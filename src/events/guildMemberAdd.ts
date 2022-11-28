@@ -7,9 +7,7 @@ const autoroleIds = process.env.AUTOROLE_IDS?.trim()
 
 export async function run(member: GuildMember) {
 	// Autorole
-	if (!member.pending) {
-		if (!member.user.bot && autoroleIds !== undefined) {
-			member.roles.add(autoroleIds).catch(() => {});
-		}
+	if (!member.pending && !member.user.bot && autoroleIds !== undefined) {
+		member.roles.add(autoroleIds).catch(() => {});
 	}
 }
