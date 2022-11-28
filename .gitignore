@@ -1,0 +1,16 @@
+# Logs
+npm-debug.log*
+logs
+*.log
+
+# Node
+node_modules/
+dist
+.npm
+
+# Windows
+desktop.ini
+
+# Env
+.env.test
+.env
