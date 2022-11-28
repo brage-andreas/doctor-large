@@ -6,13 +6,10 @@ const autoroleIds = process.env.AUTOROLE_IDS?.trim()
 	.filter((id) => REGEXP.ID.test(id));
 
 export async function run(oldMember: GuildMember, newMember: GuildMember) {
-	if (
-		(oldMember.pending && !newMember.pending) ||
-		newMember.user.bot ||
-		!autoroleIds
-	) {
-		return;
+	// Autorole
+	if (oldMember.pending && !newMember.pending) {
+		if (!newMember.user.bot && autoroleIds !== undefined) {
+			newMember.roles.add(autoroleIds).catch(() => {});
+		}
 	}
-
-	newMember.roles.add(autoroleIds).catch(() => {});
 }
