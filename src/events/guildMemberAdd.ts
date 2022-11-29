@@ -1,13 +1,20 @@
 import { type GuildMember } from "discord.js";
-import { REGEXP } from "../constants.js";
-
-const autoroleIds = process.env.AUTOROLE_IDS?.trim()
-	.split(/\s+/g)
-	.filter((id) => REGEXP.ID.test(id));
+import AutoroleManager from "../database/autorole.js";
 
 export async function run(member: GuildMember) {
 	// Autorole
-	if (!member.pending && !member.user.bot && autoroleIds !== undefined) {
-		member.roles.add(autoroleIds).catch(() => {});
+	if (!member.pending && !member.user.bot) {
+		const autoroleManager = new AutoroleManager(member.guild.id);
+
+		const autoroleOptions = await autoroleManager.get();
+
+		if (
+			!autoroleOptions?.activated ||
+			autoroleOptions.roleIds.length === 0
+		) {
+			return;
+		}
+
+		member.roles.add(autoroleOptions.roleIds).catch(() => {});
 	}
 }
