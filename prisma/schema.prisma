@@ -7,20 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model options {
-  guild_id        String   @id
-  moderator_roles String[]
-  event_channel   String?
-}
-
-model submission {
-  user_id           String
-  guild_id          String
-  discord_timestamp String
-  attachment_url    String
-  user_comment      String?
-  channel_id        String
-  message_id        String?
-
-  @@id([user_id, guild_id])
+model autorole {
+  guildId          String   @id
+  activated        Boolean  @default(false)
+  roleIds          String[] @default([])
+  moderatorTag     String?
+  moderatorId      String?
+  discordTimestamp String?
 }
