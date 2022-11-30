@@ -1,5 +1,6 @@
 import { GatewayIntentBits } from "discord.js";
 
+export const COMMAND_DIR = new URL("./commands", import.meta.url);
 export const EVENT_DIR = new URL("./events", import.meta.url);
 
 export const REGEXP = {
