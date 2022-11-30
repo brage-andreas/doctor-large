@@ -17,10 +17,12 @@
 	"license": "MIT",
 	"dependencies": {
 		"@prisma/client": "^4.7.0",
+		"common-tags": "^1.8.2",
 		"discord.js": "^14.7.0",
 		"dotenv": "^16.0.3"
 	},
 	"devDependencies": {
+		"@types/common-tags": "^1.8.1",
 		"discord-api-types": "^0.37.20",
 		"eslint": "^8.28.0",
 		"eslint-config-prettier": "^8.5.0",
