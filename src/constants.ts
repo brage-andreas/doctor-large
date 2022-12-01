@@ -12,7 +12,7 @@ export const EMOJIS = {
 	V: "<:v:934561586394333234>"
 } as const;
 
-export const INTENTS: GatewayIntentBits[] = [
+export const INTENTS: Array<GatewayIntentBits> = [
 	GatewayIntentBits.Guilds,
 	GatewayIntentBits.GuildMembers,
 	GatewayIntentBits.GuildMessages

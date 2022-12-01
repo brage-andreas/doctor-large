@@ -19,6 +19,6 @@ export async function run(oldMember: GuildMember, newMember: GuildMember) {
 			return;
 		}
 
-		newMember.roles.add(autoroleOptions.roleIds).catch(() => {});
+		newMember.roles.add(autoroleOptions.roleIds).catch(() => null);
 	}
 }

@@ -1,23 +1,23 @@
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import prisma from "./prisma.js";
 
 type PrismaAutoroleCreateType =
-	| (Prisma.Without<
-			Prisma.autoroleCreateInput,
-			Prisma.autoroleUncheckedCreateInput
-	  > &
-			Prisma.autoroleUncheckedCreateInput)
-	| (Prisma.Without<
-			Prisma.autoroleUncheckedCreateInput,
-			Prisma.autoroleCreateInput
-	  > &
-			Prisma.autoroleCreateInput);
+	| (Prisma.autoroleCreateInput &
+			Prisma.Without<
+				Prisma.autoroleUncheckedCreateInput,
+				Prisma.autoroleCreateInput
+			>)
+	| (Prisma.autoroleUncheckedCreateInput &
+			Prisma.Without<
+				Prisma.autoroleCreateInput,
+				Prisma.autoroleUncheckedCreateInput
+			>);
 
 export default class AutoroleManager {
 	public readonly guildId: string;
-	private prisma = prisma.autorole;
+	private readonly prisma = prisma.autorole;
 
-	constructor(guildId: string) {
+	public constructor(guildId: string) {
 		this.guildId = guildId;
 
 		// Creates entry if it does not exist

@@ -9,7 +9,7 @@ export default async function ({
 	CLEAR_COMMANDS = false
 }: {
 	CLIENT_ID: string;
-	GUILD_ID?: string | undefined | null;
+	GUILD_ID?: string | null | undefined;
 	CLEAR_COMMANDS?: boolean;
 }) {
 	if (!process.env.BOT_TOKEN) {
@@ -24,7 +24,7 @@ export default async function ({
 		throw new Error(`Guild ID is faulty: ${GUILD_ID}`);
 	}
 
-	const data = await getRawCommandData();
+	const data = getRawCommandData();
 
 	const rest = new REST({ version: "9" }).setToken(process.env.BOT_TOKEN);
 
@@ -46,7 +46,8 @@ export default async function ({
 			.catch((err) => {
 				console.log(err.stack ?? err.message);
 			});
-	} catch (err: any) {
-		console.log(err.stack ?? err.message);
+	} catch (err: unknown) {
+		const error = err as Error;
+		console.log(error.stack ?? error.message);
 	}
 }

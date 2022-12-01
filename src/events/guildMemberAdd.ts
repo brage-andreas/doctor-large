@@ -15,6 +15,6 @@ export async function run(member: GuildMember) {
 			return;
 		}
 
-		member.roles.add(autoroleOptions.roleIds).catch(() => {});
+		member.roles.add(autoroleOptions.roleIds).catch(() => null);
 	}
 }
