@@ -5,13 +5,17 @@
 	"main": "dist/index.js",
 	"type": "module",
 	"scripts": {
-		"build": "tsc",
 		"format": "prettier --write \"**/*.+(js|ts|json)\"",
 		"lint": "eslint src --ext .ts",
 		"lint:fix": "eslint src --ext .ts --fix",
 		"prebuild": "npx rimraf dist",
+		"build": "tsc",
 		"prestart": "npm run build",
-		"start": "node ."
+		"start": "node .",
+		"prepublishCommands": "npm run build",
+		"publishCommands": "node scripts/publishCommands",
+		"preremoveCommands": "npm run build",
+		"removeCommands": "node scripts/removeCommands"
 	},
 	"author": "Drango",
 	"license": "MIT",
@@ -23,6 +27,8 @@
 	},
 	"devDependencies": {
 		"@types/common-tags": "^1.8.1",
+		"@typescript-eslint/eslint-plugin": "^5.45.0",
+		"@typescript-eslint/parser": "^5.45.0",
 		"discord-api-types": "^0.37.20",
 		"eslint": "^8.28.0",
 		"eslint-config-prettier": "^8.5.0",
