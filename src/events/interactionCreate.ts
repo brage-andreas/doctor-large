@@ -1,6 +1,6 @@
 import { oneLine } from "common-tags";
 import { type Interaction } from "discord.js";
-import getCommandMap from "../helpers/scripts/getCommandMap.js";
+import commandMap from "../helpers/scripts/commandMap.js";
 
 export async function run(interaction: Interaction) {
 	if (!interaction.inGuild()) {
@@ -57,7 +57,7 @@ export async function run(interaction: Interaction) {
 		return;
 	}
 
-	const command = getCommandMap().get(interaction.commandName);
+	const command = commandMap.get(interaction.commandName);
 
 	if (!command) {
 		// this should never happen
@@ -65,4 +65,6 @@ export async function run(interaction: Interaction) {
 			`Commands mismatch: ${interaction.commandName} not in command map`
 		);
 	}
+
+	void (await command.run(interaction));
 }

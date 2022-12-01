@@ -1,8 +1,8 @@
-import getCommandMap from "./getCommandMap.js";
+import commandMap from "./commandMap.js";
 
-export default async function () {
+export default function () {
 	// Gets the commands and turns from Map<a, b> to Array<b>
-	const commandsValuesArray = [...getCommandMap().values()];
+	const commandsValuesArray = [...commandMap.values()];
 	// Turns it to Set<b> and back to Array<b> to remove duplicates
 	const uniqueCommandsArray = [...new Set(commandsValuesArray)];
 
