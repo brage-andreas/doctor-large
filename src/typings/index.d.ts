@@ -1,8 +1,8 @@
 import type {
-	ApplicationCommandData,
 	AutocompleteInteraction,
 	ChatInputCommandInteraction,
-	ContextMenuCommandInteraction
+	ContextMenuCommandInteraction,
+	RESTPostAPIApplicationCommandsJSONBody
 } from "discord.js";
 
 export type EventFn = (...args: Array<unknown>) => Promise<unknown> | unknown;
@@ -17,7 +17,7 @@ export type CommandModuleInteractions =
 	| ContextMenuCommandInteraction<"cached">;
 
 export interface Command {
-	data: ApplicationCommandData;
+	data: RESTPostAPIApplicationCommandsJSONBody;
 	run(interaction: CommandModuleInteractions): Promise<unknown> | unknown;
 }
 

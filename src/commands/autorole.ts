@@ -1,21 +1,19 @@
 import {
-	ApplicationCommandOptionType,
 	PermissionFlagsBits,
-	type ApplicationCommandData
+	type RESTPostAPIApplicationCommandsJSONBody
 } from "discord.js";
 import {
 	type Command,
 	type CommandModuleInteractions
 } from "../typings/index.js";
 
-ApplicationCommandOptionType;
-
-const data: ApplicationCommandData = {
+const data: RESTPostAPIApplicationCommandsJSONBody = {
 	name: "autorole",
 	description: "Configuration for this servers autorole.",
-	defaultMemberPermissions:
-		PermissionFlagsBits.ManageRoles | PermissionFlagsBits.ManageGuild,
-	dmPermission: false,
+	default_member_permissions: (
+		PermissionFlagsBits.ManageRoles | PermissionFlagsBits.ManageGuild
+	).toString(),
+	dm_permission: false,
 	options: []
 };
 
