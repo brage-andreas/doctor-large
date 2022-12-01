@@ -27,7 +27,8 @@ export default class AutoroleManager {
 				return;
 			}
 
-			this.prisma.create({ data: { guildId } });
+			// For some reason it does not work without a .then()
+			this.prisma.create({ data: { guildId } }).then(() => null);
 		});
 	}
 
