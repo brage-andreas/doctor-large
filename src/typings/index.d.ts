@@ -11,14 +11,14 @@ export interface EventImport {
 	run: EventFn;
 }
 
+export type CommandModuleInteractions =
+	| AutocompleteInteraction<"cached">
+	| ChatInputCommandInteraction<"cached">
+	| ContextMenuCommandInteraction<"cached">;
+
 export interface Command {
 	data: ApplicationCommandData;
-	run(
-		interaction:
-			| AutocompleteInteraction<"cached">
-			| ChatInputCommandInteraction<"cached">
-			| ContextMenuCommandInteraction<"cached">
-	): Promise<unknown> | unknown;
+	run(interaction: CommandModuleInteractions): Promise<unknown> | unknown;
 }
 
 export interface CommandImport {
