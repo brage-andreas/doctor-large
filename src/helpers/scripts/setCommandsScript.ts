@@ -26,7 +26,7 @@ export default async function ({
 
 	const data = getRawCommandData();
 
-	const rest = new REST({ version: "9" }).setToken(process.env.BOT_TOKEN);
+	const rest = new REST().setToken(process.env.BOT_TOKEN);
 
 	try {
 		const route = GUILD_ID
