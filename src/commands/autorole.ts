@@ -1,15 +1,31 @@
 import {
 	ApplicationCommandOptionType,
-	Interaction,
+	PermissionFlagsBits,
 	type ApplicationCommandData
 } from "discord.js";
-import { Command } from "../typings/index.js";
+import {
+	type Command,
+	type CommandModuleInteractions
+} from "../typings/index.js";
 
 ApplicationCommandOptionType;
 
-const data: ApplicationCommandData = {};
+const data: ApplicationCommandData = {
+	name: "autorole",
+	description: "Configuration for this servers autorole.",
+	defaultMemberPermissions:
+		PermissionFlagsBits.ManageRoles | PermissionFlagsBits.ManageGuild,
+	dmPermission: false,
+	options: []
+};
 
-const run = async (interaction: Interaction) => {};
+const run = (interaction: CommandModuleInteractions) => {
+	if (!interaction.isRepliable()) {
+		return;
+	}
+
+	interaction.reply({ content: "test" });
+};
 
 export const getCommand: () => Command = () => ({
 	data,
