@@ -15,3 +15,21 @@ model autorole {
   moderatorId      String?
   discordTimestamp String?
 }
+
+model giveaway {
+  guildId             String
+  giveawayId          Int      @default(autoincrement())
+  giveawayDescription String?
+  channelId           String?
+  messageId           String?
+  hostUserId          String
+  hostUserTag         String
+  hostUserAvatarUrl   String
+  userEntriesIds      String[] @default([])
+  createdTimestamp    Int
+  endTimestamp        Int?
+  active              Boolean  @default(false)
+  lockEntries         Boolean  @default(false)
+
+  @@id([guildId, giveawayId])
+}
