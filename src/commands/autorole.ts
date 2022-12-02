@@ -15,6 +15,8 @@ import {
 	type CommandModuleInteractions
 } from "../typings/index.js";
 
+// TODO: REFACTOR
+
 const data: RESTPostAPIApplicationCommandsJSONBody = {
 	name: "autorole",
 	dm_permission: false,
