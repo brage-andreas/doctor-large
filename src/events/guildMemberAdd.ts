@@ -16,5 +16,9 @@ export async function run(member: GuildMember) {
 		}
 
 		member.roles.add(autoroleOptions.roleIds).catch(() => null);
+
+		console.log(
+			`Gave roles to ${member.user.tag} (${member.id}) in ${member.guild.name}`
+		);
 	}
 }

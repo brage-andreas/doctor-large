@@ -20,5 +20,9 @@ export async function run(oldMember: GuildMember, newMember: GuildMember) {
 		}
 
 		newMember.roles.add(autoroleOptions.roleIds).catch(() => null);
+
+		console.log(
+			`Gave roles to ${newMember.user.tag} (${newMember.id}) in ${newMember.guild.name}`
+		);
 	}
 }
