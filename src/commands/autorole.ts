@@ -57,6 +57,18 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 					type: ApplicationCommandOptionType.Role,
 					description:
 						"A role which will be applied by the autorole [None]"
+				},
+				{
+					name: "role-5",
+					type: ApplicationCommandOptionType.Role,
+					description:
+						"A role which will be applied by the autorole [None]"
+				},
+				{
+					name: "role-6",
+					type: ApplicationCommandOptionType.Role,
+					description:
+						"A role which will be applied by the autorole [None]"
 				}
 			]
 		}
@@ -104,6 +116,11 @@ const run = async (interaction: CommandModuleInteractions) => {
 				on ? turnOffButton : turnOnButton
 			);
 
+			const hasManageRolesPermission =
+				interaction.guild.members.me?.permissions.has(
+					PermissionFlagsBits.ManageRoles
+				) ?? false;
+
 			const description = on
 				? "<:ON:1047914157409828934> Currently toggled **on**"
 				: "<:OFF:1047914155929256026> Currently toggled **off**";
@@ -125,7 +142,11 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 			const embed = new EmbedBuilder()
 				.setTitle("Autorole")
-				.setDescription(description)
+				.setDescription(
+					hasManageRolesPermission
+						? description
+						: `${description}\n\n⚠️ Missing Manage Roles permission`
+				)
 				.setTimestamp(
 					autoroleData?.discordTimestamp
 						? Number(autoroleData.discordTimestamp)
@@ -183,8 +204,16 @@ const run = async (interaction: CommandModuleInteractions) => {
 					});
 				}
 
-				collector.stop();
+				collector.stop("stop");
 				reply();
+			});
+
+			collector.on("end", async (_, reason) => {
+				if (reason !== "time") {
+					return;
+				}
+
+				await interaction.editReply({ components: [] });
 			});
 		};
 
@@ -248,7 +277,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 			return embed;
 		};
 
-		const newRoles = [1, 2, 3, 4]
+		const newRoles = [1, 2, 3, 4, 5, 6]
 			.map((n) => interaction.options.getRole(`role-${n}`))
 			.filter((roleOrNull) => Boolean(roleOrNull)) as Array<Role>;
 
