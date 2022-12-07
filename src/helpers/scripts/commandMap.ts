@@ -20,10 +20,18 @@ for (const fileOrFolderName of readdirSync(COMMAND_DIR)) {
 	// if path exists and is a folder
 	if (existsSync(path) && lstatSync(path).isDirectory()) {
 		for (const fileName of readdirSync(path)) {
+			if (fileName.toLowerCase().startsWith("mod.")) {
+				continue;
+			}
+
 			await importAndSetCommandIntoMap(`${fileOrFolderName}/${fileName}`);
 		}
 	} else {
 		// fileOrFolderName is a filename
+		if (fileOrFolderName.toLowerCase().startsWith("mod.")) {
+			continue;
+		}
+
 		await importAndSetCommandIntoMap(fileOrFolderName);
 	}
 }
