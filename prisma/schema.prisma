@@ -27,6 +27,8 @@ model giveawayPrize {
 
 model giveaway {
   giveawayId          Int             @id @default(autoincrement())
+  guildRelativeId     Int
+  giveawayTitle       String
   giveawayDescription String?
   active              Boolean         @default(false)
   numberOfWinners     Int             @default(1)
