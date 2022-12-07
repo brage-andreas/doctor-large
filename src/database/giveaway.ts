@@ -3,7 +3,7 @@ import prisma from "./prisma.js";
 
 export default class GiveawayManager {
 	public readonly guildId: string;
-	private readonly prisma = prisma;
+	public readonly prisma = prisma;
 
 	public constructor(guildId: string) {
 		this.guildId = guildId;
@@ -26,6 +26,16 @@ export default class GiveawayManager {
 		});
 	}
 
+	public async getTotalNumberOfGiveawaysInGuild() {
+		return (
+			await this.prisma.giveaway.findMany({
+				where: {
+					guildId: this.guildId
+				}
+			})
+		).length;
+	}
+
 	public async create(data: Prisma.giveawayCreateInput) {
 		return await this.prisma.giveaway.create({
 			data
@@ -42,5 +52,9 @@ export default class GiveawayManager {
 
 	public async edit(args: Prisma.giveawayUpdateArgs) {
 		return await this.prisma.giveaway.update(args);
+	}
+
+	public async editPrize(args: Prisma.giveawayPrizeUpdateArgs) {
+		return await this.prisma.giveawayPrize.update(args);
 	}
 }
