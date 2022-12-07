@@ -1,5 +1,6 @@
 import { type AutocompleteInteraction } from "discord.js";
 
-export default async function (interaction: AutocompleteInteraction) {
-	//
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function (_interaction: AutocompleteInteraction) {
+	return 1;
 }

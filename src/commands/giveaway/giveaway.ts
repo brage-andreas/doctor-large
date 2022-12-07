@@ -39,33 +39,7 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 		{
 			name: "create",
 			description: "Create and customise a new giveaway.",
-			type: ApplicationCommandOptionType.Subcommand,
-			options: [
-				{
-					name: "title",
-					type: ApplicationCommandOptionType.String,
-					description: oneLine`
-						The title for the giveaway.
-						For example "Christmas Giveaway 2022".
-					`,
-					required: true
-				},
-				{
-					name: "description",
-					type: ApplicationCommandOptionType.String,
-					description: oneLine`
-						The description for the giveaway.
-						Put any addition info here.
-						[None]
-					`
-				},
-				{
-					name: "number-of-winners",
-					type: ApplicationCommandOptionType.Integer,
-					description: "How many winners there should be. [1]",
-					min_value: 1
-				}
-			]
+			type: ApplicationCommandOptionType.Subcommand
 		},
 		{
 			name: "edit",
@@ -76,26 +50,8 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 					name: "giveaway-to-edit",
 					type: ApplicationCommandOptionType.Integer,
 					description: "Which giveaway should be edited.",
-					autocomplete: true
-				},
-				{
-					name: "new-title",
-					type: ApplicationCommandOptionType.String,
-					description:
-						"The new (and improved) title for the giveaway. Typos happen."
-				},
-				{
-					name: "new-description",
-					type: ApplicationCommandOptionType.String,
-					description:
-						"The new (and improved) description for the giveaway."
-				},
-				{
-					name: "new-number-of-winners",
-					type: ApplicationCommandOptionType.Integer,
-					description:
-						"How many winners there should have actually been.",
-					min_value: 1
+					autocomplete: true,
+					required: true
 				}
 			]
 		}
