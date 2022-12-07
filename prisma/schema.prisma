@@ -32,6 +32,7 @@ model giveaway {
   giveawayDescription String?
   active              Boolean         @default(false)
   numberOfWinners     Int             @default(1)
+  requiredRoles       String[]        @default([])
   prizes              giveawayPrize[]
   guildId             String
   channelId           String?
@@ -40,7 +41,7 @@ model giveaway {
   hostUserTag         String
   userEntriesIds      String[]        @default([])
   lockEntries         Boolean         @default(false)
-  createdTimestamp    Int
-  endTimestamp        Int?
+  createdTimestamp    String
+  endTimestamp        String?
   winnerUserIds       String[]        @default([])
 }
