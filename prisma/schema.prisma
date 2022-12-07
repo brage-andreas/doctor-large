@@ -17,12 +17,12 @@ model autorole {
 }
 
 model giveawayPrize {
-    prizeId        Int       @id @default(autoincrement())
-    giveaway       giveaway? @relation(fields: [giveawayId], references: [giveawayId])
-    giveawayId     Int       @unique
-    name           String
-    amount         Int       @default(1)
-    additionalInfo String?
+  prizeId        Int       @id @default(autoincrement())
+  giveaway       giveaway? @relation(fields: [giveawayId], references: [giveawayId])
+  giveawayId     Int       @unique
+  name           String
+  amount         Int       @default(1)
+  additionalInfo String?
 }
 
 model giveaway {
