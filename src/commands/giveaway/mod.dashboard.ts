@@ -1,6 +1,11 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export default async function (_interaction: ChatInputCommandInteraction) {
-	//
+export default async function (
+	interaction: ChatInputCommandInteraction,
+	customId?: number
+) {
+	const id = customId && interaction.options.getInteger("giveaway", true);
+
+	await interaction.reply({ content: "WIP", ephemeral: true });
+	id;
 }

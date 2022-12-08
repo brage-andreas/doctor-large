@@ -8,10 +8,9 @@ import {
 	type Command,
 	type CommandModuleInteractions
 } from "../../typings/index.js";
-import sendToAutocompleteFindGiveaway from "./mod.autocompleteFindGiveaway.js";
+import sendToAutocompleteGiveaway from "./mod.autocompleteGiveaway.js";
 import sendToCreate from "./mod.create.js";
 import sendToDashboard from "./mod.dashboard.js";
-import sendToEdit from "./mod.edit.js";
 
 const data: RESTPostAPIApplicationCommandsJSONBody = {
 	name: "giveaway",
@@ -32,7 +31,8 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 					type: ApplicationCommandOptionType.Integer,
 					description:
 						"Which giveaway should be managed in the dashboard.",
-					autocomplete: true
+					autocomplete: true,
+					required: true
 				}
 			]
 		},
@@ -40,27 +40,13 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 			name: "create",
 			description: "Create and customise a new giveaway.",
 			type: ApplicationCommandOptionType.Subcommand
-		},
-		{
-			name: "edit",
-			description: "Edit an already existing giveaway.",
-			type: ApplicationCommandOptionType.Subcommand,
-			options: [
-				{
-					name: "giveaway-to-edit",
-					type: ApplicationCommandOptionType.Integer,
-					description: "Which giveaway should be edited.",
-					autocomplete: true,
-					required: true
-				}
-			]
 		}
 	]
 };
 
 const run = async (interaction: CommandModuleInteractions) => {
 	if (interaction.isAutocomplete()) {
-		await sendToAutocompleteFindGiveaway(interaction);
+		await sendToAutocompleteGiveaway(interaction);
 
 		return;
 	}
@@ -75,8 +61,6 @@ const run = async (interaction: CommandModuleInteractions) => {
 		sendToDashboard(interaction);
 	} else if (subcommand === "create") {
 		await sendToCreate(interaction);
-	} else if (subcommand === "edit") {
-		await sendToEdit(interaction);
 	}
 };
 
