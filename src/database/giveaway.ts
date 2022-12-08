@@ -21,12 +21,24 @@ export default class GiveawayManager {
 		});
 	}
 
-	public async getAllActive() {
+	public async getAll() {
 		return await this.prisma.giveaway.findMany({
 			where: {
-				guildId: this.guildId,
-				active: true
+				guildId: this.guildId
+			},
+			orderBy: {
+				giveawayId: "desc"
 			}
+		});
+	}
+
+	public async getWithOffset(offset: number, limit = 5) {
+		return await this.prisma.giveaway.findMany({
+			where: {
+				guildId: this.guildId
+			},
+			skip: offset,
+			take: limit
 		});
 	}
 
