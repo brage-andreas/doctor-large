@@ -41,19 +41,11 @@ export default async function (
 		guildRelativeId: totalNumberOfGiveaways + 1,
 		giveawayTitle,
 		giveawayDescription,
-		active: false,
 		numberOfWinners,
-		prizes: undefined,
 		guildId: interaction.guildId,
-		channelId: null,
-		messageId: null,
 		hostUserId: interaction.user.id,
 		hostUserTag: interaction.user.tag,
-		userEntriesIds: [],
-		lockEntries: false,
-		createdTimestamp: interaction.createdTimestamp.toString(),
-		endTimestamp: null,
-		winnerUserIds: []
+		createdTimestamp: interaction.createdTimestamp.toString()
 	});
 
 	sendToDashboard(interaction, giveawayId);
