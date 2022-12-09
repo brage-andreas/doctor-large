@@ -32,6 +32,20 @@ export default class GiveawayManager {
 		});
 	}
 
+	/*public async getLatest(currentId?: number) {
+		return await this.prisma.giveaway.findFirst({
+			where: {
+				guildId: this.guildId,
+				NOT: {
+					giveawayId: currentId
+				}
+			},
+			orderBy: {
+				giveawayId: "desc"
+			}
+		});
+	}*/
+
 	public async getWithOffset(offset: number, limit = 5) {
 		return await this.prisma.giveaway.findMany({
 			where: {
