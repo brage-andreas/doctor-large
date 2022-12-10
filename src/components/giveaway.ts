@@ -22,7 +22,7 @@ const modalGiveawayTitle = new TextInputBuilder()
 
 const modalGiveawayDescription = new TextInputBuilder()
 	.setCustomId("description")
-	.setLabel("Description [None]")
+	.setLabel("Description")
 	.setMaxLength(512)
 	.setStyle(TextInputStyle.Paragraph)
 	.setPlaceholder(
@@ -34,7 +34,7 @@ const modalGiveawayDescription = new TextInputBuilder()
 
 const modalGiveawayNumberOfWinners = new TextInputBuilder()
 	.setCustomId("number-of-winners")
-	.setLabel("Number of winners [1]")
+	.setLabel("Number of winners")
 	.setMaxLength(2)
 	.setStyle(TextInputStyle.Short)
 	.setPlaceholder("1");
@@ -78,7 +78,7 @@ const emptyString = "😴 Whoa so empty — there is no description";
 const modalGiveawayNewDescription = (oldDescription: string | null) =>
 	new TextInputBuilder()
 		.setCustomId("new-description")
-		.setLabel("New description [None]")
+		.setLabel("New description")
 		.setMaxLength(512)
 		.setStyle(TextInputStyle.Paragraph)
 		.setValue(oldDescription ?? emptyString)
@@ -87,7 +87,7 @@ const modalGiveawayNewDescription = (oldDescription: string | null) =>
 const modalGiveawayNewNumberOfWinners = (oldNumberOfWinners: number) =>
 	new TextInputBuilder()
 		.setCustomId("new-number-of-winners")
-		.setLabel("New number of winners [1]")
+		.setLabel("New number of winners")
 		.setMaxLength(2)
 		.setStyle(TextInputStyle.Short)
 		.setValue(oldNumberOfWinners.toString())
@@ -131,31 +131,44 @@ const republishGiveawayButton = new ButtonBuilder()
 const lockGiveawayEntriesButton = new ButtonBuilder()
 	.setCustomId("lockEntries")
 	.setStyle(ButtonStyle.Secondary)
+	.setEmoji("🔒")
 	.setLabel("Lock entries");
 
 const unlockGiveawayEntriesButton = new ButtonBuilder()
 	.setCustomId("unlockEntries")
 	.setStyle(ButtonStyle.Secondary)
+	.setEmoji("🔓")
 	.setLabel("Unlock entries");
 
 const setRequiredRolesButton = new ButtonBuilder()
 	.setCustomId("setRequiredRoles")
 	.setStyle(ButtonStyle.Secondary)
-	.setLabel("Set roles");
+	.setLabel("Set required roles");
 
 const clearRequiredRolesButton = new ButtonBuilder()
 	.setCustomId("clearRequiredRoles")
 	.setStyle(ButtonStyle.Secondary)
-	.setLabel("Clear roles");
+	.setLabel("Clear required roles");
+
+const setPingRolesButton = new ButtonBuilder()
+	.setCustomId("setPingRoles")
+	.setStyle(ButtonStyle.Secondary)
+	.setLabel("Set ping roles");
+
+const clearPingRolesButton = new ButtonBuilder()
+	.setCustomId("clearPingRoles")
+	.setStyle(ButtonStyle.Secondary)
+	.setLabel("Clear ping roles");
 
 const editGiveawayButton = new ButtonBuilder()
 	.setCustomId("giveawayEditButton")
-	.setStyle(ButtonStyle.Secondary)
+	.setStyle(ButtonStyle.Primary)
+	.setEmoji("✍️")
 	.setLabel("Edit");
 
 const manageGiveawayPrizesButton = new ButtonBuilder()
 	.setCustomId("prizesManage")
-	.setStyle(ButtonStyle.Secondary)
+	.setStyle(ButtonStyle.Primary)
 	.setLabel("Manage prizes");
 
 const endGiveawayButton = new ButtonBuilder()
@@ -184,13 +197,15 @@ export const giveaway = {
 			republishButton: () => republishGiveawayButton,
 			lockEntriesButton: () => lockGiveawayEntriesButton,
 			unlockEntriesButton: () => unlockGiveawayEntriesButton,
-			setRolesButton: () => setRequiredRolesButton,
-			clearRolesButton: () => clearRequiredRolesButton
+			setRequiredRolesButton: () => setRequiredRolesButton,
+			setPingRolesButton: () => setPingRolesButton
 		},
 		row2: {
 			editButton: () => editGiveawayButton,
-			endButton: () => endGiveawayButton,
-			managePrizesButton: () => manageGiveawayPrizesButton
-		}
+			managePrizesButton: () => manageGiveawayPrizesButton,
+			endButton: () => endGiveawayButton
+		},
+		clearRequiredRolesButton: () => clearRequiredRolesButton,
+		clearPingRolesButton: () => clearPingRolesButton
 	}
 };
