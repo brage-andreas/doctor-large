@@ -4,7 +4,8 @@ export const COMMAND_DIR = new URL("./commands", import.meta.url);
 export const EVENT_DIR = new URL("./events", import.meta.url);
 
 export const REGEXP = {
-	ID: /^\d{17,19}$/
+	ID: /^\d{17,19}$/,
+	GIVEAWAY_ENTRY_BUTTON_CUSTOM_ID: /^enter-giveaway-(?<id>\d+)$/
 };
 
 export const EMOJIS = {

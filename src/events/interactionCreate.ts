@@ -1,5 +1,8 @@
-import { oneLine } from "common-tags";
+import { oneLine, stripIndents } from "common-tags";
 import { type Interaction } from "discord.js";
+import { REGEXP } from "../constants.js";
+import GiveawayManager from "../database/giveaway.js";
+import { listify } from "../helpers/listify.js";
 import commandMap from "../helpers/scripts/commandMap.js";
 
 export async function run(interaction: Interaction) {
@@ -53,7 +56,100 @@ export async function run(interaction: Interaction) {
 		!interaction.isContextMenuCommand() &&
 		!interaction.isAutocomplete()
 	) {
-		// Others are handled through collectors
+		if (interaction.isButton()) {
+			const giveawayId = interaction.customId.match(
+				REGEXP.GIVEAWAY_ENTRY_BUTTON_CUSTOM_ID
+			)?.groups?.id;
+
+			if (!giveawayId) {
+				return;
+			}
+
+			await interaction.deferReply({ ephemeral: true });
+
+			const giveawayManager = new GiveawayManager(interaction.guildId);
+
+			const giveaway = await giveawayManager.get(Number(giveawayId));
+
+			if (!giveaway) {
+				return;
+			}
+
+			if (giveaway.lockEntries) {
+				interaction.followUp({
+					content:
+						"🔒 Sorry, new entries are currently locked. Try again later.",
+					ephemeral: true
+				});
+
+				return;
+			}
+
+			if (
+				!interaction.member.roles.cache.hasAll(
+					...giveaway.requiredRoles
+				)
+			) {
+				const rolesTheyHave = new Set(
+					interaction.member.roles.cache.keys()
+				);
+
+				const rolesTheyNeed = giveaway.requiredRoles
+					.filter((roleId) => !rolesTheyHave.has(roleId))
+					.map((roleId) => `<@&${roleId}>`);
+
+				interaction.followUp({
+					content: stripIndents`
+							🔒 Sorry, you don't have all the roles required to enter.
+
+							You are missing roles: ${
+								rolesTheyNeed.length
+									? listify(rolesTheyNeed, { length: 10 })
+									: "No roles... what? Try again."
+							}
+						`,
+					ephemeral: true
+				});
+
+				return;
+			}
+
+			const entrants = new Set(giveaway.userEntriesIds);
+
+			if (entrants.has(interaction.user.id)) {
+				entrants.delete(interaction.user.id);
+
+				interaction.followUp({
+					content: stripIndents`
+						Done! I removed your entry.
+						
+						You are **no longer entered** into giveaway #${giveaway.guildRelativeId}. I already miss you. 🥺
+					`,
+					ephemeral: true
+				});
+			} else {
+				entrants.add(interaction.user.id);
+
+				interaction.followUp({
+					content: stripIndents`
+						Done! Psst... I made sure the bouncer put you first in line. Don't tell anyone, OK? 😇
+						
+						🎉 You are **now entered** into giveaway #${giveaway.guildRelativeId}. Best of luck!
+						`,
+					ephemeral: true
+				});
+			}
+
+			giveawayManager.edit({
+				where: {
+					giveawayId: Number(giveawayId)
+				},
+				data: {
+					userEntriesIds: [...entrants]
+				}
+			});
+		}
+
 		return;
 	}
 

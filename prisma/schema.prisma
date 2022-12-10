@@ -15,3 +15,37 @@ model autorole {
   moderatorId      String?
   discordTimestamp String?
 }
+
+model giveawayPrize {
+  prizeId        Int       @id @default(autoincrement())
+  giveaway       giveaway? @relation(fields: [giveawayId], references: [giveawayId])
+  giveawayId     Int    
+  name           String
+  amount         Int       @default(1)
+  additionalInfo String?
+}
+
+model giveaway {
+  giveawayId          Int             @id @default(autoincrement())
+  guildRelativeId     Int
+  giveawayTitle       String
+  giveawayDescription String?
+  active              Boolean         @default(true)
+  numberOfWinners     Int             @default(1)
+  requiredRoles       String[]        @default([])
+  prizes              giveawayPrize[]
+  guildId             String
+  channelId           String?
+  messageId           String?
+  rolesToPing         String[]        @default([])
+  hostUserId          String
+  hostUserTag         String
+  userEntriesIds      String[]        @default([])
+  lockEntries         Boolean         @default(false)
+  createdTimestamp    String
+  lastEditedUserId    String?
+  lastEditedUserTag   String?
+  lastEditedTimestamp String?
+  endTimestamp        String?
+  winnerUserIds       String[]        @default([])
+}
