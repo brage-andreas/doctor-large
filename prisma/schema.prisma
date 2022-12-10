@@ -19,7 +19,7 @@ model autorole {
 model giveawayPrize {
   prizeId        Int       @id @default(autoincrement())
   giveaway       giveaway? @relation(fields: [giveawayId], references: [giveawayId])
-  giveawayId     Int       @unique
+  giveawayId     Int    
   name           String
   amount         Int       @default(1)
   additionalInfo String?
@@ -37,6 +37,7 @@ model giveaway {
   guildId             String
   channelId           String?
   messageId           String?
+  rolesToPing         String[]        @default([])
   hostUserId          String
   hostUserTag         String
   userEntriesIds      String[]        @default([])
