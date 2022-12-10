@@ -21,6 +21,14 @@ export default class GiveawayManager {
 		});
 	}
 
+	public async getPrizes(id: number) {
+		return await this.prisma.giveawayPrize.findMany({
+			where: {
+				giveawayId: id
+			}
+		});
+	}
+
 	public async getAll() {
 		return await this.prisma.giveaway.findMany({
 			where: {
