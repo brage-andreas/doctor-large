@@ -14,7 +14,7 @@ export default async function (
 			time: 180_000
 		})
 		.catch(async () => {
-			await interaction.editReply({
+			await interaction.followUp({
 				content:
 					"Something went wrong. The time limit is 3 minutes. Try again!"
 			});
@@ -48,5 +48,7 @@ export default async function (
 		createdTimestamp: interaction.createdTimestamp.toString()
 	});
 
-	sendToDashboard(interaction, giveawayId);
+	await modalResponse.deferReply();
+
+	sendToDashboard(modalResponse, giveawayId);
 }

@@ -58,6 +58,8 @@ const run = async (interaction: CommandModuleInteractions) => {
 	const subcommand = interaction.options.getSubcommand();
 
 	if (subcommand === "dashboard") {
+		await interaction.deferReply();
+
 		sendToDashboard(interaction);
 	} else if (subcommand === "create") {
 		await sendToCreate(interaction);

@@ -2,7 +2,6 @@ import { type giveaway } from "@prisma/client";
 import { type AutocompleteInteraction } from "discord.js";
 import GiveawayManager from "../../database/giveaway.js";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default async function (interaction: AutocompleteInteraction<"cached">) {
 	const guild = interaction.guild;
 	const focusedRaw = parseInt(interaction.options.getFocused()) || undefined;
@@ -22,7 +21,7 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 		const emoji = id === focused ? "✨" : id > focused ? "🔸" : "🔹";
 		const activeEmoji = !data.active ? "🔴 " : "";
 
-		return `${emoji} ${activeEmoji}${data.guildRelativeId}>  ${data.giveawayTitle}`;
+		return `${emoji} #${data.guildRelativeId} ${activeEmoji}${data.giveawayTitle}`;
 	};
 
 	const fullResponse = offsetGiveaways
