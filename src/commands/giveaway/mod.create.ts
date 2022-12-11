@@ -10,7 +10,7 @@ export default async function (
 
 	const modalResponse = await interaction
 		.awaitModalSubmit({
-			filter: (interaction) => interaction.customId === "giveawayCreate",
+			filter: (interaction) => interaction.customId === "createGiveaway",
 			time: 180_000
 		})
 		.catch(async () => {
@@ -27,12 +27,13 @@ export default async function (
 	const giveawayManager = new GiveawayManager(interaction.guildId);
 
 	const giveawayTitle = modalResponse.fields.getTextInputValue("title");
+
 	const giveawayDescription =
 		modalResponse.fields.getTextInputValue("description");
 
-	const numberOfWinners =
-		Number(modalResponse.fields.getTextInputValue("number-of-winners")) ??
-		1;
+	const numberOfWinners = Number(
+		modalResponse.fields.getTextInputValue("numberOfWinners")
+	);
 
 	const totalNumberOfGiveaways =
 		await giveawayManager.getTotalNumberOfGiveawaysInGuild();
@@ -48,7 +49,7 @@ export default async function (
 		createdTimestamp: interaction.createdTimestamp.toString()
 	});
 
-	await modalResponse.deferReply();
+	const message = await modalResponse.deferReply({ fetchReply: true });
 
-	sendToDashboard(modalResponse, giveawayId);
+	sendToDashboard(message, giveawayId);
 }

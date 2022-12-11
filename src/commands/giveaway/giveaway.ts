@@ -45,24 +45,24 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 };
 
 const run = async (interaction: CommandModuleInteractions) => {
-	if (interaction.isAutocomplete()) {
-		await sendToAutocompleteGiveaway(interaction);
-
-		return;
-	}
-
 	if (!interaction.isChatInputCommand()) {
+		if (interaction.isAutocomplete()) {
+			await sendToAutocompleteGiveaway(interaction);
+		}
+
 		return;
 	}
 
-	const subcommand = interaction.options.getSubcommand();
+	switch (interaction.options.getSubcommand()) {
+		case "dashboard": {
+			sendToDashboard(interaction);
+			break;
+		}
 
-	if (subcommand === "dashboard") {
-		await interaction.deferReply();
-
-		sendToDashboard(interaction);
-	} else if (subcommand === "create") {
-		await sendToCreate(interaction);
+		case "create": {
+			await sendToCreate(interaction);
+			break;
+		}
 	}
 };
 
