@@ -104,6 +104,7 @@ const modalGiveawayNewDescription = (oldDescription: string | null) =>
 		.setLabel("New description")
 		.setMaxLength(512)
 		.setStyle(TextInputStyle.Paragraph)
+		.setRequired(true)
 		.setValue(oldDescription ?? emptyString)
 		.setPlaceholder(oldDescription ?? emptyString);
 
@@ -116,6 +117,7 @@ const modalGiveawayNewNumberOfWinners = (oldNumberOfWinners: number) =>
 		.setLabel("New number of winners")
 		.setMaxLength(2)
 		.setStyle(TextInputStyle.Short)
+		.setRequired(true)
 		.setValue(oldNumberOfWinners.toString())
 		.setPlaceholder(oldNumberOfWinners.toString());
 
@@ -251,6 +253,22 @@ const backButton = new ButtonBuilder()
 	.setStyle(ButtonStyle.Secondary);
 
 /**
+ * ID: lastChannel
+ */
+const lastChannelButton = new ButtonBuilder()
+	.setCustomId("lastChannel")
+	.setLabel("Use the previous channel")
+	.setStyle(ButtonStyle.Primary);
+
+/**
+ * ID: editCurrent
+ */
+const editCurrentMessageButton = new ButtonBuilder()
+	.setCustomId("editCurrent")
+	.setLabel("Edit the current message")
+	.setStyle(ButtonStyle.Success);
+
+/**
  * ID: enter-giveaway-{giveawayId}
  */
 const enterGiveawayButton = (giveawayId: number) =>
@@ -351,6 +369,16 @@ export const giveaway = {
 		 * ID: back
 		 */
 		backButton: () => backButton,
+
+		/**
+		 * ID: lastChannel
+		 */
+		lastChannelButton: () => lastChannelButton,
+
+		/**
+		 * ID: editCurrent
+		 */
+		editCurrentMessageButton: () => editCurrentMessageButton,
 
 		/**
 		 * ID: enter-giveaway-{giveawayId}
