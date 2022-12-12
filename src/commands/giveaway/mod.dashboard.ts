@@ -3,7 +3,9 @@ import {
 	ActionRowBuilder,
 	ComponentType,
 	type ButtonBuilder,
-	type Message
+	type ButtonInteraction,
+	type CommandInteraction,
+	type ModalSubmitInteraction
 } from "discord.js";
 import { giveawayComponents } from "../../components/index.js";
 import GiveawayManager from "../../database/giveaway.js";
@@ -16,12 +18,18 @@ import toSetPingRoles from "./mod.dashboard.setPingRoles.js";
 import toSetRequiredRoles from "./mod.dashboard.setRequiredRoles.js";
 import formatGiveaway from "./mod.formatGiveaway.js";
 
-const dashboard = async (message: Message<true>, giveawayId: number) => {
-	const giveawayManager = new GiveawayManager(message.guildId);
+const dashboard = async (
+	interaction:
+		| ButtonInteraction<"cached">
+		| CommandInteraction<"cached">
+		| ModalSubmitInteraction<"cached">,
+	giveawayId: number
+) => {
+	const giveawayManager = new GiveawayManager(interaction.guildId);
 	const giveaway = await giveawayManager.get(giveawayId);
 
 	if (!giveaway) {
-		await message.edit({
+		await interaction.editReply({
 			content: stripIndents`
 				How did we get here?
 			
@@ -51,87 +59,151 @@ const dashboard = async (message: Message<true>, giveawayId: number) => {
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		giveawayComponents.dashboard.row2.editButton(),
+		giveawayComponents.dashboard.row2.managePrizesButton(),
 		giveawayComponents.dashboard.row2.endButton()
 	);
 
-	const msg = await message.edit({
-		content: await formatGiveaway(giveaway, false),
+	const msg = await interaction.editReply({
+		content: await formatGiveaway(giveaway, false, interaction.guild),
 		components: [row1, row2],
 		embeds: []
 	});
 
 	const collector = msg.createMessageComponentCollector({
-		filter: (interaction) => interaction.user.id === message.author.id,
-		componentType: ComponentType.Button
+		filter: (buttonInteraction) =>
+			buttonInteraction.user.id === buttonInteraction.user.id,
+		componentType: ComponentType.Button,
+		time: 120_000,
+		max: 1
 	});
 
-	collector.on("ignore", (interaction) => {
-		interaction.reply({
+	collector.on("ignore", (buttonInteraction) => {
+		buttonInteraction.reply({
 			content: "🚫 This button is not for you.",
 			ephemeral: true
 		});
 	});
 
-	collector.on("collect", (interaction) => {
-		switch (interaction.customId) {
+	collector.on("collect", async (buttonInteraction) => {
+		switch (buttonInteraction.customId) {
 			case "publishGiveaway": {
-				toPublishGiveaway(interaction, giveawayId, giveawayManager);
+				await buttonInteraction.deferUpdate();
+
+				toPublishGiveaway(
+					buttonInteraction,
+					giveawayId,
+					giveawayManager
+				);
+
 				break;
 			}
 
 			case "republishGiveaway": {
-				toRepublishGiveaway(interaction, giveawayId, giveawayManager);
+				await buttonInteraction.deferUpdate();
+
+				toRepublishGiveaway(
+					buttonInteraction,
+					giveawayId,
+					giveawayManager
+				);
+
 				break;
 			}
 
 			case "lockEntries": {
-				const flippedLockEntries = !giveaway.lockEntries;
+				await buttonInteraction.deferUpdate();
 
-				giveawayManager.edit({
-					where: {
-						giveawayId
-					},
-					data: {
-						lockEntries: flippedLockEntries
-					}
+				await giveawayManager.edit({
+					where: { giveawayId },
+					data: { lockEntries: true }
 				});
 
-				dashboard(message, giveawayId);
+				dashboard(buttonInteraction, giveawayId);
+
+				break;
+			}
+
+			case "unlockEntries": {
+				await buttonInteraction.deferUpdate();
+
+				await giveawayManager.edit({
+					where: { giveawayId },
+					data: { lockEntries: false }
+				});
+
+				dashboard(buttonInteraction, giveawayId);
 
 				break;
 			}
 
 			case "setRequiredRoles": {
-				toSetRequiredRoles(interaction, giveawayId, giveawayManager);
+				await buttonInteraction.deferUpdate();
+
+				toSetRequiredRoles(
+					buttonInteraction,
+					giveawayId,
+					giveawayManager
+				);
+
 				break;
 			}
 
 			case "setPingRoles": {
-				toSetPingRoles(interaction, giveawayId, giveawayManager);
+				await buttonInteraction.deferUpdate();
+
+				toSetPingRoles(buttonInteraction, giveawayId, giveawayManager);
+
 				break;
 			}
 
 			case "editGiveaway": {
-				toEditGiveaway(interaction, giveawayId, giveawayManager);
+				// await buttonInteraction.deferUpdate();
+				// Showing modal
+
+				toEditGiveaway(buttonInteraction, giveawayId, giveawayManager);
+
 				break;
 			}
 
 			case "managePrizes": {
-				toManagePrizes(interaction, giveawayId, giveawayManager);
+				await buttonInteraction.deferUpdate();
+
+				toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
+
 				break;
 			}
 
 			case "endGiveaway": {
-				toEndGiveaway(interaction, giveawayId, giveawayManager);
+				await buttonInteraction.deferUpdate();
+
+				toEndGiveaway(buttonInteraction, giveawayId, giveawayManager);
+
 				break;
 			}
 		}
 	});
+
+	collector.on("end", (_, reason) => {
+		if (reason !== "time") {
+			return;
+		}
+
+		const components = [row1, row2].map((row) =>
+			row.setComponents(
+				row.components.map((component) => component.setDisabled(true))
+			)
+		);
+
+		msg.edit({ components }).catch(() => null);
+	});
 };
 
 export default async function toDashboard(
-	message: Message<true>,
+	interaction:
+		| ButtonInteraction<"cached">
+		| CommandInteraction<"cached">
+		| ModalSubmitInteraction<"cached">,
 	giveawayId: number
 ) {
-	await dashboard(message, giveawayId);
+	await dashboard(interaction, giveawayId);
 }

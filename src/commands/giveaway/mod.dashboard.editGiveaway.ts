@@ -3,7 +3,7 @@ import { giveawayComponents } from "../../components/index.js";
 import type GiveawayManager from "../../database/giveaway.js";
 import toDashboard from "./mod.dashboard.js";
 
-export default async function (
+export default async function toEditGiveaway(
 	interaction: ButtonInteraction<"cached">,
 	giveawayId: number,
 	giveawayManager: GiveawayManager
@@ -23,7 +23,7 @@ export default async function (
 
 	await interaction.showModal(editGiveawayModal);
 
-	const modalResponse = await interaction
+	const modalInteraction = await interaction
 		.awaitModalSubmit({
 			filter: (interaction) => interaction.customId === "editGiveaway",
 			time: 180_000
@@ -35,20 +35,20 @@ export default async function (
 			});
 		});
 
-	if (!modalResponse) {
+	if (!modalInteraction) {
 		return;
 	}
 
-	await modalResponse.deferUpdate();
+	await modalInteraction.deferUpdate({ fetchReply: true });
 
-	const giveawayTitle = modalResponse.fields.getTextInputValue("new-title");
+	const giveawayTitle = modalInteraction.fields.getTextInputValue("newTitle");
 
 	const giveawayDescription =
-		modalResponse.fields.getTextInputValue("new-description");
+		modalInteraction.fields.getTextInputValue("newDescription");
 
 	const numberOfWinners =
 		Number(
-			modalResponse.fields.getTextInputValue("new-number-of-winners")
+			modalInteraction.fields.getTextInputValue("newNumberOfWinners")
 		) ?? 1;
 
 	await giveawayManager.edit({
@@ -65,5 +65,5 @@ export default async function (
 		}
 	});
 
-	await toDashboard(interaction, giveawayManager, giveawayId);
+	await toDashboard(modalInteraction, giveawayId);
 }

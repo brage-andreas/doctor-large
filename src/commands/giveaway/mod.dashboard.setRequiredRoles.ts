@@ -1,8 +1,24 @@
-import { ButtonInteraction } from "discord.js";
+import { stripIndents } from "common-tags";
+import {
+	ActionRowBuilder,
+	RoleSelectMenuBuilder,
+	type ButtonBuilder,
+	type ButtonInteraction
+} from "discord.js";
+import { giveawayComponents } from "../../components/index.js";
+import type GiveawayManager from "../../database/giveaway.js";
+import { listify } from "../../helpers/listify.js";
+import toDashboard from "./mod.dashboard.js";
 
-export default function (i: ButtonInteraction<"cached">) {
-	if (!i.replied) {
-		await i.deferUpdate().catch(console.error);
+export default async function toSetRequiredRoles(
+	interaction: ButtonInteraction<"cached">,
+	giveawayId: number,
+	giveawayManager: GiveawayManager
+) {
+	const giveaway = await giveawayManager.get(giveawayId);
+
+	if (!giveaway) {
+		return;
 	}
 
 	const requiredRolesSelect = new RoleSelectMenuBuilder()
@@ -25,18 +41,16 @@ export default function (i: ButtonInteraction<"cached">) {
 			}
 		`;
 
-	const clearRequiredRolesButton =
-		giveawayComponents.dashboard.clearRequiredRolesButton();
-
 	const row1 = new ActionRowBuilder<RoleSelectMenuBuilder>().setComponents(
 		requiredRolesSelect
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		clearRequiredRolesButton
+		giveawayComponents.dashboard.backButton(),
+		giveawayComponents.dashboard.clearRequiredRolesButton()
 	);
 
-	const updateMsg = await i.editReply({
+	const updateMsg = await interaction.editReply({
 		content: chooseRequiredRoleStr,
 		components: [row1, row2]
 	});
@@ -44,6 +58,14 @@ export default function (i: ButtonInteraction<"cached">) {
 	const component = await updateMsg.awaitMessageComponent({
 		filter: (i) => i.user.id === interaction.user.id
 	});
+
+	if (component.customId === "back") {
+		await component.deferUpdate();
+
+		toDashboard(interaction, giveawayId);
+
+		return;
+	}
 
 	if (component.customId === "requiredRolesSelect") {
 		if (!component.isRoleSelectMenu()) {
@@ -73,7 +95,5 @@ export default function (i: ButtonInteraction<"cached">) {
 		});
 	}
 
-	await dashboard(interaction, giveawayManager, id);
-
-	return;
+	await toDashboard(interaction, giveawayId);
 }

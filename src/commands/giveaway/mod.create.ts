@@ -8,7 +8,7 @@ export default async function (
 ) {
 	await interaction.showModal(giveawayComponents.create.optionsModal());
 
-	const modalResponse = await interaction
+	const modalInteraction = await interaction
 		.awaitModalSubmit({
 			filter: (interaction) => interaction.customId === "createGiveaway",
 			time: 180_000
@@ -20,19 +20,19 @@ export default async function (
 			});
 		});
 
-	if (!modalResponse) {
+	if (!modalInteraction) {
 		return;
 	}
 
 	const giveawayManager = new GiveawayManager(interaction.guildId);
 
-	const giveawayTitle = modalResponse.fields.getTextInputValue("title");
+	const giveawayTitle = modalInteraction.fields.getTextInputValue("title");
 
 	const giveawayDescription =
-		modalResponse.fields.getTextInputValue("description");
+		modalInteraction.fields.getTextInputValue("description");
 
 	const numberOfWinners = Number(
-		modalResponse.fields.getTextInputValue("numberOfWinners")
+		modalInteraction.fields.getTextInputValue("numberOfWinners")
 	);
 
 	const totalNumberOfGiveaways =
@@ -49,7 +49,7 @@ export default async function (
 		createdTimestamp: interaction.createdTimestamp.toString()
 	});
 
-	const message = await modalResponse.deferReply({ fetchReply: true });
+	await modalInteraction.deferUpdate();
 
-	sendToDashboard(message, giveawayId);
+	sendToDashboard(modalInteraction, giveawayId);
 }

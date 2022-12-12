@@ -1,18 +1,24 @@
 import { type giveaway } from "@prisma/client";
 import { oneLine, stripIndents } from "common-tags";
-import { EmbedBuilder } from "discord.js";
+import { EmbedBuilder, PermissionFlagsBits, type Guild } from "discord.js";
 import GiveawayManager from "../../database/giveaway.js";
 import { listify } from "../../helpers/listify.js";
 import { longStamp, timestamp } from "../../helpers/timestamps.js";
 
 async function formatGiveaway(
 	data: giveaway,
-	embed: true
+	embed: true,
+	guild?: Guild
 ): Promise<EmbedBuilder>;
-async function formatGiveaway(data: giveaway, embed: false): Promise<string>;
 async function formatGiveaway(
 	data: giveaway,
-	embed: boolean
+	embed: false,
+	guild?: Guild
+): Promise<string>;
+async function formatGiveaway(
+	data: giveaway,
+	embed: boolean,
+	guild?: Guild
 ): Promise<EmbedBuilder | string> {
 	const id = data.guildRelativeId;
 	const title = data.giveawayTitle;
@@ -38,18 +44,18 @@ async function formatGiveaway(
 	);
 
 	if (embed) {
-		const numberOfWinnersStr = `• Number of winners: ${numberOfWinners}`;
+		const numberOfWinnersStr = `→ Number of winners: ${numberOfWinners}`;
 
 		const requiredRolesStr = requiredRoles.length
-			? `• Roles required to enter: ${listify(
+			? `→ Roles required to enter: ${listify(
 					requiredRoles.map((roleId) => `<@&${roleId}>`),
 					{ length: 10 }
 			  )}`
-			: "• This giveaway is open for everyone! Woo!";
+			: "→ This giveaway is open for everyone! Woo!";
 
 		const endStr = endTimestamp
-			? `• The giveaway will end: ${longStamp(endTimestamp)}`
-			: "• The giveaway has no set end date. Enter while you can!";
+			? `→ The giveaway will end: ${longStamp(endTimestamp)}`
+			: "→ The giveaway has no set end date. Enter while you can!";
 
 		const prizesStr = prizes.length
 			? prizes
@@ -85,31 +91,48 @@ async function formatGiveaway(
 			});
 	}
 
-	const numberOfWinnersStr = `• Number of winners: ${numberOfWinners}`;
-
 	const requiredRolesStr = requiredRoles.length
-		? `• Required roles: ${listify(
+		? `→ Required roles (${requiredRoles.length}): ${listify(
 				requiredRoles.map((roleId) => `<@&${roleId}>`),
 				{ length: 5 }
 		  )}`
-		: "• Required roles: None";
+		: "→ Required roles: None";
 
 	const pingRolesStr = rolesToPing.length
-		? `• Ping roles: ${listify(
+		? `→ Ping roles (${rolesToPing.length}): ${listify(
 				rolesToPing.map((roleId) => `<@&${roleId}>`),
-				{ length: 5 }
+				{ length: 10 }
 		  )}`
-		: "• Ping roles: None";
+		: "→ Ping roles: None";
+
+	const badPingRoles = rolesToPing.filter((roleId) => {
+		const mentionable = guild?.roles.cache.get(roleId)?.mentionable;
+		const hasPerms = guild?.members.me?.permissions.has(
+			PermissionFlagsBits.MentionEveryone
+		);
+
+		return !mentionable && !hasPerms;
+	});
+
+	const pingRolesWarning = badPingRoles.length
+		? oneLine`
+			⚠️ Missing permissions to ping roles (${badPingRoles.length}):
+			${listify(
+				badPingRoles.map((roleId) => `<@&${roleId}>`),
+				{ length: 10 }
+			)}
+		`
+		: null;
 
 	const endStr = endTimestamp
-		? `• End date: ${longStamp(endTimestamp)}`
-		: "• End date: ⚠️ The giveaway has no set end date. It will be open indefinitely!";
+		? `→ End date: ${longStamp(endTimestamp)}`
+		: "→ End date: ⚠️ The giveaway has no set end date. It will be open indefinitely!";
 
 	const prizesStr = prizes.length
-		? `**Prizes**:\n${prizes
+		? `**Prizes** (${prizes.length}):\n${prizes
 				.map(
 					(prize) =>
-						`${prize.amount}x **${prize.name}** ${
+						`→ ${prize.amount}x ${prize.name} ${
 							prize.additionalInfo
 								? `- ${prize.additionalInfo}`
 								: ""
@@ -118,26 +141,33 @@ async function formatGiveaway(
 				.join("\n")}`
 		: "**Prizes**: ⚠️ There are no set prizes";
 
-	const idStr = `#${id}`;
-	const absoluteIdStr = `#${data.giveawayId}`;
+	const titleStr = `**Title**:\n\`\`\`\n${title}\n\`\`\``;
 
-	const titleStr = `**Title**:\n> ${title}`;
 	const descriptionStr = `**Description**:\n${
 		description
-			? `> ${description.split("\n").join("\n> ")}`
+			? `\`\`\`\n${description}\n\`\`\``
 			: "⚠️ There is no set description"
 	}`;
 
-	const hostStr = `• Host: ${hostTag} (${hostId})`;
-	const activeStr = `• Active: ${active ? "Yes" : "No"}`;
-	const publishedStr = `• Published: ${published ? "Yes" : "No"}`;
-	const entriesStr = `• Entries: ${entries}`;
-	const lockEntriesStr = `• Entries locked: ${lockEntries ? "Yes" : "No"}`;
-	const createdStr = `• Created: ${longStamp(created)}`;
+	const idStr = `#${id}`;
+	const absoluteIdStr = `#${data.giveawayId}`;
+	const numberOfWinnersStr = `→ Number of winners: ${numberOfWinners}`;
+	const hostStr = `→ Host: ${hostTag} (${hostId})`;
+	const activeStr = `→ Active: ${active ? "Yes" : "No"}`;
+	const publishedStr = `→ Published: ${published ? "Yes" : "No"}`;
+	const entriesStr = `→ Entries: ${entries}`;
+	const createdStr = `→ Created: ${longStamp(created)}`;
+	const lockEntriesStr = `→ Entries locked: ${lockEntries ? "Yes" : "No"}`;
+	const messageUrl =
+		data.guildId && data.channelId && data.messageId
+			? `\n→ [Link to giveaway](<https://discord.com/channels/${data.guildId}/${data.channelId}/${data.messageId}>)`
+			: "";
 
 	const winnersStr = winners.length
-		? `• Winners: ${winners.map((id) => `<@${id}> (${id})`).join(", ")}`
-		: "• No winners (yet)";
+		? `→ Winners (${winners.length}): ${winners
+				.map((id) => `<@${id}> (${id})`)
+				.join(", ")}`
+		: "→ No winners (yet)";
 
 	const lastEditStr =
 		!editTag && !editUID && !editStamp
@@ -151,25 +181,23 @@ async function formatGiveaway(
 
 	return stripIndents`
 		${titleStr}
-
 		${descriptionStr}
-		
 		${prizesStr}
 
 		**Info**:
 		${hostStr}
 		${createdStr}
-		${winnersStr}
+		${entriesStr}
+		${winnersStr}${messageUrl}
 		
 		**Options**:
+		${endStr}
 		${activeStr}
 		${publishedStr}
 		${lockEntriesStr}
 		${numberOfWinnersStr}
-		${entriesStr}
 		${requiredRolesStr}
-		${pingRolesStr}
-		${endStr}
+		${pingRolesStr} ${pingRolesWarning ? `\n\n${pingRolesWarning}` : ""}
 
 		Giveaway ${idStr} (${absoluteIdStr}) • ${lastEditStr}
 	`;

@@ -55,7 +55,10 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 	switch (interaction.options.getSubcommand()) {
 		case "dashboard": {
-			sendToDashboard(interaction);
+			await interaction.deferReply();
+			const giveawayId = interaction.options.getInteger("giveaway", true);
+
+			sendToDashboard(interaction, giveawayId);
 			break;
 		}
 
