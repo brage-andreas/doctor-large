@@ -160,12 +160,12 @@ const publishGiveawayButton = new ButtonBuilder()
 	.setLabel("Publish");
 
 /**
- * ID: republishGiveaway
+ * ID: publishingOptions
  */
-const republishGiveawayButton = new ButtonBuilder()
-	.setCustomId("republishGiveaway")
+const publishingOptionsButton = new ButtonBuilder()
+	.setCustomId("publishingOptions")
 	.setStyle(ButtonStyle.Success)
-	.setLabel("Republish");
+	.setLabel("Publishing Options");
 
 /**
  * ID: lockEntries
@@ -242,6 +242,22 @@ const endGiveawayButton = new ButtonBuilder()
 	.setStyle(ButtonStyle.Danger)
 	.setLabel("End giveaway");
 
+/**
+ * ID: resetData
+ */
+const resetDataButton = new ButtonBuilder()
+	.setCustomId("resetData")
+	.setStyle(ButtonStyle.Danger)
+	.setLabel("Reset data");
+
+/**
+ * ID: deleteGiveaway
+ */
+const deleteGiveawayButton = new ButtonBuilder()
+	.setCustomId("deleteGiveaway")
+	.setStyle(ButtonStyle.Danger)
+	.setLabel("Delete giveaway");
+
 // -----------------------
 
 /**
@@ -265,8 +281,16 @@ const lastChannelButton = new ButtonBuilder()
  */
 const editCurrentMessageButton = new ButtonBuilder()
 	.setCustomId("editCurrent")
-	.setLabel("Edit the current message")
+	.setLabel("Edit current message")
 	.setStyle(ButtonStyle.Success);
+
+/**
+ * ID: recallCurrent
+ */
+const recallCurrentMessageButton = new ButtonBuilder()
+	.setCustomId("recallCurrent")
+	.setLabel("Recall current message")
+	.setStyle(ButtonStyle.Danger);
 
 /**
  * ID: enter-giveaway-{giveawayId}
@@ -314,9 +338,9 @@ export const giveaway = {
 			publishButton: () => publishGiveawayButton,
 
 			/**
-			 * ID: republishGiveaway
+			 * ID: publishingOptions
 			 */
-			republishButton: () => republishGiveawayButton,
+			publishingOptionsButton: () => publishingOptionsButton,
 
 			/**
 			 * ID: lockEntries
@@ -352,7 +376,17 @@ export const giveaway = {
 			/**
 			 * ID: endGiveaway
 			 */
-			endButton: () => endGiveawayButton
+			endButton: () => endGiveawayButton,
+
+			/**
+			 * ID: resetData
+			 */
+			resetDataButton: () => resetDataButton,
+
+			/**
+			 * ID: deleteGiveaway
+			 */
+			deleteGiveawayButton: () => deleteGiveawayButton
 		},
 
 		/**
@@ -379,6 +413,11 @@ export const giveaway = {
 		 * ID: editCurrent
 		 */
 		editCurrentMessageButton: () => editCurrentMessageButton,
+
+		/**
+		 * ID: recallCurrent
+		 */
+		recallCurrentMessageButton: () => recallCurrentMessageButton,
 
 		/**
 		 * ID: enter-giveaway-{giveawayId}
