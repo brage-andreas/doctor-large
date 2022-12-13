@@ -186,6 +186,14 @@ const unlockGiveawayEntriesButton = new ButtonBuilder()
 	.setLabel("Unlock entries");
 
 /**
+ * ID: setEndDate
+ */
+const setEndDateButton = new ButtonBuilder()
+	.setCustomId("setEndDate")
+	.setStyle(ButtonStyle.Secondary)
+	.setLabel("Set end date");
+
+/**
  * ID: setRequiredRoles
  */
 const setRequiredRolesButton = new ButtonBuilder()
@@ -351,6 +359,11 @@ export const giveaway = {
 			 * ID: unlockEntries
 			 */
 			unlockEntriesButton: () => unlockGiveawayEntriesButton,
+
+			/**
+			 * ID: setEndDate
+			 */
+			setEndDateButton: () => setEndDateButton,
 
 			/**
 			 * ID: setRequiredRoles
