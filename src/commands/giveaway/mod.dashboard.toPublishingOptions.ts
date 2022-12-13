@@ -11,10 +11,11 @@ import {
 } from "discord.js";
 import { giveawayComponents } from "../../components/index.js";
 import type GiveawayManager from "../../database/giveaway.js";
+import lastEditBy from "../../helpers/lastEdit.js";
 import toDashboard from "./mod.dashboard.js";
 import formatGiveaway from "./mod.formatGiveaway.js";
 
-export default async function toRepublishGiveaway(
+export default async function toPublishingOptions(
 	interaction: ButtonInteraction<"cached">,
 	giveawayId: number,
 	giveawayManager: GiveawayManager
@@ -46,7 +47,8 @@ export default async function toRepublishGiveaway(
 	const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
 		giveawayComponents.dashboard.backButton(),
 		giveawayComponents.dashboard.lastChannelButton(),
-		giveawayComponents.dashboard.editCurrentMessageButton()
+		giveawayComponents.dashboard.editCurrentMessageButton(),
+		giveawayComponents.dashboard.recallCurrentMessageButton()
 	);
 
 	const retry = async (message?: string) => {
@@ -160,16 +162,17 @@ export default async function toRepublishGiveaway(
 					giveawayId: giveaway.giveawayId
 				},
 				data: {
-					lastEditedTimestamp: Date.now().toString(),
-					lastEditedUserTag: interaction.user.tag,
-					lastEditedUserId: interaction.user.id,
 					messageId: message.id,
-					channelId
+					channelId,
+					...lastEditBy(interaction.user)
 				}
 			});
 		}
 
-		if (componentInteraction.customId === "editCurrent") {
+		if (
+			componentInteraction.customId === "editCurrent" ||
+			componentInteraction.customId === "recallCurrent"
+		) {
 			if (!giveaway.channelId || !giveaway.messageId) {
 				componentInteraction.followUp({
 					content: "The giveaway is not published yet!",
@@ -209,48 +212,67 @@ export default async function toRepublishGiveaway(
 				return;
 			}
 
-			const message = await channel.messages
-				.edit(giveaway.messageId, {
-					content: giveaway.rolesToPing
-						.map((roleId) => `<@&${roleId}>`)
-						.join(" "),
-					allowedMentions: {
-						roles: giveaway.rolesToPing
-					},
-					embeds: [
-						await formatGiveaway(giveaway, true, interaction.guild)
-					],
-					components: [
-						new ActionRowBuilder<ButtonBuilder>().setComponents(
-							giveawayComponents.dashboard.enterGiveawayButton(
-								giveawayId
-							)
-						)
-					]
-				})
-				.catch(() => null);
+			const isEdit = componentInteraction.customId === "editCurrent";
 
-			interaction.editReply({
-				content: message
-					? stripIndents`
-						✨ Done! Giveaway has been edited in ${channel}.
-						
-						Here is a [link to your now perfected giveaway](<${message.url}>).
-					`
-					: "⚠️ I could not edit the message. Maybe it has been deleted?",
-				components: [],
-				embeds: []
-			});
+			const content = giveaway.rolesToPing
+				.map((roleId) => `<@&${roleId}>`)
+				.join(" ");
 
-			if (message) {
+			const embeds = [
+				await formatGiveaway(giveaway, true, interaction.guild)
+			];
+
+			const components = [
+				new ActionRowBuilder<ButtonBuilder>().setComponents(
+					giveawayComponents.dashboard.enterGiveawayButton(giveawayId)
+				)
+			];
+
+			const successOrURL = isEdit
+				? await channel.messages
+						.edit(giveaway.messageId, {
+							allowedMentions: { roles: giveaway.rolesToPing },
+							components,
+							content,
+							embeds
+						})
+						.then((msg) => msg.url)
+						.catch(() => null)
+				: await channel.messages
+						.delete(giveaway.messageId)
+						.then(() => true)
+						.catch(() => null);
+
+			if (isEdit) {
+				interaction.editReply({
+					content: successOrURL
+						? stripIndents`
+							✨ Done! Giveaway has been edited in ${channel}.
+							
+							Here is a [link to your now perfected giveaway](<${successOrURL}>).
+						`
+						: "⚠️ I could not edit the message. Maybe it has been deleted?",
+					components: [],
+					embeds: []
+				});
+			} else {
+				interaction.editReply({
+					content: successOrURL
+						? `✨ Done! Giveaway has been recalled from ${channel}. All data remain intact.`
+						: "⚠️ I could not recall the Giveaway. The message might have already been deleted.",
+					components: [],
+					embeds: []
+				});
+			}
+
+			if (successOrURL) {
 				giveawayManager.edit({
 					where: {
 						giveawayId: giveaway.giveawayId
 					},
 					data: {
-						lastEditedTimestamp: Date.now().toString(),
-						lastEditedUserTag: interaction.user.tag,
-						lastEditedUserId: interaction.user.id
+						messageId: isEdit ? giveaway.messageId : null,
+						...lastEditBy(interaction.user)
 					}
 				});
 			}

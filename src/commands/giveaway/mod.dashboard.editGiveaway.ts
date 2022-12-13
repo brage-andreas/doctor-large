@@ -1,6 +1,7 @@
 import { type ButtonInteraction } from "discord.js";
 import { giveawayComponents } from "../../components/index.js";
 import type GiveawayManager from "../../database/giveaway.js";
+import lastEditBy from "../../helpers/lastEdit.js";
 import toDashboard from "./mod.dashboard.js";
 
 export default async function toEditGiveaway(
@@ -59,9 +60,7 @@ export default async function toEditGiveaway(
 			giveawayTitle,
 			giveawayDescription,
 			numberOfWinners,
-			lastEditedTimestamp: Date.now().toString(),
-			lastEditedUserId: interaction.user.id,
-			lastEditedUserTag: interaction.user.tag
+			...lastEditBy(interaction.user)
 		}
 	});
 

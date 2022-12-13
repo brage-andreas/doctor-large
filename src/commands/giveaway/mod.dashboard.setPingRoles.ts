@@ -7,6 +7,7 @@ import {
 } from "discord.js";
 import { giveawayComponents } from "../../components/index.js";
 import type GiveawayManager from "../../database/giveaway.js";
+import lastEditBy from "../../helpers/lastEdit.js";
 import { listify } from "../../helpers/listify.js";
 import toDashboard from "./mod.dashboard.js";
 
@@ -79,7 +80,8 @@ export default async function toSetPingRoles(
 				giveawayId: giveaway.giveawayId
 			},
 			data: {
-				rolesToPing: component.values
+				rolesToPing: component.values,
+				...lastEditBy(interaction.user)
 			}
 		});
 	} else if (component.customId === "clearPingRoles") {
@@ -90,7 +92,8 @@ export default async function toSetPingRoles(
 				giveawayId: giveaway.giveawayId
 			},
 			data: {
-				rolesToPing: []
+				rolesToPing: [],
+				...lastEditBy(interaction.user)
 			}
 		});
 	}
