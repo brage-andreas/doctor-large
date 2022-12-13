@@ -16,6 +16,7 @@ import toEndGiveaway from "./mod.dashboard.endGiveaway.js";
 import toManagePrizes from "./mod.dashboard.managePrizes.js";
 import toPublishGiveaway from "./mod.dashboard.publishGiveaway.js";
 import toResetData from "./mod.dashboard.resetData.js";
+import toSetEndDate from "./mod.dashboard.setEndDate.js";
 import toSetPingRoles from "./mod.dashboard.setPingRoles.js";
 import toSetRequiredRoles from "./mod.dashboard.setRequiredRoles.js";
 import toPublishingOptions from "./mod.dashboard.toPublishingOptions.js";
@@ -56,6 +57,7 @@ const dashboard = async (
 	const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		publishButton,
 		lockEntriesButton,
+		giveawayComponents.dashboard.row1.setEndDateButton(),
 		giveawayComponents.dashboard.row1.setRequiredRolesButton(),
 		giveawayComponents.dashboard.row1.setPingRolesButton()
 	);
@@ -143,6 +145,14 @@ const dashboard = async (
 				});
 
 				dashboard(buttonInteraction, giveawayId);
+
+				break;
+			}
+
+			case "setEndDate": {
+				await buttonInteraction.deferUpdate();
+
+				toSetEndDate(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
