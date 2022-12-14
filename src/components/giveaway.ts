@@ -28,8 +28,8 @@ const modalGiveawayTitle = new TextInputBuilder()
  */
 const modalGiveawayDescription = new TextInputBuilder()
 	.setCustomId("description")
-	.setLabel("Description")
-	.setMaxLength(512)
+	.setLabel("Description (max 20 lines)")
+	.setMaxLength(200)
 	.setStyle(TextInputStyle.Paragraph)
 	.setPlaceholder(
 		oneLine`
@@ -44,7 +44,7 @@ const modalGiveawayDescription = new TextInputBuilder()
 const modalGiveawayNumberOfWinners = new TextInputBuilder()
 	.setCustomId("numberOfWinners")
 	.setLabel("Number of winners")
-	.setMaxLength(2)
+	.setMaxLength(1)
 	.setStyle(TextInputStyle.Short)
 	.setPlaceholder("1");
 
@@ -54,7 +54,7 @@ const modalGiveawayNumberOfWinners = new TextInputBuilder()
  * Children: title, description, numberOfWinners
  */
 const createOptionsModal = new ModalBuilder()
-	.setTitle("Create a giveaway (3 min)")
+	.setTitle("Create a giveaway")
 	.setCustomId("createGiveaway")
 	.setComponents(
 		new ActionRowBuilder<TextInputBuilder>().addComponents(
@@ -101,8 +101,8 @@ const emptyString = "😴 Whoa so empty — there is no description";
 const modalGiveawayNewDescription = (oldDescription: string | null) =>
 	new TextInputBuilder()
 		.setCustomId("newDescription")
-		.setLabel("New description")
-		.setMaxLength(512)
+		.setLabel("New description (max 20 lines)")
+		.setMaxLength(200)
 		.setStyle(TextInputStyle.Paragraph)
 		.setRequired(true)
 		.setValue(oldDescription ?? emptyString)
@@ -115,7 +115,7 @@ const modalGiveawayNewNumberOfWinners = (oldNumberOfWinners: number) =>
 	new TextInputBuilder()
 		.setCustomId("newNumberOfWinners")
 		.setLabel("New number of winners")
-		.setMaxLength(2)
+		.setMaxLength(1)
 		.setStyle(TextInputStyle.Short)
 		.setRequired(true)
 		.setValue(oldNumberOfWinners.toString())
@@ -243,12 +243,12 @@ const manageGiveawayPrizesButton = new ButtonBuilder()
 	.setLabel("Manage prizes");
 
 /**
- * ID: endGiveaway
+ * ID: endGiveawayOptions
  */
-const endGiveawayButton = new ButtonBuilder()
-	.setCustomId("endGiveaway")
-	.setStyle(ButtonStyle.Danger)
-	.setLabel("End giveaway");
+const endGiveawayOptionsButton = new ButtonBuilder()
+	.setCustomId("endGiveawayOptions")
+	.setStyle(ButtonStyle.Primary)
+	.setLabel("End options");
 
 /**
  * ID: resetData
@@ -343,7 +343,7 @@ export const giveaway = {
 			/**
 			 * ID: publishGiveaway
 			 */
-			publishButton: () => publishGiveawayButton,
+			publishGiveawayButton: () => publishGiveawayButton,
 
 			/**
 			 * ID: publishingOptions
@@ -387,9 +387,9 @@ export const giveaway = {
 			managePrizesButton: () => manageGiveawayPrizesButton,
 
 			/**
-			 * ID: endGiveaway
+			 * ID: endGiveawayOptions
 			 */
-			endButton: () => endGiveawayButton,
+			endGiveawayOptionsButton: () => endGiveawayOptionsButton,
 
 			/**
 			 * ID: resetData
