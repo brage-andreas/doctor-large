@@ -28,8 +28,8 @@ const modalGiveawayTitle = new TextInputBuilder()
  */
 const modalGiveawayDescription = new TextInputBuilder()
 	.setCustomId("description")
-	.setLabel("Description")
-	.setMaxLength(512)
+	.setLabel("Description (max 20 lines)")
+	.setMaxLength(200)
 	.setStyle(TextInputStyle.Paragraph)
 	.setPlaceholder(
 		oneLine`
@@ -44,7 +44,7 @@ const modalGiveawayDescription = new TextInputBuilder()
 const modalGiveawayNumberOfWinners = new TextInputBuilder()
 	.setCustomId("numberOfWinners")
 	.setLabel("Number of winners")
-	.setMaxLength(2)
+	.setMaxLength(1)
 	.setStyle(TextInputStyle.Short)
 	.setPlaceholder("1");
 
@@ -54,7 +54,7 @@ const modalGiveawayNumberOfWinners = new TextInputBuilder()
  * Children: title, description, numberOfWinners
  */
 const createOptionsModal = new ModalBuilder()
-	.setTitle("Create a giveaway (3 min)")
+	.setTitle("Create a giveaway")
 	.setCustomId("createGiveaway")
 	.setComponents(
 		new ActionRowBuilder<TextInputBuilder>().addComponents(
@@ -101,8 +101,8 @@ const emptyString = "😴 Whoa so empty — there is no description";
 const modalGiveawayNewDescription = (oldDescription: string | null) =>
 	new TextInputBuilder()
 		.setCustomId("newDescription")
-		.setLabel("New description")
-		.setMaxLength(512)
+		.setLabel("New description (max 20 lines)")
+		.setMaxLength(200)
 		.setStyle(TextInputStyle.Paragraph)
 		.setRequired(true)
 		.setValue(oldDescription ?? emptyString)
@@ -115,7 +115,7 @@ const modalGiveawayNewNumberOfWinners = (oldNumberOfWinners: number) =>
 	new TextInputBuilder()
 		.setCustomId("newNumberOfWinners")
 		.setLabel("New number of winners")
-		.setMaxLength(2)
+		.setMaxLength(1)
 		.setStyle(TextInputStyle.Short)
 		.setRequired(true)
 		.setValue(oldNumberOfWinners.toString())
@@ -160,12 +160,12 @@ const publishGiveawayButton = new ButtonBuilder()
 	.setLabel("Publish");
 
 /**
- * ID: republishGiveaway
+ * ID: publishingOptions
  */
-const republishGiveawayButton = new ButtonBuilder()
-	.setCustomId("republishGiveaway")
+const publishingOptionsButton = new ButtonBuilder()
+	.setCustomId("publishingOptions")
 	.setStyle(ButtonStyle.Success)
-	.setLabel("Republish");
+	.setLabel("Publishing Options");
 
 /**
  * ID: lockEntries
@@ -184,6 +184,14 @@ const unlockGiveawayEntriesButton = new ButtonBuilder()
 	.setStyle(ButtonStyle.Secondary)
 	.setEmoji("🔓")
 	.setLabel("Unlock entries");
+
+/**
+ * ID: setEndDate
+ */
+const setEndDateButton = new ButtonBuilder()
+	.setCustomId("setEndDate")
+	.setStyle(ButtonStyle.Secondary)
+	.setLabel("Set end date");
 
 /**
  * ID: setRequiredRoles
@@ -235,12 +243,28 @@ const manageGiveawayPrizesButton = new ButtonBuilder()
 	.setLabel("Manage prizes");
 
 /**
- * ID: endGiveaway
+ * ID: endGiveawayOptions
  */
-const endGiveawayButton = new ButtonBuilder()
-	.setCustomId("endGiveaway")
+const endGiveawayOptionsButton = new ButtonBuilder()
+	.setCustomId("endGiveawayOptions")
+	.setStyle(ButtonStyle.Primary)
+	.setLabel("End options");
+
+/**
+ * ID: resetData
+ */
+const resetDataButton = new ButtonBuilder()
+	.setCustomId("resetData")
 	.setStyle(ButtonStyle.Danger)
-	.setLabel("End giveaway");
+	.setLabel("Reset data");
+
+/**
+ * ID: deleteGiveaway
+ */
+const deleteGiveawayButton = new ButtonBuilder()
+	.setCustomId("deleteGiveaway")
+	.setStyle(ButtonStyle.Danger)
+	.setLabel("Delete giveaway");
 
 // -----------------------
 
@@ -265,8 +289,16 @@ const lastChannelButton = new ButtonBuilder()
  */
 const editCurrentMessageButton = new ButtonBuilder()
 	.setCustomId("editCurrent")
-	.setLabel("Edit the current message")
+	.setLabel("Edit current message")
 	.setStyle(ButtonStyle.Success);
+
+/**
+ * ID: recallCurrent
+ */
+const recallCurrentMessageButton = new ButtonBuilder()
+	.setCustomId("recallCurrent")
+	.setLabel("Recall current message")
+	.setStyle(ButtonStyle.Danger);
 
 /**
  * ID: enter-giveaway-{giveawayId}
@@ -311,12 +343,12 @@ export const giveaway = {
 			/**
 			 * ID: publishGiveaway
 			 */
-			publishButton: () => publishGiveawayButton,
+			publishGiveawayButton: () => publishGiveawayButton,
 
 			/**
-			 * ID: republishGiveaway
+			 * ID: publishingOptions
 			 */
-			republishButton: () => republishGiveawayButton,
+			publishingOptionsButton: () => publishingOptionsButton,
 
 			/**
 			 * ID: lockEntries
@@ -327,6 +359,11 @@ export const giveaway = {
 			 * ID: unlockEntries
 			 */
 			unlockEntriesButton: () => unlockGiveawayEntriesButton,
+
+			/**
+			 * ID: setEndDate
+			 */
+			setEndDateButton: () => setEndDateButton,
 
 			/**
 			 * ID: setRequiredRoles
@@ -350,9 +387,19 @@ export const giveaway = {
 			managePrizesButton: () => manageGiveawayPrizesButton,
 
 			/**
-			 * ID: endGiveaway
+			 * ID: endGiveawayOptions
 			 */
-			endButton: () => endGiveawayButton
+			endGiveawayOptionsButton: () => endGiveawayOptionsButton,
+
+			/**
+			 * ID: resetData
+			 */
+			resetDataButton: () => resetDataButton,
+
+			/**
+			 * ID: deleteGiveaway
+			 */
+			deleteGiveawayButton: () => deleteGiveawayButton
 		},
 
 		/**
@@ -379,6 +426,11 @@ export const giveaway = {
 		 * ID: editCurrent
 		 */
 		editCurrentMessageButton: () => editCurrentMessageButton,
+
+		/**
+		 * ID: recallCurrent
+		 */
+		recallCurrentMessageButton: () => recallCurrentMessageButton,
 
 		/**
 		 * ID: enter-giveaway-{giveawayId}

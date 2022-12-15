@@ -1,5 +1,6 @@
 import { type GuildMember } from "discord.js";
 import AutoroleManager from "../database/autorole.js";
+import Logger from "../logger/logger.js";
 
 export async function run(member: GuildMember) {
 	// Autorole
@@ -15,10 +16,19 @@ export async function run(member: GuildMember) {
 			return;
 		}
 
-		member.roles.add(autoroleOptions.roleIds).catch(() => null);
+		const success = await member.roles
+			.add(autoroleOptions.roleIds)
+			.then(() => true)
+			.catch(() => false);
 
-		console.log(
-			`Gave roles to ${member.user.tag} (${member.id}) in ${member.guild.name}`
-		);
+		if (success) {
+			new Logger({ prefix: "AUTOROLE" }).log(
+				`Gave roles to ${member.user.tag} (${member.id})`
+			);
+		} else {
+			new Logger({ prefix: "AUTOROLE", color: "red" }).log(
+				`Failed to give roles to ${member.user.tag} (${member.id})`
+			);
+		}
 	}
 }

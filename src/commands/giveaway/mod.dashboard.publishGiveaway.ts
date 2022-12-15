@@ -11,6 +11,8 @@ import {
 } from "discord.js";
 import { giveawayComponents } from "../../components/index.js";
 import type GiveawayManager from "../../database/giveaway.js";
+import lastEditBy from "../../helpers/lastEdit.js";
+import Logger from "../../logger/logger.js";
 import toDashboard from "./mod.dashboard.js";
 import formatGiveaway from "./mod.formatGiveaway.js";
 
@@ -120,22 +122,24 @@ export default async function toPublishGiveaway(
 				content: stripIndents`
 					✨ Done! Giveaway published in ${channel}.
 
-					Here is a **[link to your shiny new giveaway](<${msg.url}>)**.
+					Here is a [link to your shiny new giveaway](<${msg.url}>).
 				`,
 				components: [],
 				embeds: []
 			});
+
+			new Logger({ prefix: "GIVEAWAY", interaction }).logInteraction(
+				`Published giveaway #${giveawayId} in ${channel.name} (${channelId})`
+			);
 
 			giveawayManager.edit({
 				where: {
 					giveawayId: giveaway.giveawayId
 				},
 				data: {
-					lastEditedTimestamp: Date.now().toString(),
-					lastEditedUserTag: interaction.user.tag,
-					lastEditedUserId: interaction.user.id,
 					messageId: msg.id,
-					channelId
+					channelId,
+					...lastEditBy(interaction.user)
 				}
 			});
 		}

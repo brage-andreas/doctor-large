@@ -1,4 +1,5 @@
 import { GatewayIntentBits } from "discord.js";
+import { type Color } from "./typings/index.js";
 
 export const COMMAND_DIR = new URL("./commands", import.meta.url);
 export const EVENT_DIR = new URL("./events", import.meta.url);
@@ -18,3 +19,6 @@ export const INTENTS: Array<GatewayIntentBits> = [
 	GatewayIntentBits.GuildMembers,
 	GatewayIntentBits.GuildMessages
 ];
+
+export const DEFAULT_LOGGER_PREFIX = "LOG";
+export const DEFAULT_LOGGER_COLOR: Color = "yellow";

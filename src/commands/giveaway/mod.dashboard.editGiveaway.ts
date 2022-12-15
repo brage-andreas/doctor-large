@@ -1,6 +1,9 @@
+import { stripIndents } from "common-tags";
 import { type ButtonInteraction } from "discord.js";
 import { giveawayComponents } from "../../components/index.js";
 import type GiveawayManager from "../../database/giveaway.js";
+import lastEditBy from "../../helpers/lastEdit.js";
+import Logger from "../../logger/logger.js";
 import toDashboard from "./mod.dashboard.js";
 
 export default async function toEditGiveaway(
@@ -29,9 +32,12 @@ export default async function toEditGiveaway(
 			time: 180_000
 		})
 		.catch(async () => {
-			await interaction.editReply({
-				content:
-					"Something went wrong. The time limit is 3 minutes. Try again!"
+			await interaction.followUp({
+				content: stripIndents`
+						Something went wrong editing the giveaway.
+						The time limit is 3 minutes. Try again!
+					`,
+				ephemeral: true
 			});
 		});
 
@@ -43,13 +49,22 @@ export default async function toEditGiveaway(
 
 	const giveawayTitle = modalInteraction.fields.getTextInputValue("newTitle");
 
-	const giveawayDescription =
+	const rawGiveawayDescription =
 		modalInteraction.fields.getTextInputValue("newDescription");
+
+	const giveawayDescription = rawGiveawayDescription
+		.split("\n")
+		.slice(0, 20)
+		.join("\n");
 
 	const numberOfWinners =
 		Number(
 			modalInteraction.fields.getTextInputValue("newNumberOfWinners")
 		) ?? 1;
+
+	new Logger({ prefix: "GIVEAWAY", interaction }).logInteraction(
+		`Edited giveaway #${giveawayId}`
+	);
 
 	await giveawayManager.edit({
 		where: {
@@ -59,9 +74,7 @@ export default async function toEditGiveaway(
 			giveawayTitle,
 			giveawayDescription,
 			numberOfWinners,
-			lastEditedTimestamp: Date.now().toString(),
-			lastEditedUserId: interaction.user.id,
-			lastEditedUserTag: interaction.user.tag
+			...lastEditBy(interaction.user)
 		}
 	});
 

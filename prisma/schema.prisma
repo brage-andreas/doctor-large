@@ -38,6 +38,7 @@ model giveaway {
   channelId           String?
   messageId           String?
   rolesToPing         String[]        @default([])
+  minimumAccountAge   String
   hostUserId          String
   hostUserTag         String
   userEntriesIds      String[]        @default([])
@@ -48,4 +49,5 @@ model giveaway {
   lastEditedTimestamp String?
   endTimestamp        String?
   winnerUserIds       String[]        @default([])
+  winnerMessage       String?
 }

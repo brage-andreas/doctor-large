@@ -9,13 +9,17 @@ import {
 } from "discord.js";
 import { giveawayComponents } from "../../components/index.js";
 import GiveawayManager from "../../database/giveaway.js";
+import lastEditBy from "../../helpers/lastEdit.js";
+import toDeleteGiveaway from "./mod.dashboard.deleteGiveaway.js";
 import toEditGiveaway from "./mod.dashboard.editGiveaway.js";
-import toEndGiveaway from "./mod.dashboard.endGiveaway.js";
+import toEndGiveawayOptions from "./mod.dashboard.endGiveawayOptions.js";
 import toManagePrizes from "./mod.dashboard.managePrizes.js";
 import toPublishGiveaway from "./mod.dashboard.publishGiveaway.js";
-import toRepublishGiveaway from "./mod.dashboard.republishGiveaway.js";
+import toResetData from "./mod.dashboard.resetData.js";
+import toSetEndDate from "./mod.dashboard.setEndDate.js";
 import toSetPingRoles from "./mod.dashboard.setPingRoles.js";
 import toSetRequiredRoles from "./mod.dashboard.setRequiredRoles.js";
+import toPublishingOptions from "./mod.dashboard.toPublishingOptions.js";
 import formatGiveaway from "./mod.formatGiveaway.js";
 
 const dashboard = async (
@@ -43,8 +47,8 @@ const dashboard = async (
 	}
 
 	const publishButton = giveaway.messageId
-		? giveawayComponents.dashboard.row1.republishButton()
-		: giveawayComponents.dashboard.row1.publishButton();
+		? giveawayComponents.dashboard.row1.publishingOptionsButton()
+		: giveawayComponents.dashboard.row1.publishGiveawayButton();
 
 	const lockEntriesButton = giveaway.lockEntries
 		? giveawayComponents.dashboard.row1.unlockEntriesButton()
@@ -53,6 +57,7 @@ const dashboard = async (
 	const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		publishButton,
 		lockEntriesButton,
+		giveawayComponents.dashboard.row1.setEndDateButton(),
 		giveawayComponents.dashboard.row1.setRequiredRolesButton(),
 		giveawayComponents.dashboard.row1.setPingRolesButton()
 	);
@@ -60,7 +65,9 @@ const dashboard = async (
 	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		giveawayComponents.dashboard.row2.editButton(),
 		giveawayComponents.dashboard.row2.managePrizesButton(),
-		giveawayComponents.dashboard.row2.endButton()
+		giveawayComponents.dashboard.row2.endGiveawayOptionsButton(),
+		giveawayComponents.dashboard.row2.resetDataButton(),
+		giveawayComponents.dashboard.row2.deleteGiveawayButton()
 	);
 
 	const msg = await interaction.editReply({
@@ -71,7 +78,7 @@ const dashboard = async (
 
 	const collector = msg.createMessageComponentCollector({
 		filter: (buttonInteraction) =>
-			buttonInteraction.user.id === buttonInteraction.user.id,
+			buttonInteraction.user.id === interaction.user.id,
 		componentType: ComponentType.Button,
 		time: 120_000,
 		max: 1
@@ -98,10 +105,10 @@ const dashboard = async (
 				break;
 			}
 
-			case "republishGiveaway": {
+			case "publishingOptions": {
 				await buttonInteraction.deferUpdate();
 
-				toRepublishGiveaway(
+				toPublishingOptions(
 					buttonInteraction,
 					giveawayId,
 					giveawayManager
@@ -115,7 +122,10 @@ const dashboard = async (
 
 				await giveawayManager.edit({
 					where: { giveawayId },
-					data: { lockEntries: true }
+					data: {
+						lockEntries: true,
+						...lastEditBy(interaction.user)
+					}
 				});
 
 				dashboard(buttonInteraction, giveawayId);
@@ -128,10 +138,21 @@ const dashboard = async (
 
 				await giveawayManager.edit({
 					where: { giveawayId },
-					data: { lockEntries: false }
+					data: {
+						lockEntries: false,
+						...lastEditBy(interaction.user)
+					}
 				});
 
 				dashboard(buttonInteraction, giveawayId);
+
+				break;
+			}
+
+			case "setEndDate": {
+				await buttonInteraction.deferUpdate();
+
+				toSetEndDate(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
@@ -173,10 +194,34 @@ const dashboard = async (
 				break;
 			}
 
-			case "endGiveaway": {
+			case "endGiveawayOptions": {
 				await buttonInteraction.deferUpdate();
 
-				toEndGiveaway(buttonInteraction, giveawayId, giveawayManager);
+				toEndGiveawayOptions(
+					buttonInteraction,
+					giveawayId,
+					giveawayManager
+				);
+
+				break;
+			}
+
+			case "resetData": {
+				await buttonInteraction.deferUpdate();
+
+				toResetData(buttonInteraction, giveawayId, giveawayManager);
+
+				break;
+			}
+
+			case "deleteGiveaway": {
+				await buttonInteraction.deferUpdate();
+
+				toDeleteGiveaway(
+					buttonInteraction,
+					giveawayId,
+					giveawayManager
+				);
 
 				break;
 			}
