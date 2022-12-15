@@ -1,18 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import prisma from "./prisma.js";
 
-type PrismaAutoroleCreateType =
-	| (Prisma.autoroleCreateInput &
-			Prisma.Without<
-				Prisma.autoroleUncheckedCreateInput,
-				Prisma.autoroleCreateInput
-			>)
-	| (Prisma.autoroleUncheckedCreateInput &
-			Prisma.Without<
-				Prisma.autoroleCreateInput,
-				Prisma.autoroleUncheckedCreateInput
-			>);
-
 export default class AutoroleManager {
 	public readonly guildId: string;
 	private readonly prisma = prisma.autorole;
@@ -33,17 +21,24 @@ export default class AutoroleManager {
 	}
 
 	public async get() {
-		return await this.prisma.findUnique({
+		const data = await this.prisma.findUnique({
 			where: {
 				guildId: this.guildId
 			}
 		});
+
+		if (data) {
+			return data;
+		}
+
+		return await this.prisma.create({
+			data: { guildId: this.guildId }
+		});
 	}
 
-	public async set(data: PrismaAutoroleCreateType) {
-		return await this.prisma.upsert({
-			create: data,
-			update: data,
+	public async update(data: Prisma.autoroleUpdateInput) {
+		return await this.prisma.update({
+			data,
 			where: {
 				guildId: this.guildId
 			}
