@@ -3,6 +3,7 @@ import { type ButtonInteraction } from "discord.js";
 import { giveawayComponents } from "../../components/index.js";
 import type GiveawayManager from "../../database/giveaway.js";
 import lastEditBy from "../../helpers/lastEdit.js";
+import Logger from "../../logger/logger.js";
 import toDashboard from "./mod.dashboard.js";
 
 export default async function toEditGiveaway(
@@ -60,6 +61,10 @@ export default async function toEditGiveaway(
 		Number(
 			modalInteraction.fields.getTextInputValue("newNumberOfWinners")
 		) ?? 1;
+
+	new Logger({ prefix: "GIVEAWAY", interaction }).logInteraction(
+		`Edited giveaway #${giveawayId}`
+	);
 
 	await giveawayManager.edit({
 		where: {

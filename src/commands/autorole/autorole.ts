@@ -1,3 +1,4 @@
+import { oneLine } from "common-tags";
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
@@ -7,6 +8,7 @@ import {
 	type RESTPostAPIApplicationCommandsJSONBody
 } from "discord.js";
 import AutoroleManager from "../../database/autorole.js";
+import Logger from "../../logger/logger.js";
 import {
 	type Command,
 	type CommandModuleInteractions
@@ -52,6 +54,8 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 	const autoroleManager = new AutoroleManager(interaction.guildId);
 
+	const logger = new Logger({ prefix: "AUTOROLE" });
+
 	const dashboard = async () => {
 		const data = await autoroleManager.get();
 
@@ -81,8 +85,10 @@ const run = async (interaction: CommandModuleInteractions) => {
 		collector.on("collect", async (i) => {
 			await i.deferUpdate();
 
+			logger.setInteraction(i);
+
 			let active = data.activated ?? false;
-			let roles = data.roleIds ?? [];
+			let roles = data.roleIds;
 
 			if (i.customId === "autoroleSelect") {
 				if (!i.isRoleSelectMenu()) {
@@ -90,12 +96,31 @@ const run = async (interaction: CommandModuleInteractions) => {
 				}
 
 				roles = i.values;
+
+				logger.logInteraction(
+					oneLine`
+						Roles changed from
+						[${data.roleIds.join(", ")}]
+						to [${roles.join(", ")}]
+					`
+				);
 			} else if (i.customId === "autoroleClear") {
 				roles = [];
+
+				logger.logInteraction(
+					oneLine`
+						Roles changed from
+						[${data.roleIds.join(", ")}]
+						to [${roles.join(", ")}]
+					`
+				);
 			} else if (i.customId === "autoroleEnable") {
 				active = true;
+
+				logger.logInteraction("Activated autorole");
 			} else if (i.customId === "autoroleDisable") {
 				active = false;
+				logger.logInteraction("Deactivated autorole");
 			}
 
 			await autoroleManager.update({

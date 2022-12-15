@@ -1,12 +1,8 @@
-import { oneLine } from "common-tags";
 import { type Client } from "discord.js";
+import Logger from "../logger/logger.js";
 
-export function run(client: Client) {
-	console.log(
-		oneLine`
-			${new Date()} - Online as
-			${client.user?.tag ?? "Unknown tag"}
-			(${client.user?.id ?? "Unknown id"})
-		`
+export function run(client: Client<true>) {
+	new Logger({ prefix: "READY", color: "green" }).log(
+		`Online as ${client.user.tag} (${client.user.id})`
 	);
 }

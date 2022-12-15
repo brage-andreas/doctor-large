@@ -4,6 +4,7 @@ import { REGEXP } from "../constants.js";
 import GiveawayManager from "../database/giveaway.js";
 import { listify } from "../helpers/listify.js";
 import commandMap from "../helpers/scripts/commandMap.js";
+import Logger from "../logger/logger.js";
 
 export async function run(interaction: Interaction) {
 	if (!interaction.inGuild()) {
@@ -127,6 +128,16 @@ export async function run(interaction: Interaction) {
 					`,
 					ephemeral: true
 				});
+
+				new Logger({
+					color: "grey",
+					prefix: "GIVEAWAY"
+				}).log(
+					oneLine`
+						User ${interaction.user.tag} (${interaction.user.id})
+						left giveaway #${giveaway.giveawayId}
+					`
+				);
 			} else {
 				entrants.add(interaction.user.id);
 
@@ -138,6 +149,16 @@ export async function run(interaction: Interaction) {
 						`,
 					ephemeral: true
 				});
+
+				new Logger({
+					color: "grey",
+					prefix: "GIVEAWAY"
+				}).log(
+					oneLine`
+						User ${interaction.user.tag} (${interaction.user.id})
+						entered giveaway #${giveaway.giveawayId}
+					`
+				);
 			}
 
 			giveawayManager.edit({

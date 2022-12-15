@@ -9,6 +9,7 @@ import { giveawayComponents } from "../../components/index.js";
 import type GiveawayManager from "../../database/giveaway.js";
 import lastEditBy from "../../helpers/lastEdit.js";
 import { listify } from "../../helpers/listify.js";
+import Logger from "../../logger/logger.js";
 import toDashboard from "./mod.dashboard.js";
 
 export default async function toSetRequiredRoles(
@@ -75,6 +76,10 @@ export default async function toSetRequiredRoles(
 
 		await component.deferUpdate();
 
+		new Logger({ prefix: "GIVEAWAY", interaction }).logInteraction(
+			`Edited required roles of giveaway #${giveaway.giveawayId}`
+		);
+
 		await giveawayManager.edit({
 			where: {
 				giveawayId: giveaway.giveawayId
@@ -86,6 +91,10 @@ export default async function toSetRequiredRoles(
 		});
 	} else if (component.customId === "clearRequiredRoles") {
 		await component.deferUpdate();
+
+		new Logger({ prefix: "GIVEAWAY", interaction }).logInteraction(
+			`Cleared required roles of giveaway #${giveaway.giveawayId}`
+		);
 
 		await giveawayManager.edit({
 			where: {

@@ -9,6 +9,7 @@ import { giveawayComponents } from "../../components/index.js";
 import type GiveawayManager from "../../database/giveaway.js";
 import lastEditBy from "../../helpers/lastEdit.js";
 import { listify } from "../../helpers/listify.js";
+import Logger from "../../logger/logger.js";
 import toDashboard from "./mod.dashboard.js";
 
 export default async function toSetPingRoles(
@@ -75,6 +76,10 @@ export default async function toSetPingRoles(
 
 		await component.deferUpdate();
 
+		new Logger({ prefix: "GIVEAWAY", interaction }).logInteraction(
+			`Edited ping roles of giveaway #${giveaway.giveawayId}`
+		);
+
 		await giveawayManager.edit({
 			where: {
 				giveawayId: giveaway.giveawayId
@@ -86,6 +91,10 @@ export default async function toSetPingRoles(
 		});
 	} else if (component.customId === "clearPingRoles") {
 		await component.deferUpdate();
+
+		new Logger({ prefix: "GIVEAWAY", interaction }).logInteraction(
+			`Cleared ping roles of giveaway #${giveaway.giveawayId}`
+		);
 
 		await giveawayManager.edit({
 			where: {

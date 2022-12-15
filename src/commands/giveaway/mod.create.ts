@@ -1,6 +1,7 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { giveawayComponents } from "../../components/index.js";
 import GiveawayManager from "../../database/giveaway.js";
+import Logger from "../../logger/logger.js";
 import sendToDashboard from "./mod.dashboard.js";
 
 export default async function (
@@ -48,6 +49,10 @@ export default async function (
 		hostUserTag: interaction.user.tag,
 		createdTimestamp: interaction.createdTimestamp.toString()
 	});
+
+	new Logger({ prefix: "GIVEAWAY", interaction }).logInteraction(
+		`Created giveaway with ID #${giveawayId}`
+	);
 
 	await modalInteraction.deferUpdate();
 

@@ -12,6 +12,7 @@ import {
 import { giveawayComponents } from "../../components/index.js";
 import type GiveawayManager from "../../database/giveaway.js";
 import lastEditBy from "../../helpers/lastEdit.js";
+import Logger from "../../logger/logger.js";
 import toDashboard from "./mod.dashboard.js";
 import formatGiveaway from "./mod.formatGiveaway.js";
 
@@ -55,6 +56,8 @@ export default async function toPublishingOptions(
 		if (message) {
 			interaction.followUp({ content: message, ephemeral: true });
 		}
+
+		const logger = new Logger({ prefix: "GIVEAWAY", interaction });
 
 		const updateMsg = await interaction.editReply({
 			content: chooseChannelStr,
@@ -149,13 +152,17 @@ export default async function toPublishingOptions(
 
 			interaction.editReply({
 				content: stripIndents`
-					✨ Done! Giveaway published in ${channel}.
-
-					Here is a [link to your now perfected giveaway](<${message.url}>).
+				✨ Done! Giveaway published in ${channel}.
+				
+				Here is a [link to your now perfected giveaway](<${message.url}>).
 				`,
 				components: [],
 				embeds: []
 			});
+
+			logger.logInteraction(
+				`Republished giveaway #${giveaway.giveawayId} in ${channel.name} (${channelId})`
+			);
 
 			giveawayManager.edit({
 				where: {
@@ -255,6 +262,12 @@ export default async function toPublishingOptions(
 					components: [],
 					embeds: []
 				});
+
+				if (successOrURL) {
+					logger.logInteraction(
+						`Edited giveaway #${giveaway.giveawayId} in ${channel.name} (${channel.id})`
+					);
+				}
 			} else {
 				interaction.editReply({
 					content: successOrURL
@@ -263,6 +276,12 @@ export default async function toPublishingOptions(
 					components: [],
 					embeds: []
 				});
+
+				if (successOrURL) {
+					logger.logInteraction(
+						`Recalled giveaway #${giveaway.giveawayId} from ${channel.name} (${channel.id})`
+					);
+				}
 			}
 
 			if (successOrURL) {

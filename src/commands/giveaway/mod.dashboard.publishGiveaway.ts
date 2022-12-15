@@ -12,6 +12,7 @@ import {
 import { giveawayComponents } from "../../components/index.js";
 import type GiveawayManager from "../../database/giveaway.js";
 import lastEditBy from "../../helpers/lastEdit.js";
+import Logger from "../../logger/logger.js";
 import toDashboard from "./mod.dashboard.js";
 import formatGiveaway from "./mod.formatGiveaway.js";
 
@@ -126,6 +127,10 @@ export default async function toPublishGiveaway(
 				components: [],
 				embeds: []
 			});
+
+			new Logger({ prefix: "GIVEAWAY", interaction }).logInteraction(
+				`Published giveaway #${giveawayId} in ${channel.name} (${channelId})`
+			);
 
 			giveawayManager.edit({
 				where: {

@@ -7,6 +7,15 @@ import type {
 
 export type EventFn = (...args: Array<unknown>) => Promise<unknown> | unknown;
 
+export type Color =
+	| "black"
+	| "blue"
+	| "green"
+	| "grey"
+	| "red"
+	| "white"
+	| "yellow";
+
 export interface EventImport {
 	run: EventFn;
 }
