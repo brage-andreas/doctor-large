@@ -233,13 +233,7 @@ const dashboard = async (
 			return;
 		}
 
-		const components = [row1, row2].map((row) =>
-			row.setComponents(
-				row.components.map((component) => component.setDisabled(true))
-			)
-		);
-
-		msg.edit({ components }).catch(() => null);
+		msg.edit({ components: [] }).catch(() => null);
 	});
 };
 
