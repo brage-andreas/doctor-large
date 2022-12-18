@@ -16,12 +16,24 @@ model autorole {
   discordTimestamp String?
 }
 
+model giveawayWinner {
+  winnerId   Int             @id @default(autoincrement())
+  userId     String
+  giveawayId Int
+  prizes     giveawayPrize[]
+  accepted   Boolean
+
+  @@unique([userId, giveawayId])
+}
+
 model giveawayPrize {
-  prizeId        Int       @id @default(autoincrement())
-  giveaway       giveaway? @relation(fields: [giveawayId], references: [giveawayId])
-  giveawayId     Int    
+  prizeId        Int            @id @default(autoincrement())
+  giveaway       giveaway?      @relation(fields: [giveawayId], references: [giveawayId])
+  giveawayId     Int
+  winner         giveawayWinner? @relation(fields: [winnerId], references: [winnerId])
+  winnerId       Int?
   name           String
-  amount         Int       @default(1)
+  amount         Int            @default(1)
   additionalInfo String?
 }
 
@@ -30,24 +42,25 @@ model giveaway {
   guildRelativeId     Int
   giveawayTitle       String
   giveawayDescription String?
-  active              Boolean         @default(true)
-  numberOfWinners     Int             @default(1)
-  requiredRoles       String[]        @default([])
-  prizes              giveawayPrize[]
+  hostUserId          String
+  hostUserTag         String
   guildId             String
   channelId           String?
   messageId           String?
-  rolesToPing         String[]        @default([])
-  minimumAccountAge   String
-  hostUserId          String
-  hostUserTag         String
-  userEntriesIds      String[]        @default([])
+  active              Boolean         @default(true)
   lockEntries         Boolean         @default(false)
-  createdTimestamp    String
+  requiredRoles       String[]        @default([])
+  rolesToPing         String[]        @default([])
+  minimumAccountAge   String?
+  prizes              giveawayPrize[]
   lastEditedUserId    String?
   lastEditedUserTag   String?
   lastEditedTimestamp String?
+  createdTimestamp    String
   endTimestamp        String?
+  userEntriesIds      String[]        @default([])
+  numberOfWinners     Int             @default(1)
   winnerUserIds       String[]        @default([])
   winnerMessage       String?
+  winnerMessageId     String?
 }
