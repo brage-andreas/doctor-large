@@ -14,20 +14,32 @@ const importAndSetCommandIntoMap = async (relativePath: string) => {
 	commandMap.set(cmd.data.name, cmd);
 };
 
+const isFolder = (url: URL) => existsSync(url) && lstatSync(url).isDirectory();
+
 for (const fileOrFolderName of readdirSync(COMMAND_DIR)) {
 	const path = new URL(`../../commands/${fileOrFolderName}`, import.meta.url);
 
 	// if path exists and is a folder
-	if (existsSync(path) && lstatSync(path).isDirectory()) {
-		for (const fileName of readdirSync(path)) {
-			if (fileName.toLowerCase().startsWith("mod.")) {
+	if (isFolder(path)) {
+		for (const nestedFileOrFolderName of readdirSync(path)) {
+			if (nestedFileOrFolderName.toLowerCase().startsWith("mod.")) {
 				continue;
 			}
 
-			await importAndSetCommandIntoMap(`${fileOrFolderName}/${fileName}`);
+			const nestedPath = new URL(
+				`../../commands/${fileOrFolderName}/${nestedFileOrFolderName}`,
+				import.meta.url
+			);
+
+			if (isFolder(nestedPath)) {
+				continue;
+			}
+
+			await importAndSetCommandIntoMap(
+				`${fileOrFolderName}/${nestedFileOrFolderName}`
+			);
 		}
 	} else {
-		// fileOrFolderName is a filename
 		if (fileOrFolderName.toLowerCase().startsWith("mod.")) {
 			continue;
 		}
