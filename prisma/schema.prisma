@@ -21,7 +21,7 @@ model giveawayWinner {
   userId     String
   giveawayId Int
   prizes     giveawayPrize[]
-  accepted   Boolean
+  accepted   Boolean         @default(false)
 
   @@unique([userId, giveawayId])
 }
@@ -60,7 +60,6 @@ model giveaway {
   endTimestamp        String?
   userEntriesIds      String[]        @default([])
   numberOfWinners     Int             @default(1)
-  winnerUserIds       String[]        @default([])
-  winnerMessage       String?
   winnerMessageId     String?
+  winnerUserIds       String[]        @default([])
 }
