@@ -1,4 +1,9 @@
 import { type Prisma } from "@prisma/client";
+import {
+	type CompleteGiveaway,
+	type CompleteGiveawayPrize,
+	type CompleteGiveawayWinners
+} from "../typings/database.js";
 import prisma from "./prisma.js";
 
 export default class GiveawayManager {
@@ -9,18 +14,24 @@ export default class GiveawayManager {
 		this.guildId = guildId;
 	}
 
-	public async get(id: number) {
+	public async get(id: number): Promise<CompleteGiveaway | null> {
 		return await this.prisma.giveaway.findUnique({
 			where: {
 				giveawayId: id
 			},
 			include: {
-				prizes: true
+				prizes: {
+					include: {
+						winner: true
+					}
+				}
 			}
 		});
 	}
 
-	public async getPrizes(giveawayId: number) {
+	public async getPrizes(
+		giveawayId: number
+	): Promise<Array<CompleteGiveawayPrize>> {
 		return await this.prisma.giveawayPrize.findMany({
 			where: {
 				giveawayId
@@ -32,24 +43,37 @@ export default class GiveawayManager {
 		});
 	}
 
-	public async getWinners(giveawayId: number) {
+	public async getWinners(
+		giveawayId: number
+	): Promise<Array<CompleteGiveawayWinners>> {
 		return await this.prisma.giveawayWinner.findMany({
 			where: {
 				giveawayId
 			},
 			include: {
-				prizes: true
+				prizes: {
+					include: {
+						giveaway: true
+					}
+				}
 			}
 		});
 	}
 
-	public async getAll() {
+	public async getAll(): Promise<Array<CompleteGiveaway>> {
 		return await this.prisma.giveaway.findMany({
 			where: {
 				guildId: this.guildId
 			},
 			orderBy: {
 				giveawayId: "desc"
+			},
+			include: {
+				prizes: {
+					include: {
+						winner: true
+					}
+				}
 			}
 		});
 	}
@@ -88,9 +112,19 @@ export default class GiveawayManager {
 		});
 	}
 
-	public async createWinner(data: Prisma.giveawayWinnerCreateInput) {
-		return await this.prisma.giveawayWinner.create({
-			data
+	public async upsertWinner(data: Prisma.giveawayWinnerCreateInput) {
+		return await this.prisma.giveawayWinner.upsert({
+			create: data,
+			update: {
+				accepted: data.accepted,
+				prizes: data.prizes
+			},
+			where: {
+				userId_giveawayId: {
+					giveawayId: data.giveawayId,
+					userId: data.userId
+				}
+			}
 		});
 	}
 
