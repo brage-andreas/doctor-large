@@ -13,6 +13,9 @@ export default class GiveawayManager {
 		return await this.prisma.giveaway.findUnique({
 			where: {
 				giveawayId: id
+			},
+			include: {
+				prizes: true
 			}
 		});
 	}
@@ -21,6 +24,10 @@ export default class GiveawayManager {
 		return await this.prisma.giveawayPrize.findMany({
 			where: {
 				giveawayId
+			},
+			include: {
+				giveaway: true,
+				winner: true
 			}
 		});
 	}
@@ -29,6 +36,9 @@ export default class GiveawayManager {
 		return await this.prisma.giveawayWinner.findMany({
 			where: {
 				giveawayId
+			},
+			include: {
+				prizes: true
 			}
 		});
 	}
@@ -78,10 +88,8 @@ export default class GiveawayManager {
 		});
 	}
 
-	public async createWinners(
-		...data: Array<Prisma.giveawayWinnerCreateManyInput>
-	) {
-		return await this.prisma.giveawayWinner.createMany({
+	public async createWinner(data: Prisma.giveawayWinnerCreateInput) {
+		return await this.prisma.giveawayWinner.create({
 			data
 		});
 	}
