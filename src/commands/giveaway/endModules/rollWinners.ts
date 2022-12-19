@@ -2,13 +2,11 @@ import { type Guild } from "discord.js";
 import type GiveawayManager from "../../../database/giveaway.js";
 
 export const rollWinners = async (options: {
-	customNumberOfWinners?: number;
 	giveawayManager: GiveawayManager;
 	giveawayId: number;
 	guild: Guild;
 }) => {
-	const { customNumberOfWinners, giveawayManager, giveawayId, guild } =
-		options;
+	const { giveawayManager, giveawayId, guild } = options;
 
 	const giveaway = await giveawayManager.get(giveawayId);
 
@@ -16,12 +14,15 @@ export const rollWinners = async (options: {
 		return [];
 	}
 
-	// removes duplicates
-	const entries: Array<string> = [...new Set(giveaway.userEntriesIds)];
+	const unclaimedPrizes = giveaway.prizes.filter(
+		(prize) => !prize.winner?.accepted
+	);
 
 	const requiredRoles = giveaway.requiredRoles;
 	const minimumAccountAge = Number(giveaway.minimumAccountAge);
-	const numberToRoll = customNumberOfWinners ?? giveaway.numberOfWinners;
+
+	// removes duplicates
+	const entries = [...new Set(giveaway.userEntriesIds)];
 
 	const members = await guild.members.fetch({ force: true });
 
@@ -34,7 +35,7 @@ export const rollWinners = async (options: {
 
 		if (
 			minimumAccountAge &&
-			minimumAccountAge <= Date.now() - member.user.createdTimestamp
+			Date.now() - member.user.createdTimestamp < minimumAccountAge
 		) {
 			return false;
 		}
@@ -49,51 +50,57 @@ export const rollWinners = async (options: {
 		return true;
 	});
 
-	const entriesBucket: Set<string> = new Set(validEntrants);
-	let retries = 0;
+	if (validEntrants.length) {
+		const entriesBucket = new Set(validEntrants);
+		const fullEntriesBucket = new Set(validEntrants);
 
-	for (let i = 0; i < numberToRoll; i++) {
-		const prize = giveaway.prizes.at(i);
-		const rolledUserId = [...entriesBucket.values()].at(
-			Math.floor(Math.random() * entriesBucket.size)
-		);
+		const rollUserId = () => {
+			const random = (set: Set<string>) =>
+				[...set.values()].at(Math.floor(Math.random() * set.size));
 
-		if (!rolledUserId) {
-			// this is so it doesn't loop forever
-			// in case there are more prizes than entries
-			retries++;
-			i--;
-
-			if (4 < retries) {
-				break;
+			if (!entriesBucket.size) {
+				return random(fullEntriesBucket);
 			}
 
-			continue;
-		}
+			return random(entriesBucket);
+		};
 
-		retries = 0;
+		for (const prize of unclaimedPrizes) {
+			const rolledUserId = rollUserId()!;
 
-		const { winnerId } = await giveawayManager.createWinner({
-			giveawayId,
-			accepted: false,
-			userId: rolledUserId,
-			prizes: {
-				connect: {
-					prizeId: prize?.prizeId
+			const oldPrizes = giveaway.prizes
+				.filter(
+					(prize) =>
+						prize.winner?.userId === rolledUserId &&
+						prize.winner.accepted
+				)
+				.map((prize) => ({ prizeId: prize.prizeId }));
+
+			const { winnerId } = await giveawayManager.upsertWinner({
+				giveawayId,
+				accepted: false,
+				userId: rolledUserId,
+				prizes: {
+					connect: [
+						...oldPrizes,
+						{
+							prizeId: prize?.prizeId
+						}
+					]
 				}
-			}
-		});
+			});
 
-		await giveawayManager.editPrize({
-			where: {
-				prizeId: prize?.prizeId
-			},
-			data: {
-				winnerId
-			}
-		});
+			await giveawayManager.editPrize({
+				where: {
+					prizeId: prize?.prizeId
+				},
+				data: {
+					winnerId
+				}
+			});
 
-		entriesBucket.delete(rolledUserId);
+			entriesBucket.delete(rolledUserId);
+		}
 	}
 
 	return await giveawayManager

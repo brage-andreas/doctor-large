@@ -1,64 +1,71 @@
-import { type giveaway } from "@prisma/client";
 import { oneLine, stripIndents } from "common-tags";
 import { EmbedBuilder, PermissionFlagsBits, type Guild } from "discord.js";
-import GiveawayManager from "../../database/giveaway.js";
+import ms from "ms";
 import { listify } from "../../helpers/listify.js";
 import { longStamp, timestamp } from "../../helpers/timestamps.js";
+import { type CompleteGiveaway } from "../../typings/database.js";
 
-async function formatGiveaway(
-	data: giveaway,
+function formatGiveaway(
+	giveaway: CompleteGiveaway,
 	embed: true,
 	guild?: Guild
-): Promise<EmbedBuilder>;
-async function formatGiveaway(
-	data: giveaway,
+): EmbedBuilder;
+function formatGiveaway(
+	giveaway: CompleteGiveaway,
 	embed: false,
 	guild?: Guild
-): Promise<string>;
-async function formatGiveaway(
-	data: giveaway,
+): string;
+function formatGiveaway(
+	giveaway: CompleteGiveaway,
 	embed: boolean,
 	guild?: Guild
-): Promise<EmbedBuilder | string> {
-	const id = data.guildRelativeId;
-	const title = data.giveawayTitle;
-	const description = data.giveawayDescription;
-	const active = data.active;
-	const numberOfWinners = data.numberOfWinners;
-	const requiredRoles = data.requiredRoles;
-	const rolesToPing = data.rolesToPing;
-	const published = Boolean(data.messageId);
-	const hostId = data.hostUserId;
-	const hostTag = data.hostUserTag;
-	const entries = data.userEntriesIds.length;
-	const lockEntries = data.lockEntries;
-	const created = data.createdTimestamp;
-	const editUID = data.lastEditedUserId;
-	const editTag = data.lastEditedUserTag;
-	const editStamp = data.lastEditedTimestamp;
-	const endTimestamp = data.endTimestamp;
-	const winners = data.winnerUserIds;
-
-	const prizes = await new GiveawayManager(data.guildId).getPrizes(
-		data.giveawayId
-	);
+): EmbedBuilder | string {
+	const id = giveaway.guildRelativeId;
+	const title = giveaway.giveawayTitle;
+	const description = giveaway.giveawayDescription;
+	const active = giveaway.active;
+	const numberOfWinners = giveaway.numberOfWinners;
+	const requiredRoles = giveaway.requiredRoles;
+	const minimumAccountAge = giveaway.minimumAccountAge;
+	const rolesToPing = giveaway.rolesToPing;
+	const published = Boolean(giveaway.messageId);
+	const hostId = giveaway.hostUserId;
+	const hostTag = giveaway.hostUserTag;
+	const entries = giveaway.userEntriesIds.length;
+	const lockEntries = giveaway.lockEntries;
+	const created = giveaway.createdTimestamp;
+	const editUID = giveaway.lastEditedUserId;
+	const editTag = giveaway.lastEditedUserTag;
+	const editStamp = giveaway.lastEditedTimestamp;
+	const endTimestamp = giveaway.endTimestamp;
+	const winners = giveaway.prizes
+		.map((prize) => prize.winner)
+		.filter((e) => Boolean(e));
 
 	if (embed) {
 		const numberOfWinnersStr = `→ Number of winners: ${numberOfWinners}`;
 
-		const requiredRolesStr = requiredRoles.length
-			? `→ Roles required to enter: ${listify(
-					requiredRoles.map((roleId) => `<@&${roleId}>`),
-					{ length: 10 }
-			  )}`
-			: "→ This giveaway is open for everyone! Woo!";
+		const requiredRolesStr = `→ Roles required to enter: ${
+			requiredRoles.length
+				? listify(
+						requiredRoles.map((roleId) => `<@&${roleId}>`),
+						{ length: 10 }
+				  )
+				: "None"
+		}`;
+
+		const minimumAccountAgeStr = `→ Minimum account age: ${
+			minimumAccountAge
+				? ms(Number(minimumAccountAge), { long: true })
+				: "None"
+		}`;
 
 		const endStr = endTimestamp
 			? `→ The giveaway will end: ${longStamp(endTimestamp)}`
 			: "→ The giveaway has no set end date. Enter while you can!";
 
-		const prizesStr = prizes.length
-			? prizes
+		const prizesStr = giveaway.prizes.length
+			? giveaway.prizes
 					.map(
 						(prize) =>
 							`${prize.amount}x **${prize.name}** ${
@@ -77,6 +84,7 @@ async function formatGiveaway(
 			${numberOfWinnersStr}
 			${endStr}
 			${requiredRolesStr}
+			${minimumAccountAgeStr}
 
 			**Prizes**
 			${prizesStr}
@@ -97,6 +105,12 @@ async function formatGiveaway(
 				{ length: 5 }
 		  )}`
 		: "→ Required roles: None";
+
+	const minimumAccountAgeStr = `→ Minimum account age: ${
+		minimumAccountAge
+			? ms(Number(minimumAccountAge), { long: true })
+			: "None"
+	}`;
 
 	const pingRolesStr = rolesToPing.length
 		? `→ Ping roles (${rolesToPing.length}): ${listify(
@@ -128,8 +142,8 @@ async function formatGiveaway(
 		? `→ End date: ${longStamp(endTimestamp)}`
 		: "→ End date: ⚠️ The giveaway has no set end date. It will be open indefinitely!";
 
-	const prizesStr = prizes.length
-		? `**Prizes** (${prizes.length}):\n${prizes
+	const prizesStr = giveaway.prizes.length
+		? `**Prizes** (${giveaway.prizes.length}):\n${giveaway.prizes
 				.map(
 					(prize) =>
 						`→ ${prize.amount}x ${prize.name} ${
@@ -150,7 +164,7 @@ async function formatGiveaway(
 	}`;
 
 	const idStr = `#${id}`;
-	const absoluteIdStr = `#${data.giveawayId}`;
+	const absoluteIdStr = `#${giveaway.giveawayId}`;
 	const numberOfWinnersStr = `→ Number of winners: ${numberOfWinners}`;
 	const hostStr = `→ Host: ${hostTag} (${hostId})`;
 	const activeStr = `→ Active: ${active ? "Yes" : "No"}`;
@@ -159,15 +173,15 @@ async function formatGiveaway(
 	const createdStr = `→ Created: ${longStamp(created)}`;
 	const lockEntriesStr = `→ Entries locked: ${lockEntries ? "Yes" : "No"}`;
 	const messageUrl =
-		data.guildId && data.channelId && data.messageId
-			? `\n→ [Link to giveaway](<https://discord.com/channels/${data.guildId}/${data.channelId}/${data.messageId}>)`
-			: "";
+		giveaway.guildId && giveaway.channelId && giveaway.messageId
+			? `→ [Link to giveaway](<https://discord.com/channels/${giveaway.guildId}/${giveaway.channelId}/${giveaway.messageId}>)`
+			: null;
 
 	const winnersStr = winners.length
 		? `→ Winners (${winners.length}): ${winners
 				.map((id) => `<@${id}> (${id})`)
 				.join(", ")}`
-		: "→ No winners (yet)";
+		: "→ No winners";
 
 	const lastEditStr =
 		!editTag && !editUID && !editStamp
@@ -188,7 +202,7 @@ async function formatGiveaway(
 		${hostStr}
 		${createdStr}
 		${entriesStr}
-		${winnersStr}${messageUrl}
+		${winnersStr}${messageUrl ? `\n${messageUrl}` : ""}
 		
 		**Options**:
 		${endStr}
@@ -196,6 +210,7 @@ async function formatGiveaway(
 		${publishedStr}
 		${lockEntriesStr}
 		${numberOfWinnersStr}
+		${minimumAccountAgeStr}
 		${requiredRolesStr}
 		${pingRolesStr} ${pingRolesWarning ? `\n\n${pingRolesWarning}` : ""}
 

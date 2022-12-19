@@ -71,7 +71,7 @@ const dashboard = async (
 	);
 
 	const msg = await interaction.editReply({
-		content: await formatGiveaway(giveaway, false, interaction.guild),
+		content: formatGiveaway(giveaway, false, interaction.guild),
 		components: [row1, row2],
 		embeds: []
 	});
@@ -194,7 +194,7 @@ const dashboard = async (
 				break;
 			}
 
-			case "endGiveawayOptions": {
+			case "endGiveaway": {
 				await buttonInteraction.deferUpdate();
 
 				toEndGiveaway(buttonInteraction, giveawayId, giveawayManager);

@@ -1,31 +1,39 @@
-import { type giveaway, type giveawayPrize } from "@prisma/client";
 import { stripIndents } from "common-tags";
-import { EmbedBuilder, type GuildTextBasedChannel } from "discord.js";
+import {
+	EmbedBuilder,
+	type GuildTextBasedChannel,
+	type Message
+} from "discord.js";
 import GiveawayManager from "../../../database/giveaway.js";
 import { listify } from "../../../helpers/listify.js";
+import { type CompleteGiveaway } from "../../../typings/database.js";
 
-const getWinnersEmbed = (
-	giveaway: giveaway & {
-		prizes: Array<giveawayPrize>;
-	}
-) => {
-	const winners = giveaway.winnerUserIds;
+const getWinnersEmbed = (giveaway: CompleteGiveaway) => {
+	const winners = giveaway.prizes
+		.map((prize) => prize.winner?.userId)
+		.filter((e) => Boolean(e));
 
 	const data = giveaway.prizes
-		.map((prize) => `→ <@${prize.winnerId}> won **1x ${prize.name}**`)
+		.map(
+			(prize) =>
+				prize.winner?.userId &&
+				`→ <@${prize.winner.userId}> won **1x ${prize.name}**`
+		)
+		.filter((e) => Boolean(e))
 		.join("\n");
 
-	const embed = new EmbedBuilder().setFooter({
-		text: `Winners of giveaway #${giveaway.guildRelativeId}`
-	});
+	const embed = new EmbedBuilder()
+		.setColor("#2d7d46")
+		.setTitle(`🎉 Giveaway #${giveaway.guildRelativeId} has ended!`)
+		.setFooter({
+			text: `Giveaway #${giveaway.guildRelativeId} • Hosted by ${giveaway.hostUserTag}`
+		});
 
 	embed.setDescription(stripIndents`
-		🎉 Giveaway #${giveaway.guildRelativeId} has ended!
-
 		The winners are: ${
 			winners.length
 				? listify(
-						winners.map((id) => `<@${id}>`),
+						[...new Set(winners)].map((id) => `<@${id}>`),
 						{ length: winners.length }
 				  )
 				: "No winners"
@@ -56,12 +64,43 @@ export default async function publishWinners(
 			? await channel.messages.fetch(giveaway.messageId)
 			: null;
 
+	if (giveaway.winnerMessageId) {
+		await channel.messages
+			.delete(giveaway.winnerMessageId)
+			.catch(() => null);
+	}
+
+	const winnerIds = [
+		...new Set(
+			giveaway.prizes
+				.map((prize) => prize.winner?.userId)
+				.filter((e) => Boolean(e)) as Array<string>
+		)
+	];
+
+	let message: Message<true>;
+
 	if (giveawayMessage) {
-		giveawayMessage.reply({
-			embeds: [getWinnersEmbed(giveaway)],
-			failIfNotExists: false
+		message = await giveawayMessage.reply({
+			allowedMentions: { users: winnerIds },
+			failIfNotExists: false,
+			content: winnerIds.map((id) => `<@${id}>`).join(" "),
+			embeds: [getWinnersEmbed(giveaway)]
 		});
 	} else {
-		channel.send({ embeds: [getWinnersEmbed(giveaway)] });
+		message = await channel.send({
+			allowedMentions: { users: winnerIds },
+			content: winnerIds.map((id) => `<@${id}>`).join(" "),
+			embeds: [getWinnersEmbed(giveaway)]
+		});
 	}
+
+	await giveawayManager.edit({
+		where: {
+			giveawayId
+		},
+		data: {
+			winnerMessageId: message.id
+		}
+	});
 }

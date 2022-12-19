@@ -1,4 +1,4 @@
-import { stripIndents } from "common-tags";
+import { oneLine, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
@@ -95,17 +95,6 @@ export default async function toEndGiveaway(
 		guild: interaction.guild
 	});
 
-	await giveawayManager.edit({
-		where: {
-			giveawayId: giveaway.giveawayId
-		},
-		data: {
-			lockEntries: true,
-			active: false,
-			winnerUserIds: winners
-		}
-	});
-
 	const publishWinnersNow = await yesNo({
 		filter: (i) => i.user.id === interaction.user.id,
 		yesStyle: ButtonStyle.Secondary,
@@ -127,7 +116,19 @@ export default async function toEndGiveaway(
 	});
 
 	if (publishWinnersNow) {
-		return await publishWinners(channel, giveawayId);
+		await publishWinners(channel, giveawayId);
+
+		await interaction.editReply({
+			content: oneLine`
+				Done! Winners of giveaway
+				#${giveaway.guildRelativeId}
+				are published in ${channel}!
+			`,
+			components: [],
+			embeds: []
+		});
+
+		return;
 	}
 
 	await toDashboard(interaction, giveawayId);
