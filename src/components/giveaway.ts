@@ -243,12 +243,12 @@ const manageGiveawayPrizesButton = new ButtonBuilder()
 	.setLabel("Manage prizes");
 
 /**
- * ID: endGiveawayOptions
+ * ID: endGiveaway
  */
-const endGiveawayOptionsButton = new ButtonBuilder()
-	.setCustomId("endGiveawayOptions")
+const endGiveawayButton = new ButtonBuilder()
+	.setCustomId("endGiveaway")
 	.setStyle(ButtonStyle.Primary)
-	.setLabel("End options");
+	.setLabel("End giveaway");
 
 /**
  * ID: resetData
@@ -387,9 +387,9 @@ export const giveaway = {
 			managePrizesButton: () => manageGiveawayPrizesButton,
 
 			/**
-			 * ID: endGiveawayOptions
+			 * ID: endGiveaway
 			 */
-			endGiveawayOptionsButton: () => endGiveawayOptionsButton,
+			endGiveawayButton: () => endGiveawayButton,
 
 			/**
 			 * ID: resetData
