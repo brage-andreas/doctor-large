@@ -10,16 +10,16 @@ import {
 import { giveawayComponents } from "../../components/index.js";
 import GiveawayManager from "../../database/giveaway.js";
 import lastEditBy from "../../helpers/lastEdit.js";
-import toDeleteGiveaway from "./mod.dashboard.deleteGiveaway.js";
-import toEditGiveaway from "./mod.dashboard.editGiveaway.js";
-import toEndGiveawayOptions from "./mod.dashboard.endGiveawayOptions.js";
-import toManagePrizes from "./mod.dashboard.managePrizes.js";
-import toPublishGiveaway from "./mod.dashboard.publishGiveaway.js";
-import toResetData from "./mod.dashboard.resetData.js";
-import toSetEndDate from "./mod.dashboard.setEndDate.js";
-import toSetPingRoles from "./mod.dashboard.setPingRoles.js";
-import toSetRequiredRoles from "./mod.dashboard.setRequiredRoles.js";
-import toPublishingOptions from "./mod.dashboard.toPublishingOptions.js";
+import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
+import toEditGiveaway from "./dashboardModules/editGiveaway.js";
+import toManagePrizes from "./dashboardModules/managePrizes.js";
+import toPublishGiveaway from "./dashboardModules/publishGiveaway.js";
+import toResetData from "./dashboardModules/resetData.js";
+import toSetEndDate from "./dashboardModules/setEndDate.js";
+import toSetPingRoles from "./dashboardModules/setPingRoles.js";
+import toSetRequiredRoles from "./dashboardModules/setRequiredRoles.js";
+import toPublishingOptions from "./dashboardModules/toPublishingOptions.js";
+import toEndGiveaway from "./mod.dashboard.endGiveaway.js";
 import formatGiveaway from "./mod.formatGiveaway.js";
 
 const dashboard = async (
@@ -65,7 +65,7 @@ const dashboard = async (
 	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		giveawayComponents.dashboard.row2.editButton(),
 		giveawayComponents.dashboard.row2.managePrizesButton(),
-		giveawayComponents.dashboard.row2.endGiveawayOptionsButton(),
+		giveawayComponents.dashboard.row2.endGiveawayButton(),
 		giveawayComponents.dashboard.row2.resetDataButton(),
 		giveawayComponents.dashboard.row2.deleteGiveawayButton()
 	);
@@ -197,11 +197,7 @@ const dashboard = async (
 			case "endGiveawayOptions": {
 				await buttonInteraction.deferUpdate();
 
-				toEndGiveawayOptions(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
+				toEndGiveaway(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}

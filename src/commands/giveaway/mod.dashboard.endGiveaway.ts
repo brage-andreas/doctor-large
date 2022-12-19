@@ -1,91 +1,17 @@
-import { type giveaway } from "@prisma/client";
 import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
 	ButtonStyle,
-	type ButtonInteraction,
-	type Guild
+	type ButtonInteraction
 } from "discord.js";
 import type GiveawayManager from "../../database/giveaway.js";
 import yesNo from "../../helpers/yesNo.js";
+import publishWinners from "./endModules/publishWinners.js";
+import { rollWinners } from "./endModules/rollWinners.js";
 import toDashboard from "./mod.dashboard.js";
 
-export const rollWinners = async (options: {
-	customNumberOfWinners?: number;
-	giveaway: giveaway;
-	guild: Guild;
-}) => {
-	const { giveaway, customNumberOfWinners, guild } = options;
-
-	// removes duplicates
-	const entries: Array<string> = [...new Set(giveaway.userEntriesIds)];
-
-	const requiredRoles = giveaway.requiredRoles;
-	const minimumAccountAge = Number(giveaway.minimumAccountAge);
-	const numberToRoll = customNumberOfWinners ?? giveaway.numberOfWinners;
-
-	const members = await guild.members.fetch({ force: true });
-
-	const validEntrants = entries.filter((userId) => {
-		const member = members.get(userId);
-
-		if (!member) {
-			return false;
-		}
-
-		if (
-			minimumAccountAge &&
-			minimumAccountAge <= Date.now() - member.user.createdTimestamp
-		) {
-			return false;
-		}
-
-		if (
-			requiredRoles.length &&
-			!member.roles.cache.hasAll(...requiredRoles)
-		) {
-			return false;
-		}
-
-		return true;
-	});
-
-	const bucket: Set<string> = new Set(validEntrants);
-	const pool: Set<string> = new Set();
-	let retries = 0;
-
-	for (let i = 0; i < numberToRoll; i++) {
-		const winnerId = [...bucket.values()].at(
-			Math.floor(Math.random() * bucket.size)
-		);
-
-		// this should never happen
-		if (!winnerId) {
-			retries++;
-			i--;
-
-			if (4 < retries) {
-				break;
-			}
-
-			continue;
-		}
-
-		retries = 0;
-
-		pool.add(winnerId);
-		bucket.delete(winnerId);
-	}
-
-	return [...pool.values()];
-};
-
-export const publishWinners = async () => {
-	//
-};
-
-export default async function toEndGiveawayOptions(
+export default async function toEndGiveaway(
 	interaction: ButtonInteraction<"cached">,
 	giveawayId: number,
 	giveawayManager: GiveawayManager
@@ -126,9 +52,23 @@ export default async function toEndGiveawayOptions(
 		return toDashboard(interaction, giveawayId);
 	}
 
-	const channel = interaction.guild.channels.cache.get(
-		giveaway.channelId ?? ""
-	);
+	if (!giveaway.channelId) {
+		await interaction.editReply({
+			content: "⚠️ The giveaway has never been published."
+		});
+
+		return;
+	}
+
+	const channel = interaction.guild.channels.cache.get(giveaway.channelId);
+
+	if (!channel?.isTextBased()) {
+		await interaction.editReply(
+			"⚠️ This channel does not exist, or is not a text channel."
+		);
+
+		return;
+	}
 
 	const message =
 		(channel?.isTextBased() &&
@@ -150,7 +90,8 @@ export default async function toEndGiveawayOptions(
 	});
 
 	const winners = await rollWinners({
-		giveaway,
+		giveawayManager,
+		giveawayId,
 		guild: interaction.guild
 	});
 
@@ -165,19 +106,7 @@ export default async function toEndGiveawayOptions(
 		}
 	});
 
-	const x = await giveawayManager.getWinners(giveawayId);
-
-	if (!x.length) {
-		await giveawayManager.createWinners(
-			...winners.map((userId) => ({
-				giveawayId,
-				accepted: false,
-				userId
-			}))
-		);
-	}
-
-	const publishWinners = await yesNo({
+	const publishWinnersNow = await yesNo({
 		filter: (i) => i.user.id === interaction.user.id,
 		yesStyle: ButtonStyle.Secondary,
 		noStyle: ButtonStyle.Secondary,
@@ -197,5 +126,9 @@ export default async function toEndGiveawayOptions(
 		}
 	});
 
-	// await toDashboard(interaction, giveawayId);
+	if (publishWinnersNow) {
+		return await publishWinners(channel, giveawayId);
+	}
+
+	await toDashboard(interaction, giveawayId);
 }

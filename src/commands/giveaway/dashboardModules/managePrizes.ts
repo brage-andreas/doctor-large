@@ -1,8 +1,8 @@
 import { type ButtonInteraction } from "discord.js";
-import type GiveawayManager from "../../database/giveaway.js";
-import toDashboard from "./mod.dashboard.js";
+import type GiveawayManager from "../../../database/giveaway.js";
+import toDashboard from "../mod.dashboard.js";
 
-export default async function toSetEndDate(
+export default async function toManagePrizes(
 	interaction: ButtonInteraction<"cached">,
 	giveawayId: number,
 	giveawayManager: GiveawayManager
