@@ -1,8 +1,9 @@
-import { type giveaway, type Prisma } from "@prisma/client";
-import { oneLine, stripIndents } from "common-tags";
-import { EmbedBuilder, type Client } from "discord.js";
-import { listify } from "../helpers/listify.js";
-import { timestamp } from "../helpers/timestamps.js";
+import { type Prisma } from "@prisma/client";
+import {
+	type CompleteGiveaway,
+	type CompleteGiveawayPrize,
+	type CompleteGiveawayWinners
+} from "../typings/database.js";
 import prisma from "./prisma.js";
 
 export default class GiveawayManager {
@@ -13,46 +14,69 @@ export default class GiveawayManager {
 		this.guildId = guildId;
 	}
 
-	public async get(id: number) {
+	public async get(id: number): Promise<CompleteGiveaway | null> {
 		return await this.prisma.giveaway.findUnique({
 			where: {
 				giveawayId: id
+			},
+			include: {
+				prizes: {
+					include: {
+						winner: true
+					}
+				}
 			}
 		});
 	}
 
-	public async getPrizes(id: number) {
+	public async getPrizes(
+		giveawayId: number
+	): Promise<Array<CompleteGiveawayPrize>> {
 		return await this.prisma.giveawayPrize.findMany({
 			where: {
-				giveawayId: id
+				giveawayId
+			},
+			include: {
+				giveaway: true,
+				winner: true
 			}
 		});
 	}
 
-	public async getAll() {
+	public async getWinners(
+		giveawayId: number
+	): Promise<Array<CompleteGiveawayWinners>> {
+		return await this.prisma.giveawayWinner.findMany({
+			where: {
+				giveawayId
+			},
+			include: {
+				prizes: {
+					include: {
+						giveaway: true
+					}
+				}
+			}
+		});
+	}
+
+	public async getAll(): Promise<Array<CompleteGiveaway>> {
 		return await this.prisma.giveaway.findMany({
 			where: {
 				guildId: this.guildId
 			},
 			orderBy: {
 				giveawayId: "desc"
+			},
+			include: {
+				prizes: {
+					include: {
+						winner: true
+					}
+				}
 			}
 		});
 	}
-
-	/*public async getLatest(currentId?: number) {
-		return await this.prisma.giveaway.findFirst({
-			where: {
-				guildId: this.guildId,
-				NOT: {
-					giveawayId: currentId
-				}
-			},
-			orderBy: {
-				giveawayId: "desc"
-			}
-		});
-	}*/
 
 	public async getWithOffset(offset: number, limit = 5) {
 		return await this.prisma.giveaway.findMany({
@@ -88,6 +112,22 @@ export default class GiveawayManager {
 		});
 	}
 
+	public async upsertWinner(data: Prisma.giveawayWinnerCreateInput) {
+		return await this.prisma.giveawayWinner.upsert({
+			create: data,
+			update: {
+				accepted: data.accepted,
+				prizes: data.prizes
+			},
+			where: {
+				userId_giveawayId: {
+					giveawayId: data.giveawayId,
+					userId: data.userId
+				}
+			}
+		});
+	}
+
 	public async edit(args: Prisma.giveawayUpdateArgs) {
 		return await this.prisma.giveaway.update(args);
 	}
@@ -96,55 +136,7 @@ export default class GiveawayManager {
 		return await this.prisma.giveawayPrize.update(args);
 	}
 
-	public toEmbed(data: giveaway, client: Client) {
-		const lockedStr = data.lockEntries
-			? "🔒 Entries are currently locked."
-			: null;
-
-		const roleGateStr = data.requiredRoles.length
-			? "🔒 You need specific roles to enter this Giveaway."
-			: null;
-
-		const roles = client.guilds.cache
-			.get(data.guildId)
-			?.roles.cache.filter((role) => data.requiredRoles.includes(role.id))
-			.sort((a, b) => a.position - b.position)
-			.map((role) => role.toString());
-
-		const rolesStr = roles && listify(roles, { length: 5 });
-
-		const timestampInfo = data.endTimestamp
-			? oneLine`
-				• The Giveaway closes
-				${timestamp(data.endTimestamp, "F")}
-				(${timestamp(data.endTimestamp, "R")}).
-				Until then, cross your fingers 🤞
-			`
-			: "• The Giveaway is open indefinitely. Enter while you can!";
-
-		const numberOfWinnersInfo = oneLine`
-			• There can be ${data.numberOfWinners}
-			winner${data.numberOfWinners === 1 ? "" : "s"}! 😁
-		`;
-
-		const requiredRolesInfo =
-			rolesStr && `• Roles required to enter: ${rolesStr}`;
-
-		return new EmbedBuilder()
-			.setTitle(data.giveawayTitle)
-			.setDescription(
-				stripIndents`
-					${lockedStr ? lockedStr : roleGateStr ? roleGateStr : ""}
-					
-					${data.giveawayDescription}
-
-					${timestampInfo}\n${numberOfWinnersInfo}\n${requiredRolesInfo ?? ""}`
-			)
-			.setFooter({ text: `${data.hostUserTag} (${data.hostUserId})` })
-			.setTimestamp(Number(data.createdTimestamp))
-			.addFields({
-				name: "Prizes",
-				value: "WIP"
-			});
+	public async editWinner(args: Prisma.giveawayWinnerUpdateArgs) {
+		return await this.prisma.giveawayWinner.update(args);
 	}
 }

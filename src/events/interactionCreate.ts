@@ -4,6 +4,7 @@ import { REGEXP } from "../constants.js";
 import GiveawayManager from "../database/giveaway.js";
 import { listify } from "../helpers/listify.js";
 import commandMap from "../helpers/scripts/commandMap.js";
+import { timestamp } from "../helpers/timestamps.js";
 import Logger from "../logger/logger.js";
 
 export async function run(interaction: Interaction) {
@@ -108,6 +109,30 @@ export async function run(interaction: Interaction) {
 									? listify(rolesTheyNeed, { length: 10 })
 									: "No roles... what? Try again."
 							}
+						`,
+					ephemeral: true
+				});
+
+				return;
+			}
+
+			const minimumAccountAge =
+				giveaway.minimumAccountAge &&
+				Number(giveaway.minimumAccountAge);
+
+			const accountAge = Date.now() - interaction.user.createdTimestamp;
+
+			if (minimumAccountAge && accountAge < minimumAccountAge) {
+				const whenTheyWillBeOldEnough = timestamp(
+					Date.now() + minimumAccountAge - accountAge,
+					"R"
+				);
+
+				interaction.followUp({
+					content: stripIndents`
+							🔒 Sorry, your account isn't old enough to enter.
+
+							Your account will be old enough ${whenTheyWillBeOldEnough}.
 						`,
 					ephemeral: true
 				});

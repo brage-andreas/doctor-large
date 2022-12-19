@@ -9,25 +9,28 @@ import {
 	type Interaction,
 	type MessageEditOptions
 } from "discord.js";
+import { EMOJIS } from "../constants.js";
 
-export default async function yesNo(
-	medium: Exclude<Interaction, AutocompleteInteraction> | Message,
-	data: Exclude<MessageEditOptions, "Components">,
-	filter: (interaction: ButtonInteraction) => boolean,
-	options?: {
-		yesStyle?: ButtonStyle;
-		noStyle?: ButtonStyle;
-		time?: number;
-	}
-) {
+export default async function yesNo(options: {
+	yesStyle?: ButtonStyle;
+	noStyle?: ButtonStyle;
+	medium: Exclude<Interaction, AutocompleteInteraction> | Message;
+	time?: number;
+	data: Exclude<MessageEditOptions, "Components">;
+	filter(interaction: ButtonInteraction): boolean;
+}) {
+	const { yesStyle, noStyle, medium, time, data, filter } = options;
+
 	const yesButton = new ButtonBuilder()
 		.setCustomId("yes")
-		.setStyle(options?.yesStyle ?? ButtonStyle.Success)
+		.setEmoji(EMOJIS.V)
+		.setStyle(yesStyle ?? ButtonStyle.Success)
 		.setLabel("Yes");
 
 	const noButton = new ButtonBuilder()
 		.setCustomId("no")
-		.setStyle(options?.noStyle ?? ButtonStyle.Danger)
+		.setEmoji(EMOJIS.X)
+		.setStyle(noStyle ?? ButtonStyle.Danger)
 		.setLabel("No");
 
 	const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -46,10 +49,12 @@ export default async function yesNo(
 	const response = await message
 		.awaitMessageComponent({
 			componentType: ComponentType.Button,
-			time: options?.time ?? 60_000,
+			time: time ?? 60_000,
 			filter
 		})
 		.catch(() => null);
+
+	await response?.deferUpdate();
 
 	return response?.customId === "yes";
 }

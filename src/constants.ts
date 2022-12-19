@@ -10,8 +10,10 @@ export const REGEXP = {
 };
 
 export const EMOJIS = {
-	X: "<:x:934561586419490876>",
-	V: "<:v:934561586394333234>"
+	OFF: "<:OFF:1047914155929256026>",
+	ON: "<:ON:1047914157409828934>",
+	V: "<:YES:1054081028962136104>",
+	X: "<:NO:1054081030107185252>"
 } as const;
 
 export const INTENTS: Array<GatewayIntentBits> = [

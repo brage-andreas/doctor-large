@@ -4,6 +4,7 @@ import {
 	PermissionFlagsBits,
 	type ChatInputCommandInteraction
 } from "discord.js";
+import { EMOJIS } from "../../constants.js";
 
 export default function formatAutorole(
 	interaction: ChatInputCommandInteraction<"cached">,
@@ -15,8 +16,8 @@ export default function formatAutorole(
 		) ?? false;
 
 	const description = autorole?.activated
-		? "<:ON:1047914157409828934> Currently toggled **on**"
-		: "<:OFF:1047914155929256026> Currently toggled **off**";
+		? `${EMOJIS.ON} Currently toggled **on**`
+		: `${EMOJIS.OFF} Currently toggled **off**`;
 
 	const roles = autorole?.roleIds.length
 		? autorole.roleIds
