@@ -1,6 +1,6 @@
 import { oneLine, stripIndents } from "common-tags";
 import { type Interaction } from "discord.js";
-import { REGEXP } from "../constants.js";
+import { EMOJIS, REGEXP } from "../constants.js";
 import GiveawayManager from "../database/giveaway.js";
 import { listify } from "../helpers/listify.js";
 import commandMap from "../helpers/scripts/commandMap.js";
@@ -58,7 +58,11 @@ export async function run(interaction: Interaction) {
 		!interaction.isContextMenuCommand() &&
 		!interaction.isAutocomplete()
 	) {
-		if (interaction.isButton()) {
+		if (!interaction.isButton()) {
+			return;
+		}
+
+		if (REGEXP.GIVEAWAY_ENTRY_BUTTON_CUSTOM_ID.test(interaction.customId)) {
 			const giveawayId = interaction.customId.match(
 				REGEXP.GIVEAWAY_ENTRY_BUTTON_CUSTOM_ID
 			)?.groups?.id;
@@ -172,6 +176,101 @@ export async function run(interaction: Interaction) {
 						
 						🎉 You are **now entered** into giveaway #${giveaway.guildRelativeId}. Best of luck!
 						`,
+					ephemeral: true
+				});
+
+				new Logger({
+					color: "grey",
+					prefix: "GIVEAWAY"
+				}).log(
+					oneLine`
+						User ${interaction.user.tag} (${interaction.user.id})
+						entered giveaway #${giveaway.giveawayId}
+					`
+				);
+			}
+
+			giveawayManager.edit({
+				where: {
+					giveawayId: Number(giveawayId)
+				},
+				data: {
+					userEntriesIds: [...entrants]
+				}
+			});
+		}
+
+		if (
+			REGEXP.GIVEAWAY_ACCEPT_PRIZE_BUTTON_CUSTOM_ID.test(
+				interaction.customId
+			)
+		) {
+			const giveawayId = interaction.customId.match(
+				REGEXP.GIVEAWAY_ENTRY_BUTTON_CUSTOM_ID
+			)?.groups?.id;
+
+			if (!giveawayId) {
+				return;
+			}
+
+			await interaction.deferReply({ ephemeral: true });
+
+			const giveawayManager = new GiveawayManager(interaction.guildId);
+
+			const giveaway = await giveawayManager.get(Number(giveawayId));
+
+			if (!giveaway) {
+				return;
+			}
+
+			const winners = new Set(
+				giveaway.prizes
+					.map((prize) => prize.winner?.userId)
+					.filter((e) => Boolean(e))
+			);
+
+			if (!winners.has(interaction.user.id)) {
+				interaction.followUp({
+					content: stripIndents`
+						💔 You don't have any prizes to claim.
+						
+						Better luck next time. 😊
+					`,
+					ephemeral: true
+				});
+
+				return;
+			}
+
+			const prize = giveaway.prizes.find(prize => prize.winner?.userId === interaction.user.id)
+
+			if (!prize || !prize.winner) {
+				//
+
+				return
+			}
+
+			if (prize.winner.accepted) {
+				interaction.followUp({
+					content: stripIndents`
+						${EMOJIS.V} You have already claimed your prize.
+						
+						You're all set! 😁
+					`,
+					ephemeral: true
+				});
+
+				return;
+			}
+
+
+				interaction.followUp({
+					content: stripIndents`
+						🎉 You have **now claimed** your prize! Woo!
+						
+						To remind you of your extrodinary success:
+						You won ${prize.amount}x **${prize.name}** in giveaway #${giveaway.guildRelativeId}.${prize.additionalInfo ? `\n→ ${prize.additionalInfo}` : ""}
+					`,
 					ephemeral: true
 				});
 
