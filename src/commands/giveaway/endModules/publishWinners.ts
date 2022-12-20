@@ -1,5 +1,8 @@
 import { stripIndents } from "common-tags";
 import {
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
 	EmbedBuilder,
 	type GuildTextBasedChannel,
 	type Message
@@ -80,18 +83,30 @@ export default async function publishWinners(
 
 	let message: Message<true>;
 
+	const acceptPrizeButton = new ButtonBuilder()
+		.setCustomId(`accept-prize-${giveawayId}`)
+		.setLabel("Accept prize")
+		.setEmoji("🤩")
+		.setStyle(ButtonStyle.Success);
+
+	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
+		acceptPrizeButton
+	);
+
 	if (giveawayMessage) {
 		message = await giveawayMessage.reply({
 			allowedMentions: { users: winnerIds },
 			failIfNotExists: false,
 			content: winnerIds.map((id) => `<@${id}>`).join(" "),
-			embeds: [getWinnersEmbed(giveaway)]
+			embeds: [getWinnersEmbed(giveaway)],
+			components: [row]
 		});
 	} else {
 		message = await channel.send({
 			allowedMentions: { users: winnerIds },
 			content: winnerIds.map((id) => `<@${id}>`).join(" "),
-			embeds: [getWinnersEmbed(giveaway)]
+			embeds: [getWinnersEmbed(giveaway)],
+			components: [row]
 		});
 	}
 
