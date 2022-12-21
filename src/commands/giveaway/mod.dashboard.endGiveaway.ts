@@ -7,6 +7,7 @@ import {
 } from "discord.js";
 import type GiveawayManager from "../../database/giveaway.js";
 import yesNo from "../../helpers/yesNo.js";
+import Logger from "../../logger/logger.js";
 import publishWinners from "./endModules/publishWinners.js";
 import { rollWinners } from "./endModules/rollWinners.js";
 import toDashboard from "./mod.dashboard.js";
@@ -88,6 +89,12 @@ export default async function toEndGiveaway(
 			)
 		]
 	});
+
+	new Logger({
+		prefix: "GIVEAWAY",
+		color: "red",
+		interaction
+	}).logInteraction(`Ended giveaway #${giveawayId}`);
 
 	const winners = await rollWinners({
 		giveawayManager,

@@ -9,6 +9,7 @@ import {
 } from "discord.js";
 import GiveawayManager from "../../../database/giveaway.js";
 import { listify } from "../../../helpers/listify.js";
+import Logger from "../../../logger/logger.js";
 import { type CompleteGiveaway } from "../../../typings/database.js";
 
 const getWinnersEmbed = (giveaway: CompleteGiveaway) => {
@@ -109,6 +110,12 @@ export default async function publishWinners(
 			components: [row]
 		});
 	}
+
+	new Logger({
+		prefix: "GIVEAWAY"
+	}).log(
+		`Winners of giveaway #${giveawayId} published in #${channel.name} (${channel.id})`
+	);
 
 	await giveawayManager.edit({
 		where: {
