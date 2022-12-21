@@ -5,9 +5,9 @@ export const COMMAND_DIR = new URL("./commands", import.meta.url);
 export const EVENT_DIR = new URL("./events", import.meta.url);
 
 export const REGEXP = {
-	ID: /^\d{17,19}$/,
-	GIVEAWAY_ENTRY_BUTTON_CUSTOM_ID: /^enter-giveaway-(?<id>\d+)$/,
-	GIVEAWAY_ACCEPT_PRIZE_BUTTON_CUSTOM_ID: /^accept-prize-(?<id>\d+)$/
+	ENTER_GIVEAWAY_CUSTOM_ID: /^enter-giveaway-(?<id>\d+)$/,
+	ACCEPT_PRIZE_CUSTOM_ID: /^accept-prize-(?<id>\d+)$/,
+	ID: /^\d{17,19}$/
 };
 
 export const EMOJIS = {
