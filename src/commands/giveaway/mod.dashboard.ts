@@ -12,6 +12,7 @@ import GiveawayManager from "../../database/giveaway.js";
 import lastEditBy from "../../helpers/lastEdit.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import toEditGiveaway from "./dashboardModules/editGiveaway.js";
+import toEndGiveaway from "./dashboardModules/endGiveaway.js";
 import toManagePrizes from "./dashboardModules/managePrizes.js";
 import toPublishGiveaway from "./dashboardModules/publishGiveaway.js";
 import toPublishingOptions from "./dashboardModules/publishingOptions.js";
@@ -19,16 +20,16 @@ import toResetData from "./dashboardModules/resetData.js";
 import toSetEndDate from "./dashboardModules/setEndDate.js";
 import toSetPingRoles from "./dashboardModules/setPingRoles.js";
 import toSetRequiredRoles from "./dashboardModules/setRequiredRoles.js";
-import toEndGiveaway from "./mod.dashboard.endGiveaway.js";
+import toEndedDashboard from "./mod.endedGiveawayDashboard.js";
 import formatGiveaway from "./mod.formatGiveaway.js";
 
-const dashboard = async (
+export default async function toDashboard(
 	interaction:
 		| ButtonInteraction<"cached">
 		| CommandInteraction<"cached">
 		| ModalSubmitInteraction<"cached">,
 	giveawayId: number
-) => {
+) {
 	const giveawayManager = new GiveawayManager(interaction.guildId);
 	const giveaway = await giveawayManager.get(giveawayId);
 
@@ -42,6 +43,12 @@ const dashboard = async (
 			components: [],
 			embeds: []
 		});
+
+		return;
+	}
+
+	if (!giveaway.active) {
+		await toEndedDashboard(interaction, giveawayManager, giveaway);
 
 		return;
 	}
@@ -128,7 +135,7 @@ const dashboard = async (
 					}
 				});
 
-				dashboard(buttonInteraction, giveawayId);
+				toDashboard(buttonInteraction, giveawayId);
 
 				break;
 			}
@@ -144,7 +151,7 @@ const dashboard = async (
 					}
 				});
 
-				dashboard(buttonInteraction, giveawayId);
+				toDashboard(buttonInteraction, giveawayId);
 
 				break;
 			}
@@ -231,14 +238,4 @@ const dashboard = async (
 
 		msg.edit({ components: [] }).catch(() => null);
 	});
-};
-
-export default async function toDashboard(
-	interaction:
-		| ButtonInteraction<"cached">
-		| CommandInteraction<"cached">
-		| ModalSubmitInteraction<"cached">,
-	giveawayId: number
-) {
-	await dashboard(interaction, giveawayId);
 }

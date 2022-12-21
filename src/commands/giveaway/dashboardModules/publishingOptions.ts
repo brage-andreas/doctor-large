@@ -62,7 +62,7 @@ export default async function toPublishingOptions(
 		const updateMsg = await interaction.editReply({
 			content: chooseChannelStr,
 			components: [row1, row2],
-			embeds: [await formatGiveaway(giveaway, true, interaction.guild)]
+			embeds: [formatGiveaway(giveaway, true, interaction.guild)]
 		});
 
 		const componentInteraction = await updateMsg.awaitMessageComponent({
@@ -128,9 +128,7 @@ export default async function toPublishingOptions(
 				allowedMentions: {
 					roles: giveaway.rolesToPing
 				},
-				embeds: [
-					await formatGiveaway(giveaway, true, interaction.guild)
-				],
+				embeds: [formatGiveaway(giveaway, true, interaction.guild)],
 				components: [
 					new ActionRowBuilder<ButtonBuilder>().setComponents(
 						giveawayComponents.dashboard.enterGiveawayButton(
@@ -225,9 +223,7 @@ export default async function toPublishingOptions(
 				.map((roleId) => `<@&${roleId}>`)
 				.join(" ");
 
-			const embeds = [
-				await formatGiveaway(giveaway, true, interaction.guild)
-			];
+			const embeds = [formatGiveaway(giveaway, true, interaction.guild)];
 
 			const components = [
 				new ActionRowBuilder<ButtonBuilder>().setComponents(

@@ -1,3 +1,4 @@
+import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
@@ -7,30 +8,23 @@ import {
 	type CommandInteraction,
 	type ModalSubmitInteraction
 } from "discord.js";
-import GiveawayManager from "../../database/giveaway.js";
+import { EMOJIS } from "../../constants.js";
+import type GiveawayManager from "../../database/giveaway.js";
 import lastEditBy from "../../helpers/lastEdit.js";
 import { type CompleteGiveaway } from "../../typings/database.js";
-import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
-import toEditGiveaway from "./dashboardModules/editGiveaway.js";
-import toManagePrizes from "./dashboardModules/managePrizes.js";
-import toPublishGiveaway from "./dashboardModules/publishGiveaway.js";
-import toPublishingOptions from "./dashboardModules/publishingOptions.js";
-import toResetData from "./dashboardModules/resetData.js";
-import toSetEndDate from "./dashboardModules/setEndDate.js";
-import toSetPingRoles from "./dashboardModules/setPingRoles.js";
-import toSetRequiredRoles from "./dashboardModules/setRequiredRoles.js";
-import toEndGiveaway from "./mod.dashboard.endGiveaway.js";
+import { publishWinners } from "./endModules/publishWinners.js";
+import { rollWinners } from "./endModules/rollWinners.js";
+import toDashboard from "./mod.dashboard.js";
 import formatGiveaway from "./mod.formatGiveaway.js";
 
-const dashboard = async (
+export default async function toEndedDashboard(
 	interaction:
 		| ButtonInteraction<"cached">
 		| CommandInteraction<"cached">
 		| ModalSubmitInteraction<"cached">,
 	giveawayManager: GiveawayManager,
-	giveawayId: number,
 	giveaway: CompleteGiveaway
-) => {
+) {
 	const reactivateButton = new ButtonBuilder()
 		.setCustomId("reactivate")
 		.setLabel("Reactivate")
@@ -39,16 +33,38 @@ const dashboard = async (
 	const publishWinnersButton = new ButtonBuilder()
 		.setCustomId("publishWinners")
 		.setLabel("Publish winners")
-		.setStyle(ButtonStyle.Secondary);
+		.setStyle(ButtonStyle.Success);
 
 	const republishWinnersButton = new ButtonBuilder()
 		.setCustomId("republishWinners")
 		.setLabel("Republish winners")
+		.setStyle(ButtonStyle.Success);
+
+	const unpublishWinnersButton = new ButtonBuilder()
+		.setCustomId("unpublishWinners")
+		.setLabel("Unpublish winners")
 		.setStyle(ButtonStyle.Secondary);
 
-	const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents();
+	const winnerButton = giveaway.winnerMessageId
+		? republishWinnersButton
+		: publishWinnersButton;
 
-	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents();
+	const rerollWinnersButton = new ButtonBuilder()
+		.setCustomId("rerollWinners")
+		.setLabel("Re-roll winners")
+		.setStyle(ButtonStyle.Primary)
+		.setDisabled(
+			Boolean(giveaway.prizes.filter((p) => !p.winner?.accepted).length)
+		);
+
+	const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+		winnerButton,
+		rerollWinnersButton
+	);
+
+	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+		reactivateButton
+	);
 
 	const msg = await interaction.editReply({
 		content: formatGiveaway(giveaway, false, interaction.guild),
@@ -73,131 +89,96 @@ const dashboard = async (
 
 	collector.on("collect", async (buttonInteraction) => {
 		switch (buttonInteraction.customId) {
-			case "publishGiveaway": {
-				await buttonInteraction.deferUpdate();
-
-				toPublishGiveaway(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
-
-				break;
-			}
-
-			case "publishingOptions": {
-				await buttonInteraction.deferUpdate();
-
-				toPublishingOptions(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
-
-				break;
-			}
-
-			case "lockEntries": {
+			case "reactivate": {
 				await buttonInteraction.deferUpdate();
 
 				await giveawayManager.edit({
-					where: { giveawayId },
+					where: {
+						giveawayId: giveaway.giveawayId
+					},
 					data: {
-						lockEntries: true,
+						active: true,
 						...lastEditBy(interaction.user)
 					}
 				});
 
-				dashboard(buttonInteraction, giveawayId);
+				toDashboard(buttonInteraction, giveaway.giveawayId);
 
 				break;
 			}
 
-			case "unlockEntries": {
+			case "publishWinners": {
 				await buttonInteraction.deferUpdate();
 
+				publishWinners(buttonInteraction, giveaway.giveawayId);
+
+				break;
+			}
+
+			case "republishWinners": {
+				await buttonInteraction.deferUpdate();
+
+				publishWinners(buttonInteraction, giveaway.giveawayId);
+
+				break;
+			}
+
+			case "unpublishWinners": {
+				await buttonInteraction.deferUpdate();
+
+				const channel = interaction.guild.channels.cache.get(
+					giveaway.channelId ?? ""
+				);
+
+				if (!channel?.isTextBased()) {
+					await interaction.editReply({
+						content: stripIndents`
+							⚠️ The channel the giveaway was published in does not exist, or is not a valid channel.
+							Try again or republish the giveaway in a new channel.
+						`,
+						components: [],
+						embeds: []
+					});
+
+					break;
+				}
+
+				giveaway.winnerMessageId &&
+					(await channel.messages
+						.delete(giveaway.winnerMessageId)
+						.catch(() => null));
+
 				await giveawayManager.edit({
-					where: { giveawayId },
+					where: {
+						giveawayId: giveaway.giveawayId
+					},
 					data: {
-						lockEntries: false,
+						winnerMessageId: null,
 						...lastEditBy(interaction.user)
 					}
 				});
 
-				dashboard(buttonInteraction, giveawayId);
+				await interaction.editReply({
+					content: stripIndents`
+							${EMOJIS.V} Easy work. The winners are now unpublished! 😅
+						`,
+					components: [],
+					embeds: []
+				});
 
 				break;
 			}
 
-			case "setEndDate": {
+			case "rerollWinners": {
 				await buttonInteraction.deferUpdate();
 
-				toSetEndDate(buttonInteraction, giveawayId, giveawayManager);
+				await rollWinners({
+					giveawayManager,
+					giveawayId: giveaway.giveawayId,
+					guild: interaction.guild
+				});
 
-				break;
-			}
-
-			case "setRequiredRoles": {
-				await buttonInteraction.deferUpdate();
-
-				toSetRequiredRoles(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
-
-				break;
-			}
-
-			case "setPingRoles": {
-				await buttonInteraction.deferUpdate();
-
-				toSetPingRoles(buttonInteraction, giveawayId, giveawayManager);
-
-				break;
-			}
-
-			case "editGiveaway": {
-				// await buttonInteraction.deferUpdate();
-				// Showing modal
-
-				toEditGiveaway(buttonInteraction, giveawayId, giveawayManager);
-
-				break;
-			}
-
-			case "managePrizes": {
-				await buttonInteraction.deferUpdate();
-
-				toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
-
-				break;
-			}
-
-			case "endGiveaway": {
-				await buttonInteraction.deferUpdate();
-
-				toEndGiveaway(buttonInteraction, giveawayId, giveawayManager);
-
-				break;
-			}
-
-			case "resetData": {
-				await buttonInteraction.deferUpdate();
-
-				toResetData(buttonInteraction, giveawayId, giveawayManager);
-
-				break;
-			}
-
-			case "deleteGiveaway": {
-				await buttonInteraction.deferUpdate();
-
-				toDeleteGiveaway(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
+				toEndedDashboard(interaction, giveawayManager, giveaway);
 
 				break;
 			}
@@ -211,14 +192,4 @@ const dashboard = async (
 
 		msg.edit({ components: [] }).catch(() => null);
 	});
-};
-
-export default async function toDashboard(
-	interaction:
-		| ButtonInteraction<"cached">
-		| CommandInteraction<"cached">
-		| ModalSubmitInteraction<"cached">,
-	giveawayId: number
-) {
-	await dashboard(interaction, giveawayId);
 }

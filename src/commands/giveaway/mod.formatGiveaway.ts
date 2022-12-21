@@ -24,7 +24,7 @@ function formatGiveaway(
 	const title = giveaway.giveawayTitle;
 	const description = giveaway.giveawayDescription;
 	const active = giveaway.active;
-	const numberOfWinners = giveaway.numberOfWinners;
+	const numberOfWinners = giveaway.prizes.length;
 	const requiredRoles = giveaway.requiredRoles;
 	const minimumAccountAge = giveaway.minimumAccountAge;
 	const rolesToPing = giveaway.rolesToPing;
@@ -39,11 +39,11 @@ function formatGiveaway(
 	const editStamp = giveaway.lastEditedTimestamp;
 	const endTimestamp = giveaway.endTimestamp;
 	const winners = giveaway.prizes
-		.map((prize) => prize.winner)
+		.map((prize) => prize.winner?.userId)
 		.filter((e) => Boolean(e));
 
 	if (embed) {
-		const numberOfWinnersStr = `→ Number of winners: ${numberOfWinners}`;
+		const numberOfWinnersStr = `→ Number of winners: ${giveaway.prizes.length}`;
 
 		const requiredRolesStr = `→ Roles required to enter: ${
 			requiredRoles.length

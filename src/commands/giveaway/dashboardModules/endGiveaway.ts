@@ -1,16 +1,17 @@
-import { oneLine, stripIndents } from "common-tags";
+import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
 	ButtonStyle,
 	type ButtonInteraction
 } from "discord.js";
-import type GiveawayManager from "../../database/giveaway.js";
-import yesNo from "../../helpers/yesNo.js";
-import Logger from "../../logger/logger.js";
-import publishWinners from "./endModules/publishWinners.js";
-import { rollWinners } from "./endModules/rollWinners.js";
-import toDashboard from "./mod.dashboard.js";
+import type GiveawayManager from "../../../database/giveaway.js";
+import lastEditBy from "../../../helpers/lastEdit.js";
+import yesNo from "../../../helpers/yesNo.js";
+import Logger from "../../../logger/logger.js";
+import { publishWinners } from "../endModules/publishWinners.js";
+import { rollWinners } from "../endModules/rollWinners.js";
+import toDashboard from "../mod.dashboard.js";
 
 export default async function toEndGiveaway(
 	interaction: ButtonInteraction<"cached">,
@@ -55,7 +56,9 @@ export default async function toEndGiveaway(
 
 	if (!giveaway.channelId) {
 		await interaction.editReply({
-			content: "⚠️ The giveaway has never been published."
+			components: [],
+			content: "⚠️ The giveaway has never been published.",
+			embeds: []
 		});
 
 		return;
@@ -64,9 +67,11 @@ export default async function toEndGiveaway(
 	const channel = interaction.guild.channels.cache.get(giveaway.channelId);
 
 	if (!channel?.isTextBased()) {
-		await interaction.editReply(
-			"⚠️ This channel does not exist, or is not a text channel."
-		);
+		await interaction.editReply({
+			components: [],
+			embeds: [],
+			content: "⚠️ This channel does not exist, or is not a text channel."
+		});
 
 		return;
 	}
@@ -88,6 +93,17 @@ export default async function toEndGiveaway(
 					.setDisabled(true)
 			)
 		]
+	});
+
+	await giveawayManager.edit({
+		where: {
+			giveawayId
+		},
+		data: {
+			active: false,
+			lockEntries: true,
+			...lastEditBy(interaction.user)
+		}
 	});
 
 	new Logger({
@@ -123,17 +139,7 @@ export default async function toEndGiveaway(
 	});
 
 	if (publishWinnersNow) {
-		await publishWinners(channel, giveawayId);
-
-		await interaction.editReply({
-			content: oneLine`
-				Done! Winners of giveaway
-				#${giveaway.guildRelativeId}
-				are published in ${channel}!
-			`,
-			components: [],
-			embeds: []
-		});
+		await publishWinners(interaction, giveawayId);
 
 		return;
 	}
