@@ -1,6 +1,6 @@
 import { Client } from "discord.js";
 import "dotenv/config";
-import { readdirSync } from "fs";
+import { existsSync, lstatSync, readdirSync } from "fs";
 import { EVENT_DIR, INTENTS } from "./constants.js";
 import { type EventFn, type EventImport } from "./typings/index.js";
 
@@ -15,6 +15,12 @@ const client = new Client({
 const events: Map<string, EventFn> = new Map();
 
 for (const fileName of readdirSync(EVENT_DIR)) {
+	const url = new URL(`./events/${fileName}`, import.meta.url);
+
+	if (existsSync(url) && lstatSync(url).isDirectory()) {
+		continue;
+	}
+
 	const event = (await import(`./events/${fileName}`)) as EventImport;
 	const name = fileName.split(".")[0];
 
