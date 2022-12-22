@@ -8,11 +8,11 @@ const formatType = (type: string | undefined) =>
 	type?.toUpperCase().padStart(3, " ");
 
 export default class Logger {
-	public "interaction"?: Interaction<"cached">;
-	public "prefix": string;
-	public "color": Color;
+	public interaction?: Interaction<"cached">;
+	public prefix: string;
+	public color: Color;
 
-	public "constructor"(options?: {
+	public constructor(options?: {
 		interaction?: Interaction<"cached"> | undefined;
 		prefix?: string | undefined;
 		color?: Color | undefined;
@@ -24,25 +24,31 @@ export default class Logger {
 		this.interaction = options?.interaction;
 	}
 
-	public "setInteraction"(interaction: Interaction<"cached">) {
+	public setInteraction(interaction: Interaction<"cached">) {
 		this.interaction = interaction;
 
 		return this;
 	}
 
-	public "setPrefix"(type: string) {
+	public setPrefix(type: string) {
 		this.prefix = type;
 
 		return this;
 	}
 
-	public "setColor"(color: Color) {
+	public setColor(color: Color) {
 		this.color = color;
 
 		return this;
 	}
 
-	public "log"(...messages: Array<string>) {
+	public log(...messages: Array<string>) {
+		if (this.interaction) {
+			this.logInteraction(...messages);
+
+			return;
+		}
+
 		const date = new Date().toLocaleString("en-GB");
 
 		const prefix = "::".padStart(this.prefix.length, " ");
@@ -57,27 +63,33 @@ export default class Logger {
 		console.log();
 	}
 
-	public "logInteraction"(...messages: Array<string>) {
+	private logInteraction(...messages: Array<string>) {
 		if (!this.interaction) {
-			this.log(...messages);
-
-			return;
+			throw new Error("Interaction not set to logger");
 		}
 
 		const { guild, channel, user } = this.interaction;
-		const chName = channel?.name ?? "Unknown channel";
-		const chId = channel?.id ?? "Unknown channel";
-		const toStr =
+
+		const channelString = channel
+			? `${grey("| Channel:")} ${channel.name} ${grey(`(${channel.id})`)}`
+			: "";
+
+		const cmdSource = oneLine`
+			${grey("User:")} ${user.tag} ${grey(`(${user.id})`)}
+			${channelString}
+			${grey("| Guild:")} ${guild.name} ${grey(`(${guild.id})`)}
+		`;
+
+		const cmdString =
 			this.interaction.isChatInputCommand() &&
 			grey(`>> ${this.interaction.toString()}`);
 
-		const string = oneLine`
-			${grey("User:")} ${user.tag} ${grey(`(${user.id})`)}
-			${grey("| Channel:")} ${chName} ${grey(`(${chId})`)}
-			${grey("| Guild:")} ${guild.name} ${grey(`(${guild.id})`)}
-			${toStr || ""}
-		`;
+		const cmdArray = [cmdSource];
 
-		this.log(string, ...messages);
+		if (cmdString) {
+			cmdArray.push(cmdString);
+		}
+
+		this.log(...cmdArray, ...messages);
 	}
 }
