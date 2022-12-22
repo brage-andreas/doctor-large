@@ -10,24 +10,22 @@ export async function run(oldMember: GuildMember, newMember: GuildMember) {
 		}
 
 		const autoroleManager = new AutoroleManager(newMember.guild.id);
+		await autoroleManager.initialize();
 
-		const autoroleOptions = await autoroleManager.get();
+		const { activated, roleIds } = await autoroleManager.get();
 
-		if (
-			!autoroleOptions?.activated ||
-			autoroleOptions.roleIds.length === 0
-		) {
+		if (activated || roleIds.length === 0) {
 			return;
 		}
 
 		const success = await newMember.roles
-			.add(autoroleOptions.roleIds)
+			.add(roleIds)
 			.then(() => true)
 			.catch(() => false);
 
 		if (success) {
 			new Logger({ prefix: "AUTOROLE" }).log(
-				`Gave roles to ${newMember.user.tag} (${newMember.id})`
+				`Gave ${roleIds.length} roles to ${newMember.user.tag} (${newMember.id})`
 			);
 		} else {
 			new Logger({ prefix: "AUTOROLE", color: "red" }).log(
