@@ -8,10 +8,10 @@ import Logger from "../../logger/logger.js";
 export default async function acceptPrize(
 	interaction: ButtonInteraction<"cached">
 ) {
-	const giveawayId = interaction.customId.match(REGEXP.ACCEPT_PRIZE_CUSTOM_ID)
-		?.groups?.id;
+	const id = interaction.customId.match(REGEXP.ACCEPT_PRIZE_CUSTOM_ID)?.groups
+		?.id;
 
-	if (!giveawayId) {
+	if (!id) {
 		return;
 	}
 
@@ -19,7 +19,7 @@ export default async function acceptPrize(
 
 	const giveawayManager = new GiveawayManager(interaction.guildId);
 
-	const giveaway = await giveawayManager.get(Number(giveawayId));
+	const giveaway = await giveawayManager.get(Number(id));
 
 	if (!giveaway) {
 		return;
@@ -109,14 +109,14 @@ export default async function acceptPrize(
 		oneLine`
 			User ${interaction.user.tag} (${interaction.user.id})
 			claimed prizes ${prizes.map((p) => `#${p.prizeId}`).join(", ")}
-			in giveaway #${giveaway.giveawayId}
+			in giveaway #${giveaway.id}
 		`
 	);
 
 	giveawayManager.editWinner({
 		where: {
-			userId_giveawayId: {
-				giveawayId: giveaway.giveawayId,
+			userId_id: {
+				id: giveaway.id,
 				userId: prizes[0].winner.userId
 			}
 		},

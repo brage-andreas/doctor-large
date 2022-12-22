@@ -9,11 +9,10 @@ import Logger from "../../logger/logger.js";
 export default async function enterGiveaway(
 	interaction: ButtonInteraction<"cached">
 ) {
-	const giveawayId = interaction.customId.match(
-		REGEXP.ENTER_GIVEAWAY_CUSTOM_ID
-	)?.groups?.id;
+	const id = interaction.customId.match(REGEXP.ENTER_GIVEAWAY_CUSTOM_ID)
+		?.groups?.id;
 
-	if (!giveawayId) {
+	if (!id) {
 		return;
 	}
 
@@ -21,7 +20,7 @@ export default async function enterGiveaway(
 
 	const giveawayManager = new GiveawayManager(interaction.guildId);
 
-	const giveaway = await giveawayManager.get(Number(giveawayId));
+	const giveaway = await giveawayManager.get(Number(id));
 
 	if (!giveaway) {
 		return;
@@ -103,7 +102,7 @@ export default async function enterGiveaway(
 		}).log(
 			oneLine`
 				User ${interaction.user.tag} (${interaction.user.id})
-				left giveaway #${giveaway.giveawayId}
+				left giveaway #${giveaway.id}
 			`
 		);
 	} else {
@@ -124,14 +123,14 @@ export default async function enterGiveaway(
 		}).log(
 			oneLine`
 				User ${interaction.user.tag} (${interaction.user.id})
-				entered giveaway #${giveaway.giveawayId}
+				entered giveaway #${giveaway.id}
 			`
 		);
 	}
 
 	giveawayManager.edit({
 		where: {
-			giveawayId: Number(giveawayId)
+			id: Number(id)
 		},
 		data: {
 			userEntriesIds: [...entrants]
