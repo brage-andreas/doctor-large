@@ -1,8 +1,7 @@
-import { type Prisma } from "@prisma/client";
+import { type Giveaway, type Prisma } from "@prisma/client";
 import {
-	type CompleteGiveaway,
-	type CompleteGiveawayPrize,
-	type CompleteGiveawayWinners
+	type GiveawayWithIncludes,
+	type PrizeWithIncludes
 } from "../typings/database.js";
 import prisma from "./prisma.js";
 
@@ -10,75 +9,58 @@ export default class GiveawayManager {
 	public readonly guildId: string;
 	public readonly prisma = prisma;
 
+	public readonly prizes = {
+		get: this.getPrizes,
+		create: this.createPrizes,
+		edit: this.editPrize
+	};
+
+	public readonly winners = {
+		create: this.createWinners,
+		edit: this.editWinners
+	};
+
 	public constructor(guildId: string) {
 		this.guildId = guildId;
 	}
 
-	public async get(id: number): Promise<CompleteGiveaway | null> {
-		return await this.prisma.giveaway.findUnique({
+	public async get(id: number): Promise<GiveawayWithIncludes> {
+		return await this.prisma.giveaway.findUniqueOrThrow({
 			where: {
-				giveawayId: id
+				id
 			},
 			include: {
 				prizes: {
 					include: {
-						winner: true
+						winners: true
 					}
 				}
 			}
 		});
 	}
 
-	public async getPrizes(
-		giveawayId: number
-	): Promise<Array<CompleteGiveawayPrize>> {
-		return await this.prisma.giveawayPrize.findMany({
-			where: {
-				giveawayId
-			},
-			include: {
-				giveaway: true,
-				winner: true
-			}
-		});
-	}
-
-	public async getWinners(
-		giveawayId: number
-	): Promise<Array<CompleteGiveawayWinners>> {
-		return await this.prisma.giveawayWinner.findMany({
-			where: {
-				giveawayId
-			},
-			include: {
-				prizes: {
-					include: {
-						giveaway: true
-					}
-				}
-			}
-		});
-	}
-
-	public async getAll(): Promise<Array<CompleteGiveaway>> {
+	public async getAll(): Promise<Array<GiveawayWithIncludes>> {
 		return await this.prisma.giveaway.findMany({
 			where: {
 				guildId: this.guildId
 			},
 			orderBy: {
-				giveawayId: "desc"
+				id: "desc"
 			},
 			include: {
 				prizes: {
 					include: {
-						winner: true
+						winners: true
 					}
 				}
 			}
 		});
 	}
 
-	public async getWithOffset(offset: number, limit = 5) {
+	public async getWithOffset(
+		offset: number,
+		limit = 5
+	): Promise<Array<Giveaway>> {
 		return await this.prisma.giveaway.findMany({
 			where: {
 				guildId: this.guildId
@@ -88,55 +70,51 @@ export default class GiveawayManager {
 		});
 	}
 
-	public async getTotalNumberOfGiveawaysInGuild() {
-		return (
-			await this.prisma.giveaway.findMany({
-				where: {
-					guildId: this.guildId
-				}
-			})
-		).length;
+	public async getQuantityInGuild(): Promise<number> {
+		return await this.prisma.giveaway.count({
+			where: {
+				guildId: this.guildId
+			}
+		});
 	}
 
-	public async create(data: Prisma.giveawayCreateInput) {
+	public async create(data: Prisma.GiveawayCreateInput): Promise<Giveaway> {
 		return await this.prisma.giveaway.create({
 			data
 		});
 	}
 
-	public async createPrizes(
-		...data: Array<Prisma.giveawayPrizeCreateManyInput>
-	) {
-		return await this.prisma.giveawayPrize.createMany({
-			data
-		});
+	public async edit(args: Prisma.GiveawayUpdateArgs): Promise<Giveaway> {
+		return await this.prisma.giveaway.update(args);
 	}
 
-	public async upsertWinner(data: Prisma.giveawayWinnerCreateInput) {
-		return await this.prisma.giveawayWinner.upsert({
-			create: data,
-			update: {
-				accepted: data.accepted,
-				prizes: data.prizes
-			},
+	private async getPrizes(id: number): Promise<Array<PrizeWithIncludes>> {
+		return await this.prisma.prize.findMany({
 			where: {
-				userId_giveawayId: {
-					giveawayId: data.giveawayId,
-					userId: data.userId
-				}
+				id
+			},
+			include: {
+				giveaway: true,
+				winners: true
 			}
 		});
 	}
 
-	public async edit(args: Prisma.giveawayUpdateArgs) {
-		return await this.prisma.giveaway.update(args);
+	private async createPrizes(...args: Array<Prisma.PrizeCreateManyInput>) {
+		return await this.prisma.prize.createMany({
+			data: args
+		});
 	}
 
-	public async editPrize(args: Prisma.giveawayPrizeUpdateArgs) {
-		return await this.prisma.giveawayPrize.update(args);
+	private async createWinners(...args: Array<Prisma.WinnerCreateManyInput>) {
+		return await this.prisma.winner.createMany({ data: args });
 	}
 
-	public async editWinner(args: Prisma.giveawayWinnerUpdateArgs) {
-		return await this.prisma.giveawayWinner.update(args);
+	private async editPrize(args: Prisma.PrizeUpdateArgs) {
+		return await this.prisma.prize.update(args);
+	}
+
+	private async editWinners(args: Prisma.WinnerUpdateArgs) {
+		return await this.prisma.winner.update(args);
 	}
 }
