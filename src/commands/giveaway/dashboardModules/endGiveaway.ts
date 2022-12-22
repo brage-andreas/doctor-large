@@ -15,10 +15,10 @@ import toDashboard from "../mod.dashboard.js";
 
 export default async function toEndGiveaway(
 	interaction: ButtonInteraction<"cached">,
-	giveawayId: number,
+	id: number,
 	giveawayManager: GiveawayManager
 ) {
-	const giveaway = await giveawayManager.get(giveawayId);
+	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
 		return;
@@ -51,7 +51,7 @@ export default async function toEndGiveaway(
 			ephemeral: true
 		});
 
-		return toDashboard(interaction, giveawayId);
+		return toDashboard(interaction, id);
 	}
 
 	if (!giveaway.channelId) {
@@ -79,7 +79,7 @@ export default async function toEndGiveaway(
 	const message =
 		(channel?.isTextBased() &&
 			(await channel.messages
-				.fetch(giveaway.messageId ?? "")
+				.fetch(giveaway.publishedMessageId ?? "")
 				.catch(() => null))) ||
 		null;
 
@@ -97,11 +97,11 @@ export default async function toEndGiveaway(
 
 	await giveawayManager.edit({
 		where: {
-			giveawayId
+			id
 		},
 		data: {
 			active: false,
-			lockEntries: true,
+			entriesLocked: true,
 			...lastEditBy(interaction.user)
 		}
 	});
@@ -110,11 +110,11 @@ export default async function toEndGiveaway(
 		prefix: "GIVEAWAY",
 		color: "red",
 		interaction
-	}).logInteraction(`Ended giveaway #${giveawayId}`);
+	}).log(`Ended giveaway #${id}`);
 
 	const winners = await rollWinners({
 		giveawayManager,
-		giveawayId,
+		id,
 		guild: interaction.guild
 	});
 
@@ -131,7 +131,7 @@ export default async function toEndGiveaway(
 				Done! Giveaway #${giveaway.guildRelativeId} has ended.
 				→ Entries are locked.
 				→ Giveaway is no longer active.
-				→ ${winners.length}/${giveaway.numberOfWinners} winners have been rolled.
+				→ ${winners.length}/${giveaway.winnerQuantity} winners have been rolled.
 
 				Do you want to publish the winners right away?
 			`
@@ -139,10 +139,10 @@ export default async function toEndGiveaway(
 	});
 
 	if (publishWinnersNow) {
-		await publishWinners(interaction, giveawayId);
+		await publishWinners(interaction, id);
 
 		return;
 	}
 
-	await toDashboard(interaction, giveawayId);
+	await toDashboard(interaction, id);
 }

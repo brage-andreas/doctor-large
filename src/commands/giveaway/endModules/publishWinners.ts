@@ -12,24 +12,17 @@ import GiveawayManager from "../../../database/giveaway.js";
 import lastEditBy from "../../../helpers/lastEdit.js";
 import { listify } from "../../../helpers/listify.js";
 import Logger from "../../../logger/logger.js";
-import { type CompleteGiveaway } from "../../../typings/database.js";
+import { type GiveawayWithIncludes } from "../../../typings/database.js";
+import { getWinnersAndTheirPrizes } from "./getWinners.js";
 
-const getWinnersEmbed = (giveaway: CompleteGiveaway) => {
-	const winners = giveaway.prizes
-		.map((prize) => prize.winner?.userId)
-		.filter((e) => Boolean(e));
+const getWinnersEmbed = (giveaway: GiveawayWithIncludes) => {
+	const wonPrizes = getWinnersAndTheirPrizes(giveaway);
 
-	if (!winners.length) {
-		return null;
-	}
-
-	const data = giveaway.prizes
+	const data = wonPrizes
 		.map(
-			(prize) =>
-				prize.winner?.userId &&
-				`→ <@${prize.winner.userId}> won **${prize.amount}x ${prize.name}**`
+			(wonPrize) =>
+				`→ <@${wonPrize.userId}> won **${wonPrize.quantityWon}x ${wonPrize.name}**`
 		)
-		.filter((e) => Boolean(e))
 		.join("\n");
 
 	const embed = new EmbedBuilder()
@@ -41,8 +34,8 @@ const getWinnersEmbed = (giveaway: CompleteGiveaway) => {
 
 	embed.setDescription(stripIndents`
 		The winners are: ${listify(
-			[...new Set(winners)].map((id) => `<@${id}>`),
-			{ length: winners.length }
+			wonPrizes.map((wonPrize) => `<@${wonPrize.userId}>`),
+			{ length: wonPrizes.length }
 		)}
 
 		${data}
@@ -55,11 +48,11 @@ const getWinnersEmbed = (giveaway: CompleteGiveaway) => {
 
 export async function publishWinners(
 	interaction: RepliableInteraction<"cached">,
-	giveawayId: number
+	id: number
 ) {
 	const giveawayManager = new GiveawayManager(interaction.guild.id);
 
-	const giveaway = await giveawayManager.get(giveawayId);
+	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
 		await interaction.editReply({
@@ -93,8 +86,8 @@ export async function publishWinners(
 	}
 
 	const giveawayMessage =
-		channel.id === giveaway.channelId && giveaway.messageId
-			? await channel.messages.fetch(giveaway.messageId)
+		channel.id === giveaway.channelId && giveaway.publishedMessageId
+			? await channel.messages.fetch(giveaway.publishedMessageId)
 			: null;
 
 	if (giveaway.winnerMessageId) {
@@ -112,7 +105,7 @@ export async function publishWinners(
 	];
 
 	const acceptPrizeButton = new ButtonBuilder()
-		.setCustomId(`accept-prize-${giveawayId}`)
+		.setCustomId(`accept-prize-${id}`)
 		.setLabel("Accept prize")
 		.setEmoji("🤩")
 		.setStyle(ButtonStyle.Success);
@@ -184,12 +177,12 @@ export async function publishWinners(
 	new Logger({
 		prefix: "GIVEAWAY"
 	}).log(
-		`Published winners of giveaway #${giveawayId} in #${channel.name} (${channel.id})`
+		`Published winners of giveaway #${id} in #${channel.name} (${channel.id})`
 	);
 
 	await giveawayManager.edit({
 		where: {
-			giveawayId
+			id
 		},
 		data: {
 			winnerMessageId: message.id,
@@ -210,11 +203,11 @@ export async function publishWinners(
 
 export async function republishWinners(
 	interaction: RepliableInteraction<"cached">,
-	giveawayId: number
+	id: number
 ) {
 	const giveawayManager = new GiveawayManager(interaction.guild.id);
 
-	const giveaway = await giveawayManager.get(giveawayId);
+	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
 		await interaction.editReply({
@@ -254,7 +247,7 @@ export async function republishWinners(
 			.catch(() => null));
 
 	if (!currentMessage) {
-		await publishWinners(interaction, giveawayId);
+		await publishWinners(interaction, id);
 
 		return;
 	}
@@ -284,7 +277,7 @@ export async function republishWinners(
 	}
 
 	const acceptPrizeButton = new ButtonBuilder()
-		.setCustomId(`accept-prize-${giveawayId}`)
+		.setCustomId(`accept-prize-${id}`)
 		.setLabel("Accept prize")
 		.setEmoji("🤩")
 		.setStyle(ButtonStyle.Success);
@@ -304,7 +297,7 @@ export async function republishWinners(
 
 	await giveawayManager.edit({
 		where: {
-			giveawayId
+			id
 		},
 		data: {
 			...lastEditBy(interaction.user)
@@ -324,6 +317,6 @@ export async function republishWinners(
 	new Logger({
 		prefix: "GIVEAWAY"
 	}).log(
-		`Republished winners of giveaway #${giveaway.giveawayId} in #${channel.name} (${channel.id})`
+		`Republished winners of giveaway #${giveaway.id} in #${channel.name} (${channel.id})`
 	);
 }

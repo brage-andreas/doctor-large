@@ -1,4 +1,5 @@
-import { type autorole } from "@prisma/client";
+import { type Autorole } from "@prisma/client";
+import { oneLine } from "common-tags";
 import {
 	EmbedBuilder,
 	PermissionFlagsBits,
@@ -8,7 +9,7 @@ import { EMOJIS } from "../../constants.js";
 
 export default function formatAutorole(
 	interaction: ChatInputCommandInteraction<"cached">,
-	autorole: autorole | null
+	autorole: Autorole | null
 ) {
 	const hasManageRolesPermission =
 		interaction.guild.members.me?.permissions.has(
@@ -41,14 +42,17 @@ export default function formatAutorole(
 				: `${description}\n\n⚠️ Missing Manage Roles permission`
 		)
 		.setTimestamp(
-			autorole?.discordTimestamp
-				? Number(autorole.discordTimestamp)
+			autorole?.lastEditedTimestamp
+				? Number(autorole.lastEditedTimestamp)
 				: undefined
 		);
 
-	if (autorole?.moderatorTag && autorole.moderatorId) {
+	if (autorole?.lastEditedUserTag && autorole.lastEditedUserId) {
 		embed.setFooter({
-			text: `Last edited by ${autorole.moderatorTag} (${autorole.moderatorId})`
+			text: oneLine`
+				Last edited by ${autorole.lastEditedUserTag}
+				(${autorole.lastEditedUserId})
+			`
 		});
 	}
 

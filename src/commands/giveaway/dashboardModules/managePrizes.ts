@@ -4,14 +4,14 @@ import toDashboard from "../mod.dashboard.js";
 
 export default async function toManagePrizes(
 	interaction: ButtonInteraction<"cached">,
-	giveawayId: number,
+	id: number,
 	giveawayManager: GiveawayManager
 ) {
-	const giveaway = await giveawayManager.get(giveawayId);
+	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
 		return;
 	}
 
-	await toDashboard(interaction, giveawayId);
+	await toDashboard(interaction, id);
 }

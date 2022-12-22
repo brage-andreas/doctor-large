@@ -11,7 +11,7 @@ import {
 import { EMOJIS } from "../../constants.js";
 import type GiveawayManager from "../../database/giveaway.js";
 import lastEditBy from "../../helpers/lastEdit.js";
-import { type CompleteGiveaway } from "../../typings/database.js";
+import { type GiveawayWithIncludes } from "../../typings/database.js";
 import { publishWinners } from "./endModules/publishWinners.js";
 import { rollWinners } from "./endModules/rollWinners.js";
 import toDashboard from "./mod.dashboard.js";
@@ -23,7 +23,7 @@ export default async function toEndedDashboard(
 		| CommandInteraction<"cached">
 		| ModalSubmitInteraction<"cached">,
 	giveawayManager: GiveawayManager,
-	giveaway: CompleteGiveaway
+	giveaway: GiveawayWithIncludes
 ) {
 	const reactivateButton = new ButtonBuilder()
 		.setCustomId("reactivate")
@@ -94,7 +94,7 @@ export default async function toEndedDashboard(
 
 				await giveawayManager.edit({
 					where: {
-						giveawayId: giveaway.giveawayId
+						id: giveaway.id
 					},
 					data: {
 						active: true,
@@ -102,7 +102,7 @@ export default async function toEndedDashboard(
 					}
 				});
 
-				toDashboard(buttonInteraction, giveaway.giveawayId);
+				toDashboard(buttonInteraction, giveaway.id);
 
 				break;
 			}
@@ -110,7 +110,7 @@ export default async function toEndedDashboard(
 			case "publishWinners": {
 				await buttonInteraction.deferUpdate();
 
-				publishWinners(buttonInteraction, giveaway.giveawayId);
+				publishWinners(buttonInteraction, giveaway.id);
 
 				break;
 			}
@@ -118,7 +118,7 @@ export default async function toEndedDashboard(
 			case "republishWinners": {
 				await buttonInteraction.deferUpdate();
 
-				publishWinners(buttonInteraction, giveaway.giveawayId);
+				publishWinners(buttonInteraction, giveaway.id);
 
 				break;
 			}
@@ -150,7 +150,7 @@ export default async function toEndedDashboard(
 
 				await giveawayManager.edit({
 					where: {
-						giveawayId: giveaway.giveawayId
+						id: giveaway.id
 					},
 					data: {
 						winnerMessageId: null,
@@ -174,7 +174,7 @@ export default async function toEndedDashboard(
 
 				await rollWinners({
 					giveawayManager,
-					giveawayId: giveaway.giveawayId,
+					id: giveaway.id,
 					guild: interaction.guild
 				});
 

@@ -27,34 +27,33 @@ export default async function (
 
 	const giveawayManager = new GiveawayManager(interaction.guildId);
 
-	const giveawayTitle = modalInteraction.fields.getTextInputValue("title");
+	const title = modalInteraction.fields.getTextInputValue("title");
 
-	const giveawayDescription =
+	const description =
 		modalInteraction.fields.getTextInputValue("description");
 
-	const numberOfWinners = Number(
+	const winnerQuantity = Number(
 		modalInteraction.fields.getTextInputValue("numberOfWinners")
 	);
 
-	const totalNumberOfGiveaways =
-		await giveawayManager.getTotalNumberOfGiveawaysInGuild();
+	const totalNumberOfGiveaways = await giveawayManager.getQuantityInGuild();
 
-	const { giveawayId } = await giveawayManager.create({
+	const { id } = await giveawayManager.create({
+		createdTimestamp: interaction.createdTimestamp.toString(),
 		guildRelativeId: totalNumberOfGiveaways + 1,
-		giveawayTitle,
-		giveawayDescription,
-		numberOfWinners,
-		guildId: interaction.guildId,
-		hostUserId: interaction.user.id,
+		winnerQuantity,
 		hostUserTag: interaction.user.tag,
-		createdTimestamp: interaction.createdTimestamp.toString()
+		hostUserId: interaction.user.id,
+		description,
+		guildId: interaction.guildId,
+		title
 	});
 
-	new Logger({ prefix: "GIVEAWAY", interaction }).logInteraction(
-		`Created giveaway with ID #${giveawayId}`
+	new Logger({ prefix: "GIVEAWAY", interaction }).log(
+		`Created giveaway with ID #${id}`
 	);
 
 	await modalInteraction.deferUpdate();
 
-	sendToDashboard(modalInteraction, giveawayId);
+	sendToDashboard(modalInteraction, id);
 }

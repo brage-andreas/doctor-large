@@ -3,44 +3,48 @@ import { EmbedBuilder, PermissionFlagsBits, type Guild } from "discord.js";
 import ms from "ms";
 import { listify } from "../../helpers/listify.js";
 import { longStamp, timestamp } from "../../helpers/timestamps.js";
-import { type CompleteGiveaway } from "../../typings/database.js";
+import { type GiveawayWithIncludes } from "../../typings/database.js";
 
 function formatGiveaway(
-	giveaway: CompleteGiveaway,
+	giveaway: GiveawayWithIncludes,
 	embed: true,
 	guild?: Guild
 ): EmbedBuilder;
 function formatGiveaway(
-	giveaway: CompleteGiveaway,
+	giveaway: GiveawayWithIncludes,
 	embed: false,
 	guild?: Guild
 ): string;
 function formatGiveaway(
-	giveaway: CompleteGiveaway,
+	giveaway: GiveawayWithIncludes,
 	embed: boolean,
 	guild?: Guild
 ): EmbedBuilder | string {
 	const id = giveaway.guildRelativeId;
-	const title = giveaway.giveawayTitle;
-	const description = giveaway.giveawayDescription;
+	const title = giveaway.title;
+	const description = giveaway.description;
 	const active = giveaway.active;
 	const numberOfWinners = giveaway.prizes.length;
-	const requiredRoles = giveaway.requiredRoles;
+	const requiredRoles = giveaway.requiredRolesIds;
 	const minimumAccountAge = giveaway.minimumAccountAge;
-	const rolesToPing = giveaway.rolesToPing;
-	const published = Boolean(giveaway.messageId);
+	const rolesToPing = giveaway.pingRolesIds;
+	const published = Boolean(giveaway.publishedMessageId);
 	const hostId = giveaway.hostUserId;
 	const hostTag = giveaway.hostUserTag;
-	const entries = giveaway.userEntriesIds.length;
-	const lockEntries = giveaway.lockEntries;
+	const entries = giveaway.entriesUserIds.length;
+	const lockEntries = giveaway.entriesLocked;
 	const created = giveaway.createdTimestamp;
 	const editUID = giveaway.lastEditedUserId;
 	const editTag = giveaway.lastEditedUserTag;
 	const editStamp = giveaway.lastEditedTimestamp;
 	const endTimestamp = giveaway.endTimestamp;
-	const winners = giveaway.prizes
-		.map((prize) => prize.winner?.userId)
-		.filter((e) => Boolean(e));
+	const winners = [
+		...giveaway.prizes.reduce((pool, prize) => {
+			prize.winnersUserIds.forEach((id) => pool.add(id));
+
+			return pool;
+		}, new Set())
+	];
 
 	if (embed) {
 		const numberOfWinnersStr = `→ Number of winners: ${giveaway.prizes.length}`;
@@ -68,7 +72,7 @@ function formatGiveaway(
 			? giveaway.prizes
 					.map(
 						(prize) =>
-							`${prize.amount}x **${prize.name}** ${
+							`${prize.quantity}x **${prize.name}** ${
 								prize.additionalInfo
 									? `- ${prize.additionalInfo}`
 									: ""
@@ -146,7 +150,7 @@ function formatGiveaway(
 		? `**Prizes** (${giveaway.prizes.length}):\n${giveaway.prizes
 				.map(
 					(prize) =>
-						`→ ${prize.amount}x ${prize.name} ${
+						`→ ${prize.quantity}x ${prize.name} ${
 							prize.additionalInfo
 								? `- ${prize.additionalInfo}`
 								: ""
@@ -164,7 +168,7 @@ function formatGiveaway(
 	}`;
 
 	const idStr = `#${id}`;
-	const absoluteIdStr = `#${giveaway.giveawayId}`;
+	const absoluteIdStr = `#${giveaway.id}`;
 	const numberOfWinnersStr = `→ Number of winners: ${numberOfWinners}`;
 	const hostStr = `→ Host: ${hostTag} (${hostId})`;
 	const activeStr = `→ Active: ${active ? "Yes" : "No"}`;
@@ -172,9 +176,13 @@ function formatGiveaway(
 	const entriesStr = `→ Entries: ${entries}`;
 	const createdStr = `→ Created: ${longStamp(created)}`;
 	const lockEntriesStr = `→ Entries locked: ${lockEntries ? "Yes" : "No"}`;
+
+	const gId = giveaway.guildId;
+	const cId = giveaway.channelId;
+	const mId = giveaway.publishedMessageId;
 	const messageUrl =
-		giveaway.guildId && giveaway.channelId && giveaway.messageId
-			? `→ [Link to giveaway](<https://discord.com/channels/${giveaway.guildId}/${giveaway.channelId}/${giveaway.messageId}>)`
+		giveaway.guildId && giveaway.channelId && giveaway.publishedMessageId
+			? `→ [Link to giveaway](<https://discord.com/channels/${gId}/${cId}/${mId}>)`
 			: null;
 
 	const winnersStr = winners.length

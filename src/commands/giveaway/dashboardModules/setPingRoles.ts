@@ -14,10 +14,10 @@ import toDashboard from "../mod.dashboard.js";
 
 export default async function toSetPingRoles(
 	interaction: ButtonInteraction<"cached">,
-	giveawayId: number,
+	id: number,
 	giveawayManager: GiveawayManager
 ) {
-	const giveaway = await giveawayManager.get(giveawayId);
+	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
 		return;
@@ -32,9 +32,9 @@ export default async function toSetPingRoles(
 			Select the roles you want to ping when publishing the giveaway.
 			
 			Currently set to: ${
-				giveaway.rolesToPing.length
+				giveaway.pingRolesIds.length
 					? listify(
-							giveaway.rolesToPing.map(
+							giveaway.pingRolesIds.map(
 								(roleId) => `<@&${roleId}>`
 							),
 							{ length: 5 }
@@ -64,7 +64,7 @@ export default async function toSetPingRoles(
 	if (component.customId === "back") {
 		await component.deferUpdate();
 
-		toDashboard(interaction, giveawayId);
+		toDashboard(interaction, id);
 
 		return;
 	}
@@ -76,36 +76,36 @@ export default async function toSetPingRoles(
 
 		await component.deferUpdate();
 
-		new Logger({ prefix: "GIVEAWAY", interaction }).logInteraction(
-			`Edited ping roles of giveaway #${giveaway.giveawayId}`
+		new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			`Edited ping roles of giveaway #${giveaway.id}`
 		);
 
 		await giveawayManager.edit({
 			where: {
-				giveawayId: giveaway.giveawayId
+				id: giveaway.id
 			},
 			data: {
-				rolesToPing: component.values,
+				pingRolesIds: component.values,
 				...lastEditBy(interaction.user)
 			}
 		});
 	} else if (component.customId === "clearPingRoles") {
 		await component.deferUpdate();
 
-		new Logger({ prefix: "GIVEAWAY", interaction }).logInteraction(
-			`Cleared ping roles of giveaway #${giveaway.giveawayId}`
+		new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			`Cleared ping roles of giveaway #${giveaway.id}`
 		);
 
 		await giveawayManager.edit({
 			where: {
-				giveawayId: giveaway.giveawayId
+				id: giveaway.id
 			},
 			data: {
-				rolesToPing: [],
+				pingRolesIds: [],
 				...lastEditBy(interaction.user)
 			}
 		});
 	}
 
-	await toDashboard(interaction, giveawayId);
+	await toDashboard(interaction, id);
 }

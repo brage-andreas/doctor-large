@@ -18,10 +18,10 @@ import formatGiveaway from "../mod.formatGiveaway.js";
 
 export default async function toPublishingOptions(
 	interaction: ButtonInteraction<"cached">,
-	giveawayId: number,
+	id: number,
 	giveawayManager: GiveawayManager
 ) {
-	const giveaway = await giveawayManager.get(giveawayId);
+	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
 		return;
@@ -72,7 +72,7 @@ export default async function toPublishingOptions(
 		if (componentInteraction.customId === "back") {
 			await componentInteraction.deferUpdate();
 
-			toDashboard(interaction, giveawayId);
+			toDashboard(interaction, id);
 
 			return;
 		}
@@ -122,18 +122,16 @@ export default async function toPublishingOptions(
 			}
 
 			const message = await channel.send({
-				content: giveaway.rolesToPing
+				content: giveaway.pingRolesIds
 					.map((roleId) => `<@&${roleId}>`)
 					.join(" "),
 				allowedMentions: {
-					roles: giveaway.rolesToPing
+					roles: giveaway.pingRolesIds
 				},
 				embeds: [formatGiveaway(giveaway, true, interaction.guild)],
 				components: [
 					new ActionRowBuilder<ButtonBuilder>().setComponents(
-						giveawayComponents.dashboard.enterGiveawayButton(
-							giveawayId
-						)
+						giveawayComponents.dashboard.enterGiveawayButton(id)
 					)
 				]
 			});
@@ -142,9 +140,9 @@ export default async function toPublishingOptions(
 				giveaway.channelId ?? ""
 			);
 
-			if (oldChannel?.isTextBased() && giveaway.messageId) {
+			if (oldChannel?.isTextBased() && giveaway.publishedMessageId) {
 				oldChannel.messages
-					.delete(giveaway.messageId)
+					.delete(giveaway.publishedMessageId)
 					.catch(() => null);
 			}
 
@@ -158,16 +156,16 @@ export default async function toPublishingOptions(
 				embeds: []
 			});
 
-			logger.logInteraction(
-				`Republished giveaway #${giveaway.giveawayId} in ${channel.name} (${channelId})`
+			logger.log(
+				`Republished giveaway #${giveaway.id} in ${channel.name} (${channelId})`
 			);
 
 			giveawayManager.edit({
 				where: {
-					giveawayId: giveaway.giveawayId
+					id: giveaway.id
 				},
 				data: {
-					messageId: message.id,
+					publishedMessageId: message.id,
 					channelId,
 					...lastEditBy(interaction.user)
 				}
@@ -178,7 +176,7 @@ export default async function toPublishingOptions(
 			componentInteraction.customId === "editCurrent" ||
 			componentInteraction.customId === "recallCurrent"
 		) {
-			if (!giveaway.channelId || !giveaway.messageId) {
+			if (!giveaway.channelId || !giveaway.publishedMessageId) {
 				componentInteraction.followUp({
 					content: "The giveaway is not published yet!",
 					ephemeral: true
@@ -219,7 +217,7 @@ export default async function toPublishingOptions(
 
 			const isEdit = componentInteraction.customId === "editCurrent";
 
-			const content = giveaway.rolesToPing
+			const content = giveaway.pingRolesIds
 				.map((roleId) => `<@&${roleId}>`)
 				.join(" ");
 
@@ -227,14 +225,14 @@ export default async function toPublishingOptions(
 
 			const components = [
 				new ActionRowBuilder<ButtonBuilder>().setComponents(
-					giveawayComponents.dashboard.enterGiveawayButton(giveawayId)
+					giveawayComponents.dashboard.enterGiveawayButton(id)
 				)
 			];
 
 			const successOrURL = isEdit
 				? await channel.messages
-						.edit(giveaway.messageId, {
-							allowedMentions: { roles: giveaway.rolesToPing },
+						.edit(giveaway.publishedMessageId, {
+							allowedMentions: { roles: giveaway.pingRolesIds },
 							components,
 							content,
 							embeds
@@ -242,7 +240,7 @@ export default async function toPublishingOptions(
 						.then((msg) => msg.url)
 						.catch(() => null)
 				: await channel.messages
-						.delete(giveaway.messageId)
+						.delete(giveaway.publishedMessageId)
 						.then(() => true)
 						.catch(() => null);
 
@@ -260,8 +258,8 @@ export default async function toPublishingOptions(
 				});
 
 				if (successOrURL) {
-					logger.logInteraction(
-						`Edited giveaway #${giveaway.giveawayId} in ${channel.name} (${channel.id})`
+					logger.log(
+						`Edited giveaway #${giveaway.id} in ${channel.name} (${channel.id})`
 					);
 				}
 			} else {
@@ -274,8 +272,8 @@ export default async function toPublishingOptions(
 				});
 
 				if (successOrURL) {
-					logger.logInteraction(
-						`Recalled giveaway #${giveaway.giveawayId} from ${channel.name} (${channel.id})`
+					logger.log(
+						`Recalled giveaway #${giveaway.id} from ${channel.name} (${channel.id})`
 					);
 				}
 			}
@@ -283,10 +281,12 @@ export default async function toPublishingOptions(
 			if (successOrURL) {
 				giveawayManager.edit({
 					where: {
-						giveawayId: giveaway.giveawayId
+						id: giveaway.id
 					},
 					data: {
-						messageId: isEdit ? giveaway.messageId : null,
+						publishedMessageId: isEdit
+							? giveaway.publishedMessageId
+							: null,
 						...lastEditBy(interaction.user)
 					}
 				});

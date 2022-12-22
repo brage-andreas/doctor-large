@@ -3,12 +3,12 @@ import type GiveawayManager from "../../../database/giveaway.js";
 
 export const rollWinners = async (options: {
 	giveawayManager: GiveawayManager;
-	giveawayId: number;
+	id: number;
 	guild: Guild;
 }) => {
-	const { giveawayManager, giveawayId, guild } = options;
+	const { giveawayManager, id, guild } = options;
 
-	const giveaway = await giveawayManager.get(giveawayId);
+	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
 		return [];
@@ -77,7 +77,7 @@ export const rollWinners = async (options: {
 				.map((prize) => ({ prizeId: prize.prizeId }));
 
 			const { winnerId } = await giveawayManager.upsertWinner({
-				giveawayId,
+				id,
 				accepted: false,
 				userId: rolledUserId,
 				prizes: {
@@ -104,6 +104,6 @@ export const rollWinners = async (options: {
 	}
 
 	return await giveawayManager
-		.getWinners(giveawayId)
+		.getWinners(id)
 		.then((winners) => winners.map((winner) => winner.userId));
 };

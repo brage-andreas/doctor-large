@@ -28,10 +28,10 @@ export default async function toDashboard(
 		| ButtonInteraction<"cached">
 		| CommandInteraction<"cached">
 		| ModalSubmitInteraction<"cached">,
-	giveawayId: number
+	id: number
 ) {
 	const giveawayManager = new GiveawayManager(interaction.guildId);
-	const giveaway = await giveawayManager.get(giveawayId);
+	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
 		await interaction.editReply({
@@ -103,11 +103,7 @@ export default async function toDashboard(
 			case "publishGiveaway": {
 				await buttonInteraction.deferUpdate();
 
-				toPublishGiveaway(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
+				toPublishGiveaway(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -115,11 +111,7 @@ export default async function toDashboard(
 			case "publishingOptions": {
 				await buttonInteraction.deferUpdate();
 
-				toPublishingOptions(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
+				toPublishingOptions(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -128,14 +120,14 @@ export default async function toDashboard(
 				await buttonInteraction.deferUpdate();
 
 				await giveawayManager.edit({
-					where: { giveawayId },
+					where: { id },
 					data: {
 						lockEntries: true,
 						...lastEditBy(interaction.user)
 					}
 				});
 
-				toDashboard(buttonInteraction, giveawayId);
+				toDashboard(buttonInteraction, id);
 
 				break;
 			}
@@ -144,14 +136,14 @@ export default async function toDashboard(
 				await buttonInteraction.deferUpdate();
 
 				await giveawayManager.edit({
-					where: { giveawayId },
+					where: { id },
 					data: {
 						lockEntries: false,
 						...lastEditBy(interaction.user)
 					}
 				});
 
-				toDashboard(buttonInteraction, giveawayId);
+				toDashboard(buttonInteraction, id);
 
 				break;
 			}
@@ -159,7 +151,7 @@ export default async function toDashboard(
 			case "setEndDate": {
 				await buttonInteraction.deferUpdate();
 
-				toSetEndDate(buttonInteraction, giveawayId, giveawayManager);
+				toSetEndDate(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -167,11 +159,7 @@ export default async function toDashboard(
 			case "setRequiredRoles": {
 				await buttonInteraction.deferUpdate();
 
-				toSetRequiredRoles(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
+				toSetRequiredRoles(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -179,7 +167,7 @@ export default async function toDashboard(
 			case "setPingRoles": {
 				await buttonInteraction.deferUpdate();
 
-				toSetPingRoles(buttonInteraction, giveawayId, giveawayManager);
+				toSetPingRoles(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -188,7 +176,7 @@ export default async function toDashboard(
 				// await buttonInteraction.deferUpdate();
 				// Showing modal
 
-				toEditGiveaway(buttonInteraction, giveawayId, giveawayManager);
+				toEditGiveaway(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -196,7 +184,7 @@ export default async function toDashboard(
 			case "managePrizes": {
 				await buttonInteraction.deferUpdate();
 
-				toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
+				toManagePrizes(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -204,7 +192,7 @@ export default async function toDashboard(
 			case "endGiveaway": {
 				await buttonInteraction.deferUpdate();
 
-				toEndGiveaway(buttonInteraction, giveawayId, giveawayManager);
+				toEndGiveaway(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -212,7 +200,7 @@ export default async function toDashboard(
 			case "resetData": {
 				await buttonInteraction.deferUpdate();
 
-				toResetData(buttonInteraction, giveawayId, giveawayManager);
+				toResetData(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -220,11 +208,7 @@ export default async function toDashboard(
 			case "deleteGiveaway": {
 				await buttonInteraction.deferUpdate();
 
-				toDeleteGiveaway(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
+				toDeleteGiveaway(buttonInteraction, id, giveawayManager);
 
 				break;
 			}

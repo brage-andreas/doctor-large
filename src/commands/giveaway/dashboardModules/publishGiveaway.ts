@@ -18,10 +18,10 @@ import formatGiveaway from "../mod.formatGiveaway.js";
 
 export default async function toPublishGiveaway(
 	interaction: ButtonInteraction<"cached">,
-	giveawayId: number,
+	id: number,
 	giveawayManager: GiveawayManager
 ) {
-	const giveaway = await giveawayManager.get(giveawayId);
+	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
 		return;
@@ -52,7 +52,7 @@ export default async function toPublishGiveaway(
 		const updateMsg = await interaction.editReply({
 			content: chooseChannelStr,
 			components: [row1, row2],
-			embeds: [await formatGiveaway(giveaway, true, interaction.guild)]
+			embeds: [formatGiveaway(giveaway, true, interaction.guild)]
 		});
 
 		const componentInteraction = await updateMsg.awaitMessageComponent({
@@ -62,7 +62,7 @@ export default async function toPublishGiveaway(
 		if (componentInteraction.customId === "back") {
 			await componentInteraction.deferUpdate();
 
-			toDashboard(interaction, giveawayId);
+			toDashboard(interaction, id);
 
 			return;
 		}
@@ -106,14 +106,10 @@ export default async function toPublishGiveaway(
 			}
 
 			const msg = await channel.send({
-				embeds: [
-					await formatGiveaway(giveaway, true, interaction.guild)
-				],
+				embeds: [formatGiveaway(giveaway, true, interaction.guild)],
 				components: [
 					new ActionRowBuilder<ButtonBuilder>().setComponents(
-						giveawayComponents.dashboard.enterGiveawayButton(
-							giveawayId
-						)
+						giveawayComponents.dashboard.enterGiveawayButton(id)
 					)
 				]
 			});
@@ -128,16 +124,16 @@ export default async function toPublishGiveaway(
 				embeds: []
 			});
 
-			new Logger({ prefix: "GIVEAWAY", interaction }).logInteraction(
-				`Published giveaway #${giveawayId} in ${channel.name} (${channelId})`
+			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				`Published giveaway #${id} in ${channel.name} (${channelId})`
 			);
 
 			giveawayManager.edit({
 				where: {
-					giveawayId: giveaway.giveawayId
+					id: giveaway.id
 				},
 				data: {
-					messageId: msg.id,
+					publishedMessageId: msg.id,
 					channelId,
 					...lastEditBy(interaction.user)
 				}
