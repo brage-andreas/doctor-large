@@ -23,5 +23,12 @@ export const INTENTS: Array<GatewayIntentBits> = [
 	GatewayIntentBits.GuildMessages
 ];
 
+export const GIVEAWAY = {
+	MAX_TITLE_LEN: 50,
+	MAX_DESCRIPTION_LEN: 200,
+	MAX_DESCRIPTION_LINES: 20,
+	MAX_WINNER_QUANTITY_LEN: 2
+} as const;
+
 export const DEFAULT_LOGGER_PREFIX = "LOG";
 export const DEFAULT_LOGGER_COLOR: Color = "yellow";
