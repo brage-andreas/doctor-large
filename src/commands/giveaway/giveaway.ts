@@ -8,9 +8,9 @@ import {
 	type Command,
 	type CommandModuleInteractions
 } from "../../typings/index.js";
-import sendToAutocompleteGiveaway from "./mod.autocompleteGiveaway.js";
-import sendToCreate from "./mod.create.js";
-import sendToDashboard from "./mod.dashboard.js";
+import sendToAutocompleteGiveaway from "./giveawayModules/autocompleteGiveaway.js";
+import sendToCreate from "./giveawayModules/create.js";
+import sendToDashboard from "./giveawayModules/dashboard.js";
 
 const data: RESTPostAPIApplicationCommandsJSONBody = {
 	name: "giveaway",

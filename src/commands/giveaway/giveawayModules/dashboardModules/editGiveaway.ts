@@ -1,10 +1,10 @@
 import { stripIndents } from "common-tags";
 import { type ButtonInteraction } from "discord.js";
-import { giveawayComponents } from "../../../components/index.js";
-import type GiveawayManager from "../../../database/giveaway.js";
-import lastEditBy from "../../../helpers/lastEdit.js";
-import Logger from "../../../logger/logger.js";
-import toDashboard from "../mod.dashboard.js";
+import { giveawayComponents } from "../../../../components/index.js";
+import type GiveawayManager from "../../../../database/giveaway.js";
+import lastEditBy from "../../../../helpers/lastEdit.js";
+import Logger from "../../../../logger/logger.js";
+import toDashboard from "../dashboard.js";
 
 export default async function toEditGiveaway(
 	interaction: ButtonInteraction<"cached">,
@@ -59,7 +59,7 @@ export default async function toEditGiveaway(
 
 	const winnerQuantity =
 		Number(
-			modalInteraction.fields.getTextInputValue("newWinnersQuantity")
+			modalInteraction.fields.getTextInputValue("newWinnerQuantity")
 		) ?? 1;
 
 	new Logger({ prefix: "GIVEAWAY", interaction }).log(

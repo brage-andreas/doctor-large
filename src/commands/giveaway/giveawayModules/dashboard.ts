@@ -7,9 +7,10 @@ import {
 	type CommandInteraction,
 	type ModalSubmitInteraction
 } from "discord.js";
-import { giveawayComponents } from "../../components/index.js";
-import GiveawayManager from "../../database/giveaway.js";
-import lastEditBy from "../../helpers/lastEdit.js";
+import { giveawayComponents } from "../../../components/index.js";
+import GiveawayManager from "../../../database/giveaway.js";
+import formatGiveaway from "../../../helpers/formatGiveaway.js";
+import lastEditBy from "../../../helpers/lastEdit.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import toEditGiveaway from "./dashboardModules/editGiveaway.js";
 import toEndGiveaway from "./dashboardModules/endGiveaway.js";
@@ -20,8 +21,7 @@ import toResetData from "./dashboardModules/resetData.js";
 import toSetEndDate from "./dashboardModules/setEndDate.js";
 import toSetPingRoles from "./dashboardModules/setPingRoles.js";
 import toSetRequiredRoles from "./dashboardModules/setRequiredRoles.js";
-import toEndedDashboard from "./mod.endedGiveawayDashboard.js";
-import formatGiveaway from "./mod.formatGiveaway.js";
+import toEndedDashboard from "./endedGiveawayDashboard.js";
 
 export default async function toDashboard(
 	interaction:
@@ -53,11 +53,11 @@ export default async function toDashboard(
 		return;
 	}
 
-	const publishButton = giveaway.messageId
+	const publishButton = giveaway.publishedMessageId
 		? giveawayComponents.dashboard.row1.publishingOptionsButton()
 		: giveawayComponents.dashboard.row1.publishGiveawayButton();
 
-	const lockEntriesButton = giveaway.lockEntries
+	const lockEntriesButton = giveaway.entriesLocked
 		? giveawayComponents.dashboard.row1.unlockEntriesButton()
 		: giveawayComponents.dashboard.row1.lockEntriesButton();
 
@@ -122,7 +122,7 @@ export default async function toDashboard(
 				await giveawayManager.edit({
 					where: { id },
 					data: {
-						lockEntries: true,
+						entriesLocked: true,
 						...lastEditBy(interaction.user)
 					}
 				});
@@ -138,7 +138,7 @@ export default async function toDashboard(
 				await giveawayManager.edit({
 					where: { id },
 					data: {
-						lockEntries: false,
+						entriesLocked: false,
 						...lastEditBy(interaction.user)
 					}
 				});

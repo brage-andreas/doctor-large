@@ -8,14 +8,14 @@ import {
 	type CommandInteraction,
 	type ModalSubmitInteraction
 } from "discord.js";
-import { EMOJIS } from "../../constants.js";
-import type GiveawayManager from "../../database/giveaway.js";
-import lastEditBy from "../../helpers/lastEdit.js";
-import { type GiveawayWithIncludes } from "../../typings/database.js";
+import { EMOJIS } from "../../../constants.js";
+import type GiveawayManager from "../../../database/giveaway.js";
+import formatGiveaway from "../../../helpers/formatGiveaway.js";
+import lastEditBy from "../../../helpers/lastEdit.js";
+import { type GiveawayWithIncludes } from "../../../typings/database.js";
+import toDashboard from "./dashboard.js";
 import { publishWinners } from "./endModules/publishWinners.js";
-import { rollWinners } from "./endModules/rollWinners.js";
-import toDashboard from "./mod.dashboard.js";
-import formatGiveaway from "./mod.formatGiveaway.js";
+import { signWinners } from "./endModules/rollWinners/signWinners.js";
 
 export default async function toEndedDashboard(
 	interaction:
@@ -49,17 +49,9 @@ export default async function toEndedDashboard(
 		? republishWinnersButton
 		: publishWinnersButton;
 
-	const rerollWinnersButton = new ButtonBuilder()
-		.setCustomId("rerollWinners")
-		.setLabel("Re-roll winners")
-		.setStyle(ButtonStyle.Primary)
-		.setDisabled(
-			Boolean(giveaway.prizes.filter((p) => !p.winner?.accepted).length)
-		);
-
 	const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		winnerButton,
-		rerollWinnersButton
+		unpublishWinnersButton
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -172,10 +164,9 @@ export default async function toEndedDashboard(
 			case "rerollWinners": {
 				await buttonInteraction.deferUpdate();
 
-				await rollWinners({
-					giveawayManager,
-					id: giveaway.id,
-					guild: interaction.guild
+				await signWinners({
+					guild: interaction.guild,
+					giveawayId: giveaway.id
 				});
 
 				toEndedDashboard(interaction, giveawayManager, giveaway);

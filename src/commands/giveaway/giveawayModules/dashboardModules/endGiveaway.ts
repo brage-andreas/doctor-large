@@ -5,13 +5,13 @@ import {
 	ButtonStyle,
 	type ButtonInteraction
 } from "discord.js";
-import type GiveawayManager from "../../../database/giveaway.js";
-import lastEditBy from "../../../helpers/lastEdit.js";
-import yesNo from "../../../helpers/yesNo.js";
-import Logger from "../../../logger/logger.js";
-import { publishWinners } from "../endModules/publishWinners.js";
-import { rollWinners } from "../endModules/rollWinners.js";
-import toDashboard from "../mod.dashboard.js";
+import type GiveawayManager from "../../../../database/giveaway.js";
+import lastEditBy from "../../../../helpers/lastEdit.js";
+import yesNo from "../../../../helpers/yesNo.js";
+import Logger from "../../../../logger/logger.js";
+import { publishWinners } from "../../endModules/publishWinners.js";
+import { signWinners } from "../../endModules/rollWinners/signWinners.js";
+import toDashboard from "../dashboard.js";
 
 export default async function toEndGiveaway(
 	interaction: ButtonInteraction<"cached">,
@@ -55,13 +55,13 @@ export default async function toEndGiveaway(
 	}
 
 	if (!giveaway.channelId) {
-		await interaction.editReply({
+		await interaction.followUp({
 			components: [],
 			content: "⚠️ The giveaway has never been published.",
 			embeds: []
 		});
 
-		return;
+		return toDashboard(interaction, id);
 	}
 
 	const channel = interaction.guild.channels.cache.get(giveaway.channelId);
@@ -70,7 +70,8 @@ export default async function toEndGiveaway(
 		await interaction.editReply({
 			components: [],
 			embeds: [],
-			content: "⚠️ This channel does not exist, or is not a text channel."
+			content:
+				"⚠️ The channel the giveaway was published in does not exist. Republish it and try again."
 		});
 
 		return;
@@ -112,11 +113,9 @@ export default async function toEndGiveaway(
 		interaction
 	}).log(`Ended giveaway #${id}`);
 
-	const winners = await rollWinners({
-		giveawayManager,
-		id,
-		guild: interaction.guild
-	});
+	await signWinners({ giveawayId: giveaway.id, guild: interaction.guild });
+
+	const winnerCount = await giveawayManager.getUniqueWinnerCount(giveaway.id);
 
 	const publishWinnersNow = await yesNo({
 		filter: (i) => i.user.id === interaction.user.id,
@@ -129,9 +128,9 @@ export default async function toEndGiveaway(
 			embeds: [],
 			content: stripIndents`
 				Done! Giveaway #${giveaway.guildRelativeId} has ended.
-				→ Entries are locked.
-				→ Giveaway is no longer active.
-				→ ${winners.length}/${giveaway.winnerQuantity} winners have been rolled.
+				→ 🔒 Entries are locked.
+				→ 🔴 Giveaway is not active.
+				→ ${winnerCount}/${giveaway.winnerQuantity} winners have been rolled.
 
 				Do you want to publish the winners right away?
 			`

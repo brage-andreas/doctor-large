@@ -13,16 +13,23 @@ import lastEditBy from "../../../helpers/lastEdit.js";
 import { listify } from "../../../helpers/listify.js";
 import Logger from "../../../logger/logger.js";
 import { type GiveawayWithIncludes } from "../../../typings/database.js";
-import { getWinnersAndTheirPrizes } from "./getWinners.js";
+import { getAllWinners, getWinnersAndTheirPrizes } from "./getWinners.js";
 
 const getWinnersEmbed = (giveaway: GiveawayWithIncludes) => {
-	const wonPrizes = getWinnersAndTheirPrizes(giveaway);
+	const winnerWithPrizesMap = getWinnersAndTheirPrizes(giveaway);
 
-	const data = wonPrizes
-		.map(
-			(wonPrize) =>
-				`→ <@${wonPrize.userId}> won **${wonPrize.quantityWon}x ${wonPrize.name}**`
-		)
+	const data = [...winnerWithPrizesMap.entries()]
+		.map(([userId, wonPrizes]) => {
+			const wonArray = wonPrizes.reduce((array, wonPrize) => {
+				array.push(
+					`→ <@${userId}> won **${wonPrize.quantityWon}x ${wonPrize.name}**`
+				);
+
+				return array;
+			}, [] as Array<string>);
+
+			return wonArray.join("\n");
+		})
 		.join("\n");
 
 	const embed = new EmbedBuilder()
@@ -34,8 +41,8 @@ const getWinnersEmbed = (giveaway: GiveawayWithIncludes) => {
 
 	embed.setDescription(stripIndents`
 		The winners are: ${listify(
-			wonPrizes.map((wonPrize) => `<@${wonPrize.userId}>`),
-			{ length: wonPrizes.length }
+			[...winnerWithPrizesMap.keys()].map((userId) => `<@${userId}>`),
+			{ length: winnerWithPrizesMap.size }
 		)}
 
 		${data}
@@ -96,13 +103,7 @@ export async function publishWinners(
 			.catch(() => null);
 	}
 
-	const winnerIds = [
-		...new Set(
-			giveaway.prizes
-				.map((prize) => prize.winner?.userId)
-				.filter((e) => Boolean(e)) as Array<string>
-		)
-	];
+	const winnerIds = getAllWinners(giveaway);
 
 	const acceptPrizeButton = new ButtonBuilder()
 		.setCustomId(`accept-prize-${id}`)
@@ -117,7 +118,7 @@ export async function publishWinners(
 	const embed = getWinnersEmbed(giveaway);
 	let message: Message<true> | null;
 
-	if (!embed) {
+	if (!embed || !winnerIds) {
 		await interaction.editReply({
 			content: stripIndents`
 				⚠️ This giveaway has no prizes, and therefore no winners. Add some prizes, and try again.
@@ -252,17 +253,11 @@ export async function republishWinners(
 		return;
 	}
 
-	const winnerIds = [
-		...new Set(
-			giveaway.prizes
-				.map((prize) => prize.winner?.userId)
-				.filter((e) => Boolean(e)) as Array<string>
-		)
-	];
+	const winnerIds = getAllWinners(giveaway);
 
 	const embed = getWinnersEmbed(giveaway);
 
-	if (!embed) {
+	if (!embed || !winnerIds) {
 		await interaction.editReply({
 			content: stripIndents`
 				⚠️ This giveaway has no prizes, and therefore no winners. Add some prizes, and try again.

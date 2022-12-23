@@ -5,12 +5,12 @@ import {
 	type ButtonBuilder,
 	type ButtonInteraction
 } from "discord.js";
-import { giveawayComponents } from "../../../components/index.js";
-import type GiveawayManager from "../../../database/giveaway.js";
-import lastEditBy from "../../../helpers/lastEdit.js";
-import { listify } from "../../../helpers/listify.js";
-import Logger from "../../../logger/logger.js";
-import toDashboard from "../mod.dashboard.js";
+import { giveawayComponents } from "../../../../components/index.js";
+import type GiveawayManager from "../../../../database/giveaway.js";
+import lastEditBy from "../../../../helpers/lastEdit.js";
+import { listify } from "../../../../helpers/listify.js";
+import Logger from "../../../../logger/logger.js";
+import toDashboard from "../dashboard.js";
 
 export default async function toSetRequiredRoles(
 	interaction: ButtonInteraction<"cached">,

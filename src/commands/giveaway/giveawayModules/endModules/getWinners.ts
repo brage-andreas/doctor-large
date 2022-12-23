@@ -1,4 +1,5 @@
 import { type Prize, type Winner } from "@prisma/client";
+import theirPrizes from "../../../helpers/theirPrizes.js";
 import { type GiveawayWithIncludes } from "../../../typings/database.js";
 
 export function getAllWinners(giveaway: GiveawayWithIncludes) {
@@ -42,15 +43,9 @@ export function getWinnersAndTheirPrizes(giveaway: GiveawayWithIncludes) {
 	}, new Set<string>());
 
 	allWinnerIds.forEach((winnerId) => {
-		const theirPrizes = giveaway.prizes.map((prize) => {
-			prize.winners = prize.winners.filter(
-				({ userId }) => userId === winnerId
-			);
+		const prizes = theirPrizes(giveaway, winnerId);
 
-			return prize;
-		});
-
-		const toPool = theirPrizes.reduce((pool: Array<WonPrize>, prize) => {
+		const toPool = prizes.reduce((pool: Array<WonPrize>, prize) => {
 			pool.push({
 				additionalInfo: prize.additionalInfo,
 				giveawayId: prize.giveawayId,
