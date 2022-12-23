@@ -45,22 +45,9 @@ export default class Logger {
 	public log(...messages: Array<string>) {
 		if (this.interaction) {
 			this.logInteraction(...messages);
-
-			return;
+		} else {
+			this._log(...messages);
 		}
-
-		const date = new Date().toLocaleString("en-GB");
-
-		const prefix = "::".padStart(this.prefix.length, " ");
-		const colorFn = getColorFn(this.color);
-
-		console.log(`${colorFn(this.prefix)} ${grey(date)}`);
-
-		messages.forEach((message) => {
-			console.log(`${grey(prefix)} ${message}`);
-		});
-
-		console.log();
 	}
 
 	private logInteraction(...messages: Array<string>) {
@@ -90,6 +77,21 @@ export default class Logger {
 			cmdArray.push(cmdString);
 		}
 
-		this.log(...cmdArray, ...messages);
+		this._log(...cmdArray, ...messages);
+	}
+
+	private _log(...messages: Array<string>) {
+		const date = new Date().toLocaleString("en-GB");
+
+		const prefix = "::".padStart(this.prefix.length, " ");
+		const colorFn = getColorFn(this.color);
+
+		console.log(`${colorFn(this.prefix)} ${grey(date)}`);
+
+		messages.forEach((message) => {
+			console.log(`${grey(prefix)} ${message}`);
+		});
+
+		console.log();
 	}
 }
