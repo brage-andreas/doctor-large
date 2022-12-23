@@ -19,7 +19,7 @@ model Autorole {
 }
 
 model Winner {
-  accepted    Boolean @default(true)
+  accepted    Boolean @default(false)
   prize       Prize   @relation(fields: [prizeId], references: [id])
   prizeId     Int     @map("prize_id")
   quantityWon Int     @map("quantity_won")
