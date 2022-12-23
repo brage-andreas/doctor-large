@@ -1,8 +1,10 @@
-import { type giveawayPrize, type giveawayWinner } from "@prisma/client";
+import { type Prize, type Winner } from "@prisma/client";
 import { oneLine, stripIndents } from "common-tags";
 import { type ButtonInteraction } from "discord.js";
+import { getAllWinners } from "../../commands/giveaway/giveawayModules/endModules/getWinners.js";
 import { EMOJIS, REGEXP } from "../../constants.js";
 import GiveawayManager from "../../database/giveaway.js";
+import theirPrizes from "../../helpers/theirPrizes.js";
 import Logger from "../../logger/logger.js";
 
 export default async function acceptPrize(
@@ -25,11 +27,19 @@ export default async function acceptPrize(
 		return;
 	}
 
-	const winners = new Set(
-		giveaway.prizes
-			.map((prize) => prize.winner?.userId)
-			.filter((e) => Boolean(e))
-	);
+	const rawWinners = getAllWinners(giveaway);
+
+	if (!rawWinners) {
+		interaction.followUp({
+			ephemeral: true,
+			content:
+				"⚠️ Could not find the winners. Contact an admin if this error persists."
+		});
+
+		return;
+	}
+
+	const winners = new Set(rawWinners);
 
 	if (!winners.has(interaction.user.id)) {
 		interaction.followUp({
@@ -44,41 +54,19 @@ export default async function acceptPrize(
 		return;
 	}
 
-	const prizeToString = (prize: giveawayPrize) => {
+	const prizes = theirPrizes(giveaway, interaction.user.id);
+
+	const prizeToString = (prize: Prize & { winners: Array<Winner> }) => {
 		const name = `**${prize.name}**`;
-		const amount = `${prize.amount}x`;
+		const quantity = `${prize.winners[0].quantityWon}x`;
 		const additionalInfo = prize.additionalInfo
 			? ` | ${prize.additionalInfo}`
 			: "";
 
-		return `${amount} ${name}${additionalInfo}`;
+		return `${quantity} ${name}${additionalInfo}`;
 	};
 
-	const rawPrizes = giveaway.prizes.filter(
-		(prize) => prize.winner?.userId === interaction.user.id
-	);
-
-	if (
-		!rawPrizes.length ||
-		!rawPrizes.some((prize) => Boolean(prize.winner))
-	) {
-		interaction.followUp({
-			content: stripIndents`
-				⚠️ Something went wrong. Please try again.
-				
-				If the error persists, contact the giveaway's host or an admin.
-			`,
-			ephemeral: true
-		});
-
-		return;
-	}
-
-	const prizes = rawPrizes as Array<
-		giveawayPrize & { winner: giveawayWinner }
-	>;
-
-	if (prizes.every((prize) => prize.winner.accepted)) {
+	if (prizes.every((prize) => prize.winners[0].accepted)) {
 		interaction.followUp({
 			content: stripIndents`
 				${EMOJIS.V} You have already claimed all your prizes. You're all set! 😁
@@ -108,20 +96,24 @@ export default async function acceptPrize(
 	}).log(
 		oneLine`
 			User ${interaction.user.tag} (${interaction.user.id})
-			claimed prizes ${prizes.map((p) => `#${p.prizeId}`).join(", ")}
+			claimed prizes ${prizes.map((p) => `#${p.id}`).join(", ")}
 			in giveaway #${giveaway.id}
 		`
 	);
 
-	giveawayManager.editWinner({
-		where: {
-			userId_id: {
-				id: giveaway.id,
-				userId: prizes[0].winner.userId
-			}
-		},
-		data: {
-			accepted: true
-		}
-	});
+	const prizeIds = giveaway.prizes
+		.filter((prize) =>
+			prize.winners.some(
+				(winner) => winner.userId === interaction.user.id
+			)
+		)
+		.map((prize) => prize.id);
+
+	for (const id of prizeIds) {
+		await giveawayManager.updateWinnerAcceptance({
+			accepted: true,
+			prizeId: id,
+			userId: interaction.user.id
+		});
+	}
 }

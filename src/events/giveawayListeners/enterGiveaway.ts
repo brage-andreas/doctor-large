@@ -26,7 +26,7 @@ export default async function enterGiveaway(
 		return;
 	}
 
-	if (giveaway.lockEntries) {
+	if (giveaway.entriesLocked) {
 		interaction.followUp({
 			content:
 				"🔒 Sorry, new entries are currently locked. Try again later.",
@@ -36,10 +36,10 @@ export default async function enterGiveaway(
 		return;
 	}
 
-	if (!interaction.member.roles.cache.hasAll(...giveaway.requiredRoles)) {
+	if (!interaction.member.roles.cache.hasAll(...giveaway.requiredRolesIds)) {
 		const rolesTheyHave = new Set(interaction.member.roles.cache.keys());
 
-		const rolesTheyNeed = giveaway.requiredRoles
+		const rolesTheyNeed = giveaway.requiredRolesIds
 			.filter((roleId) => !rolesTheyHave.has(roleId))
 			.map((roleId) => `<@&${roleId}>`);
 
@@ -82,7 +82,7 @@ export default async function enterGiveaway(
 		return;
 	}
 
-	const entrants = new Set(giveaway.userEntriesIds);
+	const entrants = new Set(giveaway.entriesUserIds);
 
 	if (entrants.has(interaction.user.id)) {
 		entrants.delete(interaction.user.id);
@@ -133,7 +133,7 @@ export default async function enterGiveaway(
 			id: Number(id)
 		},
 		data: {
-			userEntriesIds: [...entrants]
+			entriesUserIds: [...entrants]
 		}
 	});
 }
