@@ -332,14 +332,14 @@ export const giveaway = {
 		/**
 		 * ID: editGiveaway
 		 *
-		 * Children: newTitle, newDescription, newNumberOfWinners
+		 * Children: newTitle, newDescription, newWinnerQuantity
 		 */
 		editOptionsModal: (
 			id: number,
 			oldTitle: string,
 			oldDescription: string | null,
-			oldWinnerQuantiy: number
-		) => editOptionsModal(id, oldTitle, oldDescription, oldWinnerQuantiy)
+			oldWinnerQuantity: number
+		) => editOptionsModal(id, oldTitle, oldDescription, oldWinnerQuantity)
 	},
 	dashboard: {
 		row1: {
