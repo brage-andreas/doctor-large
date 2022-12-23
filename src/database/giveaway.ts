@@ -9,17 +9,6 @@ export default class GiveawayManager {
 	public readonly guildId: string;
 	public readonly prisma = prisma;
 
-	public readonly prizes = {
-		get: this.getPrizes,
-		create: this.createPrizes,
-		edit: this.editPrize
-	};
-
-	public readonly winners = {
-		create: this.createWinners,
-		edit: this.editWinners
-	};
-
 	public constructor(guildId: string) {
 		this.guildId = guildId;
 	}
@@ -88,10 +77,10 @@ export default class GiveawayManager {
 		return await this.prisma.giveaway.update(args);
 	}
 
-	private async getPrizes(id: number): Promise<Array<PrizeWithIncludes>> {
-		return await this.prisma.prize.findMany({
+	public async getPrize(prizeId: number): Promise<PrizeWithIncludes | null> {
+		return await this.prisma.prize.findFirst({
 			where: {
-				id
+				id: prizeId
 			},
 			include: {
 				giveaway: true,
@@ -100,21 +89,86 @@ export default class GiveawayManager {
 		});
 	}
 
-	private async createPrizes(...args: Array<Prisma.PrizeCreateManyInput>) {
+	public async getPrizes(
+		giveawayId: number
+	): Promise<Array<PrizeWithIncludes>> {
+		return await this.prisma.prize.findMany({
+			where: {
+				giveawayId
+			},
+			include: {
+				giveaway: true,
+				winners: true
+			}
+		});
+	}
+
+	public async createPrizes(...args: Array<Prisma.PrizeCreateManyInput>) {
 		return await this.prisma.prize.createMany({
 			data: args
 		});
 	}
 
-	private async createWinners(...args: Array<Prisma.WinnerCreateManyInput>) {
-		return await this.prisma.winner.createMany({ data: args });
-	}
-
-	private async editPrize(args: Prisma.PrizeUpdateArgs) {
+	public async editPrize(args: Prisma.PrizeUpdateArgs) {
 		return await this.prisma.prize.update(args);
 	}
 
-	private async editWinners(args: Prisma.WinnerUpdateArgs) {
-		return await this.prisma.winner.update(args);
+	public async getUniqueWinnerCount(giveawayId: number): Promise<number> {
+		const data = await this.prisma.prize.findMany({
+			where: {
+				giveawayId
+			},
+			include: {
+				winners: true
+			}
+		});
+
+		return data.reduce((set, e) => {
+			e.winners.forEach((winner) => set.add(winner.userId));
+
+			return set;
+		}, new Set<string>()).size;
+	}
+
+	public async upsertWinner(args: Prisma.WinnerCreateInput) {
+		if (!args.prize.connect?.id) {
+			throw new Error("prize.connect is undefined");
+		}
+
+		return await this.prisma.winner.upsert({
+			create: args,
+			update: {
+				accepted: args.accepted,
+				quantityWon: args.quantityWon
+			},
+			where: {
+				prizeId_userId: {
+					prizeId: args.prize.connect.id,
+					userId: args.userId
+				}
+			}
+		});
+	}
+
+	public async updateWinnerAcceptance({
+		accepted,
+		prizeId,
+		userId
+	}: {
+		accepted: boolean;
+		prizeId: number;
+		userId: string;
+	}) {
+		return await this.prisma.winner.update({
+			data: {
+				accepted
+			},
+			where: {
+				prizeId_userId: {
+					prizeId,
+					userId
+				}
+			}
+		});
 	}
 }
