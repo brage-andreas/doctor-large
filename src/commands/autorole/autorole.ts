@@ -137,9 +137,11 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 		collector.on("end", async (_, reason) => {
 			if (reason === "time") {
-				await interaction.editReply({
-					components: []
-				});
+				await interaction
+					.editReply({
+						components: []
+					})
+					.catch(() => null);
 
 				return;
 			}
