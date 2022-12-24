@@ -1,3 +1,4 @@
+import { stripIndents } from "common-tags";
 import { type RESTPostAPIApplicationCommandsJSONBody } from "discord.js";
 import GiveawayManager from "../../database/giveaway.js";
 import { type GiveawayWithIncludes } from "../../typings/database.js";
@@ -12,11 +13,32 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 	description: "View all the giveaways you have participated in."
 };
 
+const giveawayToShortString = (giveaway: GiveawayWithIncludes) => {
+	const inactive = giveaway.active ? "" : "🔴 ";
+	const id = `#${giveaway.id}`;
+	const { title } = giveaway;
+	const winners = `${giveaway.winnerQuantity} winners`;
+	const prizesQuantity = giveaway.prizes.reduce(
+		(acc, prize) => acc + prize.quantity,
+		0
+	);
+
+	return `${inactive}${id} **${title}** - ${winners}, ${prizesQuantity} prizes`;
+};
+
 const stringFromEnteredGiveaways = (giveaways: Array<GiveawayWithIncludes>) => {
 	const activeGiveaways = giveaways.filter((g) => g.active);
 	const notActiveGiveaways = giveaways.filter((g) => !g.active);
 
-	// TODO
+	const string = stripIndents`
+		**Won giveaways**
+
+		**Active**
+		${activeGiveaways.map(giveawayToShortString)}
+
+		**Inactive**
+		${notActiveGiveaways.map(giveawayToShortString)}
+	`;
 };
 
 const run = async (interaction: CommandModuleInteractions) => {
