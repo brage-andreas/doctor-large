@@ -1,6 +1,6 @@
 import { type Prize, type Winner } from "@prisma/client";
-import theirPrizes from "../../../helpers/theirPrizes.js";
-import { type GiveawayWithIncludes } from "../../../typings/database.js";
+import theirPrizes from "../../../../helpers/theirPrizes.js";
+import { type GiveawayWithIncludes } from "../../../../typings/database.js";
 
 export function getAllWinners(giveaway: GiveawayWithIncludes) {
 	const winners = [

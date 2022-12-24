@@ -1,5 +1,5 @@
 import { type Collection, type Guild, type GuildMember } from "discord.js";
-import { type GiveawayWithIncludes } from "../../../../typings/database.js";
+import { type GiveawayWithIncludes } from "../../../../../typings/database.js";
 
 export function isValidEntrant({
 	entryId,

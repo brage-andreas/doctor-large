@@ -9,9 +9,9 @@ import type GiveawayManager from "../../../../database/giveaway.js";
 import lastEditBy from "../../../../helpers/lastEdit.js";
 import yesNo from "../../../../helpers/yesNo.js";
 import Logger from "../../../../logger/logger.js";
-import { publishWinners } from "../../endModules/publishWinners.js";
-import { signWinners } from "../../endModules/rollWinners/signWinners.js";
 import toDashboard from "../dashboard.js";
+import { publishWinners } from "../endModules/publishWinners.js";
+import { signWinners } from "../endModules/rollWinners/signWinners.js";
 
 export default async function toEndGiveaway(
 	interaction: ButtonInteraction<"cached">,

@@ -8,11 +8,11 @@ import {
 	type Message,
 	type RepliableInteraction
 } from "discord.js";
-import GiveawayManager from "../../../database/giveaway.js";
-import lastEditBy from "../../../helpers/lastEdit.js";
-import { listify } from "../../../helpers/listify.js";
-import Logger from "../../../logger/logger.js";
-import { type GiveawayWithIncludes } from "../../../typings/database.js";
+import GiveawayManager from "../../../../database/giveaway.js";
+import lastEditBy from "../../../../helpers/lastEdit.js";
+import { listify } from "../../../../helpers/listify.js";
+import Logger from "../../../../logger/logger.js";
+import { type GiveawayWithIncludes } from "../../../../typings/database.js";
 import { getAllWinners, getWinnersAndTheirPrizes } from "./getWinners.js";
 
 const getWinnersEmbed = (giveaway: GiveawayWithIncludes) => {

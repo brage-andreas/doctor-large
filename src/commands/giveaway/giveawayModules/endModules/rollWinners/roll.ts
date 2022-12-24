@@ -1,5 +1,5 @@
 import { type Prize, type Winner } from "@prisma/client";
-import { type GiveawayWithIncludes } from "../../../../typings/database.js";
+import { type GiveawayWithIncludes } from "../../../../../typings/database.js";
 
 type PrizeWithWinners = Prize & {
 	winners: Array<Winner>;

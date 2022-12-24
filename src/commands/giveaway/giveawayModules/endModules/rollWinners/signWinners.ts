@@ -1,5 +1,5 @@
 import { type Guild } from "discord.js";
-import GiveawayManager from "../../../../database/giveaway.js";
+import GiveawayManager from "../../../../../database/giveaway.js";
 import roll from "./roll.js";
 import { sortValidEntrants } from "./validEntrants.js";
 
