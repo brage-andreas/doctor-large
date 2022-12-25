@@ -19,7 +19,11 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 	const getName = (data: Giveaway) => {
 		const id = data.guildRelativeId;
 		const emoji = id === focused ? "✨" : id > focused ? "🔸" : "🔹";
-		const activeEmoji = !data.active ? "🔴 " : "";
+		const activeEmoji = !data.active
+			? "🔴 "
+			: data.entriesLocked
+			? "🔒 "
+			: "";
 
 		return `${emoji} #${data.guildRelativeId} ${activeEmoji}${data.title}`;
 	};
