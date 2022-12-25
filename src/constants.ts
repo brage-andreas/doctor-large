@@ -5,8 +5,9 @@ export const COMMAND_DIR = new URL("./commands", import.meta.url);
 export const EVENT_DIR = new URL("./events", import.meta.url);
 
 export const REGEXP = {
-	ID: /^\d{17,19}$/,
-	GIVEAWAY_ENTRY_BUTTON_CUSTOM_ID: /^enter-giveaway-(?<id>\d+)$/
+	ENTER_GIVEAWAY_CUSTOM_ID: /^enter-giveaway-(?<id>\d+)$/,
+	ACCEPT_PRIZE_CUSTOM_ID: /^accept-prize-(?<id>\d+)$/,
+	ID: /^\d{17,19}$/
 };
 
 export const EMOJIS = {
@@ -21,6 +22,13 @@ export const INTENTS: Array<GatewayIntentBits> = [
 	GatewayIntentBits.GuildMembers,
 	GatewayIntentBits.GuildMessages
 ];
+
+export const GIVEAWAY = {
+	MAX_TITLE_LEN: 50,
+	MAX_DESCRIPTION_LEN: 200,
+	MAX_DESCRIPTION_LINES: 20,
+	MAX_WINNER_QUANTITY_LEN: 2
+} as const;
 
 export const DEFAULT_LOGGER_PREFIX = "LOG";
 export const DEFAULT_LOGGER_COLOR: Color = "yellow";

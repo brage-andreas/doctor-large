@@ -4,44 +4,47 @@ import prisma from "./prisma.js";
 export default class AutoroleManager {
 	public readonly guildId: string;
 	private readonly prisma = prisma.autorole;
+	private initialized = false;
 
 	public constructor(guildId: string) {
 		this.guildId = guildId;
+	}
 
-		// Creates entry if it does not exist
-		// Not awaited, so it is still possible to get "null" from get()
-		this.prisma.findUnique({ where: { guildId } }).then((data) => {
-			if (data !== null) {
-				return;
-			}
-
-			// For some reason it does not work without a .then()
-			this.prisma.create({ data: { guildId } }).then(() => null);
+	public async initialize() {
+		// guildId is primary key, so `count` will only be 0 or 1
+		const count = await this.prisma.count({
+			where: { guildId: this.guildId }
 		});
+
+		if (count === 0) {
+			await this.prisma.create({ data: { guildId: this.guildId } });
+		}
+
+		this.initialized = true;
 	}
 
 	public async get() {
-		const data = await this.prisma.findUnique({
+		if (!this.initialized) {
+			throw new Error("Autorole manager has not been initialized.");
+		}
+
+		return await this.prisma.findUniqueOrThrow({
 			where: {
 				guildId: this.guildId
 			}
-		});
-
-		if (data) {
-			return data;
-		}
-
-		return await this.prisma.create({
-			data: { guildId: this.guildId }
 		});
 	}
 
-	public async update(data: Prisma.autoroleUpdateInput) {
+	public async update(data: Prisma.AutoroleUpdateInput) {
+		if (!this.initialized) {
+			throw new Error("Autorole manager has not been initialized.");
+		}
+
 		return await this.prisma.update({
-			data,
 			where: {
 				guildId: this.guildId
-			}
+			},
+			data
 		});
 	}
 }

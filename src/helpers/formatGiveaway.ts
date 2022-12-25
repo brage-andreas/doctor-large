@@ -1,54 +1,58 @@
 import { oneLine, stripIndents } from "common-tags";
 import { EmbedBuilder, PermissionFlagsBits, type Guild } from "discord.js";
 import ms from "ms";
-import { listify } from "../../helpers/listify.js";
-import { longStamp, timestamp } from "../../helpers/timestamps.js";
-import { type CompleteGiveaway } from "../../typings/database.js";
+import { type GiveawayWithIncludes } from "../typings/database.js";
+import { listify } from "./listify.js";
+import { longStamp, timestamp } from "./timestamps.js";
 
 function formatGiveaway(
-	giveaway: CompleteGiveaway,
+	giveaway: GiveawayWithIncludes,
 	embed: true,
 	guild?: Guild
 ): EmbedBuilder;
 function formatGiveaway(
-	giveaway: CompleteGiveaway,
+	giveaway: GiveawayWithIncludes,
 	embed: false,
 	guild?: Guild
 ): string;
 function formatGiveaway(
-	giveaway: CompleteGiveaway,
+	giveaway: GiveawayWithIncludes,
 	embed: boolean,
 	guild?: Guild
 ): EmbedBuilder | string {
 	const id = giveaway.guildRelativeId;
-	const title = giveaway.giveawayTitle;
-	const description = giveaway.giveawayDescription;
+	const title = giveaway.title;
+	const description = giveaway.description;
 	const active = giveaway.active;
-	const numberOfWinners = giveaway.numberOfWinners;
-	const requiredRoles = giveaway.requiredRoles;
+	const winnerQuantity = giveaway.winnerQuantity;
+	const requiredRolesIds = giveaway.requiredRolesIds;
 	const minimumAccountAge = giveaway.minimumAccountAge;
-	const rolesToPing = giveaway.rolesToPing;
-	const published = Boolean(giveaway.messageId);
+	const rolesToPing = giveaway.pingRolesIds;
+	const published = Boolean(giveaway.publishedMessageId);
 	const hostId = giveaway.hostUserId;
 	const hostTag = giveaway.hostUserTag;
-	const entries = giveaway.userEntriesIds.length;
-	const lockEntries = giveaway.lockEntries;
+	const entries = giveaway.entriesUserIds.length;
+	const lockEntries = giveaway.entriesLocked;
 	const created = giveaway.createdTimestamp;
 	const editUID = giveaway.lastEditedUserId;
 	const editTag = giveaway.lastEditedUserTag;
 	const editStamp = giveaway.lastEditedTimestamp;
 	const endTimestamp = giveaway.endTimestamp;
-	const winners = giveaway.prizes
-		.map((prize) => prize.winner)
-		.filter((e) => Boolean(e));
+	const winners = [
+		...giveaway.prizes.reduce((pool, prize) => {
+			prize.winners.forEach((id) => pool.add(id.userId));
+
+			return pool;
+		}, new Set<string>())
+	];
 
 	if (embed) {
-		const numberOfWinnersStr = `→ Number of winners: ${numberOfWinners}`;
+		const winnerQuantityStr = `→ Number of winners: ${winnerQuantity}`;
 
 		const requiredRolesStr = `→ Roles required to enter: ${
-			requiredRoles.length
+			requiredRolesIds.length
 				? listify(
-						requiredRoles.map((roleId) => `<@&${roleId}>`),
+						requiredRolesIds.map((roleId) => `<@&${roleId}>`),
 						{ length: 10 }
 				  )
 				: "None"
@@ -68,7 +72,7 @@ function formatGiveaway(
 			? giveaway.prizes
 					.map(
 						(prize) =>
-							`${prize.amount}x **${prize.name}** ${
+							`${prize.quantity}x **${prize.name}** ${
 								prize.additionalInfo
 									? `- ${prize.additionalInfo}`
 									: ""
@@ -81,7 +85,7 @@ function formatGiveaway(
 			${description}
 		
 			**Info**
-			${numberOfWinnersStr}
+			${winnerQuantityStr}
 			${endStr}
 			${requiredRolesStr}
 			${minimumAccountAgeStr}
@@ -99,9 +103,9 @@ function formatGiveaway(
 			});
 	}
 
-	const requiredRolesStr = requiredRoles.length
-		? `→ Required roles (${requiredRoles.length}): ${listify(
-				requiredRoles.map((roleId) => `<@&${roleId}>`),
+	const requiredRolesStr = requiredRolesIds.length
+		? `→ Required roles (${requiredRolesIds.length}): ${listify(
+				requiredRolesIds.map((roleId) => `<@&${roleId}>`),
 				{ length: 5 }
 		  )}`
 		: "→ Required roles: None";
@@ -146,7 +150,7 @@ function formatGiveaway(
 		? `**Prizes** (${giveaway.prizes.length}):\n${giveaway.prizes
 				.map(
 					(prize) =>
-						`→ ${prize.amount}x ${prize.name} ${
+						`→ ${prize.quantity}x ${prize.name} ${
 							prize.additionalInfo
 								? `- ${prize.additionalInfo}`
 								: ""
@@ -164,21 +168,25 @@ function formatGiveaway(
 	}`;
 
 	const idStr = `#${id}`;
-	const absoluteIdStr = `#${giveaway.giveawayId}`;
-	const numberOfWinnersStr = `→ Number of winners: ${numberOfWinners}`;
+	const absoluteIdStr = `#${giveaway.id}`;
+	const numberOfWinnersStr = `→ Number of winners: ${winnerQuantity}`;
 	const hostStr = `→ Host: ${hostTag} (${hostId})`;
 	const activeStr = `→ Active: ${active ? "Yes" : "No"}`;
 	const publishedStr = `→ Published: ${published ? "Yes" : "No"}`;
 	const entriesStr = `→ Entries: ${entries}`;
 	const createdStr = `→ Created: ${longStamp(created)}`;
 	const lockEntriesStr = `→ Entries locked: ${lockEntries ? "Yes" : "No"}`;
+
+	const gId = giveaway.guildId;
+	const cId = giveaway.channelId;
+	const mId = giveaway.publishedMessageId;
 	const messageUrl =
-		giveaway.guildId && giveaway.channelId && giveaway.messageId
-			? `→ [Link to giveaway](<https://discord.com/channels/${giveaway.guildId}/${giveaway.channelId}/${giveaway.messageId}>)`
+		giveaway.guildId && giveaway.channelId && giveaway.publishedMessageId
+			? `→ [Link to giveaway](<https://discord.com/channels/${gId}/${cId}/${mId}>)`
 			: null;
 
 	const winnersStr = winners.length
-		? `→ Winners (${winners.length}): ${winners
+		? `→ Winners (${winners.length}/${winnerQuantity}): ${winners
 				.map((id) => `<@${id}> (${id})`)
 				.join(", ")}`
 		: "→ No winners";

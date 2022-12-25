@@ -53,6 +53,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 	await interaction.deferReply();
 
 	const autoroleManager = new AutoroleManager(interaction.guildId);
+	await autoroleManager.initialize();
 
 	const logger = new Logger({ prefix: "AUTOROLE" });
 
@@ -97,7 +98,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 				roles = i.values;
 
-				logger.logInteraction(
+				logger.log(
 					oneLine`
 						Roles changed from
 						[${data.roleIds.join(", ")}]
@@ -107,7 +108,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 			} else if (i.customId === "autoroleClear") {
 				roles = [];
 
-				logger.logInteraction(
+				logger.log(
 					oneLine`
 						Roles changed from
 						[${data.roleIds.join(", ")}]
@@ -117,18 +118,17 @@ const run = async (interaction: CommandModuleInteractions) => {
 			} else if (i.customId === "autoroleEnable") {
 				active = true;
 
-				logger.logInteraction("Activated autorole");
+				logger.log("Activated autorole");
 			} else if (i.customId === "autoroleDisable") {
 				active = false;
-				logger.logInteraction("Deactivated autorole");
+				logger.log("Deactivated autorole");
 			}
 
 			await autoroleManager.update({
-				discordTimestamp: Date.now().toString(),
-				moderatorTag: i.user.tag,
-				moderatorId: i.user.id,
-
 				activated: active,
+				lastEditedTimestamp: Date.now().toString(),
+				lastEditedUserId: i.user.id,
+				lastEditedUserTag: i.user.tag,
 				roleIds: roles
 			});
 
@@ -137,9 +137,11 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 		collector.on("end", async (_, reason) => {
 			if (reason === "time") {
-				await interaction.editReply({
-					components: []
-				});
+				await interaction
+					.editReply({
+						components: []
+					})
+					.catch(() => null);
 
 				return;
 			}

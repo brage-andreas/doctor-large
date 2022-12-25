@@ -5,19 +5,19 @@ import {
 	type ButtonBuilder,
 	type ButtonInteraction
 } from "discord.js";
-import { giveawayComponents } from "../../../components/index.js";
-import type GiveawayManager from "../../../database/giveaway.js";
-import lastEditBy from "../../../helpers/lastEdit.js";
-import { listify } from "../../../helpers/listify.js";
-import Logger from "../../../logger/logger.js";
-import toDashboard from "../mod.dashboard.js";
+import { giveawayComponents } from "../../../../components/index.js";
+import type GiveawayManager from "../../../../database/giveaway.js";
+import lastEditBy from "../../../../helpers/lastEdit.js";
+import { listify } from "../../../../helpers/listify.js";
+import Logger from "../../../../logger/logger.js";
+import toDashboard from "../dashboard.js";
 
 export default async function toSetRequiredRoles(
 	interaction: ButtonInteraction<"cached">,
-	giveawayId: number,
+	id: number,
 	giveawayManager: GiveawayManager
 ) {
-	const giveaway = await giveawayManager.get(giveawayId);
+	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
 		return;
@@ -32,9 +32,9 @@ export default async function toSetRequiredRoles(
 			Select the roles you require entrants to have.
 			
 			Currently set to: ${
-				giveaway.requiredRoles.length
+				giveaway.requiredRolesIds.length
 					? listify(
-							giveaway.requiredRoles.map(
+							giveaway.requiredRolesIds.map(
 								(roleId) => `<@&${roleId}>`
 							),
 							{ length: 5 }
@@ -64,7 +64,7 @@ export default async function toSetRequiredRoles(
 	if (component.customId === "back") {
 		await component.deferUpdate();
 
-		toDashboard(interaction, giveawayId);
+		toDashboard(interaction, id);
 
 		return;
 	}
@@ -76,36 +76,36 @@ export default async function toSetRequiredRoles(
 
 		await component.deferUpdate();
 
-		new Logger({ prefix: "GIVEAWAY", interaction }).logInteraction(
-			`Edited required roles of giveaway #${giveaway.giveawayId}`
+		new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			`Edited required roles of giveaway #${giveaway.id}`
 		);
 
 		await giveawayManager.edit({
 			where: {
-				giveawayId: giveaway.giveawayId
+				id: giveaway.id
 			},
 			data: {
-				requiredRoles: component.values,
+				requiredRolesIds: component.values,
 				...lastEditBy(interaction.user)
 			}
 		});
 	} else if (component.customId === "clearRequiredRoles") {
 		await component.deferUpdate();
 
-		new Logger({ prefix: "GIVEAWAY", interaction }).logInteraction(
-			`Cleared required roles of giveaway #${giveaway.giveawayId}`
+		new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			`Cleared required roles of giveaway #${giveaway.id}`
 		);
 
 		await giveawayManager.edit({
 			where: {
-				giveawayId: giveaway.giveawayId
+				id: giveaway.id
 			},
 			data: {
-				requiredRoles: [],
+				requiredRolesIds: [],
 				...lastEditBy(interaction.user)
 			}
 		});
 	}
 
-	await toDashboard(interaction, giveawayId);
+	await toDashboard(interaction, id);
 }

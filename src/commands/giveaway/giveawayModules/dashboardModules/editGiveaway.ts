@@ -1,27 +1,27 @@
 import { stripIndents } from "common-tags";
 import { type ButtonInteraction } from "discord.js";
-import { giveawayComponents } from "../../../components/index.js";
-import type GiveawayManager from "../../../database/giveaway.js";
-import lastEditBy from "../../../helpers/lastEdit.js";
-import Logger from "../../../logger/logger.js";
-import toDashboard from "../mod.dashboard.js";
+import { giveawayComponents } from "../../../../components/index.js";
+import type GiveawayManager from "../../../../database/giveaway.js";
+import lastEditBy from "../../../../helpers/lastEdit.js";
+import Logger from "../../../../logger/logger.js";
+import toDashboard from "../dashboard.js";
 
 export default async function toEditGiveaway(
 	interaction: ButtonInteraction<"cached">,
-	giveawayId: number,
+	id: number,
 	giveawayManager: GiveawayManager
 ) {
-	const giveaway = await giveawayManager.get(giveawayId);
+	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
 		return;
 	}
 
 	const editGiveawayModal = giveawayComponents.edit.editOptionsModal(
-		giveaway.giveawayId,
-		giveaway.giveawayTitle,
-		giveaway.giveawayDescription,
-		giveaway.numberOfWinners
+		giveaway.id,
+		giveaway.title,
+		giveaway.description,
+		giveaway.winnerQuantity
 	);
 
 	await interaction.showModal(editGiveawayModal);
@@ -47,36 +47,36 @@ export default async function toEditGiveaway(
 
 	await modalInteraction.deferUpdate({ fetchReply: true });
 
-	const giveawayTitle = modalInteraction.fields.getTextInputValue("newTitle");
+	const title = modalInteraction.fields.getTextInputValue("newTitle");
 
 	const rawGiveawayDescription =
 		modalInteraction.fields.getTextInputValue("newDescription");
 
-	const giveawayDescription = rawGiveawayDescription
+	const description = rawGiveawayDescription
 		.split("\n")
 		.slice(0, 20)
 		.join("\n");
 
-	const numberOfWinners =
+	const winnerQuantity =
 		Number(
-			modalInteraction.fields.getTextInputValue("newNumberOfWinners")
+			modalInteraction.fields.getTextInputValue("newWinnerQuantity")
 		) ?? 1;
 
-	new Logger({ prefix: "GIVEAWAY", interaction }).logInteraction(
-		`Edited giveaway #${giveawayId}`
+	new Logger({ prefix: "GIVEAWAY", interaction }).log(
+		`Edited giveaway #${id}`
 	);
 
 	await giveawayManager.edit({
 		where: {
-			giveawayId
+			id
 		},
 		data: {
-			giveawayTitle,
-			giveawayDescription,
-			numberOfWinners,
+			title,
+			description,
+			winnerQuantity,
 			...lastEditBy(interaction.user)
 		}
 	});
 
-	await toDashboard(modalInteraction, giveawayId);
+	await toDashboard(modalInteraction, id);
 }

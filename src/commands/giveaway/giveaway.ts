@@ -8,9 +8,9 @@ import {
 	type Command,
 	type CommandModuleInteractions
 } from "../../typings/index.js";
-import sendToAutocompleteGiveaway from "./mod.autocompleteGiveaway.js";
-import sendToCreate from "./mod.create.js";
-import sendToDashboard from "./mod.dashboard.js";
+import sendToAutocompleteGiveaway from "./giveawayModules/autocompleteGiveaway.js";
+import sendToCreate from "./giveawayModules/create.js";
+import sendToDashboard from "./giveawayModules/dashboard.js";
 
 const data: RESTPostAPIApplicationCommandsJSONBody = {
 	name: "giveaway",
@@ -56,9 +56,9 @@ const run = async (interaction: CommandModuleInteractions) => {
 	switch (interaction.options.getSubcommand()) {
 		case "dashboard": {
 			await interaction.deferReply();
-			const giveawayId = interaction.options.getInteger("giveaway", true);
+			const id = interaction.options.getInteger("giveaway", true);
 
-			sendToDashboard(interaction, giveawayId);
+			sendToDashboard(interaction, id);
 			break;
 		}
 

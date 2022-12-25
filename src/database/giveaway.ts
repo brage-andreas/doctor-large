@@ -1,8 +1,7 @@
-import { type Prisma } from "@prisma/client";
+import { type Giveaway, type Prisma } from "@prisma/client";
 import {
-	type CompleteGiveaway,
-	type CompleteGiveawayPrize,
-	type CompleteGiveawayWinners
+	type GiveawayWithIncludes,
+	type PrizeWithIncludes
 } from "../typings/database.js";
 import prisma from "./prisma.js";
 
@@ -14,71 +13,43 @@ export default class GiveawayManager {
 		this.guildId = guildId;
 	}
 
-	public async get(id: number): Promise<CompleteGiveaway | null> {
-		return await this.prisma.giveaway.findUnique({
+	public async get(id: number): Promise<GiveawayWithIncludes> {
+		return await this.prisma.giveaway.findUniqueOrThrow({
 			where: {
-				giveawayId: id
+				id
 			},
 			include: {
 				prizes: {
 					include: {
-						winner: true
+						winners: true
 					}
 				}
 			}
 		});
 	}
 
-	public async getPrizes(
-		giveawayId: number
-	): Promise<Array<CompleteGiveawayPrize>> {
-		return await this.prisma.giveawayPrize.findMany({
-			where: {
-				giveawayId
-			},
-			include: {
-				giveaway: true,
-				winner: true
-			}
-		});
-	}
-
-	public async getWinners(
-		giveawayId: number
-	): Promise<Array<CompleteGiveawayWinners>> {
-		return await this.prisma.giveawayWinner.findMany({
-			where: {
-				giveawayId
-			},
-			include: {
-				prizes: {
-					include: {
-						giveaway: true
-					}
-				}
-			}
-		});
-	}
-
-	public async getAll(): Promise<Array<CompleteGiveaway>> {
+	public async getAll(): Promise<Array<GiveawayWithIncludes>> {
 		return await this.prisma.giveaway.findMany({
 			where: {
 				guildId: this.guildId
 			},
 			orderBy: {
-				giveawayId: "desc"
+				id: "desc"
 			},
 			include: {
 				prizes: {
 					include: {
-						winner: true
+						winners: true
 					}
 				}
 			}
 		});
 	}
 
-	public async getWithOffset(offset: number, limit = 5) {
+	public async getWithOffset(
+		offset: number,
+		limit = 5
+	): Promise<Array<Giveaway>> {
 		return await this.prisma.giveaway.findMany({
 			where: {
 				guildId: this.guildId
@@ -88,55 +59,116 @@ export default class GiveawayManager {
 		});
 	}
 
-	public async getTotalNumberOfGiveawaysInGuild() {
-		return (
-			await this.prisma.giveaway.findMany({
-				where: {
-					guildId: this.guildId
-				}
-			})
-		).length;
+	public async getQuantityInGuild(): Promise<number> {
+		return await this.prisma.giveaway.count({
+			where: {
+				guildId: this.guildId
+			}
+		});
 	}
 
-	public async create(data: Prisma.giveawayCreateInput) {
+	public async create(data: Prisma.GiveawayCreateInput): Promise<Giveaway> {
 		return await this.prisma.giveaway.create({
 			data
 		});
 	}
 
-	public async createPrizes(
-		...data: Array<Prisma.giveawayPrizeCreateManyInput>
-	) {
-		return await this.prisma.giveawayPrize.createMany({
-			data
+	public async edit(args: Prisma.GiveawayUpdateArgs): Promise<Giveaway> {
+		return await this.prisma.giveaway.update(args);
+	}
+
+	public async getPrize(prizeId: number): Promise<PrizeWithIncludes | null> {
+		return await this.prisma.prize.findFirst({
+			where: {
+				id: prizeId
+			},
+			include: {
+				giveaway: true,
+				winners: true
+			}
 		});
 	}
 
-	public async upsertWinner(data: Prisma.giveawayWinnerCreateInput) {
-		return await this.prisma.giveawayWinner.upsert({
-			create: data,
+	public async getPrizes(
+		giveawayId: number
+	): Promise<Array<PrizeWithIncludes>> {
+		return await this.prisma.prize.findMany({
+			where: {
+				giveawayId
+			},
+			include: {
+				giveaway: true,
+				winners: true
+			}
+		});
+	}
+
+	public async createPrizes(...args: Array<Prisma.PrizeCreateManyInput>) {
+		return await this.prisma.prize.createMany({
+			data: args
+		});
+	}
+
+	public async editPrize(args: Prisma.PrizeUpdateArgs) {
+		return await this.prisma.prize.update(args);
+	}
+
+	public async getUniqueWinnerCount(giveawayId: number): Promise<number> {
+		const data = await this.prisma.prize.findMany({
+			where: {
+				giveawayId
+			},
+			include: {
+				winners: true
+			}
+		});
+
+		return data.reduce((set, e) => {
+			e.winners.forEach((winner) => set.add(winner.userId));
+
+			return set;
+		}, new Set<string>()).size;
+	}
+
+	public async upsertWinner(args: Prisma.WinnerCreateInput) {
+		if (!args.prize.connect?.id) {
+			throw new Error("prize.connect is undefined");
+		}
+
+		return await this.prisma.winner.upsert({
+			create: args,
 			update: {
-				accepted: data.accepted,
-				prizes: data.prizes
+				accepted: args.accepted,
+				quantityWon: args.quantityWon
 			},
 			where: {
-				userId_giveawayId: {
-					giveawayId: data.giveawayId,
-					userId: data.userId
+				prizeId_userId: {
+					prizeId: args.prize.connect.id,
+					userId: args.userId
 				}
 			}
 		});
 	}
 
-	public async edit(args: Prisma.giveawayUpdateArgs) {
-		return await this.prisma.giveaway.update(args);
-	}
-
-	public async editPrize(args: Prisma.giveawayPrizeUpdateArgs) {
-		return await this.prisma.giveawayPrize.update(args);
-	}
-
-	public async editWinner(args: Prisma.giveawayWinnerUpdateArgs) {
-		return await this.prisma.giveawayWinner.update(args);
+	public async updateWinnerAcceptance({
+		accepted,
+		prizeId,
+		userId
+	}: {
+		accepted: boolean;
+		prizeId: number;
+		userId: string;
+	}) {
+		return await this.prisma.winner.update({
+			data: {
+				accepted
+			},
+			where: {
+				prizeId_userId: {
+					prizeId,
+					userId
+				}
+			}
+		});
 	}
 }

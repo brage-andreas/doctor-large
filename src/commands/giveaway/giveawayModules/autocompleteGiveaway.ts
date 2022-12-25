@@ -1,6 +1,6 @@
-import { type giveaway } from "@prisma/client";
+import { type Giveaway } from "@prisma/client";
 import { type AutocompleteInteraction } from "discord.js";
-import GiveawayManager from "../../database/giveaway.js";
+import GiveawayManager from "../../../database/giveaway.js";
 
 export default async function (interaction: AutocompleteInteraction<"cached">) {
 	const guild = interaction.guild;
@@ -10,18 +10,22 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 
 	const focused =
 		(Number.isNaN(focusedRaw) ? null : focusedRaw) ??
-		((await giveawayManager.getTotalNumberOfGiveawaysInGuild()) || 1);
+		((await giveawayManager.getQuantityInGuild()) || 1);
 
 	// ensures offset will never be under 0
 	const offset = focused <= 3 ? 0 : focused - 3;
 	const offsetGiveaways = await giveawayManager.getWithOffset(offset);
 
-	const getName = (data: giveaway) => {
+	const getName = (data: Giveaway) => {
 		const id = data.guildRelativeId;
 		const emoji = id === focused ? "✨" : id > focused ? "🔸" : "🔹";
-		const activeEmoji = !data.active ? "🔴 " : "";
+		const activeEmoji = !data.active
+			? "🔴 "
+			: data.entriesLocked
+			? "🔒 "
+			: "";
 
-		return `${emoji} #${data.guildRelativeId} ${activeEmoji}${data.giveawayTitle}`;
+		return `${emoji} #${data.guildRelativeId} ${activeEmoji}${data.title}`;
 	};
 
 	const fullResponse = offsetGiveaways
@@ -40,7 +44,7 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 		})
 		.map((data) => ({
 			name: getName(data),
-			value: data.giveawayId
+			value: data.id
 		}));
 
 	const emptyResponse = {

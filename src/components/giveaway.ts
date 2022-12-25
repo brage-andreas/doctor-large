@@ -7,6 +7,7 @@ import {
 	TextInputBuilder,
 	TextInputStyle
 } from "discord.js";
+import { GIVEAWAY } from "../constants.js";
 
 // -----------------------
 //         CREATE
@@ -18,7 +19,7 @@ import {
 const modalGiveawayTitle = new TextInputBuilder()
 	.setCustomId("title")
 	.setLabel("Title")
-	.setMaxLength(50)
+	.setMaxLength(GIVEAWAY.MAX_TITLE_LEN)
 	.setStyle(TextInputStyle.Short)
 	.setRequired(true)
 	.setPlaceholder("Christmas Giveaway 2022!");
@@ -28,8 +29,8 @@ const modalGiveawayTitle = new TextInputBuilder()
  */
 const modalGiveawayDescription = new TextInputBuilder()
 	.setCustomId("description")
-	.setLabel("Description (max 20 lines)")
-	.setMaxLength(200)
+	.setLabel(`Description (max ${GIVEAWAY.MAX_DESCRIPTION_LINES} lines)`)
+	.setMaxLength(GIVEAWAY.MAX_DESCRIPTION_LEN)
 	.setStyle(TextInputStyle.Paragraph)
 	.setPlaceholder(
 		oneLine`
@@ -39,19 +40,19 @@ const modalGiveawayDescription = new TextInputBuilder()
 	);
 
 /**
- * ID: numberOfWinners
+ * ID: winnerQuantity
  */
-const modalGiveawayNumberOfWinners = new TextInputBuilder()
-	.setCustomId("numberOfWinners")
+const modalGiveawaywinnerQuantity = new TextInputBuilder()
+	.setCustomId("winnerQuantity")
 	.setLabel("Number of winners")
-	.setMaxLength(1)
+	.setMaxLength(GIVEAWAY.MAX_WINNER_QUANTITY_LEN)
 	.setStyle(TextInputStyle.Short)
 	.setPlaceholder("1");
 
 /**
  * ID: createGiveaway
  *
- * Children: title, description, numberOfWinners
+ * Children: title, description, winnerQuantity
  */
 const createOptionsModal = new ModalBuilder()
 	.setTitle("Create a giveaway")
@@ -64,7 +65,7 @@ const createOptionsModal = new ModalBuilder()
 			modalGiveawayDescription
 		),
 		new ActionRowBuilder<TextInputBuilder>().addComponents(
-			modalGiveawayNumberOfWinners
+			modalGiveawaywinnerQuantity
 		)
 	);
 
@@ -87,7 +88,7 @@ const modalGiveawayNewTitle = (oldTitle: string) =>
 	new TextInputBuilder()
 		.setCustomId("newTitle")
 		.setLabel("New Title")
-		.setMaxLength(50)
+		.setMaxLength(GIVEAWAY.MAX_TITLE_LEN)
 		.setStyle(TextInputStyle.Short)
 		.setRequired(true)
 		.setValue(oldTitle)
@@ -101,21 +102,23 @@ const emptyString = "😴 Whoa so empty — there is no description";
 const modalGiveawayNewDescription = (oldDescription: string | null) =>
 	new TextInputBuilder()
 		.setCustomId("newDescription")
-		.setLabel("New description (max 20 lines)")
-		.setMaxLength(200)
+		.setLabel(
+			`New description (max ${GIVEAWAY.MAX_DESCRIPTION_LINES} lines)`
+		)
+		.setMaxLength(GIVEAWAY.MAX_DESCRIPTION_LEN)
 		.setStyle(TextInputStyle.Paragraph)
 		.setRequired(true)
 		.setValue(oldDescription ?? emptyString)
 		.setPlaceholder(oldDescription ?? emptyString);
 
 /**
- * ID: newNumberOfWinners
+ * ID: newWinnerQuantity
  */
-const modalGiveawayNewNumberOfWinners = (oldNumberOfWinners: number) =>
+const modalGiveawayNewWinnerQuantity = (oldNumberOfWinners: number) =>
 	new TextInputBuilder()
-		.setCustomId("newNumberOfWinners")
+		.setCustomId("newWinnerQuantity")
 		.setLabel("New number of winners")
-		.setMaxLength(1)
+		.setMaxLength(GIVEAWAY.MAX_WINNER_QUANTITY_LEN)
 		.setStyle(TextInputStyle.Short)
 		.setRequired(true)
 		.setValue(oldNumberOfWinners.toString())
@@ -124,13 +127,13 @@ const modalGiveawayNewNumberOfWinners = (oldNumberOfWinners: number) =>
 /**
  * ID: editGiveaway
  *
- * Children: newTitle, newDescription, newNumberOfWinners
+ * Children: newTitle, newDescription, newWinnerQuantity
  */
 const editOptionsModal = (
 	id: number,
 	oldTitle: string,
 	oldDescription: string | null,
-	oldNumberOfWinners: number
+	oldWinnerQuantity: number
 ) =>
 	new ModalBuilder()
 		.setTitle(`Edit giveaway #${id} (3 min)`)
@@ -143,7 +146,7 @@ const editOptionsModal = (
 				modalGiveawayNewDescription(oldDescription)
 			),
 			new ActionRowBuilder<TextInputBuilder>().addComponents(
-				modalGiveawayNewNumberOfWinners(oldNumberOfWinners)
+				modalGiveawayNewWinnerQuantity(oldWinnerQuantity)
 			)
 		);
 
@@ -301,11 +304,11 @@ const recallCurrentMessageButton = new ButtonBuilder()
 	.setStyle(ButtonStyle.Danger);
 
 /**
- * ID: enter-giveaway-{giveawayId}
+ * ID: enter-giveaway-{id}
  */
-const enterGiveawayButton = (giveawayId: number) =>
+const enterGiveawayButton = (id: number) =>
 	new ButtonBuilder()
-		.setCustomId(`enter-giveaway-${giveawayId}`)
+		.setCustomId(`enter-giveaway-${id}`)
 		.setLabel("Enter")
 		.setStyle(ButtonStyle.Success)
 		.setEmoji("🎁");
@@ -329,14 +332,14 @@ export const giveaway = {
 		/**
 		 * ID: editGiveaway
 		 *
-		 * Children: newTitle, newDescription, newNumberOfWinners
+		 * Children: newTitle, newDescription, newWinnerQuantity
 		 */
 		editOptionsModal: (
 			id: number,
 			oldTitle: string,
 			oldDescription: string | null,
-			oldNumberOfWinners: number
-		) => editOptionsModal(id, oldTitle, oldDescription, oldNumberOfWinners)
+			oldWinnerQuantity: number
+		) => editOptionsModal(id, oldTitle, oldDescription, oldWinnerQuantity)
 	},
 	dashboard: {
 		row1: {
@@ -433,9 +436,8 @@ export const giveaway = {
 		recallCurrentMessageButton: () => recallCurrentMessageButton,
 
 		/**
-		 * ID: enter-giveaway-{giveawayId}
+		 * ID: enter-giveaway-{id}
 		 */
-		enterGiveawayButton: (giveawayId: number) =>
-			enterGiveawayButton(giveawayId)
+		enterGiveawayButton: (id: number) => enterGiveawayButton(id)
 	}
 };

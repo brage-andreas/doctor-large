@@ -7,30 +7,31 @@ import {
 	type CommandInteraction,
 	type ModalSubmitInteraction
 } from "discord.js";
-import { giveawayComponents } from "../../components/index.js";
-import GiveawayManager from "../../database/giveaway.js";
-import lastEditBy from "../../helpers/lastEdit.js";
+import { giveawayComponents } from "../../../components/index.js";
+import GiveawayManager from "../../../database/giveaway.js";
+import formatGiveaway from "../../../helpers/formatGiveaway.js";
+import lastEditBy from "../../../helpers/lastEdit.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import toEditGiveaway from "./dashboardModules/editGiveaway.js";
+import toEndGiveaway from "./dashboardModules/endGiveaway.js";
 import toManagePrizes from "./dashboardModules/managePrizes.js";
 import toPublishGiveaway from "./dashboardModules/publishGiveaway.js";
+import toPublishingOptions from "./dashboardModules/publishingOptions.js";
 import toResetData from "./dashboardModules/resetData.js";
 import toSetEndDate from "./dashboardModules/setEndDate.js";
 import toSetPingRoles from "./dashboardModules/setPingRoles.js";
 import toSetRequiredRoles from "./dashboardModules/setRequiredRoles.js";
-import toPublishingOptions from "./dashboardModules/toPublishingOptions.js";
-import toEndGiveaway from "./mod.dashboard.endGiveaway.js";
-import formatGiveaway from "./mod.formatGiveaway.js";
+import toEndedDashboard from "./endedGiveawayDashboard.js";
 
-const dashboard = async (
+export default async function toDashboard(
 	interaction:
 		| ButtonInteraction<"cached">
 		| CommandInteraction<"cached">
 		| ModalSubmitInteraction<"cached">,
-	giveawayId: number
-) => {
+	id: number
+) {
 	const giveawayManager = new GiveawayManager(interaction.guildId);
-	const giveaway = await giveawayManager.get(giveawayId);
+	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
 		await interaction.editReply({
@@ -46,11 +47,17 @@ const dashboard = async (
 		return;
 	}
 
-	const publishButton = giveaway.messageId
+	if (!giveaway.active) {
+		await toEndedDashboard(interaction, giveawayManager, giveaway);
+
+		return;
+	}
+
+	const publishButton = giveaway.publishedMessageId
 		? giveawayComponents.dashboard.row1.publishingOptionsButton()
 		: giveawayComponents.dashboard.row1.publishGiveawayButton();
 
-	const lockEntriesButton = giveaway.lockEntries
+	const lockEntriesButton = giveaway.entriesLocked
 		? giveawayComponents.dashboard.row1.unlockEntriesButton()
 		: giveawayComponents.dashboard.row1.lockEntriesButton();
 
@@ -96,11 +103,7 @@ const dashboard = async (
 			case "publishGiveaway": {
 				await buttonInteraction.deferUpdate();
 
-				toPublishGiveaway(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
+				toPublishGiveaway(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -108,11 +111,7 @@ const dashboard = async (
 			case "publishingOptions": {
 				await buttonInteraction.deferUpdate();
 
-				toPublishingOptions(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
+				toPublishingOptions(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -121,14 +120,14 @@ const dashboard = async (
 				await buttonInteraction.deferUpdate();
 
 				await giveawayManager.edit({
-					where: { giveawayId },
+					where: { id },
 					data: {
-						lockEntries: true,
+						entriesLocked: true,
 						...lastEditBy(interaction.user)
 					}
 				});
 
-				dashboard(buttonInteraction, giveawayId);
+				toDashboard(buttonInteraction, id);
 
 				break;
 			}
@@ -137,14 +136,14 @@ const dashboard = async (
 				await buttonInteraction.deferUpdate();
 
 				await giveawayManager.edit({
-					where: { giveawayId },
+					where: { id },
 					data: {
-						lockEntries: false,
+						entriesLocked: false,
 						...lastEditBy(interaction.user)
 					}
 				});
 
-				dashboard(buttonInteraction, giveawayId);
+				toDashboard(buttonInteraction, id);
 
 				break;
 			}
@@ -152,7 +151,7 @@ const dashboard = async (
 			case "setEndDate": {
 				await buttonInteraction.deferUpdate();
 
-				toSetEndDate(buttonInteraction, giveawayId, giveawayManager);
+				toSetEndDate(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -160,11 +159,7 @@ const dashboard = async (
 			case "setRequiredRoles": {
 				await buttonInteraction.deferUpdate();
 
-				toSetRequiredRoles(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
+				toSetRequiredRoles(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -172,7 +167,7 @@ const dashboard = async (
 			case "setPingRoles": {
 				await buttonInteraction.deferUpdate();
 
-				toSetPingRoles(buttonInteraction, giveawayId, giveawayManager);
+				toSetPingRoles(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -181,7 +176,7 @@ const dashboard = async (
 				// await buttonInteraction.deferUpdate();
 				// Showing modal
 
-				toEditGiveaway(buttonInteraction, giveawayId, giveawayManager);
+				toEditGiveaway(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -189,7 +184,7 @@ const dashboard = async (
 			case "managePrizes": {
 				await buttonInteraction.deferUpdate();
 
-				toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
+				toManagePrizes(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -197,7 +192,7 @@ const dashboard = async (
 			case "endGiveaway": {
 				await buttonInteraction.deferUpdate();
 
-				toEndGiveaway(buttonInteraction, giveawayId, giveawayManager);
+				toEndGiveaway(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -205,7 +200,7 @@ const dashboard = async (
 			case "resetData": {
 				await buttonInteraction.deferUpdate();
 
-				toResetData(buttonInteraction, giveawayId, giveawayManager);
+				toResetData(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -213,11 +208,7 @@ const dashboard = async (
 			case "deleteGiveaway": {
 				await buttonInteraction.deferUpdate();
 
-				toDeleteGiveaway(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
+				toDeleteGiveaway(buttonInteraction, id, giveawayManager);
 
 				break;
 			}
@@ -231,14 +222,4 @@ const dashboard = async (
 
 		msg.edit({ components: [] }).catch(() => null);
 	});
-};
-
-export default async function toDashboard(
-	interaction:
-		| ButtonInteraction<"cached">
-		| CommandInteraction<"cached">
-		| ModalSubmitInteraction<"cached">,
-	giveawayId: number
-) {
-	await dashboard(interaction, giveawayId);
 }
