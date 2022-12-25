@@ -21,7 +21,7 @@ export default async function (
 			});
 		});
 
-	if (!modalInteraction) {
+	if (!modalInteraction?.fields.fields.size) {
 		return;
 	}
 
@@ -33,7 +33,7 @@ export default async function (
 		modalInteraction.fields.getTextInputValue("description");
 
 	const winnerQuantity = Number(
-		modalInteraction.fields.getTextInputValue("numberOfWinners")
+		modalInteraction.fields.getTextInputValue("winnerQuantity")
 	);
 
 	const totalNumberOfGiveaways = await giveawayManager.getQuantityInGuild();
@@ -53,7 +53,7 @@ export default async function (
 		`Created giveaway with ID #${id}`
 	);
 
-	await modalInteraction.deferUpdate();
+	await modalInteraction.deferReply();
 
 	sendToDashboard(modalInteraction, id);
 }

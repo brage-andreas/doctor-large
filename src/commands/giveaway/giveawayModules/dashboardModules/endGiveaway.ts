@@ -7,6 +7,8 @@ import {
 } from "discord.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
 import lastEditBy from "../../../../helpers/lastEdit.js";
+import s from "../../../../helpers/s.js";
+import { timestamp } from "../../../../helpers/timestamps.js";
 import yesNo from "../../../../helpers/yesNo.js";
 import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
@@ -24,12 +26,45 @@ export default async function toEndGiveaway(
 		return;
 	}
 
-	let content = `Are you sure you want to end giveaway #${giveaway.guildRelativeId}?`;
+	const prizesLen = giveaway.prizes.length;
+	const prizesN = giveaway.prizes.reduce((acc, e) => acc + e.quantity, 0);
+	const winnersN = giveaway.winnerQuantity;
 
-	if (giveaway.endTimestamp && Number(giveaway.endTimestamp) < Date.now()) {
-		content += `\n\nThe giveaway is set to end ${
-			Date.now() - Number(giveaway.endTimestamp)
-		}`;
+	if (!prizesLen) {
+		await interaction.followUp({
+			ephemeral: true,
+			content: stripIndents`
+				⚠️ This giveaway has no prizes. Add some prizes, and try again.
+				
+				If the prize(s) are a secret, you can for example name the prize "Secret"
+			`
+		});
+
+		return toDashboard(interaction, id);
+	}
+
+	let content = stripIndents`
+		Are you sure you want to end giveaway #${giveaway.guildRelativeId}?
+	`;
+
+	if (giveaway.endTimestamp) {
+		const inFuture = Number(giveaway.endTimestamp) < Date.now();
+
+		content += `The giveaway ${
+			inFuture ? "is" : "was"
+		} set to end ${timestamp(giveaway.endTimestamp, "R")}.`;
+	}
+
+	if (prizesN < winnersN) {
+		content += `\n\n⚠️ There are not enough prizes for **${winnersN}** ${s(
+			"winner",
+			winnersN
+		)}!`;
+
+		content += ` There will be **${prizesN}** ${s(
+			"winner",
+			prizesN
+		)} instead.`;
 	}
 
 	const confirmation = await yesNo({
@@ -47,8 +82,8 @@ export default async function toEndGiveaway(
 
 	if (!confirmation) {
 		await interaction.followUp({
-			content: "Alright! Ending the giveaway was canceled.",
-			ephemeral: true
+			ephemeral: true,
+			content: "Alright! Ending the giveaway was canceled."
 		});
 
 		return toDashboard(interaction, id);
@@ -56,9 +91,8 @@ export default async function toEndGiveaway(
 
 	if (!giveaway.channelId) {
 		await interaction.followUp({
-			components: [],
-			content: "⚠️ The giveaway has never been published.",
-			embeds: []
+			ephemeral: true,
+			content: "⚠️ The giveaway has never been published."
 		});
 
 		return toDashboard(interaction, id);
