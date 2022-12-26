@@ -55,7 +55,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 	switch (interaction.options.getSubcommand()) {
 		case "dashboard": {
-			await interaction.deferReply();
+			await interaction.deferReply({ ephemeral: true });
 			const id = interaction.options.getInteger("giveaway", true);
 
 			sendToDashboard(interaction, id);

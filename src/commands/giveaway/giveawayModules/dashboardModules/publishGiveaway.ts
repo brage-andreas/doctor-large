@@ -114,21 +114,7 @@ export default async function toPublishGiveaway(
 				]
 			});
 
-			interaction.editReply({
-				content: stripIndents`
-					✨ Done! Giveaway published in ${channel}.
-
-					Here is a [link to your shiny new giveaway](<${msg.url}>).
-				`,
-				components: [],
-				embeds: []
-			});
-
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
-				`Published giveaway #${id} in ${channel.name} (${channelId})`
-			);
-
-			giveawayManager.edit({
+			await giveawayManager.edit({
 				where: {
 					id: giveaway.id
 				},
@@ -138,6 +124,23 @@ export default async function toPublishGiveaway(
 					...lastEditBy(interaction.user)
 				}
 			});
+
+			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				`Published giveaway #${id} in ${channel.name} (${channelId})`
+			);
+
+			await interaction.followUp({
+				components: [],
+				ephemeral: true,
+				content: stripIndents`
+					✨ Done! Giveaway published in ${channel}.
+
+					Here is a [link to your shiny new giveaway](<${msg.url}>).
+				`,
+				embeds: []
+			});
+
+			toDashboard(interaction, id);
 		}
 	};
 

@@ -19,6 +19,8 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 	description: "View all the giveaways you have participated in."
 };
 
+const no = (n: number) => (n ? `**${n}**` : "no");
+
 const giveawayToShortString = (giveaway: GiveawayWithIncludes) => {
 	const { id: gId, title, winnerQuantity, prizes } = giveaway;
 	const id = `#${gId}`;
@@ -113,7 +115,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 		return;
 	}
 
-	await interaction.deferReply();
+	await interaction.deferReply({ ephemeral: true });
 
 	const theirWonPrizes = entered
 		.sort((a, b) => b.id - a.id)
@@ -151,13 +153,8 @@ const run = async (interaction: CommandModuleInteractions) => {
 		: "";
 
 	const content = stripIndents`
-		You have entered ${entered.length ? `**${entered.length}**` : "no"} ${s(
-		"giveaway",
-		entered.length
-	)}.
-		You have won ${
-			theirWonPrizes.length ? `**${theirWonPrizes.length}**` : "no"
-		} ${s("prize", theirWonPrizes.length)}.
+		You have entered ${no(entered.length)} ${s("giveaway", entered.length)}.
+		You have won ${no(theirWonPrizes.length)} ${s("prize", theirWonPrizes.length)}.
 
 		**Entered giveaways**
 		${enteredStr}${prizesStr}

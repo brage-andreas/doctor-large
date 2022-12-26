@@ -2,7 +2,7 @@ import { type ChatInputCommandInteraction } from "discord.js";
 import { giveawayComponents } from "../../../components/index.js";
 import GiveawayManager from "../../../database/giveaway.js";
 import Logger from "../../../logger/logger.js";
-import sendToDashboard from "./dashboard.js";
+import toDashboard from "./dashboard.js";
 
 export default async function (
 	interaction: ChatInputCommandInteraction<"cached">
@@ -16,6 +16,7 @@ export default async function (
 		})
 		.catch(async () => {
 			await interaction.followUp({
+				ephemeral: true,
 				content:
 					"Something went wrong. The time limit is 3 minutes. Try again!"
 			});
@@ -53,7 +54,7 @@ export default async function (
 		`Created giveaway with ID #${id}`
 	);
 
-	await modalInteraction.deferReply();
+	await modalInteraction.deferReply({ ephemeral: true }).catch(() => null);
 
-	sendToDashboard(modalInteraction, id);
+	toDashboard(modalInteraction, id);
 }
