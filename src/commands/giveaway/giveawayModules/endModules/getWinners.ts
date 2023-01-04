@@ -1,5 +1,4 @@
-import { type Winner } from "@prisma/client";
-import theirPrizes from "../../../../helpers/theirPrizes.js";
+import { Prize, Winner } from "@prisma/client";
 import {
 	type GiveawayWithIncludes,
 	type WonPrize
@@ -21,46 +20,54 @@ export function getAllWinners(giveaway: GiveawayWithIncludes) {
 	return winners;
 }
 
-export function getWinnersPerPrize(giveaway: GiveawayWithIncludes) {
-	const pool: Set<Winner> = new Set();
+export function prizeToWonPrize(
+	prize: Prize & { winners: Array<Winner> },
+	winnerUserId: string
+): WonPrize | null {
+	const winner = prize.winners.find(
+		(winner) => winner.userId === winnerUserId
+	);
 
-	giveaway.prizes.forEach(({ winners }) => {
-		winners.forEach((winner) => {
-			pool.add(winner);
-		});
-	});
+	if (!winner) {
+		return null;
+	}
 
-	return [...pool];
+	const { additionalInfo, giveawayId, quantity, name, id } = prize;
+	const { quantityWon, accepted } = winner;
+
+	return {
+		additionalInfo,
+		quantityWon,
+		giveawayId,
+		accepted,
+		quantity,
+		name,
+		id
+	};
 }
 
-export function getWinnersAndTheirPrizes(giveaway: GiveawayWithIncludes) {
-	const pool: Map<string, Array<WonPrize>> = new Map();
+/**
+ * Mapped by winners' user ID's.
+ */
+export function giveawayToWonPrizesMap(
+	giveaway: GiveawayWithIncludes
+): Map<string, Array<WonPrize>> {
+	return giveaway.prizes.reduce((wonPrizeMap, prize) => {
+		prize.winners.forEach((winner) => {
+			const wonPrize = prizeToWonPrize(prize, winner.userId);
 
-	const allWinnerIds = giveaway.prizes.reduce((pool, { winners }) => {
-		winners.forEach(({ userId }) => pool.add(userId));
+			if (!wonPrize) {
+				return;
+			}
 
-		return pool;
-	}, new Set<string>());
+			const alreadyMappedWonPrizes = wonPrizeMap.get(winner.userId) ?? [];
 
-	allWinnerIds.forEach((winnerId) => {
-		const prizes = theirPrizes(giveaway, winnerId);
+			wonPrizeMap.set(winner.userId, [
+				...alreadyMappedWonPrizes,
+				wonPrize
+			]);
+		});
 
-		const toPool = prizes.reduce((pool: Array<WonPrize>, prize) => {
-			pool.push({
-				additionalInfo: prize.additionalInfo,
-				giveawayId: prize.giveawayId,
-				quantity: prize.quantity,
-				name: prize.name,
-				id: prize.id,
-				quantityWon: prize.winners[0].quantityWon,
-				accepted: prize.winners[0].accepted
-			});
-
-			return pool;
-		}, []);
-
-		pool.set(winnerId, toPool);
-	});
-
-	return pool;
+		return wonPrizeMap;
+	}, new Map<string, Array<WonPrize>>());
 }
