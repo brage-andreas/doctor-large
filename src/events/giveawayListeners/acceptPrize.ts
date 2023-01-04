@@ -32,8 +32,7 @@ export default async function acceptPrize(
 	if (!rawWinners) {
 		interaction.followUp({
 			ephemeral: true,
-			content:
-				"⚠️ Could not find the winners. Contact an admin if this error persists."
+			content: `${EMOJIS.WARN} Could not find the winners. Contact an admin if this error persists.`
 		});
 
 		return;
@@ -44,7 +43,7 @@ export default async function acceptPrize(
 	if (!winners.has(interaction.user.id)) {
 		interaction.followUp({
 			content: stripIndents`
-				💔 You don't have any prizes to claim.
+				${EMOJIS.HEART_BREAK} You don't have any prizes to claim.
 				
 				Better luck next time.
 			`,
@@ -69,7 +68,9 @@ export default async function acceptPrize(
 	if (prizes.every((prize) => prize.winners[0].accepted)) {
 		interaction.followUp({
 			content: stripIndents`
-				${EMOJIS.V} You have already claimed all your prizes. You're all set! 😁
+				${EMOJIS.V} You have already claimed all your prizes. You're all set! ${
+				EMOJIS.GRIN
+			}
 
 				I'm sure you win a lot! So in case you need a reminder, you won:
 				→ ${prizes.map(prizeToString).join("\n→ ")}
@@ -82,7 +83,7 @@ export default async function acceptPrize(
 
 	interaction.followUp({
 		content: stripIndents`
-			🎉 You have **now claimed** your prize! Woo!
+			${EMOJIS.TADA} You have **now claimed** your prize! Woo!
 			
 			To remind you of your extraordinary success, you won:
 			→ ${prizes.map(prizeToString).join("\n→ ")}

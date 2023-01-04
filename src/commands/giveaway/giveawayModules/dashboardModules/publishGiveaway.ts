@@ -10,6 +10,7 @@ import {
 	type TextChannel
 } from "discord.js";
 import { giveawayComponents } from "../../../../components/index.js";
+import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
 import formatGiveaway from "../../../../helpers/formatGiveaway.js";
 import lastEditBy from "../../../../helpers/lastEdit.js";
@@ -70,7 +71,7 @@ export default async function toPublishGiveaway(
 		if (componentInteraction.customId === "channelSelect") {
 			if (!componentInteraction.isChannelSelectMenu()) {
 				interaction.editReply({
-					content: "⚠️ Something went wrong. Try again.",
+					content: `${EMOJIS.WARN} Something went wrong. Try again.`,
 					components: [],
 					embeds: []
 				});
@@ -87,7 +88,7 @@ export default async function toPublishGiveaway(
 			if (!channel) {
 				await componentInteraction.deferUpdate();
 
-				retry("⚠️ This channel does not exist.");
+				retry(`${EMOJIS.WARN} This channel does not exist.`);
 
 				return;
 			}
@@ -99,7 +100,7 @@ export default async function toPublishGiveaway(
 				await componentInteraction.deferUpdate();
 
 				retry(
-					`⚠️ I am missing permissions to send messages in ${channel} (${channelId})`
+					`${EMOJIS.WARN} I am missing permissions to send messages in ${channel} (${channelId})`
 				);
 
 				return;
@@ -133,7 +134,7 @@ export default async function toPublishGiveaway(
 				components: [],
 				ephemeral: true,
 				content: stripIndents`
-					✨ Done! Giveaway published in ${channel}.
+					${EMOJIS.SPARKS} Done! Giveaway published in ${channel}.
 
 					Here is a [link to your shiny new giveaway](<${msg.url}>).
 				`,

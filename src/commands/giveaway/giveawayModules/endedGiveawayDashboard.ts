@@ -74,7 +74,7 @@ export default async function toEndedDashboard(
 
 	collector.on("ignore", (buttonInteraction) => {
 		buttonInteraction.reply({
-			content: "🚫 This button is not for you.",
+			content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
 			ephemeral: true
 		});
 	});
@@ -125,7 +125,7 @@ export default async function toEndedDashboard(
 				if (!channel?.isTextBased()) {
 					await interaction.editReply({
 						content: stripIndents`
-							⚠️ The channel the giveaway was published in does not exist, or is not a valid channel.
+							${EMOJIS.WARN} The channel the giveaway was published in does not exist, or is not a valid channel.
 							Try again or republish the giveaway in a new channel.
 						`,
 						components: [],
@@ -152,7 +152,7 @@ export default async function toEndedDashboard(
 
 				await interaction.editReply({
 					content: stripIndents`
-							${EMOJIS.V} Easy work. The winners are now unpublished! 😅
+							${EMOJIS.V} The winners are now unpublished. 
 						`,
 					components: [],
 					embeds: []

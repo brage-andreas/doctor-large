@@ -8,6 +8,7 @@ import {
 	type ModalSubmitInteraction
 } from "discord.js";
 import { giveawayComponents } from "../../../components/index.js";
+import { EMOJIS } from "../../../constants.js";
 import GiveawayManager from "../../../database/giveaway.js";
 import formatGiveaway from "../../../helpers/formatGiveaway.js";
 import lastEditBy from "../../../helpers/lastEdit.js";
@@ -38,7 +39,7 @@ export default async function toDashboard(
 			content: stripIndents`
 				How did we get here?
 			
-				⚠️ This giveaway does not exist. Try creating one or double-check the ID.
+				${EMOJIS.WARN} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			components: [],
 			embeds: []
@@ -93,7 +94,7 @@ export default async function toDashboard(
 
 	collector.on("ignore", (buttonInteraction) => {
 		buttonInteraction.reply({
-			content: "🚫 This button is not for you.",
+			content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
 			ephemeral: true
 		});
 	});

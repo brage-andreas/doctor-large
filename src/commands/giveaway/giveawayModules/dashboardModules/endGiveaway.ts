@@ -5,6 +5,7 @@ import {
 	ButtonStyle,
 	type ButtonInteraction
 } from "discord.js";
+import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
 import lastEditBy from "../../../../helpers/lastEdit.js";
 import s from "../../../../helpers/s.js";
@@ -34,7 +35,7 @@ export default async function toEndGiveaway(
 		await interaction.followUp({
 			ephemeral: true,
 			content: stripIndents`
-				⚠️ This giveaway has no prizes. Add some prizes, and try again.
+				${EMOJIS.WARN} This giveaway has no prizes. Add some prizes, and try again.
 				
 				If the prize(s) are a secret, you can for example name the prize "Secret"
 			`
@@ -56,7 +57,9 @@ export default async function toEndGiveaway(
 	}
 
 	if (prizesN < winnersN) {
-		content += `\n\n⚠️ There are not enough prizes for **${winnersN}** ${s(
+		content += `\n\n${
+			EMOJIS.WARN
+		} There are not enough prizes for **${winnersN}** ${s(
 			"winner",
 			winnersN
 		)}!`;
@@ -92,7 +95,7 @@ export default async function toEndGiveaway(
 	if (!giveaway.channelId) {
 		await interaction.followUp({
 			ephemeral: true,
-			content: "⚠️ The giveaway has never been published."
+			content: `${EMOJIS.WARN} The giveaway has never been published.`
 		});
 
 		return toDashboard(interaction, id);
@@ -104,8 +107,7 @@ export default async function toEndGiveaway(
 		await interaction.editReply({
 			components: [],
 			embeds: [],
-			content:
-				"⚠️ The channel the giveaway was published in does not exist. Republish it and try again."
+			content: `${EMOJIS.WARN} The channel the giveaway was published in does not exist. Republish it and try again.`
 		});
 
 		return;
@@ -162,9 +164,9 @@ export default async function toEndGiveaway(
 			embeds: [],
 			content: stripIndents`
 				Done! Giveaway #${giveaway.guildRelativeId} has ended.
-				→ 🔒 Entries are locked.
-				→ 🔴 Giveaway is not active.
-				→ ${winnerCount}/${giveaway.winnerQuantity} winners have been rolled.
+				1. ${EMOJIS.LOCK} Entries are locked.
+				2. ${EMOJIS.INACTIVE} Giveaway is not active.
+				3. ${winnerCount}/${giveaway.winnerQuantity} winners have been rolled.
 
 				Do you want to publish the winners right away?
 			`

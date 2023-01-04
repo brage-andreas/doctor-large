@@ -26,7 +26,7 @@ export default function formatAutorole(
 					const role = interaction.guild.roles.cache.get(roleId);
 
 					if (!role) {
-						return `⚠️ Could not find role (${roleId})`;
+						return `${EMOJIS.WARN} Could not find role (${roleId})`;
 					}
 
 					return `${i + 1}. ${role} (${role.id})`;
@@ -39,7 +39,7 @@ export default function formatAutorole(
 		.setDescription(
 			hasManageRolesPermission
 				? description
-				: `${description}\n\n⚠️ Missing Manage Roles permission`
+				: `${description}\n\n${EMOJIS.WARN} Missing Manage Roles permission`
 		)
 		.setTimestamp(
 			autorole?.lastEditedTimestamp

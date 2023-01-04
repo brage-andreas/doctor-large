@@ -10,6 +10,7 @@ import {
 	type TextChannel
 } from "discord.js";
 import { giveawayComponents } from "../../../../components/index.js";
+import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
 import formatGiveaway from "../../../../helpers/formatGiveaway.js";
 import lastEditBy from "../../../../helpers/lastEdit.js";
@@ -89,7 +90,7 @@ export default async function toPublishingOptions(
 
 			if (!channelId) {
 				interaction.editReply({
-					content: "⚠️ Something went wrong. Try again.",
+					content: `${EMOJIS.WARN} Something went wrong. Try again.`,
 					components: [],
 					embeds: []
 				});
@@ -105,7 +106,7 @@ export default async function toPublishingOptions(
 			if (!channel) {
 				await componentInteraction.deferUpdate();
 
-				retry("⚠️ This channel does not exist.");
+				retry(`${EMOJIS.WARN} This channel does not exist.`);
 
 				return;
 			}
@@ -117,7 +118,7 @@ export default async function toPublishingOptions(
 				await componentInteraction.deferUpdate();
 
 				retry(
-					`⚠️ I am missing permissions to send messages in ${channel} (${channelId})`
+					`${EMOJIS.WARN} I am missing permissions to send messages in ${channel} (${channelId})`
 				);
 
 				return;
@@ -150,7 +151,7 @@ export default async function toPublishingOptions(
 				components: [],
 				ephemeral: true,
 				content: stripIndents`
-					✨ Done! Giveaway published in ${channel}.
+					${EMOJIS.SPARKS} Done! Giveaway published in ${channel}.
 					
 					Here is a [link to your now perfected giveaway](<${message.url}>).
 				`,
@@ -179,7 +180,7 @@ export default async function toPublishingOptions(
 		) {
 			if (!giveaway.channelId || !giveaway.publishedMessageId) {
 				componentInteraction.followUp({
-					content: "⚠️ The giveaway has not been published yet.",
+					content: `${EMOJIS.WARN} The giveaway has not been published yet.`,
 					ephemeral: true
 				});
 
@@ -195,7 +196,7 @@ export default async function toPublishingOptions(
 
 				retry(
 					stripIndents`
-						⚠️ I cannot find channel: ${giveaway.channelId} (${giveaway.channelId}).
+						${EMOJIS.WARN} I cannot find channel: ${giveaway.channelId} (${giveaway.channelId}).
 						Maybe it has it been deleted?
 					`
 				);
@@ -208,7 +209,7 @@ export default async function toPublishingOptions(
 
 				retry(
 					stripIndents`
-						⚠️ The channel is not a text channel: ${giveaway.channelId} (${giveaway.channelId}).
+						${EMOJIS.WARN} The channel is not a text channel: ${giveaway.channelId} (${giveaway.channelId}).
 						I don't know how this happened.
 					`
 				);
@@ -251,11 +252,11 @@ export default async function toPublishingOptions(
 					ephemeral: true,
 					content: successOrURL
 						? stripIndents`
-							✨ Done! Giveaway has been edited in ${channel}.
+							${EMOJIS.SPARKS} Done! Giveaway has been edited in ${channel}.
 							
 							Here is a [link to your now perfected giveaway](<${successOrURL}>).
 						`
-						: "⚠️ I could not edit the message. Maybe it has been deleted?",
+						: `${EMOJIS.WARN} I could not edit the message. Maybe it has been deleted?`,
 					embeds: []
 				});
 
@@ -269,8 +270,8 @@ export default async function toPublishingOptions(
 					components: [],
 					ephemeral: true,
 					content: successOrURL
-						? `✨ Done! Giveaway has been recalled from ${channel}. All data remain intact.`
-						: "⚠️ I could not recall the Giveaway. The message might have already been deleted.",
+						? `${EMOJIS.SPARKS} Done! Giveaway has been recalled from ${channel}. All data remain intact.`
+						: `${EMOJIS.WARN} I could not recall the Giveaway. The message might have already been deleted.`,
 					embeds: []
 				});
 

@@ -1,6 +1,7 @@
 import { oneLine, stripIndents } from "common-tags";
 import { EmbedBuilder, PermissionFlagsBits, type Guild } from "discord.js";
 import ms from "ms";
+import { EMOJIS } from "../constants.js";
 import { type GiveawayWithIncludes } from "../typings/database.js";
 import { listify } from "./listify.js";
 import { longStamp, timestamp } from "./timestamps.js";
@@ -79,7 +80,7 @@ function formatGiveaway(
 							}`
 					)
 					.join("\n")
-			: "There are no set prizes. Maybe it is a secret? 🤫";
+			: `There are no set prizes. Maybe it is a secret? ${EMOJIS.SHUSH}`;
 
 		const descriptionStr = stripIndents`
 			${description}
@@ -134,7 +135,7 @@ function formatGiveaway(
 
 	const pingRolesWarning = badPingRoles.length
 		? oneLine`
-			⚠️ Missing permissions to ping roles (${badPingRoles.length}):
+			${EMOJIS.WARN} Missing permissions to ping roles (${badPingRoles.length}):
 			${listify(
 				badPingRoles.map((roleId) => `<@&${roleId}>`),
 				{ length: 10 }
@@ -144,7 +145,7 @@ function formatGiveaway(
 
 	const endStr = endTimestamp
 		? `→ End date: ${longStamp(endTimestamp)}`
-		: "→ End date: ⚠️ The giveaway has no set end date. It will be open indefinitely!";
+		: `→ End date: ${EMOJIS.WARN} The giveaway has no set end date. It will be open indefinitely!`;
 
 	const prizesStr = giveaway.prizes.length
 		? `**Prizes** (${giveaway.prizes.length}):\n${giveaway.prizes
@@ -157,14 +158,14 @@ function formatGiveaway(
 						}`
 				)
 				.join("\n")}`
-		: "**Prizes**: ⚠️ There are no set prizes";
+		: `**Prizes**: ${EMOJIS.WARN} There are no set prizes`;
 
 	const titleStr = `**Title**:\n\`\`\`\n${title}\n\`\`\``;
 
 	const descriptionStr = `**Description**:\n${
 		description
 			? `\`\`\`\n${description}\n\`\`\``
-			: "⚠️ There is no set description"
+			: `${EMOJIS.WARN} There is no set description`
 	}`;
 
 	const idStr = `#${id}`;
