@@ -28,10 +28,23 @@ export default class GiveawayManager {
 		});
 	}
 
-	public async getAll(): Promise<Array<GiveawayWithIncludes>> {
+	public async getAll(filter?: {
+		entryUserId?: string;
+		winnerUserId?: string;
+		hostUserId?: string;
+	}): Promise<Array<GiveawayWithIncludes>> {
+		const entry = filter?.entryUserId;
+		const winner = filter?.winnerUserId;
+		const host = filter?.hostUserId;
+
 		return await this.prisma.giveaway.findMany({
 			where: {
-				guildId: this.guildId
+				guildId: this.guildId,
+				hostUserId: host,
+				entriesUserIds: entry ? { hasSome: entry } : undefined,
+				prizes: winner
+					? { some: { winners: { some: { userId: winner } } } }
+					: undefined
 			},
 			orderBy: {
 				id: "desc"
@@ -47,15 +60,18 @@ export default class GiveawayManager {
 	}
 
 	public async getWithOffset(
-		offset: number,
-		limit = 5
+		skip: number,
+		take: number
 	): Promise<Array<Giveaway>> {
 		return await this.prisma.giveaway.findMany({
 			where: {
 				guildId: this.guildId
 			},
-			skip: offset,
-			take: limit
+			orderBy: {
+				id: "asc"
+			},
+			skip,
+			take
 		});
 	}
 
@@ -89,12 +105,25 @@ export default class GiveawayManager {
 		});
 	}
 
-	public async getPrizes(
-		giveawayId: number
-	): Promise<Array<PrizeWithIncludes>> {
+	public async getPrizes(filter?: {
+		giveawayId?: number;
+		winnerUserId?: string;
+		winnerAccepted?: boolean;
+	}): Promise<Array<PrizeWithIncludes>> {
+		const id = filter?.giveawayId;
+		const userId = filter?.winnerUserId;
+		const accepted = filter?.winnerAccepted;
+
 		return await this.prisma.prize.findMany({
 			where: {
-				giveawayId
+				giveawayId: id,
+				winners:
+					userId || accepted
+						? { some: { userId, accepted } }
+						: undefined
+			},
+			orderBy: {
+				id: "desc"
 			},
 			include: {
 				giveaway: true,
