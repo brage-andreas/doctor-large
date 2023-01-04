@@ -1,5 +1,11 @@
 import { stripIndents } from "common-tags";
-import { type RESTPostAPIApplicationCommandsJSONBody } from "discord.js";
+import {
+	ActionRowBuilder,
+	ApplicationCommandOptionType,
+	ButtonBuilder,
+	ButtonStyle,
+	type RESTPostAPIApplicationCommandsJSONBody
+} from "discord.js";
 import { EMOJIS } from "../../constants.js";
 import GiveawayManager from "../../database/giveaway.js";
 import s from "../../helpers/s.js";
@@ -11,12 +17,19 @@ import {
 	type Command,
 	type CommandModuleInteractions
 } from "../../typings/index.js";
-import { getWinnersAndTheirPrizes } from "./giveawayModules/endModules/getWinners.js";
+import { prizeToWonPrize } from "./giveawayModules/endModules/getWinners.js";
 
 const data: RESTPostAPIApplicationCommandsJSONBody = {
 	name: "my-giveaways",
 	dm_permission: false,
-	description: "View all the giveaways you have participated in."
+	description: "View all the giveaways you have participated in.",
+	options: [
+		{
+			name: "hide",
+			description: "Whether to hide this command (True)",
+			type: ApplicationCommandOptionType.Boolean
+		}
+	]
 };
 
 const no = (n: number) => (n ? `**${n}**` : "no");
@@ -70,7 +83,7 @@ const wonPrizesToString = (wonPrizes: Array<WonPrize>) =>
 	wonPrizes
 		.map((wonPrize) => {
 			const { name, quantityWon, accepted } = wonPrize;
-			const emoji = accepted ? EMOJIS.V : `${EMOJIS.X} Not accepted`;
+			const emoji = !accepted ? ` (${EMOJIS.WARN} Not accepted)` : "";
 
 			return `→ ${quantityWon} ${name} (${emoji})`;
 		})
@@ -84,30 +97,16 @@ const run = async (interaction: CommandModuleInteractions) => {
 	const id = interaction.user.id;
 
 	const giveawayManager = new GiveawayManager(interaction.guildId);
-	const allGiveaways = await giveawayManager.getAll();
 
-	const [entered, hosted] = allGiveaways.reduce(
-		(giveawayArray, giveaway) => {
-			const isEntered = giveaway.entriesUserIds.includes(id);
-			const isHost = giveaway.hostUserId === id;
-
-			if (isEntered) {
-				giveawayArray[0].push(giveaway);
-			} else if (isHost) {
-				giveawayArray[1].push(giveaway);
-			}
-
-			return giveawayArray;
-		},
-		[[], []] as [Array<GiveawayWithIncludes>, Array<GiveawayWithIncludes>]
-	);
+	const entered = await giveawayManager.getAll({ entryUserId: id });
+	const hosted = await giveawayManager.getAll({ hostUserId: id });
 
 	if (!entered.length && !hosted.length) {
 		await interaction
 			.reply({
 				components: [],
 				ephemeral: true,
-				content: "😶‍🌫️ You have not participated in any giveaways yet!",
+				content: `${EMOJIS.NO_ENTRY} You have not participated in any giveaways yet!`,
 				embeds: []
 			})
 			.catch(() => null);
@@ -117,13 +116,16 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 	await interaction.deferReply({ ephemeral: true });
 
-	const theirWonPrizes = entered
-		.sort((a, b) => b.id - a.id)
-		.slice(0, 5)
-		.filter((g) =>
-			g.prizes.some((p) => p.winners.some((w) => w.userId === id))
-		)
-		.flatMap((g) => getWinnersAndTheirPrizes(g).get(id)!);
+	const prizes = await giveawayManager.getPrizes({ winnerUserId: id });
+
+	const notAcceptedPrizes = await giveawayManager.getPrizes({
+		winnerAccepted: false,
+		winnerUserId: id
+	});
+
+	const theirWonPrizes = prizes
+		.flatMap((prize) => prizeToWonPrize(prize, id))
+		.filter((wonPrizeOrNull) => wonPrizeOrNull !== null) as Array<WonPrize>;
 
 	const prizesStr = theirWonPrizes.length
 		? `\n\n**Won prizes (${theirWonPrizes.length})**\n${wonPrizesToString(
@@ -133,7 +135,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 	const enteredStr = entered.length
 		? stringFromEnteredGiveaways(entered)
-		: "None. 😢";
+		: `None. ${EMOJIS.CRY}`;
 
 	const hostEntries = hosted.reduce(
 		(acc, g) => acc + g.entriesUserIds.length,
@@ -162,8 +164,48 @@ const run = async (interaction: CommandModuleInteractions) => {
 		${hostedStr}
 	`;
 
+	const acceptAllButton = notAcceptedPrizes.length
+		? new ButtonBuilder()
+				.setCustomId("acceptAllPrizes")
+				.setEmoji(EMOJIS.TADA)
+				.setLabel("Accept all prizes")
+				.setStyle(ButtonStyle.Success)
+		: undefined;
+
+	const viewAllEnteredButton = entered.length
+		? new ButtonBuilder()
+				.setCustomId("viewAllEntered")
+				.setLabel("View entered")
+				.setStyle(ButtonStyle.Secondary)
+		: undefined;
+
+	const viewAllPrizes = prizes.length
+		? new ButtonBuilder()
+				.setCustomId("viewAllPrizes")
+				.setLabel("View prizes")
+				.setStyle(ButtonStyle.Secondary)
+		: undefined;
+
+	const viewAllHosted = hosted.length
+		? new ButtonBuilder()
+				.setCustomId("viewAllHosted")
+				.setLabel("View hosted")
+				.setStyle(ButtonStyle.Secondary)
+		: undefined;
+
+	const buttonArray = [
+		acceptAllButton,
+		viewAllEnteredButton,
+		viewAllPrizes,
+		viewAllHosted
+	].filter((buttonOrNull) => buttonOrNull !== null) as Array<ButtonBuilder>;
+
+	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
+		...buttonArray
+	);
+
 	interaction.editReply({
-		components: [],
+		components: buttonArray.length ? [row] : [],
 		content,
 		embeds: []
 	});
