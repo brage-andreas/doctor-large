@@ -4,7 +4,7 @@ import Logger from "../logger/logger.js";
 
 export async function run(member: GuildMember) {
 	// Autorole
-	if (!member.pending && !member.user.bot) {
+	if (!member.user.bot) {
 		const autoroleManager = new AutoroleManager(member.guild.id);
 		await autoroleManager.initialize();
 
