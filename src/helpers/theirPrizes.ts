@@ -1,7 +1,7 @@
-import { type GiveawayWithIncludes } from "../typings/database.js";
+import { type GiveawayDataWithIncludes } from "../typings/database.js";
 
 export default function theirPrizes(
-	giveaway: GiveawayWithIncludes,
+	giveaway: GiveawayDataWithIncludes,
 	userId: string
 ) {
 	const id = userId;

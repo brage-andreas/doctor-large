@@ -13,10 +13,10 @@ import GiveawayManager from "../../../../database/giveaway.js";
 import lastEditBy from "../../../../helpers/lastEdit.js";
 import { listify } from "../../../../helpers/listify.js";
 import Logger from "../../../../logger/logger.js";
-import { type GiveawayWithIncludes } from "../../../../typings/database.js";
+import { type GiveawayDataWithIncludes } from "../../../../typings/database.js";
 import { getAllWinners, giveawayToWonPrizesMap } from "./getWinners.js";
 
-const getWinnersEmbed = (giveaway: GiveawayWithIncludes) => {
+const getWinnersEmbed = (giveaway: GiveawayDataWithIncludes) => {
 	const winnerWithPrizesMap = giveawayToWonPrizesMap(giveaway);
 
 	const data = [...winnerWithPrizesMap.entries()]
@@ -55,7 +55,7 @@ export async function publishWinners(
 	interaction: RepliableInteraction<"cached">,
 	id: number
 ) {
-	const giveawayManager = new GiveawayManager(interaction.guild.id);
+	const giveawayManager = new GiveawayManager(interaction.guild);
 
 	const giveaway = await giveawayManager.get(id);
 
@@ -193,7 +193,7 @@ export async function publishWinners(
 		content: stripIndents`
 			${EMOJIS.SPARKS} Done! Published the winners of giveaway #${giveaway.guildRelativeId} in ${channel}!
 
-			Fine, if you don't believe me, [here is a link to it](<${message.url}>).
+			Fine. If you don't believe me, [here is a link to it](<${message.url}>).
 		`,
 		components: [],
 		embeds: []
@@ -204,7 +204,7 @@ export async function republishWinners(
 	interaction: RepliableInteraction<"cached">,
 	id: number
 ) {
-	const giveawayManager = new GiveawayManager(interaction.guild.id);
+	const giveawayManager = new GiveawayManager(interaction.guild);
 
 	const giveaway = await giveawayManager.get(id);
 

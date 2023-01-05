@@ -1,5 +1,5 @@
 import { type Collection, type Guild, type GuildMember } from "discord.js";
-import { type GiveawayWithIncludes } from "../../../../../typings/database.js";
+import { type GiveawayDataWithIncludes } from "../../../../../typings/database.js";
 
 export function isValidEntrant({
 	entryId,
@@ -8,7 +8,7 @@ export function isValidEntrant({
 }: {
 	entryId: string;
 	members: Collection<string, GuildMember>;
-	giveaway: GiveawayWithIncludes;
+	giveaway: GiveawayDataWithIncludes;
 }) {
 	const minimumAccountAge = Number(giveaway.minimumAccountAge);
 	const requiredRolesIds = giveaway.requiredRolesIds;
@@ -37,7 +37,7 @@ export function isValidEntrant({
 }
 
 export async function sortValidEntrants(
-	giveaway: GiveawayWithIncludes,
+	giveaway: GiveawayDataWithIncludes,
 	guild: Guild
 ) {
 	const entries = [...new Set(giveaway.entriesUserIds)];

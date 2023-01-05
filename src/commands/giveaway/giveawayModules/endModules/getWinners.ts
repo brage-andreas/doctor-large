@@ -1,10 +1,10 @@
-import { Prize, Winner } from "@prisma/client";
+import { type PrizeData, type WinnerData } from "@prisma/client";
 import {
-	type GiveawayWithIncludes,
+	type GiveawayDataWithIncludes,
 	type WonPrize
 } from "../../../../typings/database.js";
 
-export function getAllWinners(giveaway: GiveawayWithIncludes) {
+export function getAllWinners(giveaway: GiveawayDataWithIncludes) {
 	const winners = [
 		...giveaway.prizes.reduce((pool, prize) => {
 			prize.winners.forEach((winner) => pool.add(winner.userId));
@@ -21,7 +21,7 @@ export function getAllWinners(giveaway: GiveawayWithIncludes) {
 }
 
 export function prizeToWonPrize(
-	prize: Prize & { winners: Array<Winner> },
+	prize: PrizeData & { winners: Array<WinnerData> },
 	winnerUserId: string
 ): WonPrize | null {
 	const winner = prize.winners.find(
@@ -50,7 +50,7 @@ export function prizeToWonPrize(
  * Mapped by winners' user ID's.
  */
 export function giveawayToWonPrizesMap(
-	giveaway: GiveawayWithIncludes
+	giveaway: GiveawayDataWithIncludes
 ): Map<string, Array<WonPrize>> {
 	return giveaway.prizes.reduce((wonPrizeMap, prize) => {
 		prize.winners.forEach((winner) => {

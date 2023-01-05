@@ -1,4 +1,4 @@
-import { type Autorole } from "@prisma/client";
+import { type AutoroleData } from "@prisma/client";
 import { oneLine } from "common-tags";
 import {
 	EmbedBuilder,
@@ -9,7 +9,7 @@ import { EMOJIS } from "../../constants.js";
 
 export default function formatAutorole(
 	interaction: ChatInputCommandInteraction<"cached">,
-	autorole: Autorole | null
+	autorole: AutoroleData | null
 ) {
 	const hasManageRolesPermission =
 		interaction.guild.members.me?.permissions.has(

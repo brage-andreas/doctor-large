@@ -1,15 +1,15 @@
-import type { Giveaway, Prize, Winner } from "@prisma/client";
+import type { GiveawayData, PrizeData, WinnerData } from "@prisma/client";
 
-export type GiveawayWithIncludes = Giveaway & {
-	prizes: Array<Prize & { winners: Array<Winner> }>;
+export type GiveawayDataWithIncludes = GiveawayData & {
+	prizes: Array<PrizeData & { winners: Array<WinnerData> }>;
 };
 
-export type PrizeWithIncludes = Prize & {
-	giveaway: Giveaway;
-	winners: Array<Winner>;
+export type PrizeDataWithIncludes = PrizeData & {
+	giveaway: GiveawayData;
+	winners: Array<WinnerData>;
 };
 
-type WonPrize = Exclude<Prize, "winners"> & {
+type WonPrize = Exclude<PrizeData, "winners"> & {
 	quantityWon: number;
 	accepted: boolean;
 };

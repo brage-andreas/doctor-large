@@ -3,7 +3,7 @@ import prisma from "./prisma.js";
 
 export default class AutoroleManager {
 	public readonly guildId: string;
-	private readonly prisma = prisma.autorole;
+	private readonly prisma = prisma.autoroleData;
 	private initialized = false;
 
 	public constructor(guildId: string) {
@@ -35,7 +35,7 @@ export default class AutoroleManager {
 		});
 	}
 
-	public async update(data: Prisma.AutoroleUpdateInput) {
+	public async update(data: Prisma.AutoroleDataUpdateInput) {
 		if (!this.initialized) {
 			throw new Error("Autorole manager has not been initialized.");
 		}

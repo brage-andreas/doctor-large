@@ -1,4 +1,4 @@
-import { type Giveaway } from "@prisma/client";
+import { type GiveawayData } from "@prisma/client";
 import { type AutocompleteInteraction } from "discord.js";
 import { EMOJIS } from "../../../constants.js";
 import GiveawayManager from "../../../database/giveaway.js";
@@ -6,7 +6,7 @@ import GiveawayManager from "../../../database/giveaway.js";
 export default async function (interaction: AutocompleteInteraction<"cached">) {
 	const guild = interaction.guild;
 
-	const giveawayManager = new GiveawayManager(guild.id);
+	const giveawayManager = new GiveawayManager(guild);
 	const max = await giveawayManager.getQuantityInGuild();
 
 	const focusedInt = parseInt(interaction.options.getFocused());
@@ -29,7 +29,7 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 
 	const offsetGiveaways = await giveawayManager.getWithOffset(skip, 5);
 
-	const getName = (data: Giveaway) => {
+	const getName = (data: GiveawayData) => {
 		const id = data.guildRelativeId;
 		const emoji =
 			focused === id

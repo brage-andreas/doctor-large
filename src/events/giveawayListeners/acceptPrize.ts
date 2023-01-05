@@ -1,4 +1,4 @@
-import { type Prize, type Winner } from "@prisma/client";
+import { type PrizeData, type WinnerData } from "@prisma/client";
 import { oneLine, stripIndents } from "common-tags";
 import { type ButtonInteraction } from "discord.js";
 import { getAllWinners } from "../../commands/giveaway/giveawayModules/endModules/getWinners.js";
@@ -19,7 +19,7 @@ export default async function acceptPrize(
 
 	await interaction.deferReply({ ephemeral: true });
 
-	const giveawayManager = new GiveawayManager(interaction.guildId);
+	const giveawayManager = new GiveawayManager(interaction.guild);
 
 	const giveaway = await giveawayManager.get(Number(id));
 
@@ -55,7 +55,9 @@ export default async function acceptPrize(
 
 	const prizes = theirPrizes(giveaway, interaction.user.id);
 
-	const prizeToString = (prize: Prize & { winners: Array<Winner> }) => {
+	const prizeToString = (
+		prize: PrizeData & { winners: Array<WinnerData> }
+	) => {
 		const name = `**${prize.name}**`;
 		const quantity = `${prize.winners[0].quantityWon}x`;
 		const additionalInfo = prize.additionalInfo

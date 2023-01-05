@@ -1,13 +1,13 @@
-import { type Prize, type Winner } from "@prisma/client";
-import { type GiveawayWithIncludes } from "../../../../../typings/database.js";
+import { type PrizeData, type WinnerData } from "@prisma/client";
+import { type GiveawayDataWithIncludes } from "../../../../../typings/database.js";
 
-type PrizeWithWinners = Prize & {
-	winners: Array<Winner>;
+type PrizeWithWinners = PrizeData & {
+	winners: Array<WinnerData>;
 };
 
 export default function roll(
 	entries: Array<string>,
-	giveaway: GiveawayWithIncludes
+	giveaway: GiveawayDataWithIncludes
 ) {
 	const alwaysFullBucket = new Set(entries);
 	const oneTimeBucket = new Set(entries);
