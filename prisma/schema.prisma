@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Autorole {
+model AutoroleData {
   activated           Boolean  @default(false)
   guildId             String   @id @map("guild_id")
   lastEditedTimestamp String?  @map("last_edited_timestamp")
@@ -18,53 +18,53 @@ model Autorole {
   @@map("autorole")
 }
 
-model Winner {
-  accepted    Boolean @default(false)
-  prize       Prize   @relation(fields: [prizeId], references: [id])
-  prizeId     Int     @map("prize_id")
-  quantityWon Int     @map("quantity_won")
-  userId      String  @map("user_id")
+model WinnerData {
+  accepted    Boolean   @default(false)
+  prize       PrizeData @relation(fields: [prizeId], references: [id])
+  prizeId     Int       @map("prize_id")
+  quantityWon Int       @map("quantity_won")
+  userId      String    @map("user_id")
 
   @@id([prizeId, userId])
   @@map("giveaway_winner")
 }
 
-model Prize {
-  additionalInfo String?   @map("additional_info")
-  giveaway       Giveaway  @relation(fields: [giveawayId], references: [id])
-  giveawayId     Int       @map("giveaway_id")
-  id             Int       @id @default(autoincrement())
+model PrizeData {
+  additionalInfo String?      @map("additional_info")
+  giveaway       GiveawayData @relation(fields: [giveawayId], references: [id])
+  giveawayId     Int          @map("giveaway_id")
+  id             Int          @id @default(autoincrement())
   name           String
-  quantity       Int       @default(1)
-  winners        Winner[]
+  quantity       Int          @default(1)
+  winners        WinnerData[]
 
   @@map("giveaway_prize")
 }
 
-model Giveaway {
-  active              Boolean  @default(true)
-  channelId           String?  @map("channel_id")
-  createdTimestamp    String   @map("created_timestamp")
-  description         String?
-  endTimestamp        String?  @map("end_timestamp")
-  entriesLocked       Boolean  @default(false) @map("entries_locked")
-  entriesUserIds      String[] @default([]) @map("entries_user_ids")
-  prizes              Prize[]
-  guildId             String   @map("guild_id")
-  guildRelativeId     Int      @map("guild_relative_id")
-  hostUserId          String   @map("host_user_id")
-  hostUserTag         String   @map("host_user_tag")
-  id                  Int      @id @default(autoincrement())
-  lastEditedTimestamp String?  @map("last_edited_timestamp")
-  lastEditedUserId    String?  @map("last_edited_user_id")
-  lastEditedUserTag   String?  @map("last_edited_user_tag")
-  minimumAccountAge   String?  @map("minimum_account_age")
-  pingRolesIds        String[] @default([]) @map("ping_roles_ids")
-  publishedMessageId  String?  @map("published_message_id")
-  requiredRolesIds    String[] @default([]) @map("required_roles_ids")
-  title               String
-  winnerMessageId     String?  @map("winner_message_id")
-  winnerQuantity      Int      @default(1) @map("winner_quantity")
+model GiveawayData {
+  active              Boolean     @default(true)
+  channelId           String?     @map("channel_id")
+  createdTimestamp    String      @map("created_timestamp")
+  description         String?   
+  endTimestamp        String?     @map("end_timestamp")
+  entriesLocked       Boolean     @default(false) @map("entries_locked")
+  entriesUserIds      String[]    @default([]) @map("entries_user_ids")
+  prizes              PrizeData[]
+  guildId             String      @map("guild_id")
+  guildRelativeId     Int         @map("guild_relative_id")
+  hostUserId          String      @map("host_user_id")
+  hostUserTag         String      @map("host_user_tag")
+  id                  Int         @id @default(autoincrement())
+  lastEditedTimestamp String?     @map("last_edited_timestamp")
+  lastEditedUserId    String?     @map("last_edited_user_id")
+  lastEditedUserTag   String?     @map("last_edited_user_tag")
+  minimumAccountAge   String?     @map("minimum_account_age")
+  pingRolesIds        String[]    @default([]) @map("ping_roles_ids")
+  publishedMessageId  String?     @map("published_message_id")
+  requiredRolesIds    String[]    @default([]) @map("required_roles_ids")
+  title               String   
+  winnerMessageId     String?     @map("winner_message_id")
+  winnerQuantity      Int         @default(1) @map("winner_quantity")
 
   @@map("giveaway")
 }
