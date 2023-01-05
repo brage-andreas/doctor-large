@@ -10,9 +10,8 @@ import {
 } from "discord.js";
 import { EMOJIS } from "../../../constants.js";
 import type GiveawayManager from "../../../database/giveaway.js";
-import formatGiveaway from "../../../helpers/formatGiveaway.js";
 import lastEditBy from "../../../helpers/lastEdit.js";
-import { type GiveawayWithIncludes } from "../../../typings/database.js";
+import type Giveaway from "../../../modules/Giveaway.js";
 import toDashboard from "./dashboard.js";
 import { publishWinners } from "./endModules/publishWinners.js";
 import { signWinners } from "./endModules/rollWinners/signWinners.js";
@@ -23,7 +22,7 @@ export default async function toEndedDashboard(
 		| CommandInteraction<"cached">
 		| ModalSubmitInteraction<"cached">,
 	giveawayManager: GiveawayManager,
-	giveaway: GiveawayWithIncludes
+	giveaway: Giveaway
 ) {
 	const reactivateButton = new ButtonBuilder()
 		.setCustomId("reactivate")
@@ -59,7 +58,7 @@ export default async function toEndedDashboard(
 	);
 
 	const msg = await interaction.editReply({
-		content: formatGiveaway(giveaway, false, interaction.guild),
+		content: giveaway.toDashboardOverviewString(),
 		components: [row1, row2],
 		embeds: []
 	});

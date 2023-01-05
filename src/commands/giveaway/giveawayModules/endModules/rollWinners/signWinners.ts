@@ -9,7 +9,7 @@ export async function signWinners(options: {
 }) {
 	const { guild, giveawayId } = options;
 
-	const giveawayManager = new GiveawayManager(guild.id);
+	const giveawayManager = new GiveawayManager(guild);
 	const giveaway = await giveawayManager.get(giveawayId);
 
 	const entries = await sortValidEntrants(giveaway, guild);

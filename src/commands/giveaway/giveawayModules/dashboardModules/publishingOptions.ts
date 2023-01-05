@@ -12,7 +12,6 @@ import {
 import { giveawayComponents } from "../../../../components/index.js";
 import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
-import formatGiveaway from "../../../../helpers/formatGiveaway.js";
 import lastEditBy from "../../../../helpers/lastEdit.js";
 import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
@@ -65,7 +64,7 @@ export default async function toPublishingOptions(
 		const updateMsg = await interaction.editReply({
 			content: chooseChannelStr,
 			components: [row1, row2],
-			embeds: [formatGiveaway(giveaway, true, interaction.guild)]
+			embeds: [giveaway.toEmbed()]
 		});
 
 		const componentInteraction = await updateMsg.awaitMessageComponent({
@@ -134,7 +133,7 @@ export default async function toPublishingOptions(
 				content: giveaway.pingRolesIds
 					.map((roleId) => `<@&${roleId}>`)
 					.join(" "),
-				embeds: [formatGiveaway(giveaway, true, interaction.guild)]
+				embeds: [giveaway.toEmbed()]
 			});
 
 			const oldChannel = interaction.guild.channels.cache.get(
@@ -223,7 +222,7 @@ export default async function toPublishingOptions(
 				.map((roleId) => `<@&${roleId}>`)
 				.join(" ");
 
-			const embeds = [formatGiveaway(giveaway, true, interaction.guild)];
+			const embeds = [giveaway.toEmbed()];
 
 			const components = [
 				new ActionRowBuilder<ButtonBuilder>().setComponents(

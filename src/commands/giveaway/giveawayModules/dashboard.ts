@@ -10,7 +10,6 @@ import {
 import { giveawayComponents } from "../../../components/index.js";
 import { EMOJIS } from "../../../constants.js";
 import GiveawayManager from "../../../database/giveaway.js";
-import formatGiveaway from "../../../helpers/formatGiveaway.js";
 import lastEditBy from "../../../helpers/lastEdit.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import toEditGiveaway from "./dashboardModules/editGiveaway.js";
@@ -31,7 +30,7 @@ export default async function toDashboard(
 		| ModalSubmitInteraction<"cached">,
 	id: number
 ) {
-	const giveawayManager = new GiveawayManager(interaction.guildId);
+	const giveawayManager = new GiveawayManager(interaction.guild);
 	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
@@ -79,7 +78,7 @@ export default async function toDashboard(
 	);
 
 	const msg = await interaction.editReply({
-		content: formatGiveaway(giveaway, false, interaction.guild),
+		content: giveaway.toDashboardOverviewString(),
 		components: [row1, row2],
 		embeds: []
 	});

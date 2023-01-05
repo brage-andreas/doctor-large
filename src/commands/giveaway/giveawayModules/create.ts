@@ -26,7 +26,7 @@ export default async function (
 		return;
 	}
 
-	const giveawayManager = new GiveawayManager(interaction.guildId);
+	const giveawayManager = new GiveawayManager(interaction.guild);
 
 	const title = modalInteraction.fields.getTextInputValue("title");
 

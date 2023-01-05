@@ -18,7 +18,7 @@ export default async function enterGiveaway(
 
 	await interaction.deferReply({ ephemeral: true });
 
-	const giveawayManager = new GiveawayManager(interaction.guildId);
+	const giveawayManager = new GiveawayManager(interaction.guild);
 
 	const giveaway = await giveawayManager.get(Number(id));
 
