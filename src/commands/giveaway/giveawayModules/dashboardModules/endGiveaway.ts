@@ -24,22 +24,35 @@ export default async function toEndGiveaway(
 	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
+		await interaction
+			.editReply({
+				components: [],
+				content: stripIndents`
+				How did we get here?
+			
+				${EMOJIS.WARN} This giveaway does not exist. Try creating one or double-check the ID.
+			`,
+				embeds: []
+			})
+			.catch(() => null);
+
 		return;
 	}
 
-	const prizesLen = giveaway.prizes.length;
-	const prizesN = giveaway.prizes.reduce((acc, e) => acc + e.quantity, 0);
+	const prizesN = giveaway.prizesQuantity;
 	const winnersN = giveaway.winnerQuantity;
 
-	if (!prizesLen) {
-		await interaction.followUp({
-			ephemeral: true,
-			content: stripIndents`
+	if (!prizesN) {
+		await interaction
+			.followUp({
+				ephemeral: true,
+				content: stripIndents`
 				${EMOJIS.WARN} This giveaway has no prizes. Add some prizes, and try again.
 				
 				If the prize(s) are a secret, you can for example name the prize "Secret"
 			`
-		});
+			})
+			.catch(() => null);
 
 		return toDashboard(interaction, id);
 	}
@@ -84,10 +97,12 @@ export default async function toEndGiveaway(
 	});
 
 	if (!confirmation) {
-		await interaction.followUp({
-			ephemeral: true,
-			content: "Alright! Ending the giveaway was canceled."
-		});
+		await interaction
+			.followUp({
+				ephemeral: true,
+				content: "Alright! Ending the giveaway was canceled."
+			})
+			.catch(() => null);
 
 		return toDashboard(interaction, id);
 	}
@@ -120,17 +135,19 @@ export default async function toEndGiveaway(
 				.catch(() => null))) ||
 		null;
 
-	await message?.edit({
-		components: [
-			new ActionRowBuilder<ButtonBuilder>().addComponents(
-				new ButtonBuilder()
-					.setLabel("This giveaway has ended!")
-					.setStyle(ButtonStyle.Secondary)
-					.setCustomId("giveaway-ended")
-					.setDisabled(true)
-			)
-		]
-	});
+	await message
+		?.edit({
+			components: [
+				new ActionRowBuilder<ButtonBuilder>().addComponents(
+					new ButtonBuilder()
+						.setLabel("This giveaway has ended!")
+						.setStyle(ButtonStyle.Secondary)
+						.setCustomId("giveaway-ended")
+						.setDisabled(true)
+				)
+			]
+		})
+		.catch(() => null);
 
 	await giveawayManager.edit({
 		where: {
