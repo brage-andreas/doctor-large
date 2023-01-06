@@ -35,7 +35,7 @@ export default async function enterGiveaway(
 		return;
 	}
 
-	if (!interaction.member.roles.cache.hasAll(...giveaway.requiredRolesIds)) {
+	if (!giveaway.hasRequiredRoles(interaction.member)) {
 		const rolesTheyHave = new Set(interaction.member.roles.cache.keys());
 
 		const rolesTheyNeed = giveaway.requiredRolesIds
@@ -58,12 +58,11 @@ export default async function enterGiveaway(
 		return;
 	}
 
-	const minimumAccountAge =
-		giveaway.minimumAccountAge && Number(giveaway.minimumAccountAge);
+	if (!giveaway.isOldEnough(interaction.member)) {
+		const minimumAccountAge = Number(giveaway.minimumAccountAge);
 
-	const accountAge = Date.now() - interaction.user.createdTimestamp;
+		const accountAge = Date.now() - interaction.user.createdTimestamp;
 
-	if (minimumAccountAge && accountAge < minimumAccountAge) {
 		const whenTheyWillBeOldEnough = timestamp(
 			Date.now() + minimumAccountAge - accountAge,
 			"R"
