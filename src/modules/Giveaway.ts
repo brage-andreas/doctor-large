@@ -4,7 +4,8 @@ import {
 	EmbedBuilder,
 	PermissionFlagsBits,
 	type Client,
-	type Guild
+	type Guild,
+	type GuildMember
 } from "discord.js";
 import ms from "ms";
 import { EMOJIS } from "../constants.js";
@@ -21,7 +22,7 @@ export default class Giveaway {
 	public data: GiveawayDataWithIncludes;
 	public guild: Guild;
 
-	// --
+	// -- Data --
 	public active: boolean;
 	public channelId: string | null;
 	public createdTimestamp: string;
@@ -45,7 +46,7 @@ export default class Giveaway {
 	public title: string;
 	public winnerMessageId: string | null;
 	public winnerQuantity: number;
-	// --
+	// ----------
 
 	private _prizesQuantity: number | null = null;
 	private _winnersUserIds: Set<string> | null = null;
@@ -57,7 +58,7 @@ export default class Giveaway {
 
 		this.manager = new GiveawayManager(guild);
 
-		// --
+		// -- Data --
 		this.lastEditedTimestamp = data.lastEditedTimestamp;
 		this.publishedMessageId = data.publishedMessageId;
 		this.lastEditedUserTag = data.lastEditedUserTag;
@@ -80,11 +81,11 @@ export default class Giveaway {
 		this.active = data.active;
 		this.title = data.title;
 		this.id = data.id;
+		// ----------
 
 		this.prizes = data.prizes.map(
 			(prize) => new Prize({ ...prize, giveaway: this }, guild)
 		);
-		//--
 	}
 
 	public get prizesQuantity() {
@@ -112,6 +113,26 @@ export default class Giveaway {
 
 	public get isPublished() {
 		return Boolean(this.publishedMessageId);
+	}
+
+	public hasRequiredRoles(member: GuildMember) {
+		const roleIds = this.requiredRolesIds;
+
+		return roleIds.length
+			? roleIds.every((roleId) => member.roles.cache.has(roleId))
+			: true;
+	}
+
+	public isOldEnough(member: GuildMember) {
+		const minimumAccountAge = Number(this.minimumAccountAge);
+
+		const accountAge = Date.now() - member.user.createdTimestamp;
+
+		if (minimumAccountAge && accountAge < minimumAccountAge) {
+			return false;
+		}
+
+		return true;
 	}
 
 	public toShortString() {
