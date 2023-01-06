@@ -14,8 +14,8 @@ export default class GiveawayManager {
 		this.guild = guild;
 	}
 
-	public async get(id: number): Promise<Giveaway> {
-		const data = await this.prisma.giveawayData.findUniqueOrThrow({
+	public async get(id: number): Promise<Giveaway | null> {
+		const data = await this.prisma.giveawayData.findUnique({
 			where: {
 				id
 			},
@@ -28,7 +28,7 @@ export default class GiveawayManager {
 			}
 		});
 
-		return new Giveaway(data, this.guild);
+		return data && new Giveaway(data, this.guild);
 	}
 
 	public async getAll(filter?: {
