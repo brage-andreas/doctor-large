@@ -38,7 +38,7 @@ export default async function enterGiveaway(
 	if (!giveaway.hasRequiredRoles(interaction.member)) {
 		const rolesTheyHave = new Set(interaction.member.roles.cache.keys());
 
-		const rolesTheyNeed = giveaway.requiredRolesIds
+		const rolesTheyNeed = [...giveaway.requiredRolesIds]
 			.filter((roleId) => !rolesTheyHave.has(roleId))
 			.map((roleId) => `<@&${roleId}>`);
 

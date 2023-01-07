@@ -39,7 +39,7 @@ export default async function toEndGiveaway(
 		return;
 	}
 
-	const prizesN = giveaway.prizesQuantity;
+	const prizesN = giveaway.prizesQuantity();
 	const winnersN = giveaway.winnerQuantity;
 
 	if (!prizesN) {
@@ -168,7 +168,7 @@ export default async function toEndGiveaway(
 
 	await signWinners({ giveawayId: giveaway.id, guild: interaction.guild });
 
-	const winnerCount = giveaway.winnersUserIds.size;
+	const winnerCount = giveaway.winnersUserIds().size;
 
 	const publishWinnersNow = await yesNo({
 		filter: (i) => i.user.id === interaction.user.id,

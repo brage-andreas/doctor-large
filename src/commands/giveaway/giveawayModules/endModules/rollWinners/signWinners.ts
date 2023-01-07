@@ -1,7 +1,6 @@
 import { type Guild } from "discord.js";
 import GiveawayManager from "../../../../../database/giveaway.js";
 import roll from "./roll.js";
-import { sortValidEntrants } from "./validEntrants.js";
 
 export async function signWinners(options: {
 	giveawayId: number;
@@ -12,9 +11,22 @@ export async function signWinners(options: {
 	const giveawayManager = new GiveawayManager(guild);
 	const giveaway = await giveawayManager.get(giveawayId);
 
-	const entries = await sortValidEntrants(giveaway, guild);
+	if (!giveaway) {
+		return;
+	}
 
-	const dataMap = roll(entries, giveaway);
+	const members = await guild.members.fetch({ force: true });
+	const entries = [...members.values()].filter(
+		(member) =>
+			giveaway.entriesUserIds.has(member.id) &&
+			giveaway.isOldEnough(member) &&
+			giveaway.hasRequiredRoles(member)
+	);
+
+	const dataMap = roll(
+		entries.map((m) => m.id),
+		giveaway
+	);
 
 	if (!dataMap?.size) {
 		return;

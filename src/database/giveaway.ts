@@ -139,6 +139,10 @@ export default class GiveawayManager {
 
 		const giveaway = await this.get(data.giveawayId);
 
+		if (!giveaway) {
+			return null;
+		}
+
 		return new Prize({ ...data, giveaway }, this.guild);
 	}
 

@@ -124,13 +124,13 @@ export default async function toPublishingOptions(
 			}
 
 			const message = await channel.send({
-				allowedMentions: { roles: giveaway.pingRolesIds },
+				allowedMentions: { roles: [...giveaway.pingRolesIds] },
 				components: [
 					new ActionRowBuilder<ButtonBuilder>().setComponents(
 						giveawayComponents.dashboard.enterGiveawayButton(id)
 					)
 				],
-				content: giveaway.pingRolesIds
+				content: [...giveaway.pingRolesIds]
 					.map((roleId) => `<@&${roleId}>`)
 					.join(" "),
 				embeds: [giveaway.toEmbed()]
@@ -218,9 +218,7 @@ export default async function toPublishingOptions(
 
 			const isEdit = componentInteraction.customId === "editCurrent";
 
-			const content = giveaway.pingRolesIds
-				.map((roleId) => `<@&${roleId}>`)
-				.join(" ");
+			const content = giveaway.pingRolesMentions?.join(" ");
 
 			const embeds = [giveaway.toEmbed()];
 
@@ -233,7 +231,9 @@ export default async function toPublishingOptions(
 			const successOrURL = isEdit
 				? await channel.messages
 						.edit(giveaway.publishedMessageId, {
-							allowedMentions: { roles: giveaway.pingRolesIds },
+							allowedMentions: {
+								roles: [...giveaway.pingRolesIds]
+							},
 							components,
 							content,
 							embeds

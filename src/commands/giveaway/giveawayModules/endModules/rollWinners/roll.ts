@@ -1,25 +1,15 @@
-import { type PrizeData, type WinnerData } from "@prisma/client";
-import { type GiveawayDataWithIncludes } from "../../../../../typings/database.js";
+import type Giveaway from "../../../../../modules/Giveaway.js";
+import type Prize from "../../../../../modules/Prize.js";
 
-type PrizeWithWinners = PrizeData & {
-	winners: Array<WinnerData>;
-};
-
-export default function roll(
-	entries: Array<string>,
-	giveaway: GiveawayDataWithIncludes
-) {
+export default function roll(entries: Array<string>, giveaway: Giveaway) {
 	const alwaysFullBucket = new Set(entries);
 	const oneTimeBucket = new Set(entries);
 
-	const { prizes, winnerQuantity } = giveaway;
-	const prizesQuantity = prizes.reduce(
-		(acc, prize) => acc + prize.quantity,
-		0
-	);
+	const prizesQuantity = giveaway.prizesQuantity();
+	const winnerQuantity = giveaway.winnerQuantity;
 
-	const prizesWithOneWinner = prizes.reduce((prizeArray, prize) => {
-		const arrayOfCurrentPrizes: Array<PrizeWithWinners> = Array.from(
+	const prizesWithOneWinner = giveaway.prizes.reduce((prizeArray, prize) => {
+		const arrayOfCurrentPrizes: Array<Prize> = Array.from(
 			{ length: prize.quantity },
 			() => {
 				const prizeCopy = structuredClone(prize);
@@ -32,7 +22,7 @@ export default function roll(
 		prizeArray.push(...arrayOfCurrentPrizes);
 
 		return prizeArray;
-	}, [] as Array<PrizeWithWinners>);
+	}, [] as Array<Prize>);
 
 	if (!oneTimeBucket.size || !prizesQuantity || !winnerQuantity) {
 		return null;

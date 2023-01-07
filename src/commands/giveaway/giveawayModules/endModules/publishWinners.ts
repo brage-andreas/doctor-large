@@ -3,7 +3,6 @@ import {
 	ActionRowBuilder,
 	ButtonBuilder,
 	ButtonStyle,
-	EmbedBuilder,
 	PermissionFlagsBits,
 	type Message,
 	type RepliableInteraction
@@ -11,45 +10,7 @@ import {
 import { EMOJIS } from "../../../../constants.js";
 import GiveawayManager from "../../../../database/giveaway.js";
 import lastEditBy from "../../../../helpers/lastEdit.js";
-import { listify } from "../../../../helpers/listify.js";
 import Logger from "../../../../logger/logger.js";
-import { type GiveawayDataWithIncludes } from "../../../../typings/database.js";
-import { getAllWinners, giveawayToWonPrizesMap } from "./getWinners.js";
-
-const getWinnersEmbed = (giveaway: GiveawayDataWithIncludes) => {
-	const winnerWithPrizesMap = giveawayToWonPrizesMap(giveaway);
-
-	const data = [...winnerWithPrizesMap.entries()]
-		.map(([userId, wonPrizes]) =>
-			wonPrizes.map(
-				(wonPrize) =>
-					`→ <@${userId}> won **${wonPrize.quantityWon}x ${wonPrize.name}**`
-			)
-		)
-		.join("\n");
-
-	const embed = new EmbedBuilder()
-		.setColor("#2d7d46")
-		.setTitle(
-			`${EMOJIS.TADA} Giveaway #${giveaway.guildRelativeId} has ended!`
-		)
-		.setFooter({
-			text: `Giveaway #${giveaway.guildRelativeId} • Hosted by ${giveaway.hostUserTag}`
-		});
-
-	embed.setDescription(stripIndents`
-		The winners are: ${listify(
-			[...winnerWithPrizesMap.keys()].map((userId) => `<@${userId}>`),
-			{ length: winnerWithPrizesMap.size }
-		)}
-
-		${data}
-
-		Congratulations!
-	`);
-
-	return embed;
-};
 
 export async function publishWinners(
 	interaction: RepliableInteraction<"cached">,
@@ -74,7 +35,7 @@ export async function publishWinners(
 	}
 
 	const channel = interaction.guild.channels.cache.get(
-		giveaway?.channelId ?? ""
+		giveaway.channelId ?? ""
 	);
 
 	if (!channel?.isTextBased()) {
@@ -101,8 +62,6 @@ export async function publishWinners(
 			.catch(() => null);
 	}
 
-	const winnerIds = getAllWinners(giveaway);
-
 	const acceptPrizeButton = new ButtonBuilder()
 		.setCustomId(`accept-prize-${id}`)
 		.setLabel("Accept prize")
@@ -113,10 +72,9 @@ export async function publishWinners(
 		acceptPrizeButton
 	);
 
-	const embed = getWinnersEmbed(giveaway);
 	let message: Message<true> | null;
 
-	if (!embed || !winnerIds) {
+	if (!giveaway.winnersUserIds().size) {
 		await interaction.editReply({
 			content: stripIndents`
 				${EMOJIS.WARN} This giveaway has no prizes, and therefore no winners. Add some prizes, and try again.
@@ -133,19 +91,23 @@ export async function publishWinners(
 	if (giveawayMessage) {
 		message = await giveawayMessage
 			.reply({
-				allowedMentions: { users: winnerIds },
+				allowedMentions: { users: [...giveaway.winnersUserIds()] },
 				failIfNotExists: false,
-				content: winnerIds.map((id) => `<@${id}>`).join(" "),
-				embeds: [embed],
+				content: [...giveaway.winnersUserIds()]
+					.map((id) => `<@${id}>`)
+					.join(" "),
+				embeds: [giveaway.endedEmbed()],
 				components: [row]
 			})
 			.catch(() => null);
 	} else {
 		message = await channel
 			.send({
-				allowedMentions: { users: winnerIds },
-				content: winnerIds.map((id) => `<@${id}>`).join(" "),
-				embeds: [embed],
+				allowedMentions: { users: [...giveaway.winnersUserIds()] },
+				content: [...giveaway.winnersUserIds()]
+					.map((id) => `<@${id}>`)
+					.join(" "),
+				embeds: [giveaway.endedEmbed()],
 				components: [row]
 			})
 			.catch(() => null);
@@ -251,11 +213,7 @@ export async function republishWinners(
 		return;
 	}
 
-	const winnerIds = getAllWinners(giveaway);
-
-	const embed = getWinnersEmbed(giveaway);
-
-	if (!embed || !winnerIds) {
+	if (!giveaway.winnersUserIds()) {
 		await interaction.editReply({
 			content: stripIndents`
 				${EMOJIS.WARN} This giveaway has no prizes, and therefore no winners. Add some prizes, and try again.
@@ -281,8 +239,10 @@ export async function republishWinners(
 
 	await currentMessage
 		.edit({
-			allowedMentions: { users: winnerIds },
-			content: winnerIds.map((id) => `<@${id}>`).join(" "),
+			allowedMentions: { users: [...giveaway.winnersUserIds()] },
+			content: [...giveaway.winnersUserIds()]
+				.map((id) => `<@${id}>`)
+				.join(" "),
 			embeds: [],
 			components: [row]
 		})
