@@ -11,6 +11,7 @@ import { myGiveawayComponents } from "../../components/index.js";
 import { EMOJIS } from "../../constants.js";
 import GiveawayManager from "../../database/giveaway.js";
 import s from "../../helpers/s.js";
+import Logger from "../../logger/logger.js";
 import type Giveaway from "../../modules/Giveaway.js";
 import type Prize from "../../modules/Prize.js";
 import {
@@ -79,6 +80,8 @@ const run = async (interaction: CommandModuleInteractions) => {
 	if (!interaction.isChatInputCommand()) {
 		return;
 	}
+
+	const logger = new Logger({ prefix: "MY GIVEAWAYS", interaction });
 
 	const hide = interaction.options.getBoolean("hide") ?? true;
 
@@ -194,6 +197,8 @@ const run = async (interaction: CommandModuleInteractions) => {
 		embeds: []
 	});
 
+	logger.log("Sent overview");
+
 	if (!rows.length) {
 		return;
 	}
@@ -234,6 +239,12 @@ const run = async (interaction: CommandModuleInteractions) => {
 					userId: id
 				});
 			}
+
+			logger.log(
+				`Bulk-accepted ${
+					notAcceptedPrizes.length
+				} prize(s): ${notAcceptedPrizes.map((p) => p.id).join(", ")}`
+			);
 
 			await buttonInteraction.editReply({
 				content: getContent(await getPrizes())

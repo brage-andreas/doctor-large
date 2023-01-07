@@ -1,5 +1,5 @@
 import { oneLine } from "common-tags";
-import { type Interaction } from "discord.js";
+import { type Guild, type Interaction } from "discord.js";
 import { DEFAULT_LOGGER_COLOR, DEFAULT_LOGGER_PREFIX } from "../constants.js";
 import { type Color } from "../typings/index.js";
 import { getColorFn, grey } from "./color.js";
@@ -9,11 +9,13 @@ const formatType = (type: string | undefined) =>
 
 export default class Logger {
 	public interaction?: Interaction<"cached">;
+	public guild?: Guild;
 	public prefix: string;
 	public color: Color;
 
 	public constructor(options?: {
 		interaction?: Interaction<"cached"> | undefined;
+		guild?: Guild | undefined;
 		prefix?: string | undefined;
 		color?: Color | undefined;
 	}) {
@@ -22,16 +24,27 @@ export default class Logger {
 		this.color = options?.color ?? DEFAULT_LOGGER_COLOR;
 
 		this.interaction = options?.interaction;
+		this.guild = options?.guild ?? options?.interaction?.guild;
 	}
 
 	public setInteraction(interaction: Interaction<"cached">) {
 		this.interaction = interaction;
 
+		if (!this.guild) {
+			this.guild = interaction.guild;
+		}
+
 		return this;
 	}
 
-	public setPrefix(type: string) {
-		this.prefix = type;
+	public setGuild(guild: Guild) {
+		this.guild = guild;
+
+		return this;
+	}
+
+	public setPrefix(prefix: string) {
+		this.prefix = prefix;
 
 		return this;
 	}
@@ -46,7 +59,20 @@ export default class Logger {
 		if (this.interaction) {
 			this.logInteraction(...messages);
 		} else {
-			this._log(...messages);
+			const toLog: Array<string> = [];
+
+			if (this.guild) {
+				const { name, id } = this.guild;
+				const guildString = `${grey("Guild:")} ${name} ${grey(
+					`(${id})`
+				)}`;
+
+				toLog.push(guildString);
+			}
+
+			toLog.push(...messages);
+
+			this._log(...toLog);
 		}
 	}
 
@@ -55,7 +81,8 @@ export default class Logger {
 			throw new Error("Interaction not set to logger");
 		}
 
-		const { guild, channel, user } = this.interaction;
+		const { channel, user } = this.interaction;
+		const guild = this.guild ?? this.interaction.guild; // should never be default but just in case
 
 		const channelString = channel
 			? `${grey("| Channel:")} ${channel.name} ${grey(`(${channel.id})`)}`

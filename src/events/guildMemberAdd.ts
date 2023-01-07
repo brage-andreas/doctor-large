@@ -7,6 +7,8 @@ export async function run(member: GuildMember) {
 		return;
 	}
 
+	const logger = new Logger({ prefix: "AUTOROLE", guild: member.guild });
+
 	const autoroleManager = new AutoroleManager(member.guild.id);
 	await autoroleManager.initialize();
 
@@ -22,12 +24,12 @@ export async function run(member: GuildMember) {
 		.catch(() => false);
 
 	if (success) {
-		new Logger({ prefix: "AUTOROLE" }).log(
+		logger.log(
 			`Gave ${roleIds.length} role(s) to ${member.user.tag} (${member.id})`
 		);
 	} else {
-		new Logger({ prefix: "AUTOROLE", color: "red" }).log(
-			`Failed to give roles to ${member.user.tag} (${member.id})`
-		);
+		logger
+			.setColor("red")
+			.log(`Failed to give roles to ${member.user.tag} (${member.id})`);
 	}
 }

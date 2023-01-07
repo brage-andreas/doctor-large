@@ -11,6 +11,7 @@ import { giveawayComponents } from "../../../components/index.js";
 import { EMOJIS } from "../../../constants.js";
 import GiveawayManager from "../../../database/giveaway.js";
 import lastEditBy from "../../../helpers/lastEdit.js";
+import Logger from "../../../logger/logger.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import toEditGiveaway from "./dashboardModules/editGiveaway.js";
 import toEndGiveaway from "./dashboardModules/endGiveaway.js";
@@ -82,6 +83,12 @@ export default async function toDashboard(
 		components: [row1, row2],
 		embeds: []
 	});
+
+	// weird bug
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	new Logger({ prefix: "GIVEAWAY", interaction: interaction as any }).log(
+		`Opened dashboard of giveaway with ID #${giveawayId}`
+	);
 
 	const collector = msg.createMessageComponentCollector({
 		filter: (buttonInteraction) =>
