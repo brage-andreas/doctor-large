@@ -3,30 +3,31 @@ import AutoroleManager from "../database/autorole.js";
 import Logger from "../logger/logger.js";
 
 export async function run(member: GuildMember) {
-	// Autorole
-	if (!member.pending && !member.user.bot) {
-		const autoroleManager = new AutoroleManager(member.guild.id);
-		await autoroleManager.initialize();
+	if (member.user.bot) {
+		return;
+	}
 
-		const { activated, roleIds } = await autoroleManager.get();
+	const autoroleManager = new AutoroleManager(member.guild.id);
+	await autoroleManager.initialize();
 
-		if (!activated || roleIds.length === 0) {
-			return;
-		}
+	const { activated, roleIds } = await autoroleManager.get();
 
-		const success = await member.roles
-			.add(roleIds)
-			.then(() => true)
-			.catch(() => false);
+	if (!activated || roleIds.length === 0) {
+		return;
+	}
 
-		if (success) {
-			new Logger({ prefix: "AUTOROLE" }).log(
-				`Gave ${roleIds.length} role(s) to ${member.user.tag} (${member.id})`
-			);
-		} else {
-			new Logger({ prefix: "AUTOROLE", color: "red" }).log(
-				`Failed to give roles to ${member.user.tag} (${member.id})`
-			);
-		}
+	const success = await member.roles
+		.add(roleIds)
+		.then(() => true)
+		.catch(() => false);
+
+	if (success) {
+		new Logger({ prefix: "AUTOROLE" }).log(
+			`Gave ${roleIds.length} role(s) to ${member.user.tag} (${member.id})`
+		);
+	} else {
+		new Logger({ prefix: "AUTOROLE", color: "red" }).log(
+			`Failed to give roles to ${member.user.tag} (${member.id})`
+		);
 	}
 }

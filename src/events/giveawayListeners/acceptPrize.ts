@@ -1,50 +1,36 @@
-import { type Prize, type Winner } from "@prisma/client";
 import { oneLine, stripIndents } from "common-tags";
 import { type ButtonInteraction } from "discord.js";
-import { getAllWinners } from "../../commands/giveaway/giveawayModules/endModules/getWinners.js";
 import { EMOJIS, REGEXP } from "../../constants.js";
 import GiveawayManager from "../../database/giveaway.js";
-import theirPrizes from "../../helpers/theirPrizes.js";
 import Logger from "../../logger/logger.js";
+import type Prize from "../../modules/Prize.js";
 
 export default async function acceptPrize(
 	interaction: ButtonInteraction<"cached">
 ) {
-	const id = interaction.customId.match(REGEXP.ACCEPT_PRIZE_CUSTOM_ID)?.groups
-		?.id;
+	const match = interaction.customId.match(REGEXP.ACCEPT_PRIZE_CUSTOM_ID);
+	const prizeId = match?.groups?.id;
 
-	if (!id) {
+	if (!prizeId) {
 		return;
 	}
 
 	await interaction.deferReply({ ephemeral: true });
 
-	const giveawayManager = new GiveawayManager(interaction.guildId);
+	const giveawayManager = new GiveawayManager(interaction.guild);
 
-	const giveaway = await giveawayManager.get(Number(id));
+	const giveaway = await giveawayManager.get(Number(prizeId));
 
 	if (!giveaway) {
 		return;
 	}
 
-	const rawWinners = getAllWinners(giveaway);
+	const userId = interaction.user.id;
 
-	if (!rawWinners) {
-		interaction.followUp({
-			ephemeral: true,
-			content:
-				"⚠️ Could not find the winners. Contact an admin if this error persists."
-		});
-
-		return;
-	}
-
-	const winners = new Set(rawWinners);
-
-	if (!winners.has(interaction.user.id)) {
+	if (!giveaway.winnersUserIds().has(userId)) {
 		interaction.followUp({
 			content: stripIndents`
-				💔 You don't have any prizes to claim.
+				${EMOJIS.HEART_BREAK} You don't have any prizes to claim.
 				
 				Better luck next time.
 			`,
@@ -54,11 +40,11 @@ export default async function acceptPrize(
 		return;
 	}
 
-	const prizes = theirPrizes(giveaway, interaction.user.id);
+	const prizes = giveaway.prizesOf(userId);
 
-	const prizeToString = (prize: Prize & { winners: Array<Winner> }) => {
+	const prizeToString = (prize: Prize) => {
 		const name = `**${prize.name}**`;
-		const quantity = `${prize.winners[0].quantityWon}x`;
+		const quantity = `${prize.winners.get(userId)!.quantityWon}x`;
 		const additionalInfo = prize.additionalInfo
 			? ` | ${prize.additionalInfo}`
 			: "";
@@ -66,10 +52,12 @@ export default async function acceptPrize(
 		return `${quantity} ${name}${additionalInfo}`;
 	};
 
-	if (prizes.every((prize) => prize.winners[0].accepted)) {
+	if (prizes.every((prize) => prize.winners.get(userId)!.accepted)) {
 		interaction.followUp({
 			content: stripIndents`
-				${EMOJIS.V} You have already claimed all your prizes. You're all set! 😁
+				${EMOJIS.V} You have already claimed all your prizes. You're all set! ${
+				EMOJIS.GRIN
+			}
 
 				I'm sure you win a lot! So in case you need a reminder, you won:
 				→ ${prizes.map(prizeToString).join("\n→ ")}
@@ -82,7 +70,7 @@ export default async function acceptPrize(
 
 	interaction.followUp({
 		content: stripIndents`
-			🎉 You have **now claimed** your prize! Woo!
+			${EMOJIS.TADA} You have **now claimed** your prize! Woo!
 			
 			To remind you of your extraordinary success, you won:
 			→ ${prizes.map(prizeToString).join("\n→ ")}
@@ -95,25 +83,17 @@ export default async function acceptPrize(
 		prefix: "GIVEAWAY"
 	}).log(
 		oneLine`
-			User ${interaction.user.tag} (${interaction.user.id})
+			User ${interaction.user.tag} (${userId})
 			claimed prizes ${prizes.map((p) => `#${p.id}`).join(", ")}
 			in giveaway #${giveaway.id}
 		`
 	);
 
-	const prizeIds = giveaway.prizes
-		.filter((prize) =>
-			prize.winners.some(
-				(winner) => winner.userId === interaction.user.id
-			)
-		)
-		.map((prize) => prize.id);
-
-	for (const id of prizeIds) {
+	for (const { id } of prizes) {
 		await giveawayManager.updateWinnerAcceptance({
 			accepted: true,
 			prizeId: id,
-			userId: interaction.user.id
+			userId
 		});
 	}
 }

@@ -1,6 +1,7 @@
 import { stripIndents } from "common-tags";
 import { type ButtonInteraction } from "discord.js";
 import { giveawayComponents } from "../../../../components/index.js";
+import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
 import lastEditBy from "../../../../helpers/lastEdit.js";
 import Logger from "../../../../logger/logger.js";
@@ -14,6 +15,17 @@ export default async function toEditGiveaway(
 	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
+		await interaction.reply({
+			components: [],
+			ephemeral: true,
+			content: stripIndents`
+				How did we get here?
+			
+				${EMOJIS.WARN} This giveaway does not exist. Try creating one or double-check the ID.
+			`,
+			embeds: []
+		});
+
 		return;
 	}
 
@@ -28,7 +40,9 @@ export default async function toEditGiveaway(
 
 	const modalInteraction = await interaction
 		.awaitModalSubmit({
-			filter: (interaction) => interaction.customId === "editGiveaway",
+			filter: (i) =>
+				i.customId === "editGiveaway" &&
+				i.user.id === interaction.user.id,
 			time: 180_000
 		})
 		.catch(async () => {

@@ -1,28 +1,47 @@
-import { type Giveaway } from "@prisma/client";
+import { type GiveawayData } from "@prisma/client";
 import { type AutocompleteInteraction } from "discord.js";
+import { EMOJIS } from "../../../constants.js";
 import GiveawayManager from "../../../database/giveaway.js";
 
 export default async function (interaction: AutocompleteInteraction<"cached">) {
 	const guild = interaction.guild;
-	const focusedRaw = parseInt(interaction.options.getFocused()) || undefined;
 
-	const giveawayManager = new GiveawayManager(guild.id);
+	const giveawayManager = new GiveawayManager(guild);
+	const max = await giveawayManager.getQuantityInGuild();
 
+	const focusedInt = parseInt(interaction.options.getFocused());
 	const focused =
-		(Number.isNaN(focusedRaw) ? null : focusedRaw) ??
-		((await giveawayManager.getQuantityInGuild()) || 1);
+		focusedInt === 0
+			? 0
+			: focusedInt || (await giveawayManager.getQuantityInGuild()) || 1;
 
-	// ensures offset will never be under 0
-	const offset = focused <= 3 ? 0 : focused - 3;
-	const offsetGiveaways = await giveawayManager.getWithOffset(offset);
+	const rawSkip = focused - 3;
+	const skip =
+		// if under 0, make it 0
+		rawSkip < 0
+			? 0
+			: // if the highest id it will try to take is over the max in the guild
+			//   make it 5 less than the max in the guild, so you will get the last 5
+			max < 5 && max <= rawSkip + 5
+			? max - 5
+			: // else default to whatever value it was
+			  rawSkip;
 
-	const getName = (data: Giveaway) => {
+	const offsetGiveaways = await giveawayManager.getWithOffset(skip, 5);
+
+	const getName = (data: GiveawayData) => {
 		const id = data.guildRelativeId;
-		const emoji = id === focused ? "✨" : id > focused ? "🔸" : "🔹";
+		const emoji =
+			focused === id
+				? EMOJIS.SPARKS
+				: focused < id
+				? EMOJIS.HIGHER
+				: EMOJIS.LOWER;
+
 		const activeEmoji = !data.active
-			? "🔴 "
+			? `${EMOJIS.INACTIVE} `
 			: data.entriesLocked
-			? "🔒 "
+			? `${EMOJIS.LOCK} `
 			: "";
 
 		return `${emoji} #${data.guildRelativeId} ${activeEmoji}${data.title}`;
@@ -48,7 +67,7 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 		}));
 
 	const emptyResponse = {
-		name: "😴 Whoa so empty — there are no giveaways",
+		name: `${EMOJIS.SLEEP} Whoa so empty — there are no giveaways`,
 		value: 0
 	};
 

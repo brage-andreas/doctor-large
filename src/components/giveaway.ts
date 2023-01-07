@@ -7,7 +7,7 @@ import {
 	TextInputBuilder,
 	TextInputStyle
 } from "discord.js";
-import { GIVEAWAY } from "../constants.js";
+import { EMOJIS, GIVEAWAY } from "../constants.js";
 
 // -----------------------
 //         CREATE
@@ -94,7 +94,7 @@ const modalGiveawayNewTitle = (oldTitle: string) =>
 		.setValue(oldTitle)
 		.setPlaceholder(oldTitle);
 
-const emptyString = "😴 Whoa so empty — there is no description";
+const emptyString = `${EMOJIS.SLEEP} Whoa so empty — there is no description`;
 
 /**
  * ID: newDescription
@@ -176,7 +176,7 @@ const publishingOptionsButton = new ButtonBuilder()
 const lockGiveawayEntriesButton = new ButtonBuilder()
 	.setCustomId("lockEntries")
 	.setStyle(ButtonStyle.Secondary)
-	.setEmoji("🔒")
+	.setEmoji(EMOJIS.LOCK)
 	.setLabel("Lock entries");
 
 /**
@@ -185,7 +185,7 @@ const lockGiveawayEntriesButton = new ButtonBuilder()
 const unlockGiveawayEntriesButton = new ButtonBuilder()
 	.setCustomId("unlockEntries")
 	.setStyle(ButtonStyle.Secondary)
-	.setEmoji("🔓")
+	.setEmoji(EMOJIS.UNLOCK)
 	.setLabel("Unlock entries");
 
 /**
@@ -234,7 +234,7 @@ const clearPingRolesButton = new ButtonBuilder()
 const editGiveawayButton = new ButtonBuilder()
 	.setCustomId("editGiveaway")
 	.setStyle(ButtonStyle.Primary)
-	.setEmoji("✍️")
+	.setEmoji(EMOJIS.EDIT)
 	.setLabel("Edit");
 
 /**
@@ -311,7 +311,7 @@ const enterGiveawayButton = (id: number) =>
 		.setCustomId(`enter-giveaway-${id}`)
 		.setLabel("Enter")
 		.setStyle(ButtonStyle.Success)
-		.setEmoji("🎁");
+		.setEmoji(EMOJIS.ENTER_GIVEAWAY_EMOJI);
 
 // -----------------------
 

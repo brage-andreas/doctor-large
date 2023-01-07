@@ -1,6 +1,6 @@
 import { oneLine } from "common-tags";
 import { type Interaction } from "discord.js";
-import { REGEXP } from "../constants.js";
+import { EMOJIS, REGEXP } from "../constants.js";
 import commandMap from "../helpers/scripts/commandMap.js";
 import acceptPrize from "./giveawayListeners/acceptPrize.js";
 import enterGiveaway from "./giveawayListeners/enterGiveaway.js";
@@ -42,7 +42,7 @@ export async function run(interaction: Interaction) {
 			interaction.reply({
 				content: oneLine`
 					Something went wrong...
-					Maybe I'm out of wine 🤔
+					Maybe I'm out of wine ${EMOJIS.THINK} 
 				`,
 				ephemeral: true
 			});

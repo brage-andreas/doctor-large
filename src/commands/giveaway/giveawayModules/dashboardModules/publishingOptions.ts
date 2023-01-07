@@ -10,8 +10,8 @@ import {
 	type TextChannel
 } from "discord.js";
 import { giveawayComponents } from "../../../../components/index.js";
+import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
-import formatGiveaway from "../../../../helpers/formatGiveaway.js";
 import lastEditBy from "../../../../helpers/lastEdit.js";
 import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
@@ -34,12 +34,14 @@ export default async function toPublishingOptions(
 		.setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement);
 
 	const chooseChannelStr = stripIndents`
-			Select the channel you would like to publish the giveaway in.${
-				giveaway.channelId
-					? `\n\nPrevious channel: <#${giveaway.channelId}> (${giveaway.channelId})`
-					: ""
-			}
-		`;
+		Select the channel you would like to publish the giveaway in.
+
+		${
+			giveaway.channelId
+				? `Previous channel: <#${giveaway.channelId}> (${giveaway.channelId})`
+				: ""
+		}
+	`;
 
 	const row1 = new ActionRowBuilder<ChannelSelectMenuBuilder>().setComponents(
 		channelSelectMenu
@@ -52,17 +54,17 @@ export default async function toPublishingOptions(
 		giveawayComponents.dashboard.recallCurrentMessageButton()
 	);
 
+	const logger = new Logger({ prefix: "GIVEAWAY", interaction });
+
 	const retry = async (message?: string) => {
 		if (message) {
 			interaction.followUp({ content: message, ephemeral: true });
 		}
 
-		const logger = new Logger({ prefix: "GIVEAWAY", interaction });
-
 		const updateMsg = await interaction.editReply({
 			content: chooseChannelStr,
 			components: [row1, row2],
-			embeds: [formatGiveaway(giveaway, true, interaction.guild)]
+			embeds: [giveaway.toEmbed()]
 		});
 
 		const componentInteraction = await updateMsg.awaitMessageComponent({
@@ -87,7 +89,7 @@ export default async function toPublishingOptions(
 
 			if (!channelId) {
 				interaction.editReply({
-					content: "⚠️ Something went wrong. Try again.",
+					content: `${EMOJIS.WARN} Something went wrong. Try again.`,
 					components: [],
 					embeds: []
 				});
@@ -103,7 +105,7 @@ export default async function toPublishingOptions(
 			if (!channel) {
 				await componentInteraction.deferUpdate();
 
-				retry("⚠️ This channel does not exist.");
+				retry(`${EMOJIS.WARN} This channel does not exist.`);
 
 				return;
 			}
@@ -115,25 +117,23 @@ export default async function toPublishingOptions(
 				await componentInteraction.deferUpdate();
 
 				retry(
-					`⚠️ I am missing permissions to send messages in ${channel} (${channelId})`
+					`${EMOJIS.WARN} I am missing permissions to send messages in ${channel} (${channelId})`
 				);
 
 				return;
 			}
 
 			const message = await channel.send({
-				content: giveaway.pingRolesIds
-					.map((roleId) => `<@&${roleId}>`)
-					.join(" "),
-				allowedMentions: {
-					roles: giveaway.pingRolesIds
-				},
-				embeds: [formatGiveaway(giveaway, true, interaction.guild)],
+				allowedMentions: { roles: [...giveaway.pingRolesIds] },
 				components: [
 					new ActionRowBuilder<ButtonBuilder>().setComponents(
 						giveawayComponents.dashboard.enterGiveawayButton(id)
 					)
-				]
+				],
+				content: [...giveaway.pingRolesIds]
+					.map((roleId) => `<@&${roleId}>`)
+					.join(" "),
+				embeds: [giveaway.toEmbed()]
 			});
 
 			const oldChannel = interaction.guild.channels.cache.get(
@@ -146,13 +146,14 @@ export default async function toPublishingOptions(
 					.catch(() => null);
 			}
 
-			interaction.editReply({
-				content: stripIndents`
-				✨ Done! Giveaway published in ${channel}.
-				
-				Here is a [link to your now perfected giveaway](<${message.url}>).
-				`,
+			interaction.followUp({
 				components: [],
+				ephemeral: true,
+				content: stripIndents`
+					${EMOJIS.SPARKS} Done! Giveaway published in ${channel}.
+					
+					Here is a [link to your now perfected giveaway](<${message.url}>).
+				`,
 				embeds: []
 			});
 
@@ -178,7 +179,7 @@ export default async function toPublishingOptions(
 		) {
 			if (!giveaway.channelId || !giveaway.publishedMessageId) {
 				componentInteraction.followUp({
-					content: "The giveaway is not published yet!",
+					content: `${EMOJIS.WARN} The giveaway has not been published yet.`,
 					ephemeral: true
 				});
 
@@ -194,7 +195,7 @@ export default async function toPublishingOptions(
 
 				retry(
 					stripIndents`
-						⚠️ I cannot find channel: ${giveaway.channelId} (${giveaway.channelId}).
+						${EMOJIS.WARN} I cannot find channel: ${giveaway.channelId} (${giveaway.channelId}).
 						Maybe it has it been deleted?
 					`
 				);
@@ -207,7 +208,7 @@ export default async function toPublishingOptions(
 
 				retry(
 					stripIndents`
-						⚠️ The channel is not a text channel: ${giveaway.channelId} (${giveaway.channelId}).
+						${EMOJIS.WARN} The channel is not a text channel: ${giveaway.channelId} (${giveaway.channelId}).
 						I don't know how this happened.
 					`
 				);
@@ -217,11 +218,9 @@ export default async function toPublishingOptions(
 
 			const isEdit = componentInteraction.customId === "editCurrent";
 
-			const content = giveaway.pingRolesIds
-				.map((roleId) => `<@&${roleId}>`)
-				.join(" ");
+			const content = giveaway.pingRolesMentions?.join(" ");
 
-			const embeds = [formatGiveaway(giveaway, true, interaction.guild)];
+			const embeds = [giveaway.toEmbed()];
 
 			const components = [
 				new ActionRowBuilder<ButtonBuilder>().setComponents(
@@ -232,7 +231,9 @@ export default async function toPublishingOptions(
 			const successOrURL = isEdit
 				? await channel.messages
 						.edit(giveaway.publishedMessageId, {
-							allowedMentions: { roles: giveaway.pingRolesIds },
+							allowedMentions: {
+								roles: [...giveaway.pingRolesIds]
+							},
 							components,
 							content,
 							embeds
@@ -245,15 +246,16 @@ export default async function toPublishingOptions(
 						.catch(() => null);
 
 			if (isEdit) {
-				interaction.editReply({
+				interaction.followUp({
+					components: [],
+					ephemeral: true,
 					content: successOrURL
 						? stripIndents`
-							✨ Done! Giveaway has been edited in ${channel}.
+							${EMOJIS.SPARKS} Done! Giveaway has been edited in ${channel}.
 							
 							Here is a [link to your now perfected giveaway](<${successOrURL}>).
 						`
-						: "⚠️ I could not edit the message. Maybe it has been deleted?",
-					components: [],
+						: `${EMOJIS.WARN} I could not edit the message. Maybe it has been deleted?`,
 					embeds: []
 				});
 
@@ -263,11 +265,12 @@ export default async function toPublishingOptions(
 					);
 				}
 			} else {
-				interaction.editReply({
-					content: successOrURL
-						? `✨ Done! Giveaway has been recalled from ${channel}. All data remain intact.`
-						: "⚠️ I could not recall the Giveaway. The message might have already been deleted.",
+				interaction.followUp({
 					components: [],
+					ephemeral: true,
+					content: successOrURL
+						? `${EMOJIS.SPARKS} Done! Giveaway has been recalled from ${channel}. All data remain intact.`
+						: `${EMOJIS.WARN} I could not recall the Giveaway. The message might have already been deleted.`,
 					embeds: []
 				});
 
@@ -291,6 +294,8 @@ export default async function toPublishingOptions(
 					}
 				});
 			}
+
+			toDashboard(interaction, id);
 		}
 	};
 

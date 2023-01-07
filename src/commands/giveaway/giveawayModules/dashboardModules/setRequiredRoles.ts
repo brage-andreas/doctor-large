@@ -32,13 +32,8 @@ export default async function toSetRequiredRoles(
 			Select the roles you require entrants to have.
 			
 			Currently set to: ${
-				giveaway.requiredRolesIds.length
-					? listify(
-							giveaway.requiredRolesIds.map(
-								(roleId) => `<@&${roleId}>`
-							),
-							{ length: 5 }
-					  )
+				giveaway.requiredRolesIds.size
+					? listify(giveaway.requiredRolesMentions!, { length: 5 })
 					: "No roles"
 			}
 		`;

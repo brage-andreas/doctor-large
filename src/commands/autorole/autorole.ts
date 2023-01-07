@@ -50,7 +50,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 		return;
 	}
 
-	await interaction.deferReply();
+	await interaction.deferReply({ ephemeral: true });
 
 	const autoroleManager = new AutoroleManager(interaction.guildId);
 	await autoroleManager.initialize();

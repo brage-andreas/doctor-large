@@ -10,8 +10,8 @@ import {
 	type TextChannel
 } from "discord.js";
 import { giveawayComponents } from "../../../../components/index.js";
+import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
-import formatGiveaway from "../../../../helpers/formatGiveaway.js";
 import lastEditBy from "../../../../helpers/lastEdit.js";
 import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
@@ -52,7 +52,7 @@ export default async function toPublishGiveaway(
 		const updateMsg = await interaction.editReply({
 			content: chooseChannelStr,
 			components: [row1, row2],
-			embeds: [formatGiveaway(giveaway, true, interaction.guild)]
+			embeds: [giveaway.toEmbed()]
 		});
 
 		const componentInteraction = await updateMsg.awaitMessageComponent({
@@ -70,7 +70,7 @@ export default async function toPublishGiveaway(
 		if (componentInteraction.customId === "channelSelect") {
 			if (!componentInteraction.isChannelSelectMenu()) {
 				interaction.editReply({
-					content: "⚠️ Something went wrong. Try again.",
+					content: `${EMOJIS.WARN} Something went wrong. Try again.`,
 					components: [],
 					embeds: []
 				});
@@ -87,7 +87,7 @@ export default async function toPublishGiveaway(
 			if (!channel) {
 				await componentInteraction.deferUpdate();
 
-				retry("⚠️ This channel does not exist.");
+				retry(`${EMOJIS.WARN} This channel does not exist.`);
 
 				return;
 			}
@@ -99,14 +99,14 @@ export default async function toPublishGiveaway(
 				await componentInteraction.deferUpdate();
 
 				retry(
-					`⚠️ I am missing permissions to send messages in ${channel} (${channelId})`
+					`${EMOJIS.WARN} I am missing permissions to send messages in ${channel} (${channelId})`
 				);
 
 				return;
 			}
 
 			const msg = await channel.send({
-				embeds: [formatGiveaway(giveaway, true, interaction.guild)],
+				embeds: [giveaway.toEmbed()],
 				components: [
 					new ActionRowBuilder<ButtonBuilder>().setComponents(
 						giveawayComponents.dashboard.enterGiveawayButton(id)
@@ -114,21 +114,7 @@ export default async function toPublishGiveaway(
 				]
 			});
 
-			interaction.editReply({
-				content: stripIndents`
-					✨ Done! Giveaway published in ${channel}.
-
-					Here is a [link to your shiny new giveaway](<${msg.url}>).
-				`,
-				components: [],
-				embeds: []
-			});
-
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
-				`Published giveaway #${id} in ${channel.name} (${channelId})`
-			);
-
-			giveawayManager.edit({
+			await giveawayManager.edit({
 				where: {
 					id: giveaway.id
 				},
@@ -138,6 +124,23 @@ export default async function toPublishGiveaway(
 					...lastEditBy(interaction.user)
 				}
 			});
+
+			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				`Published giveaway #${id} in ${channel.name} (${channelId})`
+			);
+
+			await interaction.followUp({
+				components: [],
+				ephemeral: true,
+				content: stripIndents`
+					${EMOJIS.SPARKS} Done! Giveaway published in ${channel}.
+
+					Here is a [link to your shiny new giveaway](<${msg.url}>).
+				`,
+				embeds: []
+			});
+
+			toDashboard(interaction, id);
 		}
 	};
 

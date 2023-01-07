@@ -1,4 +1,4 @@
-import { type Autorole } from "@prisma/client";
+import { type AutoroleData } from "@prisma/client";
 import { oneLine } from "common-tags";
 import {
 	EmbedBuilder,
@@ -9,7 +9,7 @@ import { EMOJIS } from "../../constants.js";
 
 export default function formatAutorole(
 	interaction: ChatInputCommandInteraction<"cached">,
-	autorole: Autorole | null
+	autorole: AutoroleData | null
 ) {
 	const hasManageRolesPermission =
 		interaction.guild.members.me?.permissions.has(
@@ -26,7 +26,7 @@ export default function formatAutorole(
 					const role = interaction.guild.roles.cache.get(roleId);
 
 					if (!role) {
-						return `⚠️ Could not find role (${roleId})`;
+						return `${EMOJIS.WARN} Could not find role (${roleId})`;
 					}
 
 					return `${i + 1}. ${role} (${role.id})`;
@@ -39,7 +39,7 @@ export default function formatAutorole(
 		.setDescription(
 			hasManageRolesPermission
 				? description
-				: `${description}\n\n⚠️ Missing Manage Roles permission`
+				: `${description}\n\n${EMOJIS.WARN} Missing Manage Roles permission`
 		)
 		.setTimestamp(
 			autorole?.lastEditedTimestamp
