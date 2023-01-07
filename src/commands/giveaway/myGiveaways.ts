@@ -1,4 +1,4 @@
-import { stripIndents } from "common-tags";
+import { source, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
 	ApplicationCommandOptionType,
@@ -11,16 +11,12 @@ import { myGiveawayComponents } from "../../components/index.js";
 import { EMOJIS } from "../../constants.js";
 import GiveawayManager from "../../database/giveaway.js";
 import s from "../../helpers/s.js";
-import {
-	type GiveawayDataWithIncludes,
-	type PrizeDataWithIncludes,
-	type WonPrize
-} from "../../typings/database.js";
+import type Giveaway from "../../modules/Giveaway.js";
+import type Prize from "../../modules/Prize.js";
 import {
 	type Command,
 	type CommandModuleInteractions
 } from "../../typings/index.js";
-import { prizeToWonPrize } from "./giveawayModules/endModules/getWinners.js";
 
 const data: RESTPostAPIApplicationCommandsJSONBody = {
 	name: "my-giveaways",
@@ -37,31 +33,14 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 
 const no = (n: number) => (n ? `**${n}**` : "no");
 
-const giveawayToShortString = (giveaway: GiveawayDataWithIncludes) => {
-	const { id: gId, title, winnerQuantity, prizes } = giveaway;
-	const id = `#${gId}`;
-	const winners = `${winnerQuantity} ${s("winner", winnerQuantity)}`;
-	const prizesQuantity = prizes.reduce(
-		(acc, prize) => acc + prize.quantity,
-		0
-	);
-
-	return `${id} **${title}** - ${winners}, ${prizesQuantity} ${s(
-		"prize",
-		prizesQuantity
-	)}`;
-};
-
-const stringFromEnteredGiveaways = (
-	giveaways: Array<GiveawayDataWithIncludes>
-) => {
+const stringFromEnteredGiveaways = (giveaways: Array<Giveaway>) => {
 	const activeGiveaways = giveaways
 		.filter((g) => g.active)
-		.map(giveawayToShortString);
+		.map((g) => g.toShortString());
 
 	const inactiveGiveaways = giveaways
 		.filter((g) => !g.active)
-		.map(giveawayToShortString);
+		.map((g) => g.toShortString());
 
 	const strArray = [];
 
@@ -84,20 +63,24 @@ const stringFromEnteredGiveaways = (
 	return strArray.join("\n\n");
 };
 
-const wonPrizesToString = (wonPrizes: Array<WonPrize>) =>
-	wonPrizes
-		.map((wonPrize) => {
-			const { name, quantityWon, accepted } = wonPrize;
-			const emoji = !accepted ? ` (${EMOJIS.WARN} Not accepted)` : "";
+const prizeToString = (prize: Prize, winnerUserId: string) => {
+	const winner = prize.winners.get(winnerUserId);
 
-			return `→ ${quantityWon} ${name} (${emoji})`;
-		})
-		.join("\n");
+	if (!winner) {
+		return null;
+	}
+
+	const emoji = !winner.accepted ? ` (${EMOJIS.WARN} Not accepted)` : "";
+
+	return `→ ${winner.quantityWon} ${prize.name}${emoji}`;
+};
 
 const run = async (interaction: CommandModuleInteractions) => {
 	if (!interaction.isChatInputCommand()) {
 		return;
 	}
+
+	const hide = interaction.options.getBoolean("hide") ?? true;
 
 	const id = interaction.user.id;
 
@@ -117,7 +100,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 		return;
 	}
 
-	await interaction.deferReply({ ephemeral: true });
+	await interaction.deferReply({ ephemeral: hide });
 
 	// this is so it can update if the user presses the "accept all" button
 	const getPrizes = async () =>
@@ -125,18 +108,11 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 	const prizes = await getPrizes();
 
-	const theirWonPrizes = (prizes: Array<PrizeDataWithIncludes>) =>
-		prizes
-			.map((prize) => prizeToWonPrize(prize, id))
-			.filter(
-				(wonPrizeOrNull) => wonPrizeOrNull !== null
-			) as Array<WonPrize>;
-
-	const getContent = (prizes: Array<PrizeDataWithIncludes>) => {
-		const prizesStr = theirWonPrizes(prizes).length
-			? `\n\n**Won prizes (${
-					theirWonPrizes(prizes).length
-			  })**\n${wonPrizesToString(theirWonPrizes(prizes))}`
+	const getContent = (prizes: Array<Prize>) => {
+		const prizesStr = prizes.length
+			? `\n\n**Won prizes (${prizes.length})**\n→ ${prizes
+					.map((prize) => prize.toShortString())
+					.join("\n→ ")}`
 			: "";
 
 		const enteredStr = entered.length
@@ -144,28 +120,25 @@ const run = async (interaction: CommandModuleInteractions) => {
 			: `None. ${EMOJIS.CRY}`;
 
 		const hostEntries = hosted.reduce(
-			(acc, g) => acc + g.entriesUserIds.length,
+			(acc, g) => acc + g.entriesUserIds.size,
 			0
 		);
 
 		const hostedStr = hosted.length
 			? stripIndents`
-			**Hosted giveaways**
-			You have hosted **${hosted.length}** ${s(
+				**Hosted giveaways**
+				You have hosted **${hosted.length}** ${s(
 					"giveaway",
 					hosted.length
 			  )} with a total of **${hostEntries}** ${
 					hostEntries === 1 ? "entry" : "entries"
 			  }.
-		`
+			`
 			: "";
 
 		return stripIndents`
 			You have entered ${no(entered.length)} ${s("giveaway", entered.length)}.
-			You have won ${no(theirWonPrizes(prizes).length)} ${s(
-			"prize",
-			theirWonPrizes(prizes).length
-		)}.
+			You have won ${no(prizes.length)} ${s("prize", prizes.length)}.
 
 			**Entered giveaways**
 			${enteredStr}${prizesStr}
@@ -181,19 +154,19 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 	const acceptAllButton = notAcceptedPrizes.length
 		? myGiveawayComponents.acceptAllPrizesButton()
-		: undefined;
+		: null;
 
 	const viewAllEnteredButton = entered.length
 		? myGiveawayComponents.viewAllEnteredButton()
-		: undefined;
+		: null;
 
 	const viewAllPrizesButton = prizes.length
 		? myGiveawayComponents.viewAllPrizesButton()
-		: undefined;
+		: null;
 
 	const viewAllHostedButton = hosted.length
 		? myGiveawayComponents.viewAllHostedButton()
-		: undefined;
+		: null;
 
 	const getButtonArray = () =>
 		[
@@ -209,7 +182,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 		const buttons = getButtonArray();
 
 		return buttons.length
-			? [new ActionRowBuilder<ButtonBuilder>().setComponents(...buttons)]
+			? [new ActionRowBuilder<ButtonBuilder>().setComponents(buttons)]
 			: [];
 	};
 
@@ -242,6 +215,14 @@ const run = async (interaction: CommandModuleInteractions) => {
 		});
 	});
 
+	collector.on("end", (_, reason) => {
+		if (reason !== "time") {
+			return;
+		}
+
+		interaction.editReply({ components: [] }).catch(() => null);
+	});
+
 	collector.on("collect", async (buttonInteraction) => {
 		await buttonInteraction.deferReply({ ephemeral: true });
 
@@ -265,23 +246,26 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 			const userLine = `${user.tag} (${user.id})`;
 
-			const text = stripIndents`
-				${createdAt} ${createdTimestamp}
-				${guild.name} (${guild.id})
-				${userLine}
-				${"-".repeat(userLine.length)}
+			// +8 is for the "User: .." prefix
+			const text = source`
+				Server: ${guild.name} (${guild.id})
+				  Date: ${createdAt.toUTCString()} (${createdTimestamp})
+				  User: ${userLine}
+				${"-".repeat(userLine.length + 8)}
 				${string}
 			`;
 
 			return new AttachmentBuilder(Buffer.from(text), {
-				name: `${user.tag}-entered-giveaways-in-${guild.id}.txt`
+				name: `giveaways-${user.tag}-in-${guild.id}.txt`
 			});
 		};
 
 		if (buttonInteraction.customId === "viewAllEntered") {
-			const string = `Entered giveaways (${
-				entered.length
-			}):\n${stringFromEnteredGiveaways(entered)}`;
+			const string = source`
+				Entered giveaways (${entered.length}):
+				
+				${entered.map((giveaway) => giveaway.toFullString()).join("\n\n")}
+			`;
 
 			await buttonInteraction.editReply({
 				files: [getAttachment(string)]
@@ -299,9 +283,11 @@ const run = async (interaction: CommandModuleInteractions) => {
 		if (buttonInteraction.customId === "viewAllPrizes") {
 			const prizes_ = await getPrizes();
 
-			const prizesStr = wonPrizesToString(theirWonPrizes(prizes_));
+			const prizesStr = prizes_
+				.map((prize_) => prizeToString(prize_, id))
+				.join("\n");
 
-			const string = `Won prizes (${prizes_.length}):\n${prizesStr}`;
+			const string = `Won prizes (${prizes_.length}):\n\n${prizesStr}`;
 
 			await buttonInteraction.editReply({
 				files: [getAttachment(string)]
@@ -317,7 +303,11 @@ const run = async (interaction: CommandModuleInteractions) => {
 		}
 
 		if (buttonInteraction.customId === "viewAllHosted") {
-			const string = "WIP";
+			const string = source`
+				Hosted giveaways (${hosted.length}):
+				
+				${hosted.map((giveaway) => giveaway.toFullString()).join("\n\n")}
+			`;
 
 			await buttonInteraction.editReply({
 				files: [getAttachment(string)]
