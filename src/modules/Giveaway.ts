@@ -1,5 +1,5 @@
 import { type Prisma } from "@prisma/client";
-import { id, oneLine, stripIndents } from "common-tags";
+import { oneLine, source, stripIndents } from "common-tags";
 import {
 	EmbedBuilder,
 	PermissionFlagsBits,
@@ -29,7 +29,6 @@ export default class Giveaway {
 	public description: string | null;
 	public endTimestamp: string | null;
 	public entriesLocked: boolean;
-	public entriesUserIds: Array<string>;
 	public guildId: string;
 	public guildRelativeId: number;
 	public hostUserId: string;
@@ -39,14 +38,16 @@ export default class Giveaway {
 	public lastEditedUserId: string | null;
 	public lastEditedUserTag: string | null;
 	public minimumAccountAge: string | null;
-	public pingRolesIds: Array<string>;
 	public prizes: Array<Prize>;
 	public publishedMessageId: string | null;
-	public requiredRolesIds: Array<string>;
 	public title: string;
 	public winnerMessageId: string | null;
 	public winnerQuantity: number;
 	// ----------
+
+	public entriesUserIds: Set<string>;
+	public pingRolesIds: Set<string>;
+	public requiredRolesIds: Set<string>;
 
 	private _prizesQuantity: number | null = null;
 	private _winnersUserIds: Set<string> | null = null;
@@ -65,14 +66,11 @@ export default class Giveaway {
 		this.minimumAccountAge = data.minimumAccountAge;
 		this.createdTimestamp = data.createdTimestamp;
 		this.lastEditedUserId = data.lastEditedUserId;
-		this.requiredRolesIds = data.requiredRolesIds;
 		this.winnerMessageId = data.winnerMessageId;
 		this.guildRelativeId = data.guildRelativeId;
-		this.entriesUserIds = data.entriesUserIds;
 		this.winnerQuantity = data.winnerQuantity;
 		this.entriesLocked = data.entriesLocked;
 		this.endTimestamp = data.endTimestamp;
-		this.pingRolesIds = data.pingRolesIds;
 		this.description = data.description;
 		this.hostUserTag = data.hostUserTag;
 		this.hostUserId = data.hostUserId;
@@ -83,13 +81,33 @@ export default class Giveaway {
 		this.id = data.id;
 		// ----------
 
+		this.requiredRolesIds = new Set(data.requiredRolesIds);
+		this.entriesUserIds = new Set(data.entriesUserIds);
+		this.pingRolesIds = new Set(data.pingRolesIds);
+
 		this.prizes = data.prizes.map(
 			(prize) => new Prize({ ...prize, giveaway: this }, guild)
 		);
 	}
 
-	public get prizesQuantity() {
-		if (this._prizesQuantity === null) {
+	public get pingRolesMentions() {
+		if (!this.pingRolesIds.size) {
+			return undefined;
+		}
+
+		return [...this.pingRolesIds].map((id) => `<@&${id}>`);
+	}
+
+	public get requiredRolesMentions() {
+		if (!this.requiredRolesIds.size) {
+			return undefined;
+		}
+
+		return [...this.requiredRolesIds].map((id) => `<@&${id}>`);
+	}
+
+	public prizesQuantity(forceRefresh?: boolean) {
+		if (this._prizesQuantity === null || forceRefresh) {
 			this._prizesQuantity = this.prizes.reduce(
 				(acc, prize) => acc + prize.quantity,
 				0
@@ -99,8 +117,12 @@ export default class Giveaway {
 		return this._prizesQuantity;
 	}
 
-	public get winnersUserIds() {
-		if (this._winnersUserIds === null) {
+	public prizesOf(userId: string) {
+		return this.prizes.filter((prize) => prize.winners.has(userId));
+	}
+
+	public winnersUserIds(forceRefresh?: boolean) {
+		if (this._winnersUserIds === null || forceRefresh) {
 			this._winnersUserIds = this.prizes.reduce((set, e) => {
 				e.winners.forEach((winner) => set.add(winner.userId));
 
@@ -111,16 +133,18 @@ export default class Giveaway {
 		return this._winnersUserIds;
 	}
 
-	public get isPublished() {
+	public isPublished() {
 		return Boolean(this.publishedMessageId);
 	}
 
 	public hasRequiredRoles(member: GuildMember) {
-		const roleIds = this.requiredRolesIds;
+		if (!this.requiredRolesIds.size) {
+			return true;
+		}
 
-		return roleIds.length
-			? roleIds.every((roleId) => member.roles.cache.has(roleId))
-			: true;
+		const roleIds = [...this.requiredRolesIds];
+
+		return roleIds.every((roleId) => member.roles.cache.has(roleId));
 	}
 
 	public isOldEnough(member: GuildMember) {
@@ -139,8 +163,8 @@ export default class Giveaway {
 		const winners = s("winner", this.winnerQuantity);
 
 		return oneLine`
-			${this.guildRelativeId} **${this.title}** - ${this.winnerQuantity} ${winners},
-			${this.prizesQuantity} ${s("prize", this.prizesQuantity)}
+			#${this.guildRelativeId} **${this.title}** - ${this.winnerQuantity} ${winners},
+			${this.prizesQuantity()} ${s("prize", this.prizesQuantity())}
 		`;
 	}
 
@@ -149,13 +173,34 @@ export default class Giveaway {
 	}
 
 	public toFullString() {
-		//
+		const winnerStr = `${this.winnerQuantity || "No"} ${s(
+			"winner",
+			this.winnerQuantity
+		)}`;
+
+		const prizesStr = `${this.prizesQuantity() || "no"} ${s(
+			"prize",
+			this.prizesQuantity()
+		)}`;
+
+		const entriesStr = `${this.entriesUserIds.size || "No"} ${s(
+			"entrant",
+			this.entriesUserIds.size
+		)}`;
+
+		const { active } = this;
+
+		return source`
+			#${this.guildRelativeId} "${this.title}"
+			${!active ? "  → Inactive\n" : ""}  → ${entriesStr}
+			  → ${winnerStr}, ${prizesStr}
+		`;
 	}
 
 	public toDashboardOverviewString() {
-		const requiredRolesStr = this.requiredRolesIds.length
-			? `→ Required roles (${this.requiredRolesIds.length}): ${listify(
-					this.requiredRolesIds.map((roleId) => `<@&${roleId}>`),
+		const requiredRolesStr = this.requiredRolesIds.size
+			? `→ Required roles (${this.requiredRolesIds.size}): ${listify(
+					this.requiredRolesMentions!,
 					{ length: 5 }
 			  )}`
 			: "→ Required roles: None";
@@ -166,20 +211,20 @@ export default class Giveaway {
 				: "None"
 		}`;
 
-		const pingRolesStr = this.pingRolesIds.length
-			? `→ Ping roles (${this.pingRolesIds.length}): ${listify(
-					this.pingRolesIds.map((roleId) => `<@&${roleId}>`),
+		const pingRolesStr = this.pingRolesIds.size
+			? `→ Ping roles (${this.pingRolesIds.size}): ${listify(
+					this.pingRolesMentions!,
 					{ length: 10 }
 			  )}`
 			: "→ Ping roles: None";
 
-		const badPingRoles = this.pingRolesIds.filter((roleId) => {
+		const badPingRoles = [...this.pingRolesIds].filter((roleId) => {
 			const mentionable = this.guild.roles.cache.get(roleId)?.mentionable;
-			const hasPerms = this.guild.members.me?.permissions.has(
+			const canMentionAll = this.guild.members.me?.permissions.has(
 				PermissionFlagsBits.MentionEveryone
 			);
 
-			return !mentionable && !hasPerms;
+			return !mentionable && !canMentionAll;
 		});
 
 		const pingRolesWarning = badPingRoles.length
@@ -210,16 +255,20 @@ export default class Giveaway {
 				: `${EMOJIS.WARN} There is no set description`
 		}`;
 
-		const idStr = `#${id}`;
+		const idStr = `#${this.guildRelativeId}`;
 		const absoluteIdStr = `#${this.id}`;
 		const numberOfWinnersStr = `→ Number of winners: ${this.winnerQuantity}`;
 		const hostStr = `→ Host: ${this.hostUserTag} (${this.hostUserId})`;
 		const activeStr = `→ Active: ${this.active ? "Yes" : "No"}`;
-		const publishedStr = `→ Published: ${this.isPublished ? "Yes" : "No"}`;
-		const entriesStr = `→ Entries: ${this.entriesUserIds.length}`;
+		const entriesStr = `→ Entries: ${this.entriesUserIds.size}`;
 		const createdStr = `→ Created: ${longStamp(this.createdTimestamp)}`;
+
 		const lockEntriesStr = `→ Entries locked: ${
 			this.entriesLocked ? "Yes" : "No"
+		}`;
+
+		const publishedStr = `→ Published: ${
+			this.isPublished() ? "Yes" : "No"
 		}`;
 
 		const gId = this.guildId;
@@ -230,10 +279,10 @@ export default class Giveaway {
 				? `→ [Link to giveaway](<https://discord.com/channels/${gId}/${cId}/${mId}>)`
 				: null;
 
-		const winnersStr = this.winnersUserIds.size
+		const winnersStr = this.winnersUserIds().size
 			? oneLine`
-				→ Winners (${this.winnersUserIds.size}/${this.winnerQuantity}):
-				${[...this.winnersUserIds].map((id) => `<@${id}> (${id})`).join(", ")}
+				→ Winners (${this.winnersUserIds().size}/${this.winnerQuantity}):
+				${[...this.winnersUserIds()].map((id) => `<@${id}> (${id})`).join(", ")}
 			`
 			: "→ No winners";
 
@@ -280,11 +329,8 @@ export default class Giveaway {
 		const winnerQuantityStr = `→ Number of winners: ${this.winnerQuantity}`;
 
 		const requiredRolesStr = `→ Roles required to enter: ${
-			this.requiredRolesIds.length
-				? listify(
-						this.requiredRolesIds.map((roleId) => `<@&${roleId}>`),
-						{ length: 10 }
-				  )
+			this.requiredRolesIds.size
+				? listify(this.requiredRolesMentions!, { length: 10 })
 				: "None"
 		}`;
 
@@ -319,8 +365,51 @@ export default class Giveaway {
 			.setDescription(descriptionStr)
 			.setColor("#2d7d46")
 			.setFooter({
-				text: `Giveaway #${id} • Hosted by ${this.hostUserTag}`
+				text: `Giveaway #${this.guildRelativeId} • Hosted by ${this.hostUserTag}`
 			});
+	}
+
+	public endedEmbed() {
+		const winners = this.winnersUserIds();
+
+		const data = this.prizes
+			.flatMap((prize) =>
+				[...prize.winners.values()].map(
+					(winner) =>
+						`→ <@${winner.userId}> won **${winner.quantityWon}x ${prize.name}**`
+				)
+			)
+			.join("\n");
+
+		const embed = new EmbedBuilder()
+			.setColor("#2d7d46")
+			.setTitle(
+				`${EMOJIS.TADA} Giveaway #${this.guildRelativeId} has ended!`
+			)
+			.setFooter({
+				text: `Giveaway #${this.guildRelativeId} • Hosted by ${this.hostUserTag}`
+			});
+
+		if (winners.size) {
+			embed.setDescription(stripIndents`
+					The winners are: ${listify(
+						[...winners].map((userId) => `<@${userId}>`),
+						{ length: winners.size }
+					)}
+		
+					${data}
+		
+					Congratulations!
+				`);
+		} else {
+			embed.setDescription(stripIndents`
+					There were no winners.
+		
+					Uh.. congratulations!
+				`);
+		}
+
+		return embed;
 	}
 
 	public async edit(data: Prisma.GiveawayDataUpdateInput) {

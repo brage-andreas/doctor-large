@@ -14,7 +14,11 @@ export default class Prize {
 	public id: number;
 	public name: string;
 	public quantity: number;
-	public winners: Array<WinnerData>;
+
+	/**
+	 * Mapped by userId
+	 */
+	public winners: Map<string, WinnerData>;
 
 	public constructor(
 		data: PrizeData & { winners: Array<WinnerData>; giveaway: Giveaway },
@@ -28,14 +32,19 @@ export default class Prize {
 		this.giveawayId = data.giveawayId;
 		this.giveaway = data.giveaway;
 		this.quantity = data.quantity;
-		this.winners = data.winners;
 		this.name = data.name;
 		this.id = data.id;
+
+		this.winners = data.winners.reduce((map, winner) => {
+			map.set(winner.userId, winner);
+
+			return map;
+		}, new Map<string, WinnerData>());
 	}
 
 	public toShortString() {
 		return oneLine`
-			${this.data.quantity}x **${this.data.name}**
+			${this.data.quantity}x ${this.data.name}
 			${this.data.additionalInfo ? `- ${this.data.additionalInfo}` : ""}
 		`;
 	}
