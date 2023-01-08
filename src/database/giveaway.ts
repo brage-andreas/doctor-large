@@ -213,6 +213,16 @@ export default class GiveawayManager {
 		return await this.prisma.prizeData.update(args);
 	}
 
+	public async deletePrizes(prizeIds: Array<number>) {
+		return await this.prisma.prizeData.deleteMany({
+			where: {
+				id: {
+					in: prizeIds
+				}
+			}
+		});
+	}
+
 	public async upsertWinner(args: Prisma.WinnerDataCreateInput) {
 		if (!args.prize.connect?.id) {
 			throw new Error("prize.connect is undefined");
@@ -228,6 +238,16 @@ export default class GiveawayManager {
 				prizeId_userId: {
 					prizeId: args.prize.connect.id,
 					userId: args.userId
+				}
+			}
+		});
+	}
+
+	public async deleteWinners(prizeIds: Array<number>) {
+		return await this.prisma.prizeData.deleteMany({
+			where: {
+				id: {
+					in: prizeIds
 				}
 			}
 		});
