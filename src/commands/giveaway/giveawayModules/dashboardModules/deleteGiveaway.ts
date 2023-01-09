@@ -1,7 +1,8 @@
 import { stripIndents } from "common-tags";
-import { type ButtonInteraction } from "discord.js";
+import { ButtonStyle, type ButtonInteraction } from "discord.js";
 import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
+import yesNo from "../../../../helpers/yesNo.js";
 import toDashboard from "../dashboard.js";
 
 export default async function toDeleteGiveaway(
@@ -12,9 +13,8 @@ export default async function toDeleteGiveaway(
 	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
-		await interaction.reply({
+		await interaction.editReply({
 			components: [],
-			ephemeral: true,
 			content: stripIndents`
 				How did we get here?
 			
@@ -25,6 +25,22 @@ export default async function toDeleteGiveaway(
 
 		return;
 	}
+
+	const accept = yesNo({
+		yesStyle: ButtonStyle.Danger,
+		noStyle: ButtonStyle.Success,
+		medium: interaction,
+		filter: () => true,
+		data: {
+			content: stripIndents`
+			${EMOJIS.DANGER} You are about to delete giveaway #${giveaway.guildRelativeId}.
+
+			Are you sure? Absolutely sure? This action will be **irreversible**.
+		`
+		}
+	});
+
+	accept;
 
 	await toDashboard(interaction, id);
 }
