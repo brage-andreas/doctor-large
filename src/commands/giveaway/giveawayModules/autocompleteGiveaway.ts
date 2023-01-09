@@ -14,7 +14,7 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 	if (!focused) {
 		focused = 1;
 	} else if (focused === 0) {
-		focused = await giveawayManager.getNextGuildRelativeId();
+		focused = await giveawayManager.getCountInGuild();
 	}
 
 	const highestIdToTry = focused + 2;
