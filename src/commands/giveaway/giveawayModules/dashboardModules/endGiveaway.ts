@@ -88,7 +88,7 @@ export default async function toEndGiveaway(
 		yesStyle: ButtonStyle.Secondary,
 		noStyle: ButtonStyle.Secondary,
 		medium: interaction,
-		time: 60_000,
+		timeActive: 60_000,
 		data: {
 			components: [],
 			content,
@@ -175,7 +175,7 @@ export default async function toEndGiveaway(
 		yesStyle: ButtonStyle.Secondary,
 		noStyle: ButtonStyle.Secondary,
 		medium: interaction,
-		time: 60_000,
+		timeActive: 60_000,
 		data: {
 			components: [],
 			embeds: [],
