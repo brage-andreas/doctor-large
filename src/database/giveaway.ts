@@ -80,7 +80,23 @@ export default class GiveawayManager {
 		});
 	}
 
-	public async getQuantityInGuild(): Promise<number> {
+	public async getNextGuildRelativeId(): Promise<number> {
+		const data = await this.prisma.giveawayData.findFirst({
+			where: {
+				guildId: this.guild.id
+			},
+			orderBy: {
+				id: "desc"
+			},
+			select: {
+				guildRelativeId: true
+			}
+		});
+
+		return (data?.guildRelativeId ?? 0) + 1;
+	}
+
+	public async getCountInGuild(): Promise<number> {
 		return await this.prisma.giveawayData.count({
 			where: {
 				guildId: this.guild.id
@@ -103,6 +119,16 @@ export default class GiveawayManager {
 		});
 
 		return new Giveaway(data_, this.guild);
+	}
+
+	public async delete(...giveawayIds: Array<number>) {
+		return await this.prisma.giveawayData.deleteMany({
+			where: {
+				id: {
+					in: giveawayIds
+				}
+			}
+		});
 	}
 
 	public async edit(

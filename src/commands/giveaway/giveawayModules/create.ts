@@ -37,11 +37,11 @@ export default async function (
 		modalInteraction.fields.getTextInputValue("winnerQuantity")
 	);
 
-	const totalNumberOfGiveaways = await giveawayManager.getQuantityInGuild();
+	const nextGuildRelativeId = await giveawayManager.getNextGuildRelativeId();
 
 	const { id } = await giveawayManager.create({
 		createdTimestamp: interaction.createdTimestamp.toString(),
-		guildRelativeId: totalNumberOfGiveaways + 1,
+		guildRelativeId: nextGuildRelativeId,
 		winnerQuantity,
 		hostUserTag: interaction.user.tag,
 		hostUserId: interaction.user.id,
