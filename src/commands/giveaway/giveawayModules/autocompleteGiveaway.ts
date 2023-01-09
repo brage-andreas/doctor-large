@@ -7,25 +7,28 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 	const guild = interaction.guild;
 
 	const giveawayManager = new GiveawayManager(guild);
-	const max = await giveawayManager.getQuantityInGuild();
+	const highestIdThatExists = await giveawayManager.getCountInGuild();
 
-	const focusedInt = parseInt(interaction.options.getFocused());
-	const focused =
-		focusedInt === 0
-			? 0
-			: focusedInt || (await giveawayManager.getQuantityInGuild()) || 1;
+	let focused = parseInt(interaction.options.getFocused());
 
-	const rawSkip = focused - 3;
-	const skip =
-		// if under 0, make it 0
-		rawSkip < 0
-			? 0
-			: // if the highest id it will try to take is over the max in the guild
-			//   make it 5 less than the max in the guild, so you will get the last 5
-			max < 5 && max <= rawSkip + 5
-			? max - 5
-			: // else default to whatever value it was
-			  rawSkip;
+	if (!focused) {
+		focused = 1;
+	} else if (focused === 0) {
+		focused = await giveawayManager.getNextGuildRelativeId();
+	}
+
+	const highestIdToTry = focused + 2;
+	const lowestIdToTry = focused - 3;
+
+	let skip = lowestIdToTry;
+
+	if (highestIdThatExists < highestIdToTry) {
+		skip -= highestIdToTry - highestIdThatExists;
+	}
+
+	if (skip < 0) {
+		skip = 0;
+	}
 
 	const offsetGiveaways = await giveawayManager.getWithOffset(skip, 5);
 
@@ -68,7 +71,7 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 
 	const emptyResponse = {
 		name: `${EMOJIS.SLEEP} Whoa so empty — there are no giveaways`,
-		value: 0
+		value: -1
 	};
 
 	const response = fullResponse ?? [emptyResponse];
