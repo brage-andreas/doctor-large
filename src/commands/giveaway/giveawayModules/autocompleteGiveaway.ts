@@ -9,13 +9,9 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 	const giveawayManager = new GiveawayManager(guild);
 	const highestIdThatExists = await giveawayManager.getCountInGuild();
 
-	let focused = parseInt(interaction.options.getFocused());
-
-	if (!focused) {
-		focused = 1;
-	} else if (focused === 0) {
-		focused = await giveawayManager.getCountInGuild();
-	}
+	const focused =
+		parseInt(interaction.options.getFocused()) ||
+		(await giveawayManager.getCountInGuild());
 
 	const highestIdToTry = focused + 2;
 	const lowestIdToTry = focused - 3;
@@ -34,20 +30,24 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 
 	const getName = (data: GiveawayData) => {
 		const id = data.guildRelativeId;
-		const emoji =
-			focused === id
-				? EMOJIS.SPARKS
-				: focused < id
-				? EMOJIS.HIGHER
-				: EMOJIS.LOWER;
 
-		const activeEmoji = !data.active
-			? `${EMOJIS.INACTIVE} `
-			: data.entriesLocked
-			? `${EMOJIS.LOCK} `
-			: "";
+		let placement: string = EMOJIS.LOWER;
 
-		return `${emoji} #${data.guildRelativeId} ${activeEmoji}${data.title}`;
+		if (focused === id) {
+			placement = EMOJIS.SPARKS;
+		} else if (focused < id) {
+			placement = EMOJIS.HIGHER;
+		}
+
+		let status = "";
+
+		if (!data.active) {
+			status = `${EMOJIS.INACTIVE} `;
+		} else if (data.entriesLocked) {
+			status = `${EMOJIS.LOCK} `;
+		}
+
+		return `${placement} #${data.guildRelativeId} ${status}${data.title}`;
 	};
 
 	const fullResponse = offsetGiveaways
