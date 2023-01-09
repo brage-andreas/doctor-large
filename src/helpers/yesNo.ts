@@ -20,8 +20,9 @@ export default async function yesNo(options: {
 	data: Exclude<MessageEditOptions, "Components">;
 	filter?(interaction: ButtonInteraction): boolean;
 }): Promise<boolean> {
-	const { respondToIgnore, medium, data, filter } = options;
+	const { medium, data, filter } = options;
 
+	const respondToIgnore = options.respondToIgnore ?? true;
 	const yesStyle = options.yesStyle ?? ButtonStyle.Success;
 	const noStyle = options.noStyle ?? ButtonStyle.Danger;
 	const time = options.timeActive ?? 60_000;
@@ -50,14 +51,6 @@ export default async function yesNo(options: {
 	} else {
 		message = await medium.editReply({ ...data, components: [row] });
 	}
-
-	/*const response = await message
-	.awaitMessageComponent({
-		componentType: ComponentType.Button,
-		time: time ?? 60_000,
-		filter
-	})
-	.catch(() => null);*/
 
 	return new Promise((resolve, reject) => {
 		const collector = message.createMessageComponentCollector({
