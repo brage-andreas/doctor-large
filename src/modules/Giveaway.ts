@@ -22,10 +22,9 @@ export default class Giveaway {
 	public data: GiveawayDataWithIncludes;
 	public guild: Guild;
 
-	// -- Data --
+	// -- Raw data --
 	public active: boolean;
 	public channelId: string | null;
-	public createdTimestamp: string;
 	public description: string | null;
 	public endTimestamp: string | null;
 	public entriesLocked: boolean;
@@ -34,20 +33,23 @@ export default class Giveaway {
 	public hostUserId: string;
 	public hostUserTag: string;
 	public id: number;
-	public lastEditedTimestamp: string | null;
 	public lastEditedUserId: string | null;
 	public lastEditedUserTag: string | null;
 	public minimumAccountAge: string | null;
-	public prizes: Array<Prize>;
 	public publishedMessageId: string | null;
 	public title: string;
 	public winnerMessageId: string | null;
 	public winnerQuantity: number;
-	// ----------
+	// --------------
 
+	// -- Manipulated data --
+	public createdTimestamp: number;
+	public lastEditedTimestamp: number | null;
 	public entriesUserIds: Set<string>;
 	public pingRolesIds: Set<string>;
+	public prizes: Array<Prize>;
 	public requiredRolesIds: Set<string>;
+	// ----------------------
 
 	private _prizesQuantity: number | null = null;
 	private _winnersUserIds: Set<string> | null = null;
@@ -59,12 +61,10 @@ export default class Giveaway {
 
 		this.manager = new GiveawayManager(guild);
 
-		// -- Data --
-		this.lastEditedTimestamp = data.lastEditedTimestamp;
+		// -- Raw data --
 		this.publishedMessageId = data.publishedMessageId;
 		this.lastEditedUserTag = data.lastEditedUserTag;
 		this.minimumAccountAge = data.minimumAccountAge;
-		this.createdTimestamp = data.createdTimestamp;
 		this.lastEditedUserId = data.lastEditedUserId;
 		this.winnerMessageId = data.winnerMessageId;
 		this.guildRelativeId = data.guildRelativeId;
@@ -79,15 +79,22 @@ export default class Giveaway {
 		this.active = data.active;
 		this.title = data.title;
 		this.id = data.id;
-		// ----------
+		// --------------
 
+		// -- Manipulated data --
+		this.createdTimestamp = Number(data.createdTimestamp);
 		this.requiredRolesIds = new Set(data.requiredRolesIds);
 		this.entriesUserIds = new Set(data.entriesUserIds);
 		this.pingRolesIds = new Set(data.pingRolesIds);
 
+		this.lastEditedTimestamp = data.lastEditedTimestamp
+			? Number(data.lastEditedTimestamp)
+			: null;
+
 		this.prizes = data.prizes.map(
 			(prize) => new Prize({ ...prize, giveaway: this }, guild)
 		);
+		// ----------------------
 	}
 
 	public get pingRolesMentions() {
@@ -157,6 +164,19 @@ export default class Giveaway {
 		}
 
 		return true;
+	}
+
+	public async delete(options?: { withPrizesAndWinners?: boolean }) {
+		const withPrizesAndWinners = options?.withPrizesAndWinners ?? true;
+
+		if (withPrizesAndWinners) {
+			const prizesIds = this.prizes.map((prize) => prize.id);
+
+			await this.manager.deleteWinners(prizesIds);
+			await this.manager.deletePrizes(prizesIds);
+		}
+
+		await this.manager.delete(this.id);
 	}
 
 	public toShortString() {
