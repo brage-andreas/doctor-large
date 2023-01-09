@@ -12,25 +12,30 @@ import {
 import { EMOJIS } from "../constants.js";
 
 export default async function yesNo(options: {
+	respondToIgnore?: boolean;
+	timeActive?: number;
 	yesStyle?: ButtonStyle;
 	noStyle?: ButtonStyle;
 	medium: Exclude<Interaction, AutocompleteInteraction> | Message;
-	time?: number;
 	data: Exclude<MessageEditOptions, "Components">;
-	filter(interaction: ButtonInteraction): boolean;
-}) {
-	const { yesStyle, noStyle, medium, time, data, filter } = options;
+	filter?(interaction: ButtonInteraction): boolean;
+}): Promise<boolean> {
+	const { respondToIgnore, medium, data, filter } = options;
+
+	const yesStyle = options.yesStyle ?? ButtonStyle.Success;
+	const noStyle = options.noStyle ?? ButtonStyle.Danger;
+	const time = options.timeActive ?? 60_000;
 
 	const yesButton = new ButtonBuilder()
 		.setCustomId("yes")
 		.setEmoji(EMOJIS.V)
-		.setStyle(yesStyle ?? ButtonStyle.Success)
+		.setStyle(yesStyle)
 		.setLabel("Yes");
 
 	const noButton = new ButtonBuilder()
 		.setCustomId("no")
 		.setEmoji(EMOJIS.X)
-		.setStyle(noStyle ?? ButtonStyle.Danger)
+		.setStyle(noStyle)
 		.setLabel("No");
 
 	const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -46,15 +51,47 @@ export default async function yesNo(options: {
 		message = await medium.editReply({ ...data, components: [row] });
 	}
 
-	const response = await message
-		.awaitMessageComponent({
+	/*const response = await message
+	.awaitMessageComponent({
+		componentType: ComponentType.Button,
+		time: time ?? 60_000,
+		filter
+	})
+	.catch(() => null);*/
+
+	return new Promise((resolve, reject) => {
+		const collector = message.createMessageComponentCollector({
 			componentType: ComponentType.Button,
-			time: time ?? 60_000,
-			filter
-		})
-		.catch(() => null);
+			filter,
+			time,
+			max: 1
+		});
 
-	await response?.deferUpdate();
+		if (respondToIgnore) {
+			collector.on("ignore", (interaction) => {
+				interaction.reply({
+					content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
+					ephemeral: true
+				});
+			});
+		}
 
-	return response?.customId === "yes";
+		collector.on("collect", async (interaction) => {
+			await interaction.deferUpdate();
+
+			if (interaction.customId === "yes") {
+				resolve(undefined);
+			} else {
+				reject();
+			}
+		});
+
+		collector.on("end", (collected) => {
+			if (!collected.size) {
+				reject();
+			}
+		});
+	})
+		.then(() => true)
+		.catch(() => false);
 }
