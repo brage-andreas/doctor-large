@@ -8,7 +8,7 @@ import {
 	type GuildMember
 } from "discord.js";
 import ms from "ms";
-import { EMOJIS } from "../constants.js";
+import { COLORS, EMOJIS } from "../constants.js";
 import { default as GiveawayManager } from "../database/giveaway.js";
 import { listify } from "../helpers/listify.js";
 import s from "../helpers/s.js";
@@ -363,7 +363,7 @@ export default class Giveaway {
 		return new EmbedBuilder()
 			.setTitle(this.title)
 			.setDescription(descriptionStr)
-			.setColor("#2d7d46")
+			.setColor(COLORS.GREEN)
 			.setFooter({
 				text: `Giveaway #${this.guildRelativeId} • Hosted by ${this.hostUserTag}`
 			});
@@ -382,7 +382,7 @@ export default class Giveaway {
 			.join("\n");
 
 		const embed = new EmbedBuilder()
-			.setColor("#2d7d46")
+			.setColor(COLORS.GREEN)
 			.setTitle(
 				`${EMOJIS.TADA} Giveaway #${this.guildRelativeId} has ended!`
 			)
