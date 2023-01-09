@@ -10,6 +10,14 @@ export const REGEXP = {
 	ID: /^\d{17,19}$/
 };
 
+// using discord's colours if possible
+// <https://discord.com/branding>
+export const COLORS = {
+	YELLOW: "#FEE75C",
+	GREEN: "#57F287",
+	RED: "#ED4245"
+} as const;
+
 export const EMOJIS = {
 	ENTER_GIVEAWAY_EMOJI: "🎁",
 	HEART_BREAK: "💔",
@@ -18,6 +26,7 @@ export const EMOJIS = {
 	INACTIVE: "🔸",
 	NO_ENTRY: "⛔",
 	PENSIVE: "🥺",
+	DANGER: "<:Danger:1061984813650804799>",
 	HIGHER: "🔺",
 	SPARKS: "✨",
 	UNLOCK: "🔓",
@@ -30,7 +39,7 @@ export const EMOJIS = {
 	HALO: "😇",
 	LOCK: "🔒",
 	TADA: "🎉",
-	WARN: "⚠️",
+	WARN: "<:Warning:1061984815781531729>",
 	CRY: "😢",
 	OFF: "<:Off:1047914155929256026>",
 	ON: "<:On:1047914157409828934>",

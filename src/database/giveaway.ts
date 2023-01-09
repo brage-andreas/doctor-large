@@ -80,7 +80,23 @@ export default class GiveawayManager {
 		});
 	}
 
-	public async getQuantityInGuild(): Promise<number> {
+	public async getNextGuildRelativeId(): Promise<number> {
+		const data = await this.prisma.giveawayData.findFirst({
+			where: {
+				guildId: this.guild.id
+			},
+			orderBy: {
+				id: "desc"
+			},
+			select: {
+				guildRelativeId: true
+			}
+		});
+
+		return (data?.guildRelativeId ?? 0) + 1;
+	}
+
+	public async getCountInGuild(): Promise<number> {
 		return await this.prisma.giveawayData.count({
 			where: {
 				guildId: this.guild.id
@@ -103,6 +119,16 @@ export default class GiveawayManager {
 		});
 
 		return new Giveaway(data_, this.guild);
+	}
+
+	public async delete(...giveawayIds: Array<number>) {
+		return await this.prisma.giveawayData.deleteMany({
+			where: {
+				id: {
+					in: giveawayIds
+				}
+			}
+		});
 	}
 
 	public async edit(
@@ -213,6 +239,16 @@ export default class GiveawayManager {
 		return await this.prisma.prizeData.update(args);
 	}
 
+	public async deletePrizes(prizeIds: Array<number>) {
+		return await this.prisma.prizeData.deleteMany({
+			where: {
+				id: {
+					in: prizeIds
+				}
+			}
+		});
+	}
+
 	public async upsertWinner(args: Prisma.WinnerDataCreateInput) {
 		if (!args.prize.connect?.id) {
 			throw new Error("prize.connect is undefined");
@@ -228,6 +264,16 @@ export default class GiveawayManager {
 				prizeId_userId: {
 					prizeId: args.prize.connect.id,
 					userId: args.userId
+				}
+			}
+		});
+	}
+
+	public async deleteWinners(prizeIds: Array<number>) {
+		return await this.prisma.prizeData.deleteMany({
+			where: {
+				id: {
+					in: prizeIds
 				}
 			}
 		});
