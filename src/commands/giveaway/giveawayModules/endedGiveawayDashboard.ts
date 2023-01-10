@@ -13,6 +13,7 @@ import type GiveawayManager from "../../../database/giveaway.js";
 import lastEditBy from "../../../helpers/lastEdit.js";
 import type Giveaway from "../../../modules/Giveaway.js";
 import toDashboard from "./dashboard.js";
+import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import { publishWinners } from "./endModules/publishWinners.js";
 import { signWinners } from "./endModules/rollWinners/signWinners.js";
 
@@ -24,7 +25,7 @@ export default async function toEndedDashboard(
 	giveawayManager: GiveawayManager,
 	giveaway: Giveaway
 ) {
-	const winnerButton = giveaway.winnerMessageId
+	const winnerButton = giveaway.winnersArePublished()
 		? giveawayComponents.endedDashboard.republishWinnersButton()
 		: giveawayComponents.endedDashboard.publishWinnersButton();
 
@@ -39,9 +40,9 @@ export default async function toEndedDashboard(
 	);
 
 	const msg = await interaction.editReply({
-		content: giveaway.toDashboardOverviewString(),
 		components: [row1, row2],
-		embeds: []
+		content: null,
+		...giveaway.toDashboardOverview()
 	});
 
 	const collector = msg.createMessageComponentCollector({
@@ -98,15 +99,15 @@ export default async function toEndedDashboard(
 			case "unpublishWinners": {
 				await buttonInteraction.deferUpdate();
 
-				const channel = interaction.guild.channels.cache.get(
-					giveaway.channelId ?? ""
-				);
+				const channel = giveaway.channel;
 
-				if (!channel?.isTextBased()) {
+				if (!channel) {
 					await interaction.editReply({
 						content: stripIndents`
 							${EMOJIS.WARN} The channel the giveaway was published in does not exist, or is not a valid channel.
 							Try again or republish the giveaway in a new channel.
+
+							Current channel: <#${giveaway.channelId}> (${giveaway.channelId}).
 						`,
 						components: [],
 						embeds: []
@@ -115,10 +116,11 @@ export default async function toEndedDashboard(
 					break;
 				}
 
-				giveaway.winnerMessageId &&
-					(await channel.messages
+				if (giveaway.winnerMessageId) {
+					await channel.messages
 						.delete(giveaway.winnerMessageId)
-						.catch(() => null));
+						.catch(() => null);
+				}
 
 				await giveawayManager.edit({
 					where: {
@@ -155,7 +157,15 @@ export default async function toEndedDashboard(
 			}
 
 			case "deleteGiveaway": {
-				TODO;
+				await buttonInteraction.deferUpdate();
+
+				await toDeleteGiveaway(
+					buttonInteraction,
+					giveaway.id,
+					giveawayManager
+				);
+
+				break;
 			}
 		}
 	});
