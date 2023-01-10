@@ -84,7 +84,7 @@ export default async function toDeleteGiveaway(
 		}
 	}
 
-	await giveaway.delete({ withPrizesAndWinners: true });
+	await giveaway.delete({ withPublishedMessages: true });
 
 	new Logger({ prefix: "GIVEAWAY", interaction }).log(
 		`Deleted giveaway #${giveaway.id}`
