@@ -2,12 +2,12 @@ import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
-	ButtonStyle,
 	ComponentType,
 	type ButtonInteraction,
 	type CommandInteraction,
 	type ModalSubmitInteraction
 } from "discord.js";
+import { giveawayComponents } from "../../../components/index.js";
 import { EMOJIS } from "../../../constants.js";
 import type GiveawayManager from "../../../database/giveaway.js";
 import lastEditBy from "../../../helpers/lastEdit.js";
@@ -24,37 +24,18 @@ export default async function toEndedDashboard(
 	giveawayManager: GiveawayManager,
 	giveaway: Giveaway
 ) {
-	const reactivateButton = new ButtonBuilder()
-		.setCustomId("reactivate")
-		.setLabel("Reactivate")
-		.setStyle(ButtonStyle.Secondary);
-
-	const publishWinnersButton = new ButtonBuilder()
-		.setCustomId("publishWinners")
-		.setLabel("Publish winners")
-		.setStyle(ButtonStyle.Success);
-
-	const republishWinnersButton = new ButtonBuilder()
-		.setCustomId("republishWinners")
-		.setLabel("Republish winners")
-		.setStyle(ButtonStyle.Success);
-
-	const unpublishWinnersButton = new ButtonBuilder()
-		.setCustomId("unpublishWinners")
-		.setLabel("Unpublish winners")
-		.setStyle(ButtonStyle.Secondary);
-
 	const winnerButton = giveaway.winnerMessageId
-		? republishWinnersButton
-		: publishWinnersButton;
+		? giveawayComponents.endedDashboard.republishWinnersButton()
+		: giveawayComponents.endedDashboard.publishWinnersButton();
 
 	const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		winnerButton,
-		unpublishWinnersButton
+		giveawayComponents.endedDashboard.unpublishWinnersButton()
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		reactivateButton
+		giveawayComponents.endedDashboard.reactivateButton(),
+		giveawayComponents.endedDashboard.deleteGiveawayButton()
 	);
 
 	const msg = await interaction.editReply({
@@ -171,6 +152,10 @@ export default async function toEndedDashboard(
 				toEndedDashboard(interaction, giveawayManager, giveaway);
 
 				break;
+			}
+
+			case "deleteGiveaway": {
+				TODO;
 			}
 		}
 	});
