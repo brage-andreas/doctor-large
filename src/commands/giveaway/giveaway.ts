@@ -4,6 +4,7 @@ import {
 	PermissionFlagsBits,
 	type RESTPostAPIApplicationCommandsJSONBody
 } from "discord.js";
+import { EMOJIS } from "../../constants.js";
 import {
 	type Command,
 	type CommandModuleInteractions
@@ -57,6 +58,14 @@ const run = async (interaction: CommandModuleInteractions) => {
 		case "dashboard": {
 			await interaction.deferReply({ ephemeral: true });
 			const id = interaction.options.getInteger("giveaway", true);
+
+			if (id === -1) {
+				interaction.editReply({
+					content: `${EMOJIS.SLEEP} Whoa so empty — there are no giveaways`
+				});
+
+				break;
+			}
 
 			sendToDashboard(interaction, id);
 			break;
