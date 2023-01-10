@@ -24,11 +24,18 @@ export default async function toPublishGiveaway(
 	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
+		await interaction.editReply({
+			components: [],
+			content: stripIndents`
+				How did we get here?
+			
+				${EMOJIS.WARN} This giveaway does not exist. Try creating one or double-check the ID.
+			`,
+			embeds: []
+		});
+
 		return;
 	}
-
-	const chooseChannelStr =
-		"Select the channel you would like to publish the giveaway in.";
 
 	const channelSelectMenu = new ChannelSelectMenuBuilder()
 		.setCustomId("channelSelect")
@@ -50,7 +57,8 @@ export default async function toPublishGiveaway(
 		}
 
 		const updateMsg = await interaction.editReply({
-			content: chooseChannelStr,
+			content:
+				"Select the channel you would like to publish the giveaway in.",
 			components: [row1, row2],
 			embeds: [giveaway.toEmbed()]
 		});
@@ -59,9 +67,9 @@ export default async function toPublishGiveaway(
 			filter: (i) => i.user.id === interaction.user.id
 		});
 
-		if (componentInteraction.customId === "back") {
-			await componentInteraction.deferUpdate();
+		await componentInteraction.deferUpdate();
 
+		if (componentInteraction.customId === "back") {
 			toDashboard(interaction, id);
 
 			return;
@@ -85,8 +93,6 @@ export default async function toPublishGiveaway(
 				| undefined;
 
 			if (!channel) {
-				await componentInteraction.deferUpdate();
-
 				retry(`${EMOJIS.WARN} This channel does not exist.`);
 
 				return;
@@ -96,8 +102,6 @@ export default async function toPublishGiveaway(
 				interaction.guild.members.me?.permissionsIn(channel);
 
 			if (!permsInChannel?.has(PermissionFlagsBits.SendMessages)) {
-				await componentInteraction.deferUpdate();
-
 				retry(
 					`${EMOJIS.WARN} I am missing permissions to send messages in ${channel} (${channelId})`
 				);
