@@ -74,7 +74,7 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 		value: -1
 	};
 
-	const response = fullResponse ?? [emptyResponse];
+	const response = fullResponse.length ? fullResponse : [emptyResponse];
 
 	interaction.respond(response);
 }

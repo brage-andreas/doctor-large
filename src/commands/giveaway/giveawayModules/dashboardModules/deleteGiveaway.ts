@@ -3,6 +3,7 @@ import { ButtonStyle, type ButtonInteraction } from "discord.js";
 import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
 import yesNo from "../../../../helpers/yesNo.js";
+import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
 
 export default async function toDeleteGiveaway(
@@ -26,21 +27,70 @@ export default async function toDeleteGiveaway(
 		return;
 	}
 
-	const accept = yesNo({
+	const isConcludedString = !giveaway.active
+		? `\n\n${EMOJIS.WARN} It is recommended to keep concluded giveaways.`
+		: "";
+
+	const accept = await yesNo({
 		yesStyle: ButtonStyle.Danger,
-		noStyle: ButtonStyle.Success,
+		noStyle: ButtonStyle.Secondary,
 		medium: interaction,
 		filter: () => true,
 		data: {
 			content: stripIndents`
-			${EMOJIS.DANGER} You are about to delete giveaway #${giveaway.guildRelativeId}.
+				${EMOJIS.DANGER} You are about to delete giveaway #${giveaway.guildRelativeId}.
+				This will also include any prizes and winners.${isConcludedString}
 
-			Are you sure? Absolutely sure? This action will be **irreversible**.
-		`
+				Are you sure? Absolutely sure? This action will be **irreversible**.
+			`
 		}
 	});
 
-	accept;
+	if (!accept) {
+		interaction.followUp({
+			content: `Alright! Cancelled deleting giveaway #${giveaway.guildRelativeId}`
+		});
 
-	await toDashboard(interaction, id);
+		return toDashboard(interaction, id);
+	}
+
+	const createdWithinFifteenMinutes =
+		Date.now() - Number(giveaway.createdTimestamp) <= 900_000; // 900 000 ms = 15 min
+
+	if (!createdWithinFifteenMinutes) {
+		const accept2 = await yesNo({
+			yesStyle: ButtonStyle.Danger,
+			noStyle: ButtonStyle.Secondary,
+			medium: interaction,
+			filter: () => true,
+			data: {
+				content: stripIndents`
+						${EMOJIS.DANGER} You are about to delete giveaway #${giveaway.guildRelativeId}.
+						This will also include any prizes and winners.${isConcludedString}
+		
+						ARE YOU ABSOLUTELY CERTAIN?
+					`
+			}
+		});
+
+		if (!accept2) {
+			interaction.followUp({
+				content: `Alright! Cancelled deleting giveaway #${giveaway.guildRelativeId}`
+			});
+
+			return toDashboard(interaction, id);
+		}
+	}
+
+	await giveaway.delete({ withPrizesAndWinners: true });
+
+	new Logger({ prefix: "GIVEAWAY", interaction }).log(
+		`Deleted giveaway #${giveaway.id}`
+	);
+
+	interaction.editReply({
+		components: [],
+		content: `${EMOJIS.V} Successfully deleted giveaway #${giveaway.guildRelativeId}.`,
+		embeds: []
+	});
 }
