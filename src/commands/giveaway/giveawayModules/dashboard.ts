@@ -79,9 +79,9 @@ export default async function toDashboard(
 	);
 
 	const msg = await interaction.editReply({
-		content: giveaway.toDashboardOverviewString(),
 		components: [row1, row2],
-		embeds: []
+		content: null,
+		...giveaway.toDashboardOverview()
 	});
 
 	// weird bug
