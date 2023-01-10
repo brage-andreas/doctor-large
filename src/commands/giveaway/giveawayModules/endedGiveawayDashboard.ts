@@ -1,8 +1,8 @@
 import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
-	ButtonBuilder,
 	ComponentType,
+	type ButtonBuilder,
 	type ButtonInteraction,
 	type CommandInteraction,
 	type ModalSubmitInteraction
