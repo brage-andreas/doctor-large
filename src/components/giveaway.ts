@@ -314,6 +314,42 @@ const enterGiveawayButton = (id: number) =>
 		.setEmoji(EMOJIS.ENTER_GIVEAWAY_EMOJI);
 
 // -----------------------
+//     ENDED DASHBOARD
+// -----------------------
+
+/**
+ * ID: reactivate
+ */
+const reactivateButton = new ButtonBuilder()
+	.setCustomId("reactivate")
+	.setLabel("Reactivate")
+	.setStyle(ButtonStyle.Secondary);
+
+/**
+ * ID: publishWinners
+ */
+const publishWinnersButton = new ButtonBuilder()
+	.setCustomId("publishWinners")
+	.setLabel("Publish winners")
+	.setStyle(ButtonStyle.Success);
+
+/**
+ * ID: republishWinners
+ */
+const republishWinnersButton = new ButtonBuilder()
+	.setCustomId("republishWinners")
+	.setLabel("Republish winners")
+	.setStyle(ButtonStyle.Success);
+
+/**
+ * ID: unpublishWinners
+ */
+const unpublishWinnersButton = new ButtonBuilder()
+	.setCustomId("unpublishWinners")
+	.setLabel("Unpublish winners")
+	.setStyle(ButtonStyle.Secondary);
+
+// -----------------------
 
 export const giveaway = {
 	create: {
@@ -323,6 +359,7 @@ export const giveaway = {
 		 * Children: title, description, numberOfWinners
 		 */
 		optionsModal: () => createOptionsModal,
+
 		/**
 		 * ID: openInDashboard
 		 */
@@ -439,5 +476,31 @@ export const giveaway = {
 		 * ID: enter-giveaway-{id}
 		 */
 		enterGiveawayButton: (id: number) => enterGiveawayButton(id)
+	},
+	endedDashboard: {
+		/**
+		 * ID: reactivate
+		 */
+		reactivateButton: () => reactivateButton,
+
+		/**
+		 * ID: publishWinners
+		 */
+		publishWinnersButton: () => publishWinnersButton,
+
+		/**
+		 * ID: republishWinners
+		 */
+		republishWinnersButton: () => republishWinnersButton,
+
+		/**
+		 * ID: unpublishWinners
+		 */
+		unpublishWinnersButton: () => unpublishWinnersButton,
+
+		/**
+		 * ID: deleteGiveaway
+		 */
+		deleteGiveawayButton: () => deleteGiveawayButton
 	}
 };
