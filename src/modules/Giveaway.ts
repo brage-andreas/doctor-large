@@ -5,14 +5,15 @@ import {
 	PermissionFlagsBits,
 	type Client,
 	type Guild,
-	type GuildMember
+	type GuildMember,
+	type GuildTextBasedChannel
 } from "discord.js";
 import ms from "ms";
 import { COLORS, EMOJIS } from "../constants.js";
 import { default as GiveawayManager } from "../database/giveaway.js";
 import { listify } from "../helpers/listify.js";
 import s from "../helpers/s.js";
-import { longStamp, timestamp } from "../helpers/timestamps.js";
+import { longStamp } from "../helpers/timestamps.js";
 import { type GiveawayDataWithIncludes } from "../typings/database.js";
 import Prize from "./Prize.js";
 
@@ -113,6 +114,50 @@ export default class Giveaway {
 		return [...this.requiredRolesIds].map((id) => `<@&${id}>`);
 	}
 
+	public get channel(): GuildTextBasedChannel | null {
+		const channel = this.channelId
+			? this.guild.channels.cache.get(this.channelId)
+			: undefined;
+
+		return channel?.isTextBased() ? channel : null;
+	}
+
+	public get publishedMessageURL(): string | null {
+		const gId = this.guildId;
+		const cId = this.channelId;
+		const mId = this.publishedMessageId;
+
+		if (!cId || !mId) {
+			return null;
+		}
+
+		return `https://discord.com/channels/${gId}/${cId}/${mId}`;
+	}
+
+	public get winnerMessageURL(): string | null {
+		const gId = this.guildId;
+		const cId = this.channelId;
+		const mId = this.winnerMessageId;
+
+		if (!cId || !mId) {
+			return null;
+		}
+
+		return `https://discord.com/channels/${gId}/${cId}/${mId}`;
+	}
+
+	public isEdited(): this is this & {
+		lastEditedTimestamp: number;
+		lastEditedUserId: string;
+		lastEditedUserTag: string;
+	} {
+		return (
+			Boolean(this.lastEditedTimestamp) &&
+			Boolean(this.lastEditedUserId) &&
+			Boolean(this.lastEditedUserTag)
+		);
+	}
+
 	public prizesQuantity(forceRefresh?: boolean) {
 		if (this._prizesQuantity === null || forceRefresh) {
 			this._prizesQuantity = this.prizes.reduce(
@@ -140,8 +185,44 @@ export default class Giveaway {
 		return this._winnersUserIds;
 	}
 
-	public isPublished() {
+	public isPublished(): this is this & { publishedMessageId: string } {
 		return Boolean(this.publishedMessageId);
+	}
+
+	public winnersArePublished(): this is this & { winnerMessageId: string } {
+		return Boolean(this.winnerMessageId);
+	}
+
+	public async publishedMessage() {
+		if (!this.channelId || !this.publishedMessageId) {
+			return null;
+		}
+
+		const channel = this.channel;
+
+		if (!channel) {
+			return null;
+		}
+
+		return await channel.messages
+			.fetch(this.publishedMessageId)
+			.catch(() => null);
+	}
+
+	public async winnerMessage() {
+		if (!this.channelId || !this.winnerMessageId) {
+			return null;
+		}
+
+		const channel = this.channel;
+
+		if (!channel) {
+			return null;
+		}
+
+		return await channel.messages
+			.fetch(this.winnerMessageId)
+			.catch(() => null);
 	}
 
 	public hasRequiredRoles(member: GuildMember) {
@@ -166,17 +247,35 @@ export default class Giveaway {
 		return true;
 	}
 
-	public async delete(options?: { withPrizesAndWinners?: boolean }) {
-		const withPrizesAndWinners = options?.withPrizesAndWinners ?? true;
+	/**
+	 * Deletes all winners and prizes tied to the giveaway, and the giveaway itself.
+	 * Optional: Delete published messages, including the winner announcement.
+	 */
+	public async delete(options: { withPublishedMessages: boolean }) {
+		const { withPublishedMessages } = options;
 
-		if (withPrizesAndWinners) {
-			const prizesIds = this.prizes.map((prize) => prize.id);
+		if (withPublishedMessages) {
+			const channel = this.channel;
 
-			await this.manager.deleteWinners(prizesIds);
-			await this.manager.deletePrizes(prizesIds);
+			if (channel) {
+				const published = await this.publishedMessage();
+				const winner = await this.winnerMessage();
+
+				if (published?.deletable) {
+					await published.delete().catch(() => null);
+				}
+
+				if (winner?.deletable) {
+					await winner.delete().catch(() => null);
+				}
+			}
 		}
 
-		await this.manager.delete(this.id);
+		const prizesIds = this.data.prizes.map((prize) => prize.id);
+
+		await this.manager.deleteWinners(prizesIds).catch(() => null);
+		await this.manager.deletePrizes(prizesIds).catch(() => null);
+		await this.manager.delete(this.id).catch(() => null);
 	}
 
 	public toShortString() {
@@ -186,10 +285,6 @@ export default class Giveaway {
 			#${this.guildRelativeId} **${this.title}** - ${this.winnerQuantity} ${winners},
 			${this.prizesQuantity()} ${s("prize", this.prizesQuantity())}
 		`;
-	}
-
-	public toString() {
-		//
 	}
 
 	public toFullString() {
@@ -217,7 +312,7 @@ export default class Giveaway {
 		`;
 	}
 
-	public toDashboardOverviewString() {
+	public toDashboardOverview() {
 		const requiredRolesStr = this.requiredRolesIds.size
 			? `→ Required roles (${this.requiredRolesIds.size}): ${listify(
 					this.requiredRolesMentions!,
@@ -257,23 +352,27 @@ export default class Giveaway {
 		`
 			: null;
 
+		const rolesStr = stripIndents`
+			${requiredRolesStr}
+			${pingRolesStr}
+			
+			${pingRolesWarning ?? ""}
+		`;
+
 		const endStr = this.endTimestamp
 			? `→ End date: ${longStamp(this.endTimestamp)}`
-			: `→ End date: ${EMOJIS.WARN} The giveaway has no set end date. It will be open indefinitely!`;
+			: `→ End date: ${EMOJIS.WARN} No set end date.`;
+
+		const prizesName = this.prizes.length
+			? `Prizes (${this.prizesQuantity})`
+			: "Prizes";
 
 		const prizesStr = this.prizes.length
-			? `**Prizes** (${this.prizes.length}):\n${this.prizes
-					.map((prize) => prize.toShortString())
-					.join("\n")}`
-			: `**Prizes**: ${EMOJIS.WARN} There are no set prizes`;
+			? this.prizes.map((prize) => prize.toShortString()).join("\n")
+			: `${EMOJIS.WARN} No set prizes`;
 
-		const titleStr = `**Title**:\n\`\`\`\n${this.title}\n\`\`\``;
-
-		const descriptionStr = `**Description**:\n${
-			this.description
-				? `\`\`\`\n${this.description}\n\`\`\``
-				: `${EMOJIS.WARN} There is no set description`
-		}`;
+		const descriptionStr =
+			this.description ?? `${EMOJIS.WARN} There is no set description`;
 
 		const idStr = `#${this.guildRelativeId}`;
 		const absoluteIdStr = `#${this.id}`;
@@ -291,13 +390,10 @@ export default class Giveaway {
 			this.isPublished() ? "Yes" : "No"
 		}`;
 
-		const gId = this.guildId;
-		const cId = this.channelId;
-		const mId = this.publishedMessageId;
-		const messageUrl =
-			gId && cId && mId
-				? `→ [Link to giveaway](<https://discord.com/channels/${gId}/${cId}/${mId}>)`
-				: null;
+		const rawMessageUrl = this.publishedMessageURL;
+		const messageUrl = rawMessageUrl
+			? `→ [Link to giveaway](<${rawMessageUrl}>)`
+			: null;
 
 		const winnersStr = this.winnersUserIds().size
 			? oneLine`
@@ -306,43 +402,71 @@ export default class Giveaway {
 			`
 			: "→ No winners";
 
-		const editTag = this.lastEditedUserTag;
-		const editUId = this.lastEditedUserId;
-		const editStamp = this.lastEditedTimestamp;
+		const lastEditStr = this.isEdited()
+			? oneLine`
+				Last edited by:
+				${this.lastEditedUserTag}
+				(${this.lastEditedUserId})
+			`
+			: "No edits";
 
-		const lastEditStr =
-			!editTag && !editUId && !editStamp
-				? "No edits"
-				: oneLine`
-					Last edited by:
-					${editTag ?? "Unknown tag"}
-					(${editUId ?? "Unknown ID"})
-					${editStamp ? timestamp(editStamp, "R") : "Unknown date"}
-				`;
+		const infoField = stripIndents`
+			${hostStr}
+			${createdStr}
+			${entriesStr}
+			${winnersStr}${messageUrl ? `\n${messageUrl}` : ""}
+		`;
 
-		return stripIndents`
-		${titleStr}
-		${descriptionStr}
-		${prizesStr}
+		const optionsField = stripIndents`
+			${endStr}
+			${activeStr}
+			${publishedStr}
+			${lockEntriesStr}
+			${numberOfWinnersStr}
+			${minimumAccountAgeStr}
+		`;
 
-		**Info**:
-		${hostStr}
-		${createdStr}
-		${entriesStr}
-		${winnersStr}${messageUrl ? `\n${messageUrl}` : ""}
-		
-		**Options**:
-		${endStr}
-		${activeStr}
-		${publishedStr}
-		${lockEntriesStr}
-		${numberOfWinnersStr}
-		${minimumAccountAgeStr}
-		${requiredRolesStr}
-		${pingRolesStr} ${pingRolesWarning ? `\n\n${pingRolesWarning}` : ""}
+		const embed = new EmbedBuilder()
+			.setTitle(this.title)
+			.setDescription(descriptionStr)
+			.setFooter({
+				text: `Giveaway ${idStr} (${absoluteIdStr}) • ${lastEditStr}`
+			})
+			.setTimestamp(this.isEdited() ? this.lastEditedTimestamp : null)
+			.setColor(
+				// published = green
+				// active = yellow
+				// inactive = red
+				this.isPublished()
+					? COLORS.GREEN
+					: this.active
+					? COLORS.YELLOW
+					: COLORS.RED
+			)
+			.setFields(
+				{
+					name: prizesName,
+					value: prizesStr
+				},
+				{
+					name: "Roles",
+					value: rolesStr
+				},
+				{
+					name: "Options",
+					value: optionsField,
+					inline: true
+				},
+				{
+					name: "Info",
+					value: infoField,
+					inline: true
+				}
+			);
 
-		Giveaway ${idStr} (${absoluteIdStr}) • ${lastEditStr}
-	`;
+		return {
+			embeds: [embed]
+		};
 	}
 
 	public toEmbed() {
