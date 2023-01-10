@@ -37,6 +37,8 @@ export default async function (
 		modalInteraction.fields.getTextInputValue("winnerQuantity")
 	);
 
+	await modalInteraction.reply({ content: "Working...", ephemeral: true });
+
 	const nextGuildRelativeId = await giveawayManager.getNextGuildRelativeId();
 
 	const { id } = await giveawayManager.create({
@@ -53,8 +55,6 @@ export default async function (
 	new Logger({ prefix: "GIVEAWAY", interaction }).log(
 		`Created giveaway with ID #${id}`
 	);
-
-	await modalInteraction.deferReply({ ephemeral: true }).catch(() => null);
 
 	toDashboard(modalInteraction, id);
 }
