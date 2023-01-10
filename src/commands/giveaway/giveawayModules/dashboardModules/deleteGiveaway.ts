@@ -6,6 +6,8 @@ import yesNo from "../../../../helpers/yesNo.js";
 import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
 
+// TODO: delete published messages
+
 export default async function toDeleteGiveaway(
 	interaction: ButtonInteraction<"cached">,
 	id: number,
@@ -57,7 +59,7 @@ export default async function toDeleteGiveaway(
 	const createdWithinFifteenMinutes =
 		Date.now() - Number(giveaway.createdTimestamp) <= 900_000; // 900 000 ms = 15 min
 
-	if (!createdWithinFifteenMinutes) {
+	if (!createdWithinFifteenMinutes && giveaway.active) {
 		const accept2 = await yesNo({
 			yesStyle: ButtonStyle.Danger,
 			noStyle: ButtonStyle.Secondary,
@@ -65,11 +67,11 @@ export default async function toDeleteGiveaway(
 			filter: () => true,
 			data: {
 				content: stripIndents`
-						${EMOJIS.DANGER} You are about to delete giveaway #${giveaway.guildRelativeId}.
-						This will also include any prizes and winners.${isConcludedString}
-		
-						ARE YOU ABSOLUTELY CERTAIN?
-					`
+					${EMOJIS.DANGER} You are about to delete giveaway #${giveaway.guildRelativeId}.
+					This will also include any prizes and winners.${isConcludedString}
+	
+					ARE YOU ABSOLUTELY CERTAIN?
+				`
 			}
 		});
 
