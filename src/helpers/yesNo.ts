@@ -62,10 +62,12 @@ export default async function yesNo(options: {
 
 		if (respondToIgnore) {
 			collector.on("ignore", (interaction) => {
-				interaction.reply({
-					content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
-					ephemeral: true
-				});
+				interaction
+					.reply({
+						content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
+						ephemeral: true
+					})
+					.catch(() => null);
 			});
 		}
 
