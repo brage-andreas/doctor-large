@@ -2,6 +2,7 @@ import { type GiveawayData, type Prisma } from "@prisma/client";
 import { type Client, type Guild } from "discord.js";
 import Giveaway from "../modules/Giveaway.js";
 import Prize from "../modules/Prize.js";
+import { type GiveawayDataWithIncludes } from "../typings/database.js";
 import prisma from "./prisma.js";
 
 export default class GiveawayManager {
@@ -239,11 +240,21 @@ export default class GiveawayManager {
 		return await this.prisma.prizeData.update(args);
 	}
 
-	public async deletePrizes(prizeIds: Array<number>) {
+	public async deletePrizes(
+		prizeIds: Array<number> | Giveaway | GiveawayDataWithIncludes
+	) {
+		let ids: Array<number>;
+
+		if ("length" in prizeIds) {
+			ids = prizeIds;
+		} else {
+			ids = prizeIds.prizes.map((prize) => prize.id);
+		}
+
 		return await this.prisma.prizeData.deleteMany({
 			where: {
 				id: {
-					in: prizeIds
+					in: ids
 				}
 			}
 		});
@@ -269,11 +280,21 @@ export default class GiveawayManager {
 		});
 	}
 
-	public async deleteWinners(prizeIds: Array<number>) {
+	public async deleteWinners(
+		prizeIds: Array<number> | Giveaway | GiveawayDataWithIncludes
+	) {
+		let ids: Array<number>;
+
+		if ("length" in prizeIds) {
+			ids = prizeIds;
+		} else {
+			ids = prizeIds.prizes.map((prize) => prize.id);
+		}
+
 		return await this.prisma.prizeData.deleteMany({
 			where: {
 				id: {
-					in: prizeIds
+					in: ids
 				}
 			}
 		});
