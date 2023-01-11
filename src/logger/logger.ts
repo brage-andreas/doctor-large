@@ -55,11 +55,11 @@ export default class Logger {
 		return this;
 	}
 
-	public log(...messages: Array<string>) {
+	public log(...messages: Array<unknown>) {
 		if (this.interaction) {
 			this.logInteraction(...messages);
 		} else {
-			const toLog: Array<string> = [];
+			const toLog: Array<unknown> = [];
 
 			if (this.guild) {
 				const { name, id } = this.guild;
@@ -76,7 +76,7 @@ export default class Logger {
 		}
 	}
 
-	private logInteraction(...messages: Array<string>) {
+	private logInteraction(...messages: Array<unknown>) {
 		if (!this.interaction) {
 			throw new Error("Interaction not set to logger");
 		}
@@ -107,7 +107,8 @@ export default class Logger {
 		this._log(...cmdArray, ...messages);
 	}
 
-	private _log(...messages: Array<string>) {
+	// TODO: refactor
+	private _log(...messages: Array<unknown>) {
 		const date = new Date().toLocaleString("en-GB");
 
 		const prefix = "::".padStart(this.prefix.length, " ");
@@ -115,10 +116,33 @@ export default class Logger {
 
 		console.log(`${colorFn(this.prefix)} ${grey(date)}`);
 
-		messages.forEach((message) => {
-			console.log(`${grey(prefix)} ${message}`);
-		});
+		const string = messages
+			.flatMap((message) => {
+				let logMsg: string;
 
-		console.log();
+				if (
+					typeof message === "object" &&
+					message !== null &&
+					"stack" in message
+				) {
+					logMsg = `${message.stack}`;
+				} else {
+					logMsg =
+						typeof message === "string"
+							? message
+							: JSON.stringify(message, (_, value) =>
+									typeof value === "bigint"
+										? value.toString()
+										: value
+							  );
+				}
+
+				return logMsg
+					.split("\n")
+					.map((line) => `${grey(prefix)} ${line}`);
+			})
+			.join("\n");
+
+		console.log(string, "\n");
 	}
 }
