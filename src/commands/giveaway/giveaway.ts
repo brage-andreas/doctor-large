@@ -5,6 +5,7 @@ import {
 	type RESTPostAPIApplicationCommandsJSONBody
 } from "discord.js";
 import { EMOJIS } from "../../constants.js";
+import Logger from "../../logger/logger.js";
 import {
 	type Command,
 	type CommandModuleInteractions
@@ -66,6 +67,10 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 				break;
 			}
+
+			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				`Opened dashboard of giveaway with ID #${id}`
+			);
 
 			sendToDashboard(interaction, id);
 			break;
