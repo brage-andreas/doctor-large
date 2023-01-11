@@ -6,7 +6,8 @@ import {
 	type Client,
 	type Guild,
 	type GuildMember,
-	type GuildTextBasedChannel
+	type GuildTextBasedChannel,
+	type MessageEditOptions
 } from "discord.js";
 import ms from "ms";
 import { COLORS, EMOJIS } from "../constants.js";
@@ -146,6 +147,91 @@ export default class Giveaway {
 		return `https://discord.com/channels/${gId}/${cId}/${mId}`;
 	}
 
+	public get publishedMessage() {
+		return this._editMessage(this.publishedMessageId);
+	}
+
+	public get winnerMessage() {
+		return this._editMessage(this.winnerMessageId);
+	}
+
+	public get reset() {
+		const all = async () => {
+			await this.publishedMessage?.delete();
+			await this.winnerMessage?.delete();
+
+			await this.manager.deleteWinners(this.data);
+			await this.manager.deletePrizes(this.data);
+
+			await this.manager.edit({
+				where: {
+					id: this.id
+				},
+				data: {
+					channelId: null,
+					endTimestamp: null,
+					entriesLocked: false,
+					entriesUserIds: [],
+					minimumAccountAge: null,
+					pingRolesIds: [],
+					publishedMessageId: null,
+					requiredRolesIds: [],
+					winnerMessageId: null
+				}
+			});
+		};
+
+		const entriesAndWinners = async (options: {
+			includePrizes: boolean;
+		}) => {
+			await this.winnerMessage?.delete();
+
+			await this.manager.deleteWinners(this.data);
+
+			if (options.includePrizes) {
+				await this.publishedMessage?.delete();
+
+				await this.manager.deletePrizes(this.data);
+			}
+
+			await this.manager.edit({
+				where: {
+					id: this.id
+				},
+				data: {
+					entriesUserIds: []
+				}
+			});
+		};
+
+		const options = async () => {
+			await this.publishedMessage?.delete();
+			await this.winnerMessage?.delete();
+
+			await this.manager.edit({
+				where: {
+					id: this.id
+				},
+				data: {
+					channelId: null,
+					endTimestamp: null,
+					entriesLocked: false,
+					minimumAccountAge: null,
+					pingRolesIds: [],
+					publishedMessageId: null,
+					requiredRolesIds: [],
+					winnerMessageId: null
+				}
+			});
+		};
+
+		return {
+			all,
+			entriesAndWinners,
+			options
+		};
+	}
+
 	public isEdited(): this is this & {
 		lastEditedTimestamp: number;
 		lastEditedUserId: string;
@@ -193,38 +279,6 @@ export default class Giveaway {
 		return Boolean(this.winnerMessageId);
 	}
 
-	public async publishedMessage() {
-		if (!this.channelId || !this.publishedMessageId) {
-			return null;
-		}
-
-		const channel = this.channel;
-
-		if (!channel) {
-			return null;
-		}
-
-		return await channel.messages
-			.fetch(this.publishedMessageId)
-			.catch(() => null);
-	}
-
-	public async winnerMessage() {
-		if (!this.channelId || !this.winnerMessageId) {
-			return null;
-		}
-
-		const channel = this.channel;
-
-		if (!channel) {
-			return null;
-		}
-
-		return await channel.messages
-			.fetch(this.winnerMessageId)
-			.catch(() => null);
-	}
-
 	public hasRequiredRoles(member: GuildMember) {
 		if (!this.requiredRolesIds.size) {
 			return true;
@@ -258,24 +312,14 @@ export default class Giveaway {
 			const channel = this.channel;
 
 			if (channel) {
-				const published = await this.publishedMessage();
-				const winner = await this.winnerMessage();
-
-				if (published?.deletable) {
-					await published.delete().catch(() => null);
-				}
-
-				if (winner?.deletable) {
-					await winner.delete().catch(() => null);
-				}
+				await this.publishedMessage?.delete();
+				await this.winnerMessage?.delete();
 			}
 		}
 
-		const prizesIds = this.data.prizes.map((prize) => prize.id);
-
-		await this.manager.deleteWinners(prizesIds).catch(() => null);
-		await this.manager.deletePrizes(prizesIds).catch(() => null);
-		await this.manager.delete(this.id).catch(() => null);
+		await this.manager.deleteWinners(this.data);
+		await this.manager.deletePrizes(this.data);
+		await this.manager.delete(this.id);
 	}
 
 	public toShortString() {
@@ -563,5 +607,26 @@ export default class Giveaway {
 				id: this.id
 			}
 		});
+	}
+
+	private _editMessage(messageId: string | null) {
+		if (!this.channelId || !messageId) {
+			return null;
+		}
+
+		const channel = this.channel;
+
+		if (!channel) {
+			return null;
+		}
+
+		return {
+			fetch: async () =>
+				await channel.messages.fetch(messageId).catch(() => null),
+			delete: async () =>
+				await channel.messages.delete(messageId).catch(() => null),
+			edit: async (data: MessageEditOptions) =>
+				await channel.messages.edit(messageId, data).catch(() => null)
+		};
 	}
 }
