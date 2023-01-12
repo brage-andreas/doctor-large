@@ -230,10 +230,17 @@ export default class GiveawayManager {
 		});
 	}
 
-	public async createPrizes(...args: Array<Prisma.PrizeDataCreateManyInput>) {
-		return await this.prisma.prizeData.createMany({
-			data: args
-		});
+	// Prisma.PrizeDataCreateData is being weird, but this works
+	public async createPrize(data: Prisma.PrizeDataCreateArgs["data"]) {
+		const data_ = await this.prisma.prizeData.create({ data });
+
+		const giveaway = await this.get(data_.giveawayId);
+
+		if (!giveaway) {
+			return data_;
+		}
+
+		return new Prize({ ...data_, giveaway, winners: [] }, this.guild);
 	}
 
 	public async editPrize(args: Prisma.PrizeDataUpdateArgs) {
