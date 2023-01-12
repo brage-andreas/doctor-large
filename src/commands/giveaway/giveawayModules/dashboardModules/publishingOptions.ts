@@ -6,6 +6,7 @@ import {
 	PermissionFlagsBits,
 	type ButtonBuilder,
 	type ButtonInteraction,
+	type ComponentType,
 	type NewsChannel,
 	type TextChannel
 } from "discord.js";
@@ -24,6 +25,16 @@ export default async function toPublishingOptions(
 	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
+		await interaction.editReply({
+			components: [],
+			content: stripIndents`
+				How did we get here?
+			
+				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
+			`,
+			embeds: []
+		});
+
 		return;
 	}
 
@@ -67,7 +78,9 @@ export default async function toPublishingOptions(
 			embeds: [giveaway.toEmbed()]
 		});
 
-		const componentInteraction = await updateMsg.awaitMessageComponent({
+		const componentInteraction = await updateMsg.awaitMessageComponent<
+			ComponentType.Button | ComponentType.ChannelSelect
+		>({
 			filter: (i) => i.user.id === interaction.user.id
 		});
 
@@ -83,6 +96,8 @@ export default async function toPublishingOptions(
 			componentInteraction.customId === "channelSelect" ||
 			componentInteraction.customId === "lastChannel"
 		) {
+			await componentInteraction.deferUpdate();
+
 			const channelId = !componentInteraction.isChannelSelectMenu()
 				? giveaway.channelId
 				: componentInteraction.values[0];
@@ -103,8 +118,6 @@ export default async function toPublishingOptions(
 				| undefined;
 
 			if (!channel) {
-				await componentInteraction.deferUpdate();
-
 				retry(`${EMOJIS.WARN} This channel does not exist.`);
 
 				return;
@@ -114,8 +127,6 @@ export default async function toPublishingOptions(
 				interaction.guild.members.me?.permissionsIn(channel);
 
 			if (!permsInChannel?.has(PermissionFlagsBits.SendMessages)) {
-				await componentInteraction.deferUpdate();
-
 				retry(
 					`${EMOJIS.WARN} I am missing permissions to send messages in ${channel} (${channelId})`
 				);
@@ -177,6 +188,8 @@ export default async function toPublishingOptions(
 			componentInteraction.customId === "editCurrent" ||
 			componentInteraction.customId === "recallCurrent"
 		) {
+			await componentInteraction.deferUpdate();
+
 			if (!giveaway.channelId || !giveaway.publishedMessageId) {
 				componentInteraction.followUp({
 					content: `${EMOJIS.WARN} The giveaway has not been published yet.`,
@@ -191,8 +204,6 @@ export default async function toPublishingOptions(
 			);
 
 			if (!channel) {
-				await componentInteraction.deferUpdate();
-
 				retry(
 					stripIndents`
 						${EMOJIS.WARN} I cannot find channel: ${giveaway.channelId} (${giveaway.channelId}).
@@ -295,7 +306,7 @@ export default async function toPublishingOptions(
 				});
 			}
 
-			toDashboard(interaction, id);
+			toDashboard(componentInteraction, id);
 		}
 	};
 
