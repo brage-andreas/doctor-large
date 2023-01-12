@@ -408,7 +408,7 @@ export default class Giveaway {
 			: `→ End date: ${EMOJIS.WARN} No set end date.`;
 
 		const prizesName = this.prizes.length
-			? `Prizes (${this.prizesQuantity})`
+			? `Prizes (${this.prizesQuantity()})`
 			: "Prizes";
 
 		const prizesStr = this.prizes.length
