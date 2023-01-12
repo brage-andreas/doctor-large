@@ -108,7 +108,7 @@ export default class Logger {
 		`;
 
 		const cmdString =
-			"toString" in this.interaction &&
+			this.interaction.isChatInputCommand() &&
 			grey(`>> ${this.interaction.toString()}`);
 
 		const cmdArray = [cmdSource];
