@@ -64,12 +64,14 @@ export default class Prize {
 			.setColor(winners.length ? COLORS.GREEN : COLORS.YELLOW)
 			.setFields(
 				{
-					name: `Winners (${this.winners.size})`,
-					value: winners.length ? winners.join("\n") : "None"
+					inline: true,
+					value: winners.length ? winners.join("\n") : "None",
+					name: `Winners (${this.winners.size})`
 				},
 				{
-					name: "Quantity",
-					value: `${this.quantity}`
+					inline: true,
+					value: `${this.quantity}`,
+					name: "Quantity"
 				}
 			);
 	}
