@@ -11,6 +11,7 @@ import {
 import { giveawayComponents } from "../../../../components/index.js";
 import { COLORS, EMOJIS, REGEXP } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
+import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
 import toCreatePrize from "./prizeModules/createPrize.js";
 import toPrizeDashboard from "./prizeModules/prizeDashboard.js";
@@ -69,13 +70,13 @@ export default async function toManagePrizes(
 		new ActionRowBuilder<ButtonBuilder>().setComponents(buttonArray)
 	);
 
-	const getEmbedValue = (start: number, end: number) =>
+	const getPrizesKey = (start: number, end: number) =>
 		giveaway.prizes.length
 			? giveaway.prizes
 					.slice(start, end)
 					.map(
 						(prize, index) =>
-							`\`Prize ${start + index + 1}\` ${
+							`\` Prize ${start + index + 1} \` - ${
 								prize.quantity
 							}x ${prize.name}`
 					)
@@ -88,23 +89,24 @@ export default async function toManagePrizes(
 		embed.setColor(COLORS.GREEN).setFields(
 			{
 				inline: true,
-				value: getEmbedValue(0, 5),
+				value: getPrizesKey(0, 5),
 				name: "Row 1"
 			},
 			{
 				inline: true,
-				value: getEmbedValue(5, 10),
+				value: getPrizesKey(5, 10),
 				name: "Row 2"
 			}
 		);
 	} else if (sortedPrizeButtons.length === 1) {
-		embed.setColor(COLORS.GREEN).setFields({
-			value: getEmbedValue(0, 5),
-			name: "Buttons"
-		});
+		embed.setColor(COLORS.GREEN).setDescription(getPrizesKey(0, 5));
 	} else {
 		embed.setColor(COLORS.RED).setDescription("There are no prizes yet.");
 	}
+
+	new Logger({ prefix: "GIVEAWAY", interaction }).log(
+		`Opened prizes manager for giveaway #${giveaway.id}`
+	);
 
 	const msg = await interaction.editReply({
 		components,
@@ -142,13 +144,18 @@ export default async function toManagePrizes(
 			case "clearPrizes": {
 				await buttonInteraction.deferUpdate();
 
-				await giveawayManager.deletePrizes(giveaway.data);
+				await giveaway.reset({ prizes: true });
 
 				return toManagePrizes(buttonInteraction, id, giveawayManager);
 			}
 		}
 
-		const match = interaction.customId.match(REGEXP.ACCEPT_PRIZE_CUSTOM_ID);
+		await buttonInteraction.deferUpdate();
+
+		const match = buttonInteraction.customId.match(
+			REGEXP.DASHBOARD_PRIZE_CUSTOM_ID
+		);
+
 		const prizeIdString = match?.groups?.id;
 		const prizeId = prizeIdString ? parseInt(prizeIdString) : undefined;
 

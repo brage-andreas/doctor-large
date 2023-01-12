@@ -11,6 +11,7 @@ import {
 	ModalCollector,
 	modalId
 } from "../../../../../helpers/ModalCollector.js";
+import Logger from "../../../../../logger/logger.js";
 import toPrizeDashboard from "./prizeDashboard.js";
 
 export default async function toCreatePrize(
@@ -58,7 +59,7 @@ export default async function toCreatePrize(
 	const collector = ModalCollector(interaction, modal);
 
 	collector.on("collect", async (modalInteraction) => {
-		await modalInteraction.deferReply();
+		await modalInteraction.deferUpdate();
 
 		const name = modalInteraction.fields.getTextInputValue("prizeName");
 
@@ -83,6 +84,10 @@ export default async function toCreatePrize(
 			additionalInfo,
 			quantity
 		});
+
+		new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			`Created prize #${id} in giveaway #${giveawayId}`
+		);
 
 		toPrizeDashboard(modalInteraction, id, giveawayManager, giveawayId);
 	});
