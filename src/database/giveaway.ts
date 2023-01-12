@@ -247,6 +247,19 @@ export default class GiveawayManager {
 		return await this.prisma.prizeData.update(args);
 	}
 
+	public async deletePrize(prizeOrPrizeId: Prize | number) {
+		const id =
+			typeof prizeOrPrizeId === "number"
+				? prizeOrPrizeId
+				: prizeOrPrizeId.id;
+
+		return await this.prisma.prizeData.delete({
+			where: {
+				id
+			}
+		});
+	}
+
 	public async deletePrizes(
 		prizeIds: Array<number> | Giveaway | GiveawayDataWithIncludes
 	) {
