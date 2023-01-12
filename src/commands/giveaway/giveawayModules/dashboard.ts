@@ -2,10 +2,9 @@ import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
 	ComponentType,
+	type AutocompleteInteraction,
 	type ButtonBuilder,
-	type ButtonInteraction,
-	type CommandInteraction,
-	type ModalSubmitInteraction
+	type Interaction
 } from "discord.js";
 import { giveawayComponents } from "../../../components/index.js";
 import { EMOJIS } from "../../../constants.js";
@@ -24,10 +23,7 @@ import toSetRequiredRoles from "./dashboardModules/setRequiredRoles.js";
 import toEndedDashboard from "./endedGiveawayDashboard.js";
 
 export default async function toDashboard(
-	interaction:
-		| ButtonInteraction<"cached">
-		| CommandInteraction<"cached">
-		| ModalSubmitInteraction<"cached">,
+	interaction: Exclude<Interaction<"cached">, AutocompleteInteraction>,
 	giveawayId: number
 ) {
 	const giveawayManager = new GiveawayManager(interaction.guild);

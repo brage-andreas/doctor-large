@@ -2,10 +2,9 @@ import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
 	ComponentType,
+	type AutocompleteInteraction,
 	type ButtonBuilder,
-	type ButtonInteraction,
-	type CommandInteraction,
-	type ModalSubmitInteraction
+	type Interaction
 } from "discord.js";
 import { giveawayComponents } from "../../../components/index.js";
 import { EMOJIS } from "../../../constants.js";
@@ -18,10 +17,7 @@ import { publishWinners } from "./endModules/publishWinners.js";
 import { signWinners } from "./endModules/rollWinners/signWinners.js";
 
 export default async function toEndedDashboard(
-	interaction:
-		| ButtonInteraction<"cached">
-		| CommandInteraction<"cached">
-		| ModalSubmitInteraction<"cached">,
+	interaction: Exclude<Interaction<"cached">, AutocompleteInteraction>,
 	giveawayManager: GiveawayManager,
 	giveaway: Giveaway
 ) {
