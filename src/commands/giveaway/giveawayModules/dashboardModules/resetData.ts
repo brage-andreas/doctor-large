@@ -118,7 +118,7 @@ export default async function toResetData(
 					yesStyle: ButtonStyle.Danger,
 					noStyle: ButtonStyle.Secondary,
 					medium: interaction,
-					filter: () => true,
+					filter: (i) => i.user.id === interaction.user.id,
 					data: {
 						content: stripIndents`
 							${EMOJIS.WARN} You are about to wipe everything in giveaway #${giveaway.guildRelativeId}.
@@ -129,20 +129,25 @@ export default async function toResetData(
 				});
 
 				if (!accept) {
-					interaction.followUp({
+					await interaction.followUp({
+						ephemeral: true,
 						content: `Alright! Cancelled resetting giveaway #${giveaway.guildRelativeId}`
 					});
 
 					return toDashboard(interaction, id);
 				}
 
-				await giveaway.reset.all();
+				await giveaway.reset({
+					entriesAndWinners: true,
+					options: true,
+					prizes: true
+				});
 
 				new Logger({ prefix: "GIVEAWAY", interaction }).log(
 					`Level 4 reset giveaway #${giveaway.id}`
 				);
 
-				interaction.followUp({
+				await interaction.followUp({
 					ephemeral: true,
 					content: `${EMOJIS.SPARKS} Done! Successfully wiped giveaway #${giveaway.guildRelativeId}.`
 				});
@@ -155,7 +160,7 @@ export default async function toResetData(
 					yesStyle: ButtonStyle.Danger,
 					noStyle: ButtonStyle.Secondary,
 					medium: interaction,
-					filter: () => true,
+					filter: (i) => i.user.id === interaction.user.id,
 					data: {
 						content: stripIndents`
 							${EMOJIS.WARN} You are about to reset entries, winners, and prizes in giveaway #${giveaway.guildRelativeId}.
@@ -166,20 +171,21 @@ export default async function toResetData(
 				});
 
 				if (!accept) {
-					interaction.followUp({
+					await interaction.followUp({
+						ephemeral: true,
 						content: `Alright! Cancelled resetting giveaway #${giveaway.guildRelativeId}`
 					});
 
 					return toDashboard(interaction, id);
 				}
 
-				await giveaway.reset.entriesAndWinners({ includePrizes: true });
+				await giveaway.reset({ entriesAndWinners: true, prizes: true });
 
 				new Logger({ prefix: "GIVEAWAY", interaction }).log(
 					`Level 3 reset giveaway #${giveaway.id}`
 				);
 
-				interaction.followUp({
+				await interaction.followUp({
 					ephemeral: true,
 					content: `${EMOJIS.SPARKS} Done! Successfully reset entries, winners, and prizes in giveaway #${giveaway.guildRelativeId}.`
 				});
@@ -192,7 +198,7 @@ export default async function toResetData(
 					yesStyle: ButtonStyle.Danger,
 					noStyle: ButtonStyle.Secondary,
 					medium: interaction,
-					filter: () => true,
+					filter: (i) => i.user.id === interaction.user.id,
 					data: {
 						content: stripIndents`
 							${EMOJIS.WARN} You are about to reset entries and winners in giveaway #${giveaway.guildRelativeId}.
@@ -203,20 +209,21 @@ export default async function toResetData(
 				});
 
 				if (!accept) {
-					interaction.followUp({
+					await interaction.followUp({
+						ephemeral: true,
 						content: `Alright! Cancelled resetting giveaway #${giveaway.guildRelativeId}`
 					});
 
 					return toDashboard(interaction, id);
 				}
 
-				await giveaway.reset.entriesAndWinners({ includePrizes: true });
+				await giveaway.reset({ entriesAndWinners: true });
 
 				new Logger({ prefix: "GIVEAWAY", interaction }).log(
 					`Level 2 reset giveaway #${giveaway.id}`
 				);
 
-				interaction.followUp({
+				await interaction.followUp({
 					ephemeral: true,
 					content: `${EMOJIS.SPARKS} Done! Successfully reset entries and winners in giveaway #${giveaway.guildRelativeId}.`
 				});
@@ -229,7 +236,7 @@ export default async function toResetData(
 					yesStyle: ButtonStyle.Danger,
 					noStyle: ButtonStyle.Secondary,
 					medium: interaction,
-					filter: () => true,
+					filter: (i) => i.user.id === interaction.user.id,
 					data: {
 						content: stripIndents`
 							${EMOJIS.WARN} You are about to reset most options in giveaway #${giveaway.guildRelativeId}.
@@ -240,20 +247,21 @@ export default async function toResetData(
 				});
 
 				if (!accept) {
-					interaction.followUp({
+					await interaction.followUp({
+						ephemeral: true,
 						content: `Alright! Cancelled resetting giveaway #${giveaway.guildRelativeId}`
 					});
 
 					return toDashboard(interaction, id);
 				}
 
-				await giveaway.reset.entriesAndWinners({ includePrizes: true });
+				await giveaway.reset({ options: true });
 
 				new Logger({ prefix: "GIVEAWAY", interaction }).log(
 					`Level 1 reset giveaway #${giveaway.id}`
 				);
 
-				interaction.followUp({
+				await interaction.followUp({
 					ephemeral: true,
 					content: `${EMOJIS.SPARKS} Done! Successfully reset most options in giveaway #${giveaway.guildRelativeId}.`
 				});
