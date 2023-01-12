@@ -26,7 +26,7 @@ export default async function toResetData(
 			content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.WARN} This giveaway does not exist. Try creating one or double-check the ID.
+				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			embeds: []
 		});
@@ -121,7 +121,7 @@ export default async function toResetData(
 					filter: () => true,
 					data: {
 						content: stripIndents`
-							${EMOJIS.DANGER} You are about to wipe everything in giveaway #${giveaway.guildRelativeId}.
+							${EMOJIS.WARN} You are about to wipe everything in giveaway #${giveaway.guildRelativeId}.
 							
 							Are you sure? Absolutely sure? This action will be **irreversible**.
 						`
@@ -158,7 +158,7 @@ export default async function toResetData(
 					filter: () => true,
 					data: {
 						content: stripIndents`
-							${EMOJIS.DANGER} You are about to reset entries, winners, and prizes in giveaway #${giveaway.guildRelativeId}.
+							${EMOJIS.WARN} You are about to reset entries, winners, and prizes in giveaway #${giveaway.guildRelativeId}.
 							
 							Are you sure? Absolutely sure? This action will be **irreversible**.
 						`
@@ -195,7 +195,7 @@ export default async function toResetData(
 					filter: () => true,
 					data: {
 						content: stripIndents`
-							${EMOJIS.DANGER} You are about to reset entries and winners in giveaway #${giveaway.guildRelativeId}.
+							${EMOJIS.WARN} You are about to reset entries and winners in giveaway #${giveaway.guildRelativeId}.
 							
 							Are you sure? Absolutely sure? This action will be **irreversible**.
 						`
@@ -232,7 +232,7 @@ export default async function toResetData(
 					filter: () => true,
 					data: {
 						content: stripIndents`
-							${EMOJIS.DANGER} You are about to reset most options in giveaway #${giveaway.guildRelativeId}.
+							${EMOJIS.WARN} You are about to reset most options in giveaway #${giveaway.guildRelativeId}.
 							
 							Are you sure? Absolutely sure? This action will be **irreversible**.
 						`
