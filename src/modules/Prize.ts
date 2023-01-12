@@ -1,6 +1,7 @@
 import { type PrizeData, type WinnerData } from "@prisma/client";
 import { oneLine } from "common-tags";
-import { type Client, type Guild } from "discord.js";
+import { EmbedBuilder, type Client, type Guild } from "discord.js";
+import { COLORS } from "../constants.js";
 import type Giveaway from "./Giveaway.js";
 
 export default class Prize {
@@ -47,5 +48,29 @@ export default class Prize {
 			${this.data.quantity}x ${this.data.name}
 			${this.data.additionalInfo ? `- ${this.data.additionalInfo}` : ""}
 		`;
+	}
+
+	public toEmbed() {
+		const winners = [...this.winners.values()].map(
+			({ userId, quantityWon, accepted }) =>
+				`<@${userId}> won ${quantityWon}x ${
+					!accepted ? "(Not accepted)" : ""
+				}`
+		);
+
+		return new EmbedBuilder()
+			.setTitle(this.name)
+			.setDescription(this.additionalInfo)
+			.setColor(winners.length ? COLORS.GREEN : COLORS.YELLOW)
+			.setFields(
+				{
+					name: `Winners (${this.winners.size})`,
+					value: winners.length ? winners.join("\n") : "None"
+				},
+				{
+					name: "Quantity",
+					value: `${this.quantity}`
+				}
+			);
 	}
 }
