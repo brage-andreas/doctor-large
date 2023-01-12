@@ -71,10 +71,10 @@ export default async function yesNo(options: {
 			});
 		}
 
-		collector.on("collect", async (interaction) => {
-			await interaction.deferUpdate();
+		collector.on("collect", async (collectedInteraction) => {
+			await collectedInteraction.deferUpdate().catch(() => null);
 
-			if (interaction.customId === "yes") {
+			if (collectedInteraction.customId === "yes") {
 				resolve(undefined);
 			} else {
 				reject();
