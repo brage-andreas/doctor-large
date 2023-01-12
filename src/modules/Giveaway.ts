@@ -155,8 +155,12 @@ export default class Giveaway {
 		return this._editMessage(this.winnerMessageId);
 	}
 
-	public get reset() {
-		const all = async () => {
+	public async reset(filter: {
+		entriesAndWinners?: boolean;
+		prizes?: boolean;
+		options?: boolean;
+	}): Promise<void> {
+		const resetAll = async () => {
 			await this.publishedMessage?.delete();
 			await this.winnerMessage?.delete();
 
@@ -181,18 +185,10 @@ export default class Giveaway {
 			});
 		};
 
-		const entriesAndWinners = async (options: {
-			includePrizes: boolean;
-		}) => {
+		const resetEntriesAndWinners = async () => {
 			await this.winnerMessage?.delete();
 
 			await this.manager.deleteWinners(this.data);
-
-			if (options.includePrizes) {
-				await this.publishedMessage?.delete();
-
-				await this.manager.deletePrizes(this.data);
-			}
 
 			await this.manager.edit({
 				where: {
@@ -204,7 +200,7 @@ export default class Giveaway {
 			});
 		};
 
-		const options = async () => {
+		const resetOptions = async () => {
 			await this.publishedMessage?.delete();
 			await this.winnerMessage?.delete();
 
@@ -225,11 +221,31 @@ export default class Giveaway {
 			});
 		};
 
-		return {
-			all,
-			entriesAndWinners,
-			options
+		const resetPrizes = async () => {
+			await this.publishedMessage?.delete();
+
+			await this.manager.deletePrizes(this.data);
 		};
+
+		const { entriesAndWinners, prizes, options } = filter;
+
+		if (entriesAndWinners && prizes && options) {
+			await resetAll();
+
+			return;
+		}
+
+		if (entriesAndWinners) {
+			await resetEntriesAndWinners();
+		}
+
+		if (options) {
+			await resetOptions();
+		}
+
+		if (prizes) {
+			await resetPrizes();
+		}
 	}
 
 	public isEdited(): this is this & {
