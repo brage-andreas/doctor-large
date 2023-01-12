@@ -25,7 +25,7 @@ export async function publishWinners(
 			content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.WARN} This giveaway does not exist. Try creating one or double-check the ID.
+				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			components: [],
 			embeds: []
@@ -77,7 +77,7 @@ export async function publishWinners(
 	if (!giveaway.winnersUserIds().size) {
 		await interaction.editReply({
 			content: stripIndents`
-				${EMOJIS.WARN} This giveaway has no prizes, and therefore no winners. Add some prizes, and try again.
+				${EMOJIS.ERROR} This giveaway has no prizes, and therefore no winners. Add some prizes, and try again.
 				
 				If the prize(s) are a secret, you can for example name the prize "Secret".
 			`,
@@ -175,7 +175,7 @@ export async function republishWinners(
 			content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.WARN} This giveaway does not exist. Try creating one or double-check the ID.
+				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			components: [],
 			embeds: []
@@ -216,7 +216,7 @@ export async function republishWinners(
 	if (!giveaway.winnersUserIds()) {
 		await interaction.editReply({
 			content: stripIndents`
-				${EMOJIS.WARN} This giveaway has no prizes, and therefore no winners. Add some prizes, and try again.
+				${EMOJIS.ERROR} This giveaway has no prizes, and therefore no winners. Add some prizes, and try again.
 				
 				If the prize(s) are a secret, you can for example name the prize "Secret".
 			`,

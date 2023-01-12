@@ -21,7 +21,7 @@ export default async function toDeleteGiveaway(
 			content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.WARN} This giveaway does not exist. Try creating one or double-check the ID.
+				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			embeds: []
 		});
@@ -40,7 +40,7 @@ export default async function toDeleteGiveaway(
 		filter: () => true,
 		data: {
 			content: stripIndents`
-				${EMOJIS.DANGER} You are about to delete giveaway #${giveaway.guildRelativeId}.
+				${EMOJIS.ERROR} You are about to delete giveaway #${giveaway.guildRelativeId}.
 				This will also include any prizes and winners.${isConcludedString}
 
 				Are you sure? Absolutely sure? This action will be **irreversible**.
@@ -67,7 +67,7 @@ export default async function toDeleteGiveaway(
 			filter: () => true,
 			data: {
 				content: stripIndents`
-					${EMOJIS.DANGER} You are about to delete giveaway #${giveaway.guildRelativeId}.
+					${EMOJIS.ERROR} You are about to delete giveaway #${giveaway.guildRelativeId}.
 					This will also include any prizes and winners.${isConcludedString}
 	
 					ARE YOU ABSOLUTELY CERTAIN?

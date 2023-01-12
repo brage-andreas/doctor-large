@@ -30,7 +30,7 @@ export default async function toEndGiveaway(
 				content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.WARN} This giveaway does not exist. Try creating one or double-check the ID.
+				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 				embeds: []
 			})
@@ -47,7 +47,7 @@ export default async function toEndGiveaway(
 			.followUp({
 				ephemeral: true,
 				content: stripIndents`
-				${EMOJIS.WARN} This giveaway has no prizes. Add some prizes, and try again.
+				${EMOJIS.ERROR} This giveaway has no prizes. Add some prizes, and try again.
 				
 				If the prize(s) are a secret, you can for example name the prize "Secret"
 			`
