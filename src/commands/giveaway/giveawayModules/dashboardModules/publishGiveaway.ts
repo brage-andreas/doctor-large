@@ -37,6 +37,21 @@ export default async function toPublishGiveaway(
 		return;
 	}
 
+	if (!giveaway.prizesQuantity()) {
+		await interaction
+			.followUp({
+				ephemeral: true,
+				content: stripIndents`
+					${EMOJIS.ERROR} This giveaway has no prizes. Add some prizes, and try again.
+					
+					If the prize(s) are a secret, you can for example name the prize "Secret"
+				`
+			})
+			.catch(() => null);
+
+		return toDashboard(interaction, id);
+	}
+
 	const channelSelectMenu = new ChannelSelectMenuBuilder()
 		.setCustomId("channelSelect")
 		.setMinValues(1)
