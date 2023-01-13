@@ -20,13 +20,14 @@ import Prize from "./Prize.js";
 
 export default class Giveaway {
 	public readonly manager: GiveawayManager;
-	public client: Client<true>;
+	public readonly client: Client<true>;
+	public readonly guild: Guild;
 	public data: GiveawayDataWithIncludes;
-	public guild: Guild;
 
 	// -- Raw data --
 	public active: boolean;
 	public channelId: string | null;
+	public createdAt: Date;
 	public description: string | null;
 	public endTimestamp: string | null;
 	public entriesLocked: boolean;
@@ -35,18 +36,17 @@ export default class Giveaway {
 	public hostUserId: string;
 	public hostUserTag: string;
 	public id: number;
-	public lastEditedUserId: string | null;
-	public lastEditedUserTag: string | null;
+	public lastEditedAt: Date | null;
+	public publishedMessageUpdated: boolean | null;
 	public minimumAccountAge: string | null;
 	public publishedMessageId: string | null;
 	public title: string;
 	public winnerMessageId: string | null;
+	public winnerMessageUpdated: boolean | null;
 	public winnerQuantity: number;
 	// --------------
 
 	// -- Manipulated data --
-	public createdTimestamp: number;
-	public lastEditedTimestamp: number | null;
 	public entriesUserIds: Set<string>;
 	public pingRolesIds: Set<string>;
 	public prizes: Array<Prize>;
@@ -64,19 +64,21 @@ export default class Giveaway {
 		this.manager = new GiveawayManager(guild);
 
 		// -- Raw data --
+		this.publishedMessageUpdated = data.publishedMessageUpdated;
+		this.winnerMessageUpdated = data.winnerMessageUpdated;
 		this.publishedMessageId = data.publishedMessageId;
-		this.lastEditedUserTag = data.lastEditedUserTag;
 		this.minimumAccountAge = data.minimumAccountAge;
-		this.lastEditedUserId = data.lastEditedUserId;
-		this.winnerMessageId = data.winnerMessageId;
 		this.guildRelativeId = data.guildRelativeId;
+		this.winnerMessageId = data.winnerMessageId;
 		this.winnerQuantity = data.winnerQuantity;
 		this.entriesLocked = data.entriesLocked;
 		this.endTimestamp = data.endTimestamp;
+		this.lastEditedAt = data.lastEditedAt;
 		this.description = data.description;
 		this.hostUserTag = data.hostUserTag;
 		this.hostUserId = data.hostUserId;
 		this.channelId = data.channelId;
+		this.createdAt = data.createdAt;
 		this.guildId = data.guildId;
 		this.active = data.active;
 		this.title = data.title;
@@ -84,14 +86,9 @@ export default class Giveaway {
 		// --------------
 
 		// -- Manipulated data --
-		this.createdTimestamp = Number(data.createdTimestamp);
 		this.requiredRolesIds = new Set(data.requiredRolesIds);
 		this.entriesUserIds = new Set(data.entriesUserIds);
 		this.pingRolesIds = new Set(data.pingRolesIds);
-
-		this.lastEditedTimestamp = data.lastEditedTimestamp
-			? Number(data.lastEditedTimestamp)
-			: null;
 
 		this.prizes = data.prizes.map(
 			(prize) => new Prize({ ...prize, giveaway: this }, guild)
@@ -246,18 +243,6 @@ export default class Giveaway {
 		if (prizes) {
 			await resetPrizes();
 		}
-	}
-
-	public isEdited(): this is this & {
-		lastEditedTimestamp: number;
-		lastEditedUserId: string;
-		lastEditedUserTag: string;
-	} {
-		return (
-			Boolean(this.lastEditedTimestamp) &&
-			Boolean(this.lastEditedUserId) &&
-			Boolean(this.lastEditedUserTag)
-		);
 	}
 
 	public prizesQuantity(forceRefresh?: boolean) {
@@ -616,11 +601,40 @@ export default class Giveaway {
 		return embed;
 	}
 
-	public async edit(data: Prisma.GiveawayDataUpdateInput) {
+	public async edit(
+		data: Prisma.GiveawayDataUpdateInput,
+		options: {
+			nowOutdated:
+				| "none"
+				| {
+						publishedMessage?: boolean;
+						winnerMessage?: boolean;
+				  };
+		}
+	) {
+		if (typeof options.nowOutdated === "string") {
+			return await this.manager.edit({
+				where: { id: this.id },
+				data
+			});
+		}
+
+		const publishedMessageUpdated =
+			this.isPublished() || data.publishedMessageId
+				? options.nowOutdated.publishedMessage
+				: undefined;
+
+		const winnerMessageUpdated =
+			this.winnersArePublished() || data.winnerMessageId
+				? options.nowOutdated.winnerMessage
+				: undefined;
+
 		return await this.manager.edit({
-			data,
-			where: {
-				id: this.id
+			where: { id: this.id },
+			data: {
+				publishedMessageUpdated,
+				winnerMessageUpdated,
+				...data
 			}
 		});
 	}
