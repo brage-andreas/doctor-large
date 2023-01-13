@@ -1,23 +1,25 @@
 import type { Prisma } from "@prisma/client";
+import { type Guild } from "discord.js";
+import Autorole from "../modules/Autorole.js";
 import prisma from "./prisma.js";
 
 export default class AutoroleManager {
-	public readonly guildId: string;
-	private readonly prisma = prisma.autoroleData;
+	public readonly guild: Guild;
+	public readonly prisma = prisma.autoroleData;
 	private initialized = false;
 
-	public constructor(guildId: string) {
-		this.guildId = guildId;
+	public constructor(guild: Guild) {
+		this.guild = guild;
 	}
 
 	public async initialize() {
 		// guildId is primary key, so `count` will only be 0 or 1
 		const count = await this.prisma.count({
-			where: { guildId: this.guildId }
+			where: { guildId: this.guild.id }
 		});
 
 		if (count === 0) {
-			await this.prisma.create({ data: { guildId: this.guildId } });
+			await this.prisma.create({ data: { guildId: this.guild.id } });
 		}
 
 		this.initialized = true;
@@ -28,23 +30,25 @@ export default class AutoroleManager {
 			throw new Error("Autorole manager has not been initialized.");
 		}
 
-		return await this.prisma.findUniqueOrThrow({
-			where: {
-				guildId: this.guildId
-			}
+		const data = await this.prisma.findUniqueOrThrow({
+			where: { guildId: this.guild.id }
 		});
+
+		return new Autorole(data, this.guild, this);
 	}
 
-	public async update(data: Prisma.AutoroleDataUpdateInput) {
+	public async update(
+		data: Omit<Prisma.AutoroleDataUpdateInput, "guildId" | "lastEditedAt">
+	) {
 		if (!this.initialized) {
 			throw new Error("Autorole manager has not been initialized.");
 		}
 
-		return await this.prisma.update({
-			where: {
-				guildId: this.guildId
-			},
+		const data_ = await this.prisma.update({
+			where: { guildId: this.guild.id },
 			data
 		});
+
+		return new Autorole(data_, this.guild, this);
 	}
 }
