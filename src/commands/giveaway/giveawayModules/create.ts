@@ -37,12 +37,11 @@ export default async function (
 		modalInteraction.fields.getTextInputValue("winnerQuantity")
 	);
 
-	await modalInteraction.reply({ content: "Working...", ephemeral: true });
+	await modalInteraction.deferReply({ ephemeral: true });
 
 	const nextGuildRelativeId = await giveawayManager.getNextGuildRelativeId();
 
 	const { id } = await giveawayManager.create({
-		createdTimestamp: interaction.createdTimestamp.toString(),
 		guildRelativeId: nextGuildRelativeId,
 		winnerQuantity,
 		hostUserTag: interaction.user.tag,
