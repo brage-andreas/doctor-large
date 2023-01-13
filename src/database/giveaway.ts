@@ -7,8 +7,8 @@ import prisma from "./prisma.js";
 
 export default class GiveawayManager {
 	public readonly prisma = prisma;
-	public client: Client;
-	public guild: Guild;
+	public readonly client: Client;
+	public readonly guild: Guild;
 
 	public constructor(guild: Guild) {
 		this.client = guild.client;
