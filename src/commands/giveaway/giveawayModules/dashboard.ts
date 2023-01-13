@@ -9,7 +9,6 @@ import {
 import { giveawayComponents } from "../../../components/index.js";
 import { EMOJIS } from "../../../constants.js";
 import GiveawayManager from "../../../database/giveaway.js";
-import lastEditBy from "../../../helpers/lastEdit.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import toEditGiveaway from "./dashboardModules/editGiveaway.js";
 import toEndGiveaway from "./dashboardModules/endGiveaway.js";
@@ -123,12 +122,8 @@ export default async function toDashboard(
 			case "lockEntries": {
 				await buttonInteraction.deferUpdate();
 
-				await giveawayManager.edit({
-					where: { id: giveawayId },
-					data: {
-						entriesLocked: true,
-						...lastEditBy(interaction.user)
-					}
+				await giveaway.edit({
+					entriesLocked: true
 				});
 
 				toDashboard(buttonInteraction, giveawayId);
@@ -139,12 +134,8 @@ export default async function toDashboard(
 			case "unlockEntries": {
 				await buttonInteraction.deferUpdate();
 
-				await giveawayManager.edit({
-					where: { id: giveawayId },
-					data: {
-						entriesLocked: false,
-						...lastEditBy(interaction.user)
-					}
+				await giveaway.edit({
+					entriesLocked: false
 				});
 
 				toDashboard(buttonInteraction, giveawayId);

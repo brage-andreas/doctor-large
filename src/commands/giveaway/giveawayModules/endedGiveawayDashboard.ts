@@ -9,7 +9,6 @@ import {
 import { giveawayComponents } from "../../../components/index.js";
 import { EMOJIS } from "../../../constants.js";
 import type GiveawayManager from "../../../database/giveaway.js";
-import lastEditBy from "../../../helpers/lastEdit.js";
 import type Giveaway from "../../../modules/Giveaway.js";
 import toDashboard from "./dashboard.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
@@ -61,15 +60,16 @@ export default async function toEndedDashboard(
 			case "reactivate": {
 				await buttonInteraction.deferUpdate();
 
-				await giveawayManager.edit({
-					where: {
-						id: giveaway.id
+				await giveaway.edit(
+					{
+						active: true
 					},
-					data: {
-						active: true,
-						...lastEditBy(interaction.user)
+					{
+						nowOutdated: {
+							publishedMessage: true
+						}
 					}
-				});
+				);
 
 				toDashboard(buttonInteraction, giveaway.id);
 
@@ -112,21 +112,18 @@ export default async function toEndedDashboard(
 					break;
 				}
 
-				if (giveaway.winnerMessageId) {
-					await channel.messages
-						.delete(giveaway.winnerMessageId)
-						.catch(() => null);
-				}
+				await giveaway.winnerMessage?.delete();
 
-				await giveawayManager.edit({
-					where: {
-						id: giveaway.id
+				await giveaway.edit(
+					{
+						winnerMessageId: null
 					},
-					data: {
-						winnerMessageId: null,
-						...lastEditBy(interaction.user)
+					{
+						nowOutdated: {
+							winnerMessage: false
+						}
 					}
-				});
+				);
 
 				await interaction.editReply({
 					content: stripIndents`

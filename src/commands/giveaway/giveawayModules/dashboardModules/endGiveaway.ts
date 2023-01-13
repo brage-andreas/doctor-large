@@ -7,7 +7,6 @@ import {
 } from "discord.js";
 import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
-import lastEditBy from "../../../../helpers/lastEdit.js";
 import s from "../../../../helpers/s.js";
 import { timestamp } from "../../../../helpers/timestamps.js";
 import yesNo from "../../../../helpers/yesNo.js";
@@ -116,49 +115,29 @@ export default async function toEndGiveaway(
 		return toDashboard(interaction, id);
 	}
 
-	const channel = interaction.guild.channels.cache.get(giveaway.channelId);
-
-	if (!channel?.isTextBased()) {
-		await interaction.editReply({
-			components: [],
-			embeds: [],
-			content: `${EMOJIS.WARN} The channel the giveaway was published in does not exist. Republish it and try again.`
-		});
-
-		return;
-	}
-
-	const message =
-		(channel?.isTextBased() &&
-			(await channel.messages
-				.fetch(giveaway.publishedMessageId ?? "")
-				.catch(() => null))) ||
-		null;
-
-	await message
-		?.edit({
-			components: [
-				new ActionRowBuilder<ButtonBuilder>().addComponents(
-					new ButtonBuilder()
-						.setLabel("This giveaway has ended!")
-						.setStyle(ButtonStyle.Secondary)
-						.setCustomId("giveaway-ended")
-						.setDisabled(true)
-				)
-			]
-		})
-		.catch(() => null);
-
-	await giveawayManager.edit({
-		where: {
-			id
-		},
-		data: {
-			active: false,
-			entriesLocked: true,
-			...lastEditBy(interaction.user)
-		}
+	await giveaway.publishedMessage?.edit({
+		components: [
+			new ActionRowBuilder<ButtonBuilder>().addComponents(
+				new ButtonBuilder()
+					.setLabel("This giveaway has ended!")
+					.setStyle(ButtonStyle.Secondary)
+					.setCustomId("giveaway-ended")
+					.setDisabled(true)
+			)
+		]
 	});
+
+	await giveaway.edit(
+		{
+			active: false,
+			entriesLocked: true
+		},
+		{
+			nowOutdated: {
+				publishedMessage: true
+			}
+		}
+	);
 
 	new Logger({
 		prefix: "GIVEAWAY",

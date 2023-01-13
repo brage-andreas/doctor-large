@@ -57,7 +57,7 @@ export default async function toDeleteGiveaway(
 	}
 
 	const createdWithinFifteenMinutes =
-		Date.now() - Number(giveaway.createdTimestamp) <= 900_000; // 900 000 ms = 15 min
+		Date.now() - giveaway.createdAt.getTime() <= 900_000; // 900 000 ms = 15 min
 
 	if (!createdWithinFifteenMinutes && giveaway.active) {
 		const accept2 = await yesNo({

@@ -3,7 +3,6 @@ import { type ButtonInteraction } from "discord.js";
 import { giveawayComponents } from "../../../../components/index.js";
 import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
-import lastEditBy from "../../../../helpers/lastEdit.js";
 import { ModalCollector } from "../../../../helpers/ModalCollector.js";
 import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
@@ -70,21 +69,29 @@ export default async function toEditGiveaway(
 				modalInteraction.fields.getTextInputValue("newWinnerQuantity")
 			) ?? 1;
 
-		new Logger({ prefix: "GIVEAWAY", interaction }).log(
-			`Edited giveaway #${id}`
-		);
+		if (
+			title !== giveaway.title ||
+			description !== giveaway.description ||
+			winnerQuantity !== giveaway.winnerQuantity
+		) {
+			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				`Edited giveaway #${id}`
+			);
 
-		await giveawayManager.edit({
-			where: {
-				id
-			},
-			data: {
-				title,
-				description,
-				winnerQuantity,
-				...lastEditBy(interaction.user)
-			}
-		});
+			await giveaway.edit(
+				{
+					title,
+					description,
+					winnerQuantity
+				},
+				{
+					nowOutdated: {
+						publishedMessage: true,
+						winnerMessage: true
+					}
+				}
+			);
+		}
 
 		await toDashboard(modalInteraction, id);
 	});

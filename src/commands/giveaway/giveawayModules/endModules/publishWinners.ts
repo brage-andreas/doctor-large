@@ -9,7 +9,6 @@ import {
 } from "discord.js";
 import { EMOJIS } from "../../../../constants.js";
 import GiveawayManager from "../../../../database/giveaway.js";
-import lastEditBy from "../../../../helpers/lastEdit.js";
 import Logger from "../../../../logger/logger.js";
 
 export async function publishWinners(
@@ -34,9 +33,21 @@ export async function publishWinners(
 		return;
 	}
 
-	const channel = interaction.guild.channels.cache.get(
-		giveaway.channelId ?? ""
-	);
+	if (!giveaway.prizesQuantity()) {
+		await interaction.editReply({
+			content: stripIndents`
+				${EMOJIS.ERROR} This giveaway has no prizes, and therefore no winners. Add some prizes, and try again.
+				
+				If the prize(s) are a secret, you can for example name the prize "Secret".
+			`,
+			components: [],
+			embeds: []
+		});
+
+		return;
+	}
+
+	const { channel } = giveaway;
 
 	if (!channel?.isTextBased()) {
 		await interaction.editReply({
@@ -51,16 +62,9 @@ export async function publishWinners(
 		return;
 	}
 
-	const giveawayMessage =
-		channel.id === giveaway.channelId && giveaway.publishedMessageId
-			? await channel.messages.fetch(giveaway.publishedMessageId)
-			: null;
+	const giveawayMessage = await giveaway.publishedMessage?.fetch();
 
-	if (giveaway.winnerMessageId) {
-		await channel.messages
-			.delete(giveaway.winnerMessageId)
-			.catch(() => null);
-	}
+	await giveaway.winnerMessage?.delete();
 
 	const acceptPrizeButton = new ButtonBuilder()
 		.setCustomId(`accept-prize-${id}`)
@@ -73,20 +77,6 @@ export async function publishWinners(
 	);
 
 	let message: Message<true> | null;
-
-	if (!giveaway.winnersUserIds().size) {
-		await interaction.editReply({
-			content: stripIndents`
-				${EMOJIS.ERROR} This giveaway has no prizes, and therefore no winners. Add some prizes, and try again.
-				
-				If the prize(s) are a secret, you can for example name the prize "Secret".
-			`,
-			components: [],
-			embeds: []
-		});
-
-		return;
-	}
 
 	if (giveawayMessage) {
 		message = await giveawayMessage
@@ -141,15 +131,16 @@ export async function publishWinners(
 		`Published winners of giveaway #${id} in #${channel.name} (${channel.id})`
 	);
 
-	await giveawayManager.edit({
-		where: {
-			id
+	await giveaway.edit(
+		{
+			winnerMessageId: message.id
 		},
-		data: {
-			winnerMessageId: message.id,
-			...lastEditBy(interaction.user)
+		{
+			nowOutdated: {
+				winnerMessage: false
+			}
 		}
-	});
+	);
 
 	await interaction.editReply({
 		content: stripIndents`
@@ -184,9 +175,21 @@ export async function republishWinners(
 		return;
 	}
 
-	const channel = interaction.guild.channels.cache.get(
-		giveaway?.channelId ?? ""
-	);
+	if (!giveaway.prizesQuantity()) {
+		await interaction.editReply({
+			content: stripIndents`
+				${EMOJIS.ERROR} This giveaway has no prizes, and therefore no winners. Add some prizes, and try again.
+				
+				If the prize(s) are a secret, you can for example name the prize "Secret".
+			`,
+			components: [],
+			embeds: []
+		});
+
+		return;
+	}
+
+	const { channel } = giveaway;
 
 	if (!channel?.isTextBased()) {
 		await interaction.editReply({
@@ -201,28 +204,10 @@ export async function republishWinners(
 		return;
 	}
 
-	const currentMessage =
-		giveaway.winnerMessageId &&
-		(await channel.messages
-			.fetch(giveaway.winnerMessageId)
-			.catch(() => null));
+	const currentMessage = await giveaway.winnerMessage?.fetch();
 
 	if (!currentMessage) {
 		await publishWinners(interaction, id);
-
-		return;
-	}
-
-	if (!giveaway.winnersUserIds()) {
-		await interaction.editReply({
-			content: stripIndents`
-				${EMOJIS.ERROR} This giveaway has no prizes, and therefore no winners. Add some prizes, and try again.
-				
-				If the prize(s) are a secret, you can for example name the prize "Secret".
-			`,
-			components: [],
-			embeds: []
-		});
 
 		return;
 	}
@@ -248,14 +233,14 @@ export async function republishWinners(
 		})
 		.catch(() => null);
 
-	await giveawayManager.edit({
-		where: {
-			id
-		},
-		data: {
-			...lastEditBy(interaction.user)
+	await giveaway.edit(
+		{},
+		{
+			nowOutdated: {
+				winnerMessage: false
+			}
 		}
-	});
+	);
 
 	await interaction.editReply({
 		content: stripIndents`

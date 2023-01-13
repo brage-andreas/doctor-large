@@ -12,7 +12,6 @@ import {
 import { giveawayComponents } from "../../../../components/index.js";
 import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
-import lastEditBy from "../../../../helpers/lastEdit.js";
 import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
 
@@ -133,16 +132,17 @@ export default async function toPublishGiveaway(
 				]
 			});
 
-			await giveawayManager.edit({
-				where: {
-					id: giveaway.id
-				},
-				data: {
+			await giveaway.edit(
+				{
 					publishedMessageId: msg.id,
-					channelId,
-					...lastEditBy(interaction.user)
+					channelId
+				},
+				{
+					nowOutdated: {
+						publishedMessage: false
+					}
 				}
-			});
+			);
 
 			new Logger({ prefix: "GIVEAWAY", interaction }).log(
 				`Published giveaway #${id} in ${channel.name} (${channelId})`

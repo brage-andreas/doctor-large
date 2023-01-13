@@ -13,7 +13,6 @@ import {
 import { giveawayComponents } from "../../../../components/index.js";
 import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
-import lastEditBy from "../../../../helpers/lastEdit.js";
 import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
 
@@ -128,7 +127,7 @@ export default async function toPublishingOptions(
 
 			if (!permsInChannel?.has(PermissionFlagsBits.SendMessages)) {
 				retry(
-					`${EMOJIS.WARN} I am missing permissions to send messages in ${channel} (${channelId})`
+					`${EMOJIS.ERROR} I am missing permissions to send messages in ${channel} (${channelId})`
 				);
 
 				return;
@@ -141,21 +140,11 @@ export default async function toPublishingOptions(
 						giveawayComponents.dashboard.enterGiveawayButton(id)
 					)
 				],
-				content: [...giveaway.pingRolesIds]
-					.map((roleId) => `<@&${roleId}>`)
-					.join(" "),
+				content: giveaway.pingRolesMentions?.join(" "),
 				embeds: [giveaway.toEmbed()]
 			});
 
-			const oldChannel = interaction.guild.channels.cache.get(
-				giveaway.channelId ?? ""
-			);
-
-			if (oldChannel?.isTextBased() && giveaway.publishedMessageId) {
-				oldChannel.messages
-					.delete(giveaway.publishedMessageId)
-					.catch(() => null);
-			}
+			await giveaway.publishedMessage?.delete();
 
 			interaction.followUp({
 				components: [],
@@ -172,16 +161,17 @@ export default async function toPublishingOptions(
 				`Republished giveaway #${giveaway.id} in ${channel.name} (${channelId})`
 			);
 
-			giveawayManager.edit({
-				where: {
-					id: giveaway.id
-				},
-				data: {
+			giveaway.edit(
+				{
 					publishedMessageId: message.id,
-					channelId,
-					...lastEditBy(interaction.user)
+					channelId
+				},
+				{
+					nowOutdated: {
+						publishedMessage: false
+					}
 				}
-			});
+			);
 		}
 
 		if (
@@ -297,12 +287,14 @@ export default async function toPublishingOptions(
 					where: {
 						id: giveaway.id
 					},
-					data: {
-						publishedMessageId: isEdit
-							? giveaway.publishedMessageId
-							: null,
-						...lastEditBy(interaction.user)
-					}
+					data: isEdit
+						? {
+								publishedMessageId: giveaway.publishedMessageId,
+								messagesUpdated: false
+						  }
+						: {
+								publishedMessageId: null
+						  }
 				});
 			}
 
