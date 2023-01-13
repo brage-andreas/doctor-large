@@ -13,7 +13,6 @@ import {
 	type Command,
 	type CommandModuleInteractions
 } from "../../typings/index.js";
-import formatAutorole from "./mod.autorole.format.js";
 
 const data: RESTPostAPIApplicationCommandsJSONBody = {
 	name: "autorole",
@@ -26,12 +25,12 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 };
 
 const turnOnButton = new ButtonBuilder()
-	.setLabel("Toggle autorole on")
+	.setLabel("Turn on")
 	.setCustomId("autoroleEnable")
 	.setStyle(ButtonStyle.Success);
 
 const turnOffButton = new ButtonBuilder()
-	.setLabel("Toggle autorole off")
+	.setLabel("Turn off")
 	.setCustomId("autoroleDisable")
 	.setStyle(ButtonStyle.Danger);
 
@@ -52,13 +51,13 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 	await interaction.deferReply({ ephemeral: true });
 
-	const autoroleManager = new AutoroleManager(interaction.guildId);
+	const autoroleManager = new AutoroleManager(interaction.guild);
 	await autoroleManager.initialize();
 
 	const logger = new Logger({ prefix: "AUTOROLE" });
 
 	const dashboard = async () => {
-		const data = await autoroleManager.get();
+		const autorole = await autoroleManager.get();
 
 		const row1 =
 			new ActionRowBuilder<RoleSelectMenuBuilder>().setComponents(
@@ -67,12 +66,12 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 		const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
 			clearRolesButton,
-			data.activated ? turnOffButton : turnOnButton
+			autorole.activated ? turnOffButton : turnOnButton
 		);
 
 		const msg = await interaction.editReply({
 			components: [row1, row2],
-			embeds: [formatAutorole(interaction, data)]
+			embeds: [autorole.toEmbed()]
 		});
 
 		const collector = msg.createMessageComponentCollector({
@@ -88,8 +87,8 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 			logger.setInteraction(i);
 
-			let active = data.activated ?? false;
-			let roles = data.roleIds;
+			let active = autorole.activated ?? false;
+			let roles = [...autorole.roleIds];
 
 			if (i.customId === "autoroleSelect") {
 				if (!i.isRoleSelectMenu()) {
@@ -101,7 +100,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 				logger.log(
 					oneLine`
 						Roles changed from
-						[${data.roleIds.join(", ")}]
+						[${[...autorole.roleIds].join(", ")}]
 						to [${roles.join(", ")}]
 					`
 				);
@@ -111,7 +110,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 				logger.log(
 					oneLine`
 						Roles changed from
-						[${data.roleIds.join(", ")}]
+						[${[...autorole.roleIds].join(", ")}]
 						to [${roles.join(", ")}]
 					`
 				);
@@ -126,9 +125,6 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 			await autoroleManager.update({
 				activated: active,
-				lastEditedTimestamp: Date.now().toString(),
-				lastEditedUserId: i.user.id,
-				lastEditedUserTag: i.user.tag,
 				roleIds: roles
 			});
 
