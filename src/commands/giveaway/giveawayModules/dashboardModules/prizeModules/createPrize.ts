@@ -33,7 +33,7 @@ export default async function toCreatePrize(
 		.setMaxLength(PRIZE.MAX_ADDITIONAL_INFO_LEN)
 		.setMinLength(1)
 		.setCustomId("prizeInfo")
-		.setRequired(true)
+		.setRequired(false)
 		.setLabel("Additional info")
 		.setStyle(TextInputStyle.Short);
 
@@ -64,7 +64,7 @@ export default async function toCreatePrize(
 		const name = modalInteraction.fields.getTextInputValue("prizeName");
 
 		const additionalInfo =
-			modalInteraction.fields.getTextInputValue("prizeInfo");
+			modalInteraction.fields.getTextInputValue("prizeInfo") || null;
 
 		const quantityString =
 			modalInteraction.fields.getTextInputValue("prizeQuantity");
