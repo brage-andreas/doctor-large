@@ -7,7 +7,8 @@ import {
 	type Guild,
 	type GuildMember,
 	type GuildTextBasedChannel,
-	type MessageEditOptions
+	type MessageEditOptions,
+	type Role
 } from "discord.js";
 import ms from "ms";
 import { COLORS, EMOJIS } from "../constants.js";
@@ -28,7 +29,7 @@ export default class Giveaway {
 	public active: boolean;
 	public channelId: string | null;
 	public createdAt: Date;
-	public description: string | null;
+	public description: string;
 	public endTimestamp: string | null;
 	public entriesLocked: boolean;
 	public guildId: string;
@@ -37,12 +38,12 @@ export default class Giveaway {
 	public hostUserTag: string;
 	public id: number;
 	public lastEditedAt: Date | null;
-	public publishedMessageUpdated: boolean | null;
+	public publishedMessageUpdated: boolean;
 	public minimumAccountAge: string | null;
 	public publishedMessageId: string | null;
 	public title: string;
 	public winnerMessageId: string | null;
-	public winnerMessageUpdated: boolean | null;
+	public winnerMessageUpdated: boolean;
 	public winnerQuantity: number;
 	// --------------
 
@@ -53,8 +54,12 @@ export default class Giveaway {
 	public requiredRolesIds: Set<string>;
 	// ----------------------
 
+	// -- Cache --
+	public pingRoles: Array<Role>;
+	public requiredRoles: Array<Role>;
 	private _prizesQuantity: number | null = null;
 	private _winnersUserIds: Set<string> | null = null;
+	// -----------
 
 	public constructor(data: GiveawayDataWithIncludes, guild: Guild) {
 		this.client = guild.client;
@@ -90,26 +95,54 @@ export default class Giveaway {
 		this.entriesUserIds = new Set(data.entriesUserIds);
 		this.pingRolesIds = new Set(data.pingRolesIds);
 
+		this.pingRoles = data.pingRolesIds
+			.map((roleId) => guild.roles.cache.get(roleId))
+			.filter((roleOrUndefined) =>
+				Boolean(roleOrUndefined)
+			) as Array<Role>;
+
+		this.requiredRoles = data.requiredRolesIds
+			.map((roleId) => guild.roles.cache.get(roleId))
+			.filter((roleOrUndefined) =>
+				Boolean(roleOrUndefined)
+			) as Array<Role>;
+
 		this.prizes = data.prizes.map(
 			(prize) => new Prize({ ...prize, giveaway: this }, guild)
 		);
 		// ----------------------
 	}
 
+	public get publishedMessageIsOutdated() {
+		return this.publishedMessageUpdated && Boolean(this.publishedMessageId);
+	}
+
+	public get winnerMessageIsOutdated() {
+		return this.winnerMessageUpdated && Boolean(this.winnerMessageId);
+	}
+
+	public get hasPingRoles() {
+		return Boolean(this.pingRolesIds.size);
+	}
+
 	public get pingRolesMentions() {
-		if (!this.pingRolesIds.size) {
+		if (!this.hasPingRoles) {
 			return undefined;
 		}
 
-		return [...this.pingRolesIds].map((id) => `<@&${id}>`);
+		return this.pingRoles.map((role) => role.toString());
+	}
+
+	public get hasRequiredRoles() {
+		return Boolean(this.requiredRolesIds.size);
 	}
 
 	public get requiredRolesMentions() {
-		if (!this.requiredRolesIds.size) {
+		if (!this.hasRequiredRoles) {
 			return undefined;
 		}
 
-		return [...this.requiredRolesIds].map((id) => `<@&${id}>`);
+		return this.requiredRoles.map((role) => role.toString());
 	}
 
 	public get channel(): GuildTextBasedChannel | null {
@@ -154,8 +187,10 @@ export default class Giveaway {
 
 	public async reset(filter: {
 		entriesAndWinners?: boolean;
-		prizes?: boolean;
+		prizesAndWinners?: boolean;
+		winners?: boolean;
 		options?: boolean;
+		all?: boolean;
 	}): Promise<void> {
 		const resetAll = async () => {
 			await this.publishedMessage?.delete();
@@ -218,15 +253,24 @@ export default class Giveaway {
 			});
 		};
 
-		const resetPrizes = async () => {
+		const resetPrizesAndWinners = async () => {
 			await this.publishedMessage?.delete();
+			await this.winnerMessage?.delete();
 
+			await this.manager.deleteWinners(this.data);
 			await this.manager.deletePrizes(this.data);
 		};
 
-		const { entriesAndWinners, prizes, options } = filter;
+		const resetWinners = async () => {
+			await this.winnerMessage?.delete();
 
-		if (entriesAndWinners && prizes && options) {
+			await this.manager.deleteWinners(this.data);
+		};
+
+		const { entriesAndWinners, prizesAndWinners, winners, options, all } =
+			filter;
+
+		if (all) {
 			await resetAll();
 
 			return;
@@ -240,8 +284,12 @@ export default class Giveaway {
 			await resetOptions();
 		}
 
-		if (prizes) {
-			await resetPrizes();
+		if (prizesAndWinners) {
+			await resetPrizesAndWinners();
+		}
+
+		if (winners) {
+			await resetWinners();
 		}
 	}
 
@@ -280,8 +328,8 @@ export default class Giveaway {
 		return Boolean(this.winnerMessageId);
 	}
 
-	public hasRequiredRoles(member: GuildMember) {
-		if (!this.requiredRolesIds.size) {
+	public memberHasRequiredRoles(member: GuildMember) {
+		if (!this.hasRequiredRoles) {
 			return true;
 		}
 
@@ -371,7 +419,7 @@ export default class Giveaway {
 				: "None"
 		}`;
 
-		const pingRolesStr = this.pingRolesIds.size
+		const pingRolesStr = this.hasPingRoles
 			? `→ Ping roles (${this.pingRolesIds.size}): ${listify(
 					this.pingRolesMentions!,
 					{ length: 10 }
@@ -420,12 +468,11 @@ export default class Giveaway {
 			this.description ?? `${EMOJIS.WARN} There is no set description`;
 
 		const idStr = `#${this.guildRelativeId}`;
-		const absoluteIdStr = `#${this.id}`;
 		const numberOfWinnersStr = `→ Number of winners: ${this.winnerQuantity}`;
 		const hostStr = `→ Host: ${this.hostUserTag} (${this.hostUserId})`;
 		const activeStr = `→ Active: ${this.active ? "Yes" : "No"}`;
 		const entriesStr = `→ Entries: ${this.entriesUserIds.size}`;
-		const createdStr = `→ Created: ${longStamp(this.createdTimestamp)}`;
+		const createdStr = `→ Created: ${longStamp(this.createdAt)}`;
 
 		const lockEntriesStr = `→ Entries locked: ${
 			this.entriesLocked ? "Yes" : "No"
@@ -447,13 +494,13 @@ export default class Giveaway {
 			`
 			: "→ No winners";
 
-		const lastEditStr = this.isEdited()
-			? oneLine`
-				Last edited by:
-				${this.lastEditedUserTag}
-				(${this.lastEditedUserId})
-			`
-			: "No edits";
+		const publishedOutdated = this.publishedMessageIsOutdated
+			? `${EMOJIS.WARN} The published message is outdated. Republish the giveaway.`
+			: "";
+
+		const winnerOutdated = this.winnerMessageIsOutdated
+			? `\n${EMOJIS.WARN} The winner announcement is outdated. Republish the winners.`
+			: "";
 
 		const infoField = stripIndents`
 			${hostStr}
@@ -475,9 +522,9 @@ export default class Giveaway {
 			.setTitle(this.title)
 			.setDescription(descriptionStr)
 			.setFooter({
-				text: `Giveaway ${idStr} (${absoluteIdStr}) • ${lastEditStr}`
+				text: `Giveaway ${idStr} (${this.id}) • Last edited`
 			})
-			.setTimestamp(this.isEdited() ? this.lastEditedTimestamp : null)
+			.setTimestamp(this.lastEditedAt)
 			.setColor(
 				// published = green
 				// active = yellow
@@ -510,6 +557,8 @@ export default class Giveaway {
 			);
 
 		return {
+			content:
+				[publishedOutdated, winnerOutdated].join("\n") || undefined,
 			embeds: [embed]
 		};
 	}
@@ -537,25 +586,28 @@ export default class Giveaway {
 			? this.prizes.map((prize) => prize.toShortString()).join("\n")
 			: `There are no set prizes. Maybe it is a secret? ${EMOJIS.SHUSH}`;
 
-		const descriptionStr = stripIndents`
-			${this.description ? `${this.description}\n\n` : ""}
-			**Info**
-			${winnerQuantityStr}
-			${endStr}
-			${requiredRolesStr}
-			${minimumAccountAgeStr}
-
-			**Prizes**
-			${prizesStr}
-		`;
-
 		return new EmbedBuilder()
 			.setTitle(this.title)
-			.setDescription(descriptionStr)
+			.setDescription(this.description)
 			.setColor(COLORS.GREEN)
 			.setFooter({
 				text: `Giveaway #${this.guildRelativeId} • Hosted by ${this.hostUserTag}`
-			});
+			})
+			.setFields(
+				{
+					name: "Info",
+					value: stripIndents`
+					${winnerQuantityStr}
+					${endStr}
+					${requiredRolesStr}
+					${minimumAccountAgeStr}
+				`
+				},
+				{
+					name: "Prizes",
+					value: prizesStr
+				}
+			);
 	}
 
 	public endedEmbed() {
