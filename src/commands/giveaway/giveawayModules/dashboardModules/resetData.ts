@@ -138,9 +138,7 @@ export default async function toResetData(
 				}
 
 				await giveaway.reset({
-					entriesAndWinners: true,
-					options: true,
-					prizes: true
+					all: true
 				});
 
 				new Logger({ prefix: "GIVEAWAY", interaction }).log(
@@ -179,7 +177,10 @@ export default async function toResetData(
 					return toDashboard(interaction, id);
 				}
 
-				await giveaway.reset({ entriesAndWinners: true, prizes: true });
+				await giveaway.reset({
+					entriesAndWinners: true,
+					prizesAndWinners: true
+				});
 
 				new Logger({ prefix: "GIVEAWAY", interaction }).log(
 					`Level 3 reset giveaway #${giveaway.id}`
