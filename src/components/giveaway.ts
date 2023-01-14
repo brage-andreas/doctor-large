@@ -8,6 +8,7 @@ import {
 	TextInputStyle
 } from "discord.js";
 import { EMOJIS, GIVEAWAY } from "../constants.js";
+import { modalId } from "../helpers/ModalCollector.js";
 
 // -----------------------
 //         CREATE
@@ -56,7 +57,7 @@ const modalGiveawaywinnerQuantity = new TextInputBuilder()
  */
 const createOptionsModal = new ModalBuilder()
 	.setTitle("Create a giveaway")
-	.setCustomId("createGiveaway")
+	.setCustomId(modalId())
 	.setComponents(
 		new ActionRowBuilder<TextInputBuilder>().addComponents(
 			modalGiveawayTitle
@@ -99,17 +100,23 @@ const emptyString = `${EMOJIS.SLEEP} Whoa so empty — there is no description`;
 /**
  * ID: newDescription
  */
-const modalGiveawayNewDescription = (oldDescription: string | null) =>
-	new TextInputBuilder()
+const modalGiveawayNewDescription = (oldDescription: string | null) => {
+	const builder = new TextInputBuilder()
 		.setCustomId("newDescription")
 		.setLabel(
 			`New description (max ${GIVEAWAY.MAX_DESCRIPTION_LINES} lines)`
 		)
 		.setMaxLength(GIVEAWAY.MAX_DESCRIPTION_LEN)
 		.setStyle(TextInputStyle.Paragraph)
-		.setRequired(true)
-		.setValue(oldDescription ?? emptyString)
-		.setPlaceholder(oldDescription ?? emptyString);
+		.setRequired(true);
+
+	if (oldDescription) {
+		builder.setValue(oldDescription);
+		builder.setPlaceholder(oldDescription ?? emptyString);
+	}
+
+	return builder;
+};
 
 /**
  * ID: newWinnerQuantity
@@ -137,7 +144,7 @@ const editOptionsModal = (
 ) =>
 	new ModalBuilder()
 		.setTitle(`Edit giveaway #${id} (3 min)`)
-		.setCustomId("editGiveaway")
+		.setCustomId(modalId())
 		.setComponents(
 			new ActionRowBuilder<TextInputBuilder>().addComponents(
 				modalGiveawayNewTitle(oldTitle)
@@ -211,6 +218,14 @@ const clearRequiredRolesButton = new ButtonBuilder()
 	.setCustomId("clearRequiredRoles")
 	.setStyle(ButtonStyle.Secondary)
 	.setLabel("Clear required roles");
+
+/**
+ * ID: setRequiredRolesToAtEveryone
+ */
+const setPingRolesToAtEveryoneButton = new ButtonBuilder()
+	.setCustomId("setPingRolesToAtEveryone")
+	.setStyle(ButtonStyle.Primary)
+	.setLabel("Set to @everyone");
 
 /**
  * ID: setPingRoles
@@ -446,6 +461,11 @@ export const giveaway = {
 		 * ID: clearRequiredRoles
 		 */
 		clearRequiredRolesButton: () => clearRequiredRolesButton,
+
+		/**
+		 * ID: setPingRolesToAtEveryone
+		 */
+		setPingRolesToAtEveryoneButton: () => setPingRolesToAtEveryoneButton,
 
 		/**
 		 * ID: clearPingRoles
