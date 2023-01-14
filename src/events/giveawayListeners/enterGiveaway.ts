@@ -35,7 +35,7 @@ export default async function enterGiveaway(
 		return;
 	}
 
-	if (!giveaway.hasRequiredRoles(interaction.member)) {
+	if (!giveaway.memberHasRequiredRoles(interaction.member)) {
 		const rolesTheyHave = new Set(interaction.member.roles.cache.keys());
 
 		const rolesTheyNeed = [...giveaway.requiredRolesIds]
@@ -127,12 +127,10 @@ export default async function enterGiveaway(
 		);
 	}
 
-	giveawayManager.edit({
-		where: {
-			id: Number(id)
-		},
-		data: {
+	giveaway.edit(
+		{
 			entriesUserIds: [...entrants]
-		}
-	});
+		},
+		{ nowOutdated: "none" }
+	);
 }
