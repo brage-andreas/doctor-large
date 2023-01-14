@@ -11,6 +11,8 @@ import {
 import { giveawayComponents } from "../../../../components/index.js";
 import { COLORS, EMOJIS, REGEXP } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
+import s from "../../../../helpers/s.js";
+import yesNo from "../../../../helpers/yesNo.js";
 import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
 import toCreatePrize from "./prizeModules/createPrize.js";
@@ -144,7 +146,33 @@ export default async function toManagePrizes(
 			case "clearPrizes": {
 				await buttonInteraction.deferUpdate();
 
-				await giveaway.reset({ prizes: true });
+				if (giveaway.winnersUserIds().size) {
+					const n = giveaway.winnersUserIds().size;
+
+					const proceed = await yesNo({
+						yesStyle: ButtonStyle.Danger,
+						noStyle: ButtonStyle.Secondary,
+						filter: (i) => i.user.id === interaction.user.id,
+						medium: buttonInteraction,
+						data: {
+							content: stripIndents`
+								${EMOJIS.WARN} Are you sure you want to clear the prizes?
+								This will wipe the prizes of ${n} ${s("winner", n)}, and the winners themselves!
+							`,
+							embeds: []
+						}
+					});
+
+					if (!proceed) {
+						return toManagePrizes(
+							buttonInteraction,
+							id,
+							giveawayManager
+						);
+					}
+				}
+
+				await giveaway.reset({ prizesAndWinners: true });
 
 				return toManagePrizes(buttonInteraction, id, giveawayManager);
 			}
