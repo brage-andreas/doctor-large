@@ -6,6 +6,7 @@ import {
 	PermissionFlagsBits,
 	type ButtonBuilder,
 	type ButtonInteraction,
+	type GuildTextBasedChannel,
 	type NewsChannel,
 	type TextChannel
 } from "discord.js";
@@ -57,6 +58,16 @@ export default async function toPublishGiveaway(
 		.setMaxValues(1)
 		.setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement);
 
+	const chooseChannelStr = stripIndents`
+		Select the channel you would like to publish the giveaway in.
+
+		${
+			giveaway.channelId
+				? `Previous channel: <#${giveaway.channelId}> (${giveaway.channelId})`
+				: ""
+		}
+	`;
+
 	const row1 = new ActionRowBuilder<ChannelSelectMenuBuilder>().setComponents(
 		channelSelectMenu
 	);
@@ -65,14 +76,17 @@ export default async function toPublishGiveaway(
 		giveawayComponents.dashboard.backButton()
 	);
 
+	if (giveaway.channelId) {
+		row2.addComponents(giveawayComponents.dashboard.lastChannelButton());
+	}
+
 	const retry = async (message?: string) => {
 		if (message) {
 			interaction.followUp({ content: message, ephemeral: true });
 		}
 
 		const updateMsg = await interaction.editReply({
-			content:
-				"Select the channel you would like to publish the giveaway in.",
+			content: chooseChannelStr,
 			components: [row1, row2],
 			embeds: [giveaway.toEmbed()]
 		});
@@ -89,27 +103,35 @@ export default async function toPublishGiveaway(
 			return;
 		}
 
-		if (componentInteraction.customId === "channelSelect") {
-			if (!componentInteraction.isChannelSelectMenu()) {
-				interaction.editReply({
-					content: `${EMOJIS.WARN} Something went wrong. Try again.`,
-					components: [],
-					embeds: []
-				});
+		if (
+			componentInteraction.customId === "channelSelect" ||
+			componentInteraction.customId === "prizesStr"
+		) {
+			let channel: GuildTextBasedChannel;
 
-				return;
-			}
+			if (componentInteraction.isChannelSelectMenu()) {
+				const channelId = componentInteraction.values[0];
+				const channel_ = interaction.guild.channels.cache.get(
+					channelId
+				) as NewsChannel | TextChannel | undefined;
 
-			const channelId = componentInteraction.values[0];
-			const channel = interaction.guild.channels.cache.get(channelId) as
-				| NewsChannel
-				| TextChannel
-				| undefined;
+				if (!channel_) {
+					retry(`${EMOJIS.WARN} This channel does not exist.`);
 
-			if (!channel) {
-				retry(`${EMOJIS.WARN} This channel does not exist.`);
+					return;
+				}
 
-				return;
+				channel = channel_;
+			} else {
+				const channel_ = giveaway.channel;
+
+				if (!channel_) {
+					retry(`${EMOJIS.WARN} This channel does not exist.`);
+
+					return;
+				}
+
+				channel = channel_;
 			}
 
 			const permsInChannel =
@@ -117,25 +139,29 @@ export default async function toPublishGiveaway(
 
 			if (!permsInChannel?.has(PermissionFlagsBits.SendMessages)) {
 				retry(
-					`${EMOJIS.WARN} I am missing permissions to send messages in ${channel} (${channelId})`
+					`${EMOJIS.WARN} I am missing permissions to send messages in ${channel} (${channel.id})`
 				);
 
 				return;
 			}
 
 			const msg = await channel.send({
-				embeds: [giveaway.toEmbed()],
+				allowedMentions: {
+					parse: ["roles", "everyone"]
+				},
 				components: [
 					new ActionRowBuilder<ButtonBuilder>().setComponents(
 						giveawayComponents.dashboard.enterGiveawayButton(id)
 					)
-				]
+				],
+				content: giveaway.pingRolesMentions?.join(" "),
+				embeds: [giveaway.toEmbed()]
 			});
 
 			await giveaway.edit(
 				{
 					publishedMessageId: msg.id,
-					channelId
+					channelId: channel.id
 				},
 				{
 					nowOutdated: {
@@ -145,7 +171,7 @@ export default async function toPublishGiveaway(
 			);
 
 			new Logger({ prefix: "GIVEAWAY", interaction }).log(
-				`Published giveaway #${id} in ${channel.name} (${channelId})`
+				`Published giveaway #${id} in ${channel.name} (${channel.id})`
 			);
 
 			await interaction.followUp({
