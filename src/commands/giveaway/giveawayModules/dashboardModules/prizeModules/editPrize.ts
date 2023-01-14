@@ -72,7 +72,7 @@ export default async function toEditPrize(
 		const name = modalInteraction.fields.getTextInputValue("prizeName");
 
 		const additionalInfo =
-			modalInteraction.fields.getTextInputValue("prizeInfo");
+			modalInteraction.fields.getTextInputValue("prizeInfo") || null;
 
 		const quantityString =
 			modalInteraction.fields.getTextInputValue("prizeQuantity");
