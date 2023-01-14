@@ -20,7 +20,7 @@ export async function signWinners(options: {
 		(member) =>
 			giveaway.entriesUserIds.has(member.id) &&
 			giveaway.isOldEnough(member) &&
-			giveaway.hasRequiredRoles(member)
+			giveaway.memberHasRequiredRoles(member)
 	);
 
 	const dataMap = roll(
