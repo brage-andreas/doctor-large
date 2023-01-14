@@ -9,23 +9,23 @@ export async function run(member: GuildMember) {
 
 	const logger = new Logger({ prefix: "AUTOROLE", guild: member.guild });
 
-	const autoroleManager = new AutoroleManager(member.guild.id);
+	const autoroleManager = new AutoroleManager(member.guild);
 	await autoroleManager.initialize();
 
-	const { activated, roleIds } = await autoroleManager.get();
+	const autorole = await autoroleManager.get();
 
-	if (!activated || roleIds.length === 0) {
+	if (!autorole.activated || autorole.validRoles.length === 0) {
 		return;
 	}
 
 	const success = await member.roles
-		.add(roleIds)
+		.add(autorole.validRoles)
 		.then(() => true)
 		.catch(() => false);
 
 	if (success) {
 		logger.log(
-			`Gave ${roleIds.length} role(s) to ${member.user.tag} (${member.id})`
+			`Gave ${autorole.validRoles.length} role(s) to ${member.user.tag} (${member.id})`
 		);
 	} else {
 		logger
