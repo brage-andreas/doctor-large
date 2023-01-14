@@ -7,7 +7,6 @@ import {
 } from "discord.js";
 import { giveawayComponents } from "../../../../components/index.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
-import lastEditBy from "../../../../helpers/lastEdit.js";
 import { listify } from "../../../../helpers/listify.js";
 import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
@@ -44,7 +43,8 @@ export default async function toSetPingRoles(
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
 		giveawayComponents.dashboard.backButton(),
-		giveawayComponents.dashboard.clearPingRolesButton()
+		giveawayComponents.dashboard.clearPingRolesButton(),
+		giveawayComponents.dashboard.setPingRolesToAtEveryoneButton()
 	);
 
 	const updateMsg = await interaction.editReply({
@@ -56,50 +56,77 @@ export default async function toSetPingRoles(
 		filter: (i) => i.user.id === interaction.user.id
 	});
 
-	if (component.customId === "back") {
-		await component.deferUpdate();
-
-		toDashboard(interaction, id);
-
-		return;
-	}
-
-	if (component.customId === "pingRolesSelect") {
-		if (!component.isRoleSelectMenu()) {
-			return;
+	switch (component.customId) {
+		case "back": {
+			break;
 		}
 
-		await component.deferUpdate();
+		case "setPingRolesToAtEveryone": {
+			await component.deferUpdate();
 
-		new Logger({ prefix: "GIVEAWAY", interaction }).log(
-			`Edited ping roles of giveaway #${giveaway.id}`
-		);
+			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				`Set ping roles of giveaway #${giveaway.id} to @everyone`
+			);
 
-		await giveawayManager.edit({
-			where: {
-				id: giveaway.id
-			},
-			data: {
-				pingRolesIds: component.values,
-				...lastEditBy(interaction.user)
+			await giveaway.edit(
+				{
+					pingRolesIds: [interaction.guild.roles.everyone.id]
+				},
+				{
+					nowOutdated: {
+						publishedMessage: true
+					}
+				}
+			);
+
+			break;
+		}
+
+		case "clearPingRoles": {
+			await component.deferUpdate();
+
+			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				`Cleared ping roles of giveaway #${giveaway.id}`
+			);
+
+			await giveaway.edit(
+				{
+					pingRolesIds: []
+				},
+				{
+					nowOutdated: {
+						publishedMessage: true
+					}
+				}
+			);
+
+			break;
+		}
+
+		case "pingRolesSelect": {
+			if (!component.isRoleSelectMenu()) {
+				return;
 			}
-		});
-	} else if (component.customId === "clearPingRoles") {
-		await component.deferUpdate();
 
-		new Logger({ prefix: "GIVEAWAY", interaction }).log(
-			`Cleared ping roles of giveaway #${giveaway.id}`
-		);
+			await component.deferUpdate();
 
-		await giveawayManager.edit({
-			where: {
-				id: giveaway.id
-			},
-			data: {
-				pingRolesIds: [],
-				...lastEditBy(interaction.user)
-			}
-		});
+			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				`Edited ping roles of giveaway #${giveaway.id}`
+			);
+
+			await giveaway.edit(
+				{
+					pingRolesIds: component.values
+				},
+				{
+					nowOutdated: {
+						publishedMessage: true
+					}
+				}
+			);
+
+			break;
+		}
 	}
 
 	await toDashboard(interaction, id);

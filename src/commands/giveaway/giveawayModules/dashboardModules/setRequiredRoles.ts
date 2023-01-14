@@ -7,7 +7,6 @@ import {
 } from "discord.js";
 import { giveawayComponents } from "../../../../components/index.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
-import lastEditBy from "../../../../helpers/lastEdit.js";
 import { listify } from "../../../../helpers/listify.js";
 import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
@@ -56,50 +55,54 @@ export default async function toSetRequiredRoles(
 		filter: (i) => i.user.id === interaction.user.id
 	});
 
-	if (component.customId === "back") {
-		await component.deferUpdate();
+	await component.deferUpdate();
 
-		toDashboard(interaction, id);
-
-		return;
-	}
-
-	if (component.customId === "requiredRolesSelect") {
-		if (!component.isRoleSelectMenu()) {
-			return;
+	switch (component.customId) {
+		case "back": {
+			break;
 		}
 
-		await component.deferUpdate();
-
-		new Logger({ prefix: "GIVEAWAY", interaction }).log(
-			`Edited required roles of giveaway #${giveaway.id}`
-		);
-
-		await giveawayManager.edit({
-			where: {
-				id: giveaway.id
-			},
-			data: {
-				requiredRolesIds: component.values,
-				...lastEditBy(interaction.user)
+		case "requiredRolesSelect": {
+			if (!component.isRoleSelectMenu()) {
+				return;
 			}
-		});
-	} else if (component.customId === "clearRequiredRoles") {
-		await component.deferUpdate();
 
-		new Logger({ prefix: "GIVEAWAY", interaction }).log(
-			`Cleared required roles of giveaway #${giveaway.id}`
-		);
+			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				`Edited required roles of giveaway #${giveaway.id}`
+			);
 
-		await giveawayManager.edit({
-			where: {
-				id: giveaway.id
-			},
-			data: {
-				requiredRolesIds: [],
-				...lastEditBy(interaction.user)
-			}
-		});
+			await giveaway.edit(
+				{
+					requiredRolesIds: component.values
+				},
+				{
+					nowOutdated: {
+						publishedMessage: true
+					}
+				}
+			);
+
+			break;
+		}
+
+		case "clearRequiredRoles": {
+			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				`Cleared required roles of giveaway #${giveaway.id}`
+			);
+
+			await giveaway.edit(
+				{
+					requiredRolesIds: []
+				},
+				{
+					nowOutdated: {
+						publishedMessage: true
+					}
+				}
+			);
+
+			break;
+		}
 	}
 
 	await toDashboard(interaction, id);

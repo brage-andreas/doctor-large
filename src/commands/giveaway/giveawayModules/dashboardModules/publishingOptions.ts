@@ -134,7 +134,7 @@ export default async function toPublishingOptions(
 			}
 
 			const message = await channel.send({
-				allowedMentions: { roles: [...giveaway.pingRolesIds] },
+				allowedMentions: { parse: ["everyone", "roles"] },
 				components: [
 					new ActionRowBuilder<ButtonBuilder>().setComponents(
 						giveawayComponents.dashboard.enterGiveawayButton(id)
@@ -283,22 +283,21 @@ export default async function toPublishingOptions(
 			}
 
 			if (successOrURL) {
-				giveawayManager.edit({
-					where: {
-						id: giveaway.id
+				await giveaway.edit(
+					{
+						publishedMessageId: isEdit
+							? giveaway.publishedMessageId
+							: null
 					},
-					data: isEdit
-						? {
-								publishedMessageId: giveaway.publishedMessageId,
-								messagesUpdated: false
-						  }
-						: {
-								publishedMessageId: null
-						  }
-				});
-			}
+					{
+						nowOutdated: {
+							publishedMessage: false
+						}
+					}
+				);
 
-			toDashboard(componentInteraction, id);
+				toDashboard(componentInteraction, id);
+			}
 		}
 	};
 

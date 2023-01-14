@@ -59,7 +59,7 @@ export default async function toDashboard(
 	const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		publishButton,
 		lockEntriesButton,
-		giveawayComponents.dashboard.row1.setEndDateButton(),
+		giveawayComponents.dashboard.row1.setEndDateButton().setDisabled(true),
 		giveawayComponents.dashboard.row1.setRequiredRolesButton(),
 		giveawayComponents.dashboard.row1.setPingRolesButton()
 	);
@@ -74,7 +74,6 @@ export default async function toDashboard(
 
 	const msg = await interaction.editReply({
 		components: [row1, row2],
-		content: null,
 		...giveaway.toDashboardOverview()
 	});
 
@@ -122,9 +121,16 @@ export default async function toDashboard(
 			case "lockEntries": {
 				await buttonInteraction.deferUpdate();
 
-				await giveaway.edit({
-					entriesLocked: true
-				});
+				await giveaway.edit(
+					{
+						entriesLocked: true
+					},
+					{
+						nowOutdated: {
+							publishedMessage: true
+						}
+					}
+				);
 
 				toDashboard(buttonInteraction, giveawayId);
 
@@ -134,9 +140,16 @@ export default async function toDashboard(
 			case "unlockEntries": {
 				await buttonInteraction.deferUpdate();
 
-				await giveaway.edit({
-					entriesLocked: false
-				});
+				await giveaway.edit(
+					{
+						entriesLocked: false
+					},
+					{
+						nowOutdated: {
+							publishedMessage: true
+						}
+					}
+				);
 
 				toDashboard(buttonInteraction, giveawayId);
 

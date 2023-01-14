@@ -36,7 +36,6 @@ export default async function toEndedDashboard(
 
 	const msg = await interaction.editReply({
 		components: [row1, row2],
-		content: null,
 		...giveaway.toDashboardOverview()
 	});
 
