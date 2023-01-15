@@ -196,8 +196,9 @@ export default class Giveaway {
 			await this.publishedMessage?.delete();
 			await this.winnerMessage?.delete();
 
-			await this.manager.deleteWinners(this.data);
-			await this.manager.deletePrizes(this.data);
+			await this.manager.deleteWinners(this.data).then(async () => {
+				await this.manager.deletePrizes(this.data);
+			});
 
 			await this.manager.edit({
 				where: {
@@ -227,7 +228,9 @@ export default class Giveaway {
 					id: this.id
 				},
 				data: {
-					entriesUserIds: []
+					entriesUserIds: [],
+					winnerMessageId: null,
+					winnerMessageUpdated: false
 				}
 			});
 		};
@@ -247,8 +250,10 @@ export default class Giveaway {
 					minimumAccountAge: null,
 					pingRolesIds: [],
 					publishedMessageId: null,
+					publishedMessageUpdated: false,
 					requiredRolesIds: [],
-					winnerMessageId: null
+					winnerMessageId: null,
+					winnerMessageUpdated: false
 				}
 			});
 		};
@@ -257,14 +262,37 @@ export default class Giveaway {
 			await this.publishedMessage?.delete();
 			await this.winnerMessage?.delete();
 
-			await this.manager.deleteWinners(this.data);
-			await this.manager.deletePrizes(this.data);
+			await this.manager.deleteWinners(this.data).then(async () => {
+				await this.manager.deletePrizes(this.data);
+			});
+
+			await this.manager.edit({
+				where: {
+					id: this.id
+				},
+				data: {
+					publishedMessageId: null,
+					publishedMessageUpdated: false,
+					winnerMessageId: null,
+					winnerMessageUpdated: false
+				}
+			});
 		};
 
 		const resetWinners = async () => {
 			await this.winnerMessage?.delete();
 
 			await this.manager.deleteWinners(this.data);
+
+			await this.manager.edit({
+				where: {
+					id: this.id
+				},
+				data: {
+					winnerMessageId: null,
+					winnerMessageUpdated: false
+				}
+			});
 		};
 
 		const { entriesAndWinners, prizesAndWinners, winners, options, all } =
