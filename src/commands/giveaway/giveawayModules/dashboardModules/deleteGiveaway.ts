@@ -29,8 +29,18 @@ export default async function toDeleteGiveaway(
 		return;
 	}
 
+	const myGiveawaysCommand = await interaction.client.application.commands
+		.fetch()
+		.then((commands) =>
+			commands.find((command) => command.name === "my-giveaways")
+		);
+
+	const myGiveaways = myGiveawaysCommand
+		? `</my-giveaways:${myGiveawaysCommand.id}>`
+		: "/my-giveaways";
+
 	const isConcludedString = !giveaway.active
-		? `\n\n${EMOJIS.WARN} It is recommended to keep concluded giveaways.`
+		? `\n\n${EMOJIS.WARN} It is recommended to keep concluded giveaways. They can still be seen in the ${myGiveaways} command.`
 		: "";
 
 	const accept = await yesNo({
@@ -40,16 +50,18 @@ export default async function toDeleteGiveaway(
 		filter: () => true,
 		data: {
 			content: stripIndents`
-				${EMOJIS.ERROR} You are about to delete giveaway #${giveaway.guildRelativeId}.
+				${EMOJIS.WARN} You are about to delete giveaway #${giveaway.guildRelativeId}.
 				This will also include any prizes and winners.${isConcludedString}
 
 				Are you sure? Absolutely sure? This action will be **irreversible**.
-			`
+			`,
+			embeds: []
 		}
 	});
 
 	if (!accept) {
 		interaction.followUp({
+			ephemeral: true,
 			content: `Alright! Cancelled deleting giveaway #${giveaway.guildRelativeId}`
 		});
 
@@ -71,12 +83,14 @@ export default async function toDeleteGiveaway(
 					This will also include any prizes and winners.${isConcludedString}
 	
 					ARE YOU ABSOLUTELY CERTAIN?
-				`
+				`,
+				embeds: []
 			}
 		});
 
 		if (!accept2) {
 			interaction.followUp({
+				ephemeral: true,
 				content: `Alright! Cancelled deleting giveaway #${giveaway.guildRelativeId}`
 			});
 
