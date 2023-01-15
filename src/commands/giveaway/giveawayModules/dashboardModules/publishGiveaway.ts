@@ -10,7 +10,7 @@ import {
 	type NewsChannel,
 	type TextChannel
 } from "discord.js";
-import { giveawayComponents } from "../../../../components/index.js";
+import components from "../../../../components/index.js";
 import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
 import Logger from "../../../../logger/logger.js";
@@ -73,11 +73,11 @@ export default async function toPublishGiveaway(
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		giveawayComponents.dashboard.backButton()
+		components.buttons.back()
 	);
 
 	if (giveaway.channelId) {
-		row2.addComponents(giveawayComponents.dashboard.lastChannelButton());
+		row2.addComponents(components.buttons.lastChannel());
 	}
 
 	const retry = async (message?: string) => {
@@ -151,7 +151,7 @@ export default async function toPublishGiveaway(
 				},
 				components: [
 					new ActionRowBuilder<ButtonBuilder>().setComponents(
-						giveawayComponents.dashboard.enterGiveawayButton(id)
+						components.buttons.enterGiveaway(id)
 					)
 				],
 				content: giveaway.pingRolesMentions?.join(" "),

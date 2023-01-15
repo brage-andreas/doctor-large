@@ -12,10 +12,12 @@ export default function roll(entries: Array<string>, giveaway: Giveaway) {
 		const arrayOfCurrentPrizes: Array<Prize> = Array.from(
 			{ length: prize.quantity },
 			() => {
-				const prizeCopy = structuredClone(prize);
-				prizeCopy.quantity = 1;
+				const clone = prize.clone();
 
-				return prizeCopy;
+				clone.data.quantity = 1;
+				clone.quantity = 1;
+
+				return clone;
 			}
 		);
 

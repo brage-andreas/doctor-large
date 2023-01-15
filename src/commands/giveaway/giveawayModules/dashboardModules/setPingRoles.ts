@@ -5,7 +5,7 @@ import {
 	type ButtonBuilder,
 	type ButtonInteraction
 } from "discord.js";
-import { giveawayComponents } from "../../../../components/index.js";
+import components from "../../../../components/index.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
 import { listify } from "../../../../helpers/listify.js";
 import Logger from "../../../../logger/logger.js";
@@ -42,9 +42,9 @@ export default async function toSetPingRoles(
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		giveawayComponents.dashboard.backButton(),
-		giveawayComponents.dashboard.clearPingRolesButton(),
-		giveawayComponents.dashboard.setPingRolesToAtEveryoneButton()
+		components.buttons.back(),
+		components.buttons.clearPingRoles(),
+		components.buttons.setPingRolesToAtEveryone()
 	);
 
 	const updateMsg = await interaction.editReply({

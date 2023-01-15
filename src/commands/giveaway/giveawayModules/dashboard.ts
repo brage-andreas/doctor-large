@@ -6,7 +6,7 @@ import {
 	type ButtonBuilder,
 	type Interaction
 } from "discord.js";
-import { giveawayComponents } from "../../../components/index.js";
+import components from "../../../components/index.js";
 import { EMOJIS } from "../../../constants.js";
 import GiveawayManager from "../../../database/giveaway.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
@@ -49,27 +49,27 @@ export default async function toDashboard(
 	}
 
 	const publishButton = giveaway.publishedMessageId
-		? giveawayComponents.dashboard.row1.publishingOptionsButton()
-		: giveawayComponents.dashboard.row1.publishGiveawayButton();
+		? components.buttons.publishingOptions()
+		: components.buttons.publishGiveaway();
 
 	const lockEntriesButton = giveaway.entriesLocked
-		? giveawayComponents.dashboard.row1.unlockEntriesButton()
-		: giveawayComponents.dashboard.row1.lockEntriesButton();
+		? components.buttons.unlockEntries()
+		: components.buttons.lockEntries();
 
 	const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		publishButton,
 		lockEntriesButton,
-		giveawayComponents.dashboard.row1.setEndDateButton().setDisabled(true),
-		giveawayComponents.dashboard.row1.setRequiredRolesButton(),
-		giveawayComponents.dashboard.row1.setPingRolesButton()
+		components.buttons.setEndDate().setDisabled(true),
+		components.buttons.setRequiredRoles(),
+		components.buttons.setPingRoles()
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		giveawayComponents.dashboard.row2.editButton(),
-		giveawayComponents.dashboard.row2.managePrizesButton(),
-		giveawayComponents.dashboard.row2.endGiveawayButton(),
-		giveawayComponents.dashboard.row2.resetDataButton(),
-		giveawayComponents.dashboard.row2.deleteGiveawayButton()
+		components.buttons.editGiveaway(),
+		components.buttons.managePrizes(),
+		components.buttons.endGiveaway(),
+		components.buttons.resetData(),
+		components.buttons.deleteGiveaway()
 	);
 
 	const msg = await interaction.editReply({

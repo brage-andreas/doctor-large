@@ -8,7 +8,7 @@ import {
 	type ButtonInteraction,
 	type ModalSubmitInteraction
 } from "discord.js";
-import { giveawayComponents } from "../../../../components/index.js";
+import components from "../../../../components/index.js";
 import { COLORS, EMOJIS, REGEXP } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
 import s from "../../../../helpers/s.js";
@@ -63,9 +63,9 @@ export default async function toManagePrizes(
 		.setLabel("Clear prizes")
 		.setDisabled(!sortedPrizeButtons.length);
 
-	const backButton = giveawayComponents.dashboard.backButton();
+	const backButton = components.buttons.back();
 
-	const components = [
+	const rows = [
 		...sortedPrizeButtons,
 		[backButton, createButton, clearButton]
 	].map((buttonArray) =>
@@ -111,7 +111,7 @@ export default async function toManagePrizes(
 	);
 
 	const msg = await interaction.editReply({
-		components,
+		components: rows,
 		content: null,
 		embeds: [embed]
 	});

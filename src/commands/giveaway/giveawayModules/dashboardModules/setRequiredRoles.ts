@@ -5,7 +5,7 @@ import {
 	type ButtonBuilder,
 	type ButtonInteraction
 } from "discord.js";
-import { giveawayComponents } from "../../../../components/index.js";
+import components from "../../../../components/index.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
 import { listify } from "../../../../helpers/listify.js";
 import Logger from "../../../../logger/logger.js";
@@ -42,8 +42,8 @@ export default async function toSetRequiredRoles(
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		giveawayComponents.dashboard.backButton(),
-		giveawayComponents.dashboard.clearRequiredRolesButton()
+		components.buttons.back(),
+		components.buttons.clearRequiredRoles()
 	);
 
 	const updateMsg = await interaction.editReply({

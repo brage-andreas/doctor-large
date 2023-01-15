@@ -6,7 +6,7 @@ import {
 	type ButtonInteraction,
 	type ModalSubmitInteraction
 } from "discord.js";
-import { giveawayComponents } from "../../../../../components/index.js";
+import components from "../../../../../components/index.js";
 import { EMOJIS } from "../../../../../constants.js";
 import type GiveawayManager from "../../../../../database/giveaway.js";
 import Logger from "../../../../../logger/logger.js";
@@ -41,7 +41,7 @@ export default async function toPrizeDashboard(
 		.setLabel("Delete");
 
 	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		giveawayComponents.dashboard.backButton(),
+		components.buttons.back(),
 		editButton,
 		deleteButton
 	);

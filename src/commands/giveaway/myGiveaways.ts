@@ -7,7 +7,7 @@ import {
 	type ButtonBuilder,
 	type RESTPostAPIApplicationCommandsJSONBody
 } from "discord.js";
-import { myGiveawayComponents } from "../../components/index.js";
+import components from "../../components/index.js";
 import { EMOJIS } from "../../constants.js";
 import GiveawayManager from "../../database/giveaway.js";
 import s from "../../helpers/s.js";
@@ -156,19 +156,19 @@ const run = async (interaction: CommandModuleInteractions) => {
 	});
 
 	const acceptAllButton = notAcceptedPrizes.length
-		? myGiveawayComponents.acceptAllPrizesButton()
+		? components.buttons.acceptAllPrizes()
 		: null;
 
 	const viewAllEnteredButton = entered.length
-		? myGiveawayComponents.viewAllEnteredButton()
+		? components.buttons.viewAllEntered()
 		: null;
 
 	const viewAllPrizesButton = prizes.length
-		? myGiveawayComponents.viewAllPrizesButton()
+		? components.buttons.viewAllPrizes()
 		: null;
 
 	const viewAllHostedButton = hosted.length
-		? myGiveawayComponents.viewAllHostedButton()
+		? components.buttons.viewAllHosted()
 		: null;
 
 	const getButtonArray = () =>
@@ -229,7 +229,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 	});
 
 	collector.on("collect", async (buttonInteraction) => {
-		await buttonInteraction.deferReply({ ephemeral: true });
+		await buttonInteraction.deferUpdate();
 
 		if (buttonInteraction.customId === "acceptAllPrizes") {
 			for (const prize of notAcceptedPrizes) {

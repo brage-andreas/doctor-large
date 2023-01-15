@@ -1,6 +1,6 @@
 import { stripIndents } from "common-tags";
 import { type ButtonInteraction } from "discord.js";
-import { giveawayComponents } from "../../../../components/index.js";
+import components from "../../../../components/index.js";
 import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
 import { ModalCollector } from "../../../../helpers/ModalCollector.js";
@@ -29,7 +29,7 @@ export default async function toEditGiveaway(
 		return;
 	}
 
-	const editGiveawayModal = giveawayComponents.edit.editOptionsModal(
+	const editGiveawayModal = components.modals.editGiveaway(
 		giveaway.id,
 		giveaway.title,
 		giveaway.description,

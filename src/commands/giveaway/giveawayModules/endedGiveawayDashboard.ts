@@ -6,7 +6,7 @@ import {
 	type ButtonBuilder,
 	type Interaction
 } from "discord.js";
-import { giveawayComponents } from "../../../components/index.js";
+import components from "../../../components/index.js";
 import { EMOJIS } from "../../../constants.js";
 import type GiveawayManager from "../../../database/giveaway.js";
 import type Giveaway from "../../../modules/Giveaway.js";
@@ -21,17 +21,17 @@ export default async function toEndedDashboard(
 	giveaway: Giveaway
 ) {
 	const winnerButton = giveaway.winnersArePublished()
-		? giveawayComponents.endedDashboard.republishWinnersButton()
-		: giveawayComponents.endedDashboard.publishWinnersButton();
+		? components.buttons.republishWinners()
+		: components.buttons.publishWinners();
 
 	const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		winnerButton,
-		giveawayComponents.endedDashboard.unpublishWinnersButton()
+		components.buttons.unpublishWinners()
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		giveawayComponents.endedDashboard.reactivateButton(),
-		giveawayComponents.endedDashboard.deleteGiveawayButton()
+		components.buttons.reactivateGiveaway(),
+		components.buttons.deleteGiveaway()
 	);
 
 	const msg = await interaction.editReply({

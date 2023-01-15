@@ -70,14 +70,6 @@ const createOptionsModal = new ModalBuilder()
 		)
 	);
 
-/**
- * ID: openInDashboard
- */
-const openInDashboardButton = new ButtonBuilder()
-	.setCustomId("openInDashboard")
-	.setLabel("Open in dashboard")
-	.setStyle(ButtonStyle.Secondary);
-
 // -----------------------
 //          EDIT
 // -----------------------
@@ -287,14 +279,6 @@ const deleteGiveawayButton = new ButtonBuilder()
 // -----------------------
 
 /**
- * ID: back
- */
-const backButton = new ButtonBuilder()
-	.setCustomId("back")
-	.setLabel("Back")
-	.setStyle(ButtonStyle.Secondary);
-
-/**
  * ID: lastChannel
  */
 const lastChannelButton = new ButtonBuilder()
@@ -366,161 +350,145 @@ const unpublishWinnersButton = new ButtonBuilder()
 
 // -----------------------
 
+const modals = {
+	/**
+	 * ID: createGiveaway
+	 *
+	 * Children: title, description, numberOfWinners
+	 */
+	createGiveaway: () => createOptionsModal,
+
+	/**
+	 * ID: editGiveaway
+	 *
+	 * Children: newTitle, newDescription, newWinnerQuantity
+	 */
+	editGiveaway: (
+		id: number,
+		oldTitle: string,
+		oldDescription: string | null,
+		oldWinnerQuantity: number
+	) => editOptionsModal(id, oldTitle, oldDescription, oldWinnerQuantity)
+} as const;
+
+const buttons = {
+	/**
+	 * ID: publishGiveaway
+	 */
+	publishGiveaway: () => publishGiveawayButton,
+
+	/**
+	 * ID: publishingOptions
+	 */
+	publishingOptions: () => publishingOptionsButton,
+
+	/**
+	 * ID: lockEntries
+	 */
+	lockEntries: () => lockGiveawayEntriesButton,
+
+	/**
+	 * ID: unlockEntries
+	 */
+	unlockEntries: () => unlockGiveawayEntriesButton,
+
+	/**
+	 * ID: setEndDate
+	 */
+	setEndDate: () => setEndDateButton,
+
+	/**
+	 * ID: setRequiredRoles
+	 */
+	setRequiredRoles: () => setRequiredRolesButton,
+
+	/**
+	 * ID: setPingRoles
+	 */
+	setPingRoles: () => setPingRolesButton,
+
+	/**
+	 * ID: editGiveaway
+	 */
+	editGiveaway: () => editGiveawayButton,
+
+	/**
+	 * ID: managePrizes
+	 */
+	managePrizes: () => manageGiveawayPrizesButton,
+
+	/**
+	 * ID: endGiveaway
+	 */
+	endGiveaway: () => endGiveawayButton,
+
+	/**
+	 * ID: resetData
+	 */
+	resetData: () => resetDataButton,
+
+	/**
+	 * ID: deleteGiveaway
+	 */
+	deleteGiveaway: () => deleteGiveawayButton,
+
+	/**
+	 * ID: clearRequiredRoles
+	 */
+	clearRequiredRoles: () => clearRequiredRolesButton,
+
+	/**
+	 * ID: setPingRolesToAtEveryone
+	 */
+	setPingRolesToAtEveryone: () => setPingRolesToAtEveryoneButton,
+
+	/**
+	 * ID: clearPingRoles
+	 */
+	clearPingRoles: () => clearPingRolesButton,
+
+	/**
+	 * ID: lastChannel
+	 */
+	lastChannel: () => lastChannelButton,
+
+	/**
+	 * ID: editCurrent
+	 */
+	editCurrentMessage: () => editCurrentMessageButton,
+
+	/**
+	 * ID: recallCurrent
+	 */
+	recallCurrentMessage: () => recallCurrentMessageButton,
+
+	/**
+	 * ID: enter-giveaway-{id}
+	 */
+	enterGiveaway: (id: number) => enterGiveawayButton(id),
+
+	/**
+	 * ID: reactivate
+	 */
+	reactivateGiveaway: () => reactivateButton,
+
+	/**
+	 * ID: publishWinners
+	 */
+	publishWinners: () => publishWinnersButton,
+
+	/**
+	 * ID: republishWinners
+	 */
+	republishWinners: () => republishWinnersButton,
+
+	/**
+	 * ID: unpublishWinners
+	 */
+	unpublishWinners: () => unpublishWinnersButton
+} as const;
+
 export const giveaway = {
-	create: {
-		/**
-		 * ID: createGiveaway
-		 *
-		 * Children: title, description, numberOfWinners
-		 */
-		optionsModal: () => createOptionsModal,
-
-		/**
-		 * ID: openInDashboard
-		 */
-		dashboardButton: () => openInDashboardButton
-	},
-	edit: {
-		/**
-		 * ID: editGiveaway
-		 *
-		 * Children: newTitle, newDescription, newWinnerQuantity
-		 */
-		editOptionsModal: (
-			id: number,
-			oldTitle: string,
-			oldDescription: string | null,
-			oldWinnerQuantity: number
-		) => editOptionsModal(id, oldTitle, oldDescription, oldWinnerQuantity)
-	},
-	dashboard: {
-		row1: {
-			/**
-			 * ID: publishGiveaway
-			 */
-			publishGiveawayButton: () => publishGiveawayButton,
-
-			/**
-			 * ID: publishingOptions
-			 */
-			publishingOptionsButton: () => publishingOptionsButton,
-
-			/**
-			 * ID: lockEntries
-			 */
-			lockEntriesButton: () => lockGiveawayEntriesButton,
-
-			/**
-			 * ID: unlockEntries
-			 */
-			unlockEntriesButton: () => unlockGiveawayEntriesButton,
-
-			/**
-			 * ID: setEndDate
-			 */
-			setEndDateButton: () => setEndDateButton,
-
-			/**
-			 * ID: setRequiredRoles
-			 */
-			setRequiredRolesButton: () => setRequiredRolesButton,
-
-			/**
-			 * ID: setPingRoles
-			 */
-			setPingRolesButton: () => setPingRolesButton
-		},
-		row2: {
-			/**
-			 * ID: editGiveaway
-			 */
-			editButton: () => editGiveawayButton,
-
-			/**
-			 * ID: managePrizes
-			 */
-			managePrizesButton: () => manageGiveawayPrizesButton,
-
-			/**
-			 * ID: endGiveaway
-			 */
-			endGiveawayButton: () => endGiveawayButton,
-
-			/**
-			 * ID: resetData
-			 */
-			resetDataButton: () => resetDataButton,
-
-			/**
-			 * ID: deleteGiveaway
-			 */
-			deleteGiveawayButton: () => deleteGiveawayButton
-		},
-
-		/**
-		 * ID: clearRequiredRoles
-		 */
-		clearRequiredRolesButton: () => clearRequiredRolesButton,
-
-		/**
-		 * ID: setPingRolesToAtEveryone
-		 */
-		setPingRolesToAtEveryoneButton: () => setPingRolesToAtEveryoneButton,
-
-		/**
-		 * ID: clearPingRoles
-		 */
-		clearPingRolesButton: () => clearPingRolesButton,
-
-		/**
-		 * ID: back
-		 */
-		backButton: () => backButton,
-
-		/**
-		 * ID: lastChannel
-		 */
-		lastChannelButton: () => lastChannelButton,
-
-		/**
-		 * ID: editCurrent
-		 */
-		editCurrentMessageButton: () => editCurrentMessageButton,
-
-		/**
-		 * ID: recallCurrent
-		 */
-		recallCurrentMessageButton: () => recallCurrentMessageButton,
-
-		/**
-		 * ID: enter-giveaway-{id}
-		 */
-		enterGiveawayButton: (id: number) => enterGiveawayButton(id)
-	},
-	endedDashboard: {
-		/**
-		 * ID: reactivate
-		 */
-		reactivateButton: () => reactivateButton,
-
-		/**
-		 * ID: publishWinners
-		 */
-		publishWinnersButton: () => publishWinnersButton,
-
-		/**
-		 * ID: republishWinners
-		 */
-		republishWinnersButton: () => republishWinnersButton,
-
-		/**
-		 * ID: unpublishWinners
-		 */
-		unpublishWinnersButton: () => unpublishWinnersButton,
-
-		/**
-		 * ID: deleteGiveaway
-		 */
-		deleteGiveawayButton: () => deleteGiveawayButton
-	}
+	buttons,
+	modals
 };

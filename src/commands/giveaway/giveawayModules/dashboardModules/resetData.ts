@@ -6,7 +6,7 @@ import {
 	ComponentType,
 	type ButtonInteraction
 } from "discord.js";
-import { giveawayComponents } from "../../../../components/index.js";
+import components from "../../../../components/index.js";
 import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
 import yesNo from "../../../../helpers/yesNo.js";
@@ -55,7 +55,7 @@ export default async function toResetData(
 		.setStyle(ButtonStyle.Success);
 
 	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		giveawayComponents.dashboard.backButton(),
+		components.buttons.back(),
 		resetLevel4Button,
 		resetLevel3Button,
 		resetLevel2Button,

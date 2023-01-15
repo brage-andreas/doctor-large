@@ -38,24 +38,28 @@ const viewAllHostedButton = new ButtonBuilder()
 
 // -----------------------
 
-export const myGiveaway = {
+const buttons = {
 	/**
 	 * ID: acceptAllPrizes
 	 */
-	acceptAllPrizesButton: () => acceptAllPrizesButton,
+	acceptAllPrizes: () => acceptAllPrizesButton,
 
 	/**
 	 * ID: viewAllEntered
 	 */
-	viewAllEnteredButton: () => viewAllEnteredButton,
+	viewAllEntered: () => viewAllEnteredButton,
 
 	/**
 	 * ID: viewAllPrizes
 	 */
-	viewAllPrizesButton: () => viewAllPrizesButton,
+	viewAllPrizes: () => viewAllPrizesButton,
 
 	/**
 	 * ID: viewAllHosted
 	 */
-	viewAllHostedButton: () => viewAllHostedButton
+	viewAllHosted: () => viewAllHostedButton
+};
+
+export const myGiveaway = {
+	buttons
 };
