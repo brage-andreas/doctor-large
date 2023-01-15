@@ -43,6 +43,10 @@ export default class Prize {
 		}, new Map<string, WinnerData>());
 	}
 
+	public clone() {
+		return new Prize(this.data, this.guild);
+	}
+
 	public toShortString() {
 		return oneLine`
 			${this.data.quantity}x ${this.data.name}
