@@ -12,8 +12,6 @@ import { timestamp } from "../../../../helpers/timestamps.js";
 import yesNo from "../../../../helpers/yesNo.js";
 import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
-import { publishWinners } from "../endModules/publishWinners.js";
-import { rollAndSign } from "../endModules/rollWinners/rollAndSign.js";
 
 export default async function toEndGiveaway(
 	interaction: ButtonInteraction<"cached">,
@@ -56,13 +54,21 @@ export default async function toEndGiveaway(
 		return toDashboard(interaction, id);
 	}
 
+	if (!giveaway.channelId) {
+		await interaction
+			.followUp({
+				ephemeral: true,
+				content: `${EMOJIS.WARN} The giveaway has never been published.`
+			})
+			.catch(() => null);
+
+		return toDashboard(interaction, id);
+	}
+
 	let content = stripIndent`
 		Are you sure you want to end giveaway #${giveaway.guildRelativeId}?
 		
-		This will:
-		  1. Lock the giveaway.
-		  2. Deactivate the giveaway.
-		  3. Roll winners.
+		This will lock the entries and deactivate the giveaway.
 	`;
 
 	if (giveaway.endTimestamp) {
@@ -107,15 +113,6 @@ export default async function toEndGiveaway(
 		return toDashboard(interaction, id);
 	}
 
-	if (!giveaway.channelId) {
-		await interaction.followUp({
-			ephemeral: true,
-			content: `${EMOJIS.WARN} The giveaway has never been published.`
-		});
-
-		return toDashboard(interaction, id);
-	}
-
 	await giveaway.publishedMessage?.edit({
 		components: [
 			new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -145,37 +142,6 @@ export default async function toEndGiveaway(
 		color: "red",
 		interaction
 	}).log(`Ended giveaway #${id}`);
-
-	await rollAndSign({ giveawayId: giveaway.id, guild: interaction.guild });
-
-	const winnerCount = giveaway.winnersUserIds().size;
-
-	const publishWinnersNow = await yesNo({
-		filter: (i) => i.user.id === interaction.user.id,
-		yesStyle: ButtonStyle.Secondary,
-		noStyle: ButtonStyle.Secondary,
-		medium: interaction,
-		timeActive: 60_000,
-		data: {
-			components: [],
-			embeds: [],
-			content: stripIndent`
-				Done! Giveaway #${giveaway.guildRelativeId} has ended.
-				
-				  1. ${EMOJIS.LOCK} Entries are locked.
-				  2. ${EMOJIS.INACTIVE} Giveaway is not active.
-				  3. ${winnerCount}/${giveaway.winnerQuantity} winners have been rolled.
-
-				Do you want to publish the winners right away?
-			`
-		}
-	});
-
-	if (publishWinnersNow) {
-		await publishWinners(interaction, id);
-
-		return;
-	}
 
 	await toDashboard(interaction, id);
 }
