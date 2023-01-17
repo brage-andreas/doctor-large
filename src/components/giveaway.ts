@@ -348,6 +348,30 @@ const unpublishWinnersButton = new ButtonBuilder()
 	.setLabel("Unpublish winners")
 	.setStyle(ButtonStyle.Secondary);
 
+/**
+ * ID: showAllWinners
+ */
+const showAllWinnersButton = new ButtonBuilder()
+	.setCustomId("showAllWinners")
+	.setLabel("Show all winners")
+	.setStyle(ButtonStyle.Primary);
+
+/**
+ * ID: rerollWinners
+ */
+const rerollWinnersButton = new ButtonBuilder()
+	.setCustomId("rerollWinners")
+	.setLabel("Reroll unclaimed")
+	.setStyle(ButtonStyle.Success);
+
+/**
+ * ID: rerollAllWinners
+ */
+const rerollAllWinnersButton = new ButtonBuilder()
+	.setCustomId("rerollAllWinners")
+	.setLabel("Reroll all")
+	.setStyle(ButtonStyle.Danger);
+
 // -----------------------
 
 const modals = {
@@ -485,7 +509,22 @@ const buttons = {
 	/**
 	 * ID: unpublishWinners
 	 */
-	unpublishWinners: () => unpublishWinnersButton
+	unpublishWinners: () => unpublishWinnersButton,
+
+	/**
+	 * ID: showAllWinners
+	 */
+	showAllWinners: () => showAllWinnersButton,
+
+	/**
+	 * ID: rerollWinners
+	 */
+	rerollWinners: () => rerollWinnersButton,
+
+	/**
+	 * ID: rerollAllWinners
+	 */
+	rerollAllWinners: () => rerollAllWinnersButton
 } as const;
 
 export const giveaway = {
