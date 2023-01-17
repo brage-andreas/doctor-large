@@ -1,4 +1,4 @@
-import { stripIndents } from "common-tags";
+import { oneLine, stripIndent, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
@@ -13,7 +13,7 @@ import yesNo from "../../../../helpers/yesNo.js";
 import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
 import { publishWinners } from "../endModules/publishWinners.js";
-import { signWinners } from "../endModules/rollWinners/signWinners.js";
+import { rollAndSign } from "../endModules/rollWinners/rollAndSign.js";
 
 export default async function toEndGiveaway(
 	interaction: ButtonInteraction<"cached">,
@@ -56,30 +56,31 @@ export default async function toEndGiveaway(
 		return toDashboard(interaction, id);
 	}
 
-	let content = stripIndents`
+	let content = stripIndent`
 		Are you sure you want to end giveaway #${giveaway.guildRelativeId}?
+		
+		This will:
+		  1. Lock the giveaway.
+		  2. Deactivate the giveaway.
+		  3. Roll winners.
 	`;
 
 	if (giveaway.endTimestamp) {
 		const inFuture = Number(giveaway.endTimestamp) < Date.now();
 
-		content += `The giveaway ${
-			inFuture ? "is" : "was"
-		} set to end ${timestamp(giveaway.endTimestamp, "R")}.`;
+		content += oneLine`
+			The giveaway ${inFuture ? "is" : "was"} set to
+			end ${timestamp(giveaway.endTimestamp, "R")}.
+		`;
 	}
 
 	if (prizesN < winnersN) {
-		content += `\n\n${
-			EMOJIS.WARN
-		} There are not enough prizes for **${winnersN}** ${s(
-			"winner",
-			winnersN
-		)}!`;
-
-		content += ` There will be **${prizesN}** ${s(
-			"winner",
-			prizesN
-		)} instead.`;
+		content += "\n\n";
+		content += oneLine`
+			${EMOJIS.WARN} There are not enough prizes for
+			**${winnersN}** ${s("winner", winnersN)}!
+			There will be **${prizesN}** ${s("winner", prizesN)} instead.
+		`;
 	}
 
 	const confirmation = await yesNo({
@@ -145,7 +146,7 @@ export default async function toEndGiveaway(
 		interaction
 	}).log(`Ended giveaway #${id}`);
 
-	await signWinners({ giveawayId: giveaway.id, guild: interaction.guild });
+	await rollAndSign({ giveawayId: giveaway.id, guild: interaction.guild });
 
 	const winnerCount = giveaway.winnersUserIds().size;
 
@@ -158,11 +159,12 @@ export default async function toEndGiveaway(
 		data: {
 			components: [],
 			embeds: [],
-			content: stripIndents`
+			content: stripIndent`
 				Done! Giveaway #${giveaway.guildRelativeId} has ended.
-				1. ${EMOJIS.LOCK} Entries are locked.
-				2. ${EMOJIS.INACTIVE} Giveaway is not active.
-				3. ${winnerCount}/${giveaway.winnerQuantity} winners have been rolled.
+				
+				  1. ${EMOJIS.LOCK} Entries are locked.
+				  2. ${EMOJIS.INACTIVE} Giveaway is not active.
+				  3. ${winnerCount}/${giveaway.winnerQuantity} winners have been rolled.
 
 				Do you want to publish the winners right away?
 			`
