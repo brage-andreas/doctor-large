@@ -249,7 +249,7 @@ const editGiveawayButton = new ButtonBuilder()
  */
 const manageGiveawayPrizesButton = new ButtonBuilder()
 	.setCustomId("managePrizes")
-	.setStyle(ButtonStyle.Primary)
+	.setStyle(ButtonStyle.Success)
 	.setLabel("Manage prizes");
 
 /**
@@ -265,7 +265,7 @@ const endGiveawayButton = new ButtonBuilder()
  */
 const resetDataButton = new ButtonBuilder()
 	.setCustomId("resetData")
-	.setStyle(ButtonStyle.Danger)
+	.setStyle(ButtonStyle.Primary)
 	.setLabel("Reset data");
 
 /**
