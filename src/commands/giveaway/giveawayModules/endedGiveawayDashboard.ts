@@ -1,6 +1,8 @@
+import { WinnerData } from "@prisma/client";
 import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
+	AttachmentBuilder,
 	ComponentType,
 	type AutocompleteInteraction,
 	type ButtonBuilder,
@@ -13,20 +15,23 @@ import type Giveaway from "../../../modules/Giveaway.js";
 import toDashboard from "./dashboard.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import { publishWinners } from "./endModules/publishWinners.js";
-import { signWinners } from "./endModules/rollWinners/signWinners.js";
+import { rollAndSign } from "./endModules/rollWinners/rollAndSign.js";
 
 export default async function toEndedDashboard(
 	interaction: Exclude<Interaction<"cached">, AutocompleteInteraction>,
 	giveawayManager: GiveawayManager,
 	giveaway: Giveaway
 ) {
-	const winnerButton = giveaway.winnersArePublished()
+	const publishOrUnpublishButton = giveaway.winnersArePublished()
 		? components.buttons.republishWinners()
 		: components.buttons.publishWinners();
 
 	const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		winnerButton,
-		components.buttons.unpublishWinners()
+		publishOrUnpublishButton,
+		components.buttons.unpublishWinners(),
+		components.buttons.showAllWinners(),
+		components.buttons.rerollWinners(),
+		components.buttons.rerollAllWinners()
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -55,10 +60,10 @@ export default async function toEndedDashboard(
 	});
 
 	collector.on("collect", async (buttonInteraction) => {
+		await buttonInteraction.deferUpdate();
+
 		switch (buttonInteraction.customId) {
 			case "reactivate": {
-				await buttonInteraction.deferUpdate();
-
 				await giveaway.edit(
 					{
 						active: true
@@ -76,24 +81,18 @@ export default async function toEndedDashboard(
 			}
 
 			case "publishWinners": {
-				await buttonInteraction.deferUpdate();
-
 				publishWinners(buttonInteraction, giveaway.id);
 
 				break;
 			}
 
 			case "republishWinners": {
-				await buttonInteraction.deferUpdate();
-
 				publishWinners(buttonInteraction, giveaway.id);
 
 				break;
 			}
 
 			case "unpublishWinners": {
-				await buttonInteraction.deferUpdate();
-
 				const channel = giveaway.channel;
 
 				if (!channel) {
@@ -135,12 +134,64 @@ export default async function toEndedDashboard(
 				break;
 			}
 
-			case "rerollWinners": {
-				await buttonInteraction.deferUpdate();
+			case "deleteGiveaway": {
+				await toDeleteGiveaway(
+					buttonInteraction,
+					giveaway.id,
+					giveawayManager
+				);
 
-				await signWinners({
-					guild: interaction.guild,
-					giveawayId: giveaway.id
+				break;
+			}
+
+			case "showAllWinners": {
+				const prizesSortedByWinners = giveaway.prizes.reduce(
+					(map, prize) => {
+						prize.winners.forEach((winnerData) => {
+							const previousPrizes = map.get(winnerData.userId);
+
+							map.set(
+								winnerData.userId,
+								previousPrizes?.length
+									? [...previousPrizes, winnerData]
+									: [winnerData]
+							);
+						});
+
+						return map;
+					},
+					new Map<string, Array<WinnerData>>()
+				);
+
+				const data = Buffer.from();
+				const attachment = new AttachmentBuilder().setName(
+					`Giveaway #${giveaway.guildRelativeId} winners`
+				);
+
+				break;
+			}
+
+			case "rerollWinners": {
+				const prizes = await giveawayManager.getPrizes({
+					giveawayId: giveaway.id,
+					winnerAccepted: false
+				});
+
+				const entries = [...giveaway.entriesUserIds];
+				const winnerQuantity = giveaway.winnerQuantity;
+				const prizesQuantity = prizes.reduce(
+					(acc, prize) => acc + prize.quantity,
+					0
+				);
+
+				await rollAndSign({
+					giveawayManager,
+					giveawayId: giveaway.id,
+					entries,
+					prizes,
+					prizesQuantity,
+					winnerQuantity,
+					onlyUnclaimed: true
 				});
 
 				toEndedDashboard(interaction, giveawayManager, giveaway);
@@ -148,14 +199,21 @@ export default async function toEndedDashboard(
 				break;
 			}
 
-			case "deleteGiveaway": {
-				await buttonInteraction.deferUpdate();
+			case "rerollAllWinners": {
+				const entries = [...giveaway.entriesUserIds];
+				const prizesQuantity = giveaway.prizesQuantity();
+				const { winnerQuantity, prizes } = giveaway;
 
-				await toDeleteGiveaway(
-					buttonInteraction,
-					giveaway.id,
-					giveawayManager
-				);
+				await rollAndSign({
+					giveawayManager,
+					giveawayId: giveaway.id,
+					entries,
+					prizes,
+					prizesQuantity,
+					winnerQuantity
+				});
+
+				toEndedDashboard(interaction, giveawayManager, giveaway);
 
 				break;
 			}
