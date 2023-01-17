@@ -7,6 +7,7 @@ import {
 	type Guild,
 	type GuildMember,
 	type GuildTextBasedChannel,
+	type MessageCreateOptions,
 	type MessageEditOptions,
 	type Role
 } from "discord.js";
@@ -516,10 +517,9 @@ export default class Giveaway {
 			: null;
 
 		const winnersStr = this.winnersUserIds().size
-			? oneLine`
-				→ Winners (${this.winnersUserIds().size}/${this.winnerQuantity}):
-				${[...this.winnersUserIds()].map((id) => `<@${id}> (${id})`).join(", ")}
-			`
+			? `→ Winners: **${this.winnersUserIds().size}**/${
+					this.winnerQuantity
+			  }`
 			: "→ No winners";
 
 		const publishedOutdated = this.publishedMessageIsOutdated
@@ -638,7 +638,7 @@ export default class Giveaway {
 			);
 	}
 
-	public endedEmbed() {
+	public endedEmbed(): Partial<MessageCreateOptions> {
 		const winners = this.winnersUserIds();
 
 		const data = this.prizes
@@ -659,16 +659,14 @@ export default class Giveaway {
 				text: `Giveaway #${this.guildRelativeId} • Hosted by ${this.hostUserTag}`
 			});
 
+		// TODO: mention the command
+
 		if (winners.size) {
 			embed.setDescription(stripIndents`
-					The winners are: ${listify(
-						[...winners].map((userId) => `<@${userId}>`),
-						{ length: winners.size }
-					)}
+					${EMOJIS.STAR_EYES} The winners have been notified in DM's.
+					If you have DM's turned off, check the /my-giveaways command.
 		
-					${data}
-		
-					Congratulations!
+					Congratulations, everyone! ${EMOJIS.TADA}
 				`);
 		} else {
 			embed.setDescription(stripIndents`
@@ -678,7 +676,11 @@ export default class Giveaway {
 				`);
 		}
 
-		return embed;
+		return {
+			embeds: [embed],
+			content: this.pingRolesMentions?.join(" "),
+			allowedMentions: { parse: ["everyone", "roles"] }
+		};
 	}
 
 	public async edit(

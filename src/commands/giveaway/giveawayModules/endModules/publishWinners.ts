@@ -82,23 +82,14 @@ export async function publishWinners(
 	if (giveawayMessage) {
 		message = await giveawayMessage
 			.reply({
-				allowedMentions: { users: [...giveaway.winnersUserIds()] },
-				failIfNotExists: false,
-				content: [...giveaway.winnersUserIds()]
-					.map((id) => `<@${id}>`)
-					.join(" "),
-				embeds: [giveaway.endedEmbed()],
+				...giveaway.endedEmbed(),
 				components: [row]
 			})
 			.catch(() => null);
 	} else {
 		message = await channel
 			.send({
-				allowedMentions: { users: [...giveaway.winnersUserIds()] },
-				content: [...giveaway.winnersUserIds()]
-					.map((id) => `<@${id}>`)
-					.join(" "),
-				embeds: [giveaway.endedEmbed()],
+				...giveaway.endedEmbed(),
 				components: [row]
 			})
 			.catch(() => null);
