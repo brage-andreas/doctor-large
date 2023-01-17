@@ -10,6 +10,7 @@ import {
 import { EMOJIS } from "../../../../constants.js";
 import GiveawayManager from "../../../../database/giveaway.js";
 import Logger from "../../../../logger/logger.js";
+import toEndedDashboard from "../endedGiveawayDashboard.js";
 
 export async function publishWinners(
 	interaction: RepliableInteraction<"cached">,
@@ -142,15 +143,16 @@ export async function publishWinners(
 		}
 	);
 
-	await interaction.editReply({
+	await interaction.followUp({
+		ephemeral: true,
 		content: stripIndents`
 			${EMOJIS.SPARKS} Done! Published the winners of giveaway #${giveaway.guildRelativeId} in ${channel}!
 
 			Fine. If you don't believe me, [here is a link to it](<${message.url}>).
-		`,
-		components: [],
-		embeds: []
+		`
 	});
+
+	toEndedDashboard(interaction, giveawayManager, giveaway);
 }
 
 export async function republishWinners(
@@ -242,14 +244,13 @@ export async function republishWinners(
 		}
 	);
 
-	await interaction.editReply({
+	await interaction.followUp({
+		ephemeral: true,
 		content: stripIndents`
 			${EMOJIS.SPARKS} Done! Republished the winners of giveaway #${giveaway.guildRelativeId} in ${channel}!
 
 			Oh, I almost forgot! [Here is a link to it](<${currentMessage.url}>).
-		`,
-		components: [],
-		embeds: []
+		`
 	});
 
 	new Logger({
@@ -257,4 +258,6 @@ export async function republishWinners(
 	}).log(
 		`Republished winners of giveaway #${giveaway.id} in #${channel.name} (${channel.id})`
 	);
+
+	toEndedDashboard(interaction, giveawayManager, giveaway);
 }
