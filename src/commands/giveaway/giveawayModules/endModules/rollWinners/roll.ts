@@ -1,34 +1,43 @@
-import type Giveaway from "../../../../../modules/Giveaway.js";
 import type Prize from "../../../../../modules/Prize.js";
 
-export default function roll(entries: Array<string>, giveaway: Giveaway) {
+export default function roll(options: {
+	entries: Array<string>;
+	prizes: Array<Prize>;
+	prizesQuantity: number;
+	winnerQuantity: number;
+	onlyUnclaimed?: boolean;
+}) {
+	const { entries, prizes, prizesQuantity, winnerQuantity } = options;
+
+	if (!entries.length || !prizesQuantity || !winnerQuantity) {
+		return null;
+	}
+
 	const alwaysFullBucket = new Set(entries);
 	const oneTimeBucket = new Set(entries);
 
-	const prizesQuantity = giveaway.prizesQuantity();
-	const winnerQuantity = giveaway.winnerQuantity;
+	const prizesWithOneWinner = prizes.flatMap((prize) => {
+		let length = prize.quantity;
 
-	const prizesWithOneWinner = giveaway.prizes.reduce((prizeArray, prize) => {
-		const arrayOfCurrentPrizes: Array<Prize> = Array.from(
-			{ length: prize.quantity },
-			() => {
-				const clone = prize.clone();
+		if (options.onlyUnclaimed) {
+			length =
+				prize.quantity -
+				[...prize.winners.values()].reduce(
+					(acc, winner) =>
+						winner.accepted ? acc : acc + winner.quantityWon,
+					0
+				);
+		}
 
-				clone.data.quantity = 1;
-				clone.quantity = 1;
+		return Array.from({ length }, () => {
+			const clone = prize.clone();
 
-				return clone;
-			}
-		);
+			clone.data.quantity = 1;
+			clone.quantity = 1;
 
-		prizeArray.push(...arrayOfCurrentPrizes);
-
-		return prizeArray;
-	}, [] as Array<Prize>);
-
-	if (!oneTimeBucket.size || !prizesQuantity || !winnerQuantity) {
-		return null;
-	}
+			return clone;
+		});
+	});
 
 	const randomFromSet = (set: Set<string>) =>
 		[...set].at(Math.floor(Math.random() * set.size));
@@ -61,6 +70,8 @@ export default function roll(entries: Array<string>, giveaway: Giveaway) {
 		}
 
 		// if there are enough winners but the prizes aren't filled
+		// if say there are 1 winner but 10 prizes
+		// used so you reuse the same winners for the prizes remaining
 		const winnersFilledButNotPrizes = delegatedPrizes === winnerQuantity;
 
 		const randomWinner = winnersFilledButNotPrizes
@@ -77,12 +88,10 @@ export default function roll(entries: Array<string>, giveaway: Giveaway) {
 		const previous = oldEntry.find((e) => e.userId === randomWinner);
 		const newArray = oldEntry.filter((e) => e.userId !== randomWinner);
 
-		const newObject = {
+		newArray.push({
 			userId: randomWinner,
 			quantityWon: (previous?.quantityWon ?? 0) + 1
-		};
-
-		newArray.push(newObject);
+		});
 
 		winnerMap.set(currentPrize.id, newArray);
 
