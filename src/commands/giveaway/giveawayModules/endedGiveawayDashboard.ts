@@ -210,9 +210,11 @@ export default async function toEndedDashboard(
 								const name =
 									prize?.name ?? `Unknown prize (${prizeId})`;
 
-								const n = prize?.quantity
-									? `${quantityWon}/${prize.quantity}`
-									: quantityWon;
+								const n =
+									prize?.quantity &&
+									prize.quantity !== quantityWon
+										? `${quantityWon}/${prize.quantity}`
+										: quantityWon;
 
 								const time = createdAt.toLocaleString("en-GB", {
 									dateStyle: "medium",
@@ -222,7 +224,7 @@ export default async function toEndedDashboard(
 
 								return `→ ${n} ${name} - ${claimed}, won at ${time}`;
 							})
-							.join("\n  →");
+							.join("\n");
 
 						return source`
 							${userTag} (${userId})
