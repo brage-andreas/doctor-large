@@ -12,28 +12,37 @@ export async function rollAndSign(options: {
 	winnerQuantity: number;
 	onlyUnclaimed?: boolean;
 }) {
-	const { giveawayManager, entries, prizes, prizesQuantity, winnerQuantity } =
-		options;
+	const {
+		giveawayManager,
+		entries,
+		prizes,
+		prizesQuantity,
+		winnerQuantity,
+		onlyUnclaimed
+	} = options;
 
 	const dataMap = roll({
 		entries,
 		prizes,
 		prizesQuantity,
-		winnerQuantity
+		winnerQuantity,
+		onlyUnclaimed
 	});
+
+	await giveawayManager.deleteWinners({ keep: WIP });
 
 	if (!dataMap?.size) {
 		return;
 	}
 
-	for (const [giveawayId, data] of dataMap.entries()) {
+	for (const [prizeId, data] of dataMap.entries()) {
 		for (const { userId, quantityWon } of data) {
 			await giveawayManager.upsertWinner({
 				quantityWon,
 				userId,
 				prize: {
 					connect: {
-						id: giveawayId
+						id: prizeId
 					}
 				}
 			});
