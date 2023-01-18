@@ -19,7 +19,7 @@ model AutoroleData {
 model WinnerData {
   accepted    Boolean   @default(false)
   createdAt   DateTime  @default(now()) @map("created_at")
-  prize       PrizeData @relation(fields: [prizeId], references: [id])
+  prize       PrizeData @relation(fields: [prizeId], references: [id], onDelete: NoAction)
   prizeId     Int       @map("prize_id")
   quantityWon Int       @map("quantity_won")
   userId      String    @map("user_id")
@@ -31,7 +31,7 @@ model WinnerData {
 model PrizeData {
   additionalInfo String?      @map("additional_info")
   createdAt      DateTime     @default(now()) @map("created_at")
-  giveaway       GiveawayData @relation(fields: [giveawayId], references: [id])
+  giveaway       GiveawayData @relation(fields: [giveawayId], references: [id], onDelete: NoAction)
   giveawayId     Int          @map("giveaway_id")
   id             Int          @id @default(autoincrement())
   name           String
