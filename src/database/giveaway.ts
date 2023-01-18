@@ -311,9 +311,9 @@ export default class GiveawayManager {
 			ids = prizeIds.prizes.map((prize) => prize.id);
 		}
 
-		return await this.prisma.prizeData.deleteMany({
+		return await this.prisma.winnerData.deleteMany({
 			where: {
-				id: {
+				prizeId: {
 					in: ids
 				}
 			}
