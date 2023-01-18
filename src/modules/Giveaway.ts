@@ -641,15 +641,6 @@ export default class Giveaway {
 	public endedEmbed(): Partial<MessageCreateOptions> {
 		const winners = this.winnersUserIds();
 
-		const data = this.prizes
-			.flatMap((prize) =>
-				[...prize.winners.values()].map(
-					(winner) =>
-						`→ <@${winner.userId}> won **${winner.quantityWon}x ${prize.name}**`
-				)
-			)
-			.join("\n");
-
 		const embed = new EmbedBuilder()
 			.setColor(COLORS.GREEN)
 			.setTitle(
