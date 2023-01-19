@@ -2,12 +2,13 @@ import type Prize from "../../../../../modules/Prize.js";
 
 export default function roll(options: {
 	entries: Array<string>;
+	ignoreAccepted: boolean;
 	prizes: Array<Prize>;
 	prizesQuantity: number;
 	winnerQuantity: number;
-	onlyUnclaimed?: boolean;
 }) {
-	const { entries, prizes, prizesQuantity, winnerQuantity } = options;
+	const { ignoreAccepted, winnerQuantity, prizesQuantity, prizes, entries } =
+		options;
 
 	if (!entries.length || !prizesQuantity || !winnerQuantity) {
 		return null;
@@ -19,14 +20,15 @@ export default function roll(options: {
 	const prizesWithOneWinner = prizes.flatMap((prize) => {
 		let length = prize.quantity;
 
-		if (options.onlyUnclaimed) {
-			length =
-				prize.quantity -
-				[...prize.winners.values()].reduce(
-					(acc, winner) =>
-						winner.accepted ? acc : acc + winner.quantityWon,
-					0
-				);
+		if (ignoreAccepted) {
+			const winnerArray = [...prize.winners.values()];
+			const toOmit = winnerArray.reduce(
+				(n, { accepted, quantityWon }) =>
+					accepted ? n + quantityWon : n,
+				0
+			);
+
+			length = prize.quantity - toOmit;
 		}
 
 		return Array.from({ length }, () => {
@@ -39,17 +41,18 @@ export default function roll(options: {
 		});
 	});
 
-	const randomFromSet = (set: Set<string>) =>
-		[...set].at(Math.floor(Math.random() * set.size));
+	const random = (setOrArray: Array<string> | Set<string>) => {
+		const array = "size" in setOrArray ? [...setOrArray] : setOrArray;
 
-	const getWinner = () => {
+		return array.at(Math.floor(Math.random() * array.length))!;
+	};
+
+	const getRandomUserId = () => {
 		if (!oneTimeBucket.size) {
-			const userId = randomFromSet(alwaysFullBucket)!;
-
-			return userId;
+			return random(alwaysFullBucket);
 		}
 
-		const userId = randomFromSet(oneTimeBucket)!;
+		const userId = random(oneTimeBucket);
 		oneTimeBucket.delete(userId);
 
 		return userId;
@@ -62,10 +65,10 @@ export default function roll(options: {
 		Array<{ userId: string; quantityWon: number }>
 	> = new Map();
 
-	for (let i = 0; i < prizesQuantity; i++) {
+	for (let i = 0; i < prizesWithOneWinner.length; i++) {
 		const currentPrize = prizesWithOneWinner.at(i);
 
-		if (currentPrize === undefined) {
+		if (!currentPrize) {
 			continue;
 		}
 
@@ -74,26 +77,32 @@ export default function roll(options: {
 		// used so you reuse the same winners for the prizes remaining
 		const winnersFilledButNotPrizes = delegatedPrizes === winnerQuantity;
 
-		const randomWinner = winnersFilledButNotPrizes
-			? winners[Math.floor(Math.random() * winners.length)]
-			: getWinner();
+		const randomWinnerUserId = winnersFilledButNotPrizes
+			? random(winners)
+			: getRandomUserId();
 
 		if (!winnersFilledButNotPrizes) {
-			winners.push(randomWinner);
+			winners.push(randomWinnerUserId);
 		} else {
 			delegatedPrizes--;
 		}
 
-		const oldEntry = winnerMap.get(currentPrize.id) ?? [];
-		const previous = oldEntry.find((e) => e.userId === randomWinner);
-		const newArray = oldEntry.filter((e) => e.userId !== randomWinner);
+		const currentEntry = winnerMap.get(currentPrize.id) ?? [];
 
-		newArray.push({
-			userId: randomWinner,
-			quantityWon: (previous?.quantityWon ?? 0) + 1
+		const ifAlreadyWonThisPrize = currentEntry.find(
+			(e) => e.userId === randomWinnerUserId
+		);
+
+		const winnersOfThisPrize = currentEntry.filter(
+			(e) => e.userId !== randomWinnerUserId
+		);
+
+		winnersOfThisPrize.push({
+			userId: randomWinnerUserId,
+			quantityWon: (ifAlreadyWonThisPrize?.quantityWon ?? 0) + 1
 		});
 
-		winnerMap.set(currentPrize.id, newArray);
+		winnerMap.set(currentPrize.id, winnersOfThisPrize);
 
 		delegatedPrizes++;
 	}

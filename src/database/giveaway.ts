@@ -301,9 +301,26 @@ export default class GiveawayManager {
 	}
 
 	public async deleteWinners(
-		prizeIds: Array<number> | Giveaway | GiveawayDataWithIncludes
+		prizeIds:
+			| Array<number>
+			| Giveaway
+			| GiveawayDataWithIncludes
+			| { keep: Array<string>; prizeId: number }
 	) {
 		let ids: Array<number>;
+
+		if ("keep" in prizeIds) {
+			const { prizeId, keep } = prizeIds;
+
+			return await this.prisma.winnerData.deleteMany({
+				where: {
+					prizeId,
+					userId: {
+						notIn: keep
+					}
+				}
+			});
+		}
 
 		if ("length" in prizeIds) {
 			ids = prizeIds;

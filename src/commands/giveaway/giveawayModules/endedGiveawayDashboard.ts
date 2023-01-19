@@ -260,13 +260,13 @@ export default async function toEndedDashboard(
 				);
 
 				await rollAndSign({
-					giveawayManager,
-					giveawayId: giveaway.id,
 					entries,
+					giveaway,
+					ignoreAccepted: true,
+					ignoreRequirements: false,
 					prizes,
 					prizesQuantity,
-					winnerQuantity,
-					onlyUnclaimed: true
+					winnerQuantity
 				});
 
 				return toEndedDashboard(interaction, giveawayManager, giveaway);
@@ -278,9 +278,10 @@ export default async function toEndedDashboard(
 				const { winnerQuantity, prizes } = giveaway;
 
 				await rollAndSign({
-					giveawayManager,
-					giveawayId: giveaway.id,
 					entries,
+					giveaway,
+					ignoreAccepted: false,
+					ignoreRequirements: false,
 					prizes,
 					prizesQuantity,
 					winnerQuantity
