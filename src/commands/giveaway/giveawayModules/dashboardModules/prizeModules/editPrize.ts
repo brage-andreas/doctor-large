@@ -12,12 +12,12 @@ import {
 	modalId
 } from "../../../../../helpers/ModalCollector.js";
 import Logger from "../../../../../logger/logger.js";
-import type Prize from "../../../../../modules/Prize.js";
+import type PrizeModule from "../../../../../modules/Prize.js";
 import toPrizeDashboard from "./prizeDashboard.js";
 
 export default async function toEditPrize(
 	interaction: ButtonInteraction<"cached">,
-	prize: Prize,
+	prize: PrizeModule,
 	giveawayManager: GiveawayManager,
 	giveawayId: number
 ) {

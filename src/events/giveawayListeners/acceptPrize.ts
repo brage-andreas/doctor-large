@@ -3,7 +3,7 @@ import { type ButtonInteraction } from "discord.js";
 import { EMOJIS, REGEXP } from "../../constants.js";
 import GiveawayManager from "../../database/giveaway.js";
 import Logger from "../../logger/logger.js";
-import type Prize from "../../modules/Prize.js";
+import type PrizeModule from "../../modules/Prize.js";
 
 export default async function acceptPrize(
 	interaction: ButtonInteraction<"cached">
@@ -42,17 +42,16 @@ export default async function acceptPrize(
 
 	const prizes = giveaway.prizesOf(userId);
 
-	const prizeToString = (prize: Prize) => {
+	const prizeToString = (prize: PrizeModule) => {
 		const name = `**${prize.name}**`;
-		const quantity = `${prize.winners.get(userId)!.quantityWon}x`;
 		const additionalInfo = prize.additionalInfo
 			? ` | ${prize.additionalInfo}`
 			: "";
 
-		return `${quantity} ${name}${additionalInfo}`;
+		return `1x ${name}${additionalInfo}`;
 	};
 
-	if (prizes.every((prize) => prize.winners.get(userId)!.accepted)) {
+	if (prizes.every((prize) => prize.winners.get(userId)!.claimed)) {
 		interaction.followUp({
 			content: stripIndents`
 				${EMOJIS.V} You have already claimed all your prizes. You're all set! ${
@@ -90,8 +89,8 @@ export default async function acceptPrize(
 	);
 
 	for (const { id } of prizes) {
-		await giveawayManager.updateWinnerAcceptance({
-			accepted: true,
+		await giveawayManager.setWinnerClaimed({
+			claimed: true,
 			prizeId: id,
 			userId
 		});

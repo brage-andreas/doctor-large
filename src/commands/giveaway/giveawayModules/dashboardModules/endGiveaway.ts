@@ -127,7 +127,7 @@ export default async function toEndGiveaway(
 
 	await giveaway.edit(
 		{
-			active: false,
+			ended: true,
 			entriesLocked: true
 		},
 		{

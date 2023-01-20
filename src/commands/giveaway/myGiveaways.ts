@@ -12,8 +12,8 @@ import { EMOJIS } from "../../constants.js";
 import GiveawayManager from "../../database/giveaway.js";
 import s from "../../helpers/s.js";
 import Logger from "../../logger/logger.js";
-import type Giveaway from "../../modules/Giveaway.js";
-import type Prize from "../../modules/Prize.js";
+import type GiveawayModule from "../../modules/Giveaway.js";
+import type PrizeModule from "../../modules/Prize.js";
 import {
 	type Command,
 	type CommandModuleInteractions
@@ -34,13 +34,13 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 
 const no = (n: number) => (n ? `**${n}**` : "no");
 
-const stringFromEnteredGiveaways = (giveaways: Array<Giveaway>) => {
+const stringFromEnteredGiveaways = (giveaways: Array<GiveawayModule>) => {
 	const activeGiveaways = giveaways
-		.filter((g) => g.active)
+		.filter((g) => !g.ended)
 		.map((g) => g.toShortString());
 
-	const inactiveGiveaways = giveaways
-		.filter((g) => !g.active)
+	const endedGiveaways = giveaways
+		.filter((g) => g.ended)
 		.map((g) => g.toShortString());
 
 	const strArray = [];
@@ -53,27 +53,27 @@ const stringFromEnteredGiveaways = (giveaways: Array<Giveaway>) => {
 		);
 	}
 
-	if (inactiveGiveaways.length) {
+	if (endedGiveaways.length) {
 		strArray.push(
-			`Inactive (${
-				inactiveGiveaways.length
-			}):\n→ ${inactiveGiveaways.join("\n→ ")}`
+			`Ended (${endedGiveaways.length}):\n→ ${endedGiveaways.join(
+				"\n→ "
+			)}`
 		);
 	}
 
 	return strArray.join("\n\n");
 };
 
-const prizeToString = (prize: Prize, winnerUserId: string) => {
+const prizeToString = (prize: PrizeModule, winnerUserId: string) => {
 	const winner = prize.winners.get(winnerUserId);
 
 	if (!winner) {
 		return null;
 	}
 
-	const emoji = !winner.accepted ? ` (${EMOJIS.WARN} Not accepted)` : "";
+	const emoji = !winner.claimed ? ` (${EMOJIS.WARN} Not claimed)` : "";
 
-	return `→ ${winner.quantityWon} ${prize.name}${emoji}`;
+	return `→ 1x ${prize.name}${emoji}`;
 };
 
 const run = async (interaction: CommandModuleInteractions) => {
@@ -111,7 +111,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 	const prizes = await getPrizes();
 
-	const getContent = (prizes: Array<Prize>) => {
+	const getContent = (prizes: Array<PrizeModule>) => {
 		const prizesStr = prizes.length
 			? `\n\n**Won prizes (${prizes.length})**\n→ ${prizes
 					.map((prize) => prize.toShortString())
@@ -151,7 +151,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 	};
 
 	const notAcceptedPrizes = await giveawayManager.getPrizes({
-		winnerAccepted: false,
+		claimed: false,
 		winnerUserId: id
 	});
 
@@ -233,10 +233,10 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 		if (buttonInteraction.customId === "acceptAllPrizes") {
 			for (const prize of notAcceptedPrizes) {
-				await giveawayManager.updateWinnerAcceptance({
-					accepted: true,
+				await giveawayManager.setWinnerClaimed({
+					claimed: true,
 					prizeId: prize.id,
-					userId: id
+					userId: interaction.user.id
 				});
 			}
 

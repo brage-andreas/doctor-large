@@ -17,17 +17,17 @@ import { default as GiveawayManager } from "../database/giveaway.js";
 import { listify } from "../helpers/listify.js";
 import s from "../helpers/s.js";
 import { longStamp } from "../helpers/timestamps.js";
-import { type GiveawayDataWithIncludes } from "../typings/database.js";
-import Prize from "./Prize.js";
+import { type GiveawayWithIncludes } from "../typings/database.js";
+import PrizeModule from "./Prize.js";
 
-export default class Giveaway {
+export default class GiveawayModule {
 	public readonly manager: GiveawayManager;
 	public readonly client: Client<true>;
 	public readonly guild: Guild;
-	public data: GiveawayDataWithIncludes;
+	public data: GiveawayWithIncludes;
 
 	// -- Raw data --
-	public active: boolean;
+	public ended: boolean;
 	public channelId: string | null;
 	public createdAt: Date;
 	public description: string;
@@ -51,7 +51,7 @@ export default class Giveaway {
 	// -- Manipulated data --
 	public entriesUserIds: Set<string>;
 	public pingRolesIds: Set<string>;
-	public prizes: Array<Prize>;
+	public prizes: Array<PrizeModule>;
 	public requiredRolesIds: Set<string>;
 	// ----------------------
 
@@ -62,7 +62,7 @@ export default class Giveaway {
 	private _winnersUserIds: Set<string> | null = null;
 	// -----------
 
-	public constructor(data: GiveawayDataWithIncludes, guild: Guild) {
+	public constructor(data: GiveawayWithIncludes, guild: Guild) {
 		this.client = guild.client;
 		this.guild = guild;
 		this.data = data;
@@ -86,7 +86,7 @@ export default class Giveaway {
 		this.channelId = data.channelId;
 		this.createdAt = data.createdAt;
 		this.guildId = data.guildId;
-		this.active = data.active;
+		this.ended = data.ended;
 		this.title = data.title;
 		this.id = data.id;
 		// --------------
@@ -109,7 +109,7 @@ export default class Giveaway {
 			) as Array<Role>;
 
 		this.prizes = data.prizes.map(
-			(prize) => new Prize({ ...prize, giveaway: this }, guild)
+			(prize) => new PrizeModule({ ...prize, giveaway: this }, guild)
 		);
 		// ----------------------
 	}
@@ -425,11 +425,11 @@ export default class Giveaway {
 			this.entriesUserIds.size
 		)}`;
 
-		const { active } = this;
+		const { ended } = this;
 
 		return source`
 			#${this.guildRelativeId} "${this.title}"
-			${!active ? "  → Inactive\n" : ""}  → ${entriesStr}
+			${ended ? "  → Ended\n" : ""}  → ${entriesStr}
 			  → ${winnerStr}, ${prizesStr}
 		`;
 	}
@@ -496,12 +496,12 @@ export default class Giveaway {
 		const descriptionStr =
 			this.description ?? `${EMOJIS.WARN} There is no set description`;
 
-		const idStr = `#${this.guildRelativeId}`;
 		const numberOfWinnersStr = `→ Number of winners: ${this.winnerQuantity}`;
-		const hostStr = `→ Host: ${this.hostUserTag} (${this.hostUserId})`;
-		const activeStr = `→ Active: ${this.active ? "Yes" : "No"}`;
-		const entriesStr = `→ Entries: ${this.entriesUserIds.size}`;
 		const createdStr = `→ Created: ${longStamp(this.createdAt)}`;
+		const entriesStr = `→ Entries: ${this.entriesUserIds.size}`;
+		const endedStr = `→ Ended: ${this.ended ? "Yes" : "No"}`;
+		const hostStr = `→ Host: ${this.hostUserTag} (${this.hostUserId})`;
+		const idStr = `#${this.guildRelativeId}`;
 
 		const lockEntriesStr = `→ Entries locked: ${
 			this.entriesLocked ? "Yes" : "No"
@@ -539,7 +539,7 @@ export default class Giveaway {
 
 		const optionsField = stripIndents`
 			${endStr}
-			${activeStr}
+			${endedStr}
 			${publishedStr}
 			${lockEntriesStr}
 			${numberOfWinnersStr}
@@ -556,12 +556,12 @@ export default class Giveaway {
 			.setColor(
 				// published = green
 				// active = yellow
-				// inactive = red
+				// ended = red
 				this.isPublished()
 					? COLORS.GREEN
-					: this.active
-					? COLORS.YELLOW
-					: COLORS.RED
+					: this.ended
+					? COLORS.RED
+					: COLORS.YELLOW
 			)
 			.setFields(
 				{
@@ -675,7 +675,7 @@ export default class Giveaway {
 	}
 
 	public async edit(
-		data: Prisma.GiveawayDataUpdateInput,
+		data: Prisma.GiveawayUpdateInput,
 		options: {
 			nowOutdated:
 				| "none"

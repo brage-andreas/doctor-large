@@ -1,4 +1,4 @@
-import { type WinnerData } from "@prisma/client";
+import { type Winner } from "@prisma/client";
 import { source, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
@@ -11,7 +11,7 @@ import {
 import components from "../../../components/index.js";
 import { EMOJIS } from "../../../constants.js";
 import type GiveawayManager from "../../../database/giveaway.js";
-import type Giveaway from "../../../modules/Giveaway.js";
+import type GiveawayModule from "../../../modules/Giveaway.js";
 import toDashboard from "./dashboard.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import { publishWinners } from "./endModules/publishWinners.js";
@@ -20,7 +20,7 @@ import { rollAndSign } from "./endModules/rollWinners/rollAndSign.js";
 export default async function toEndedDashboard(
 	interaction: Exclude<Interaction<"cached">, AutocompleteInteraction>,
 	giveawayManager: GiveawayManager,
-	giveawayOrId: Giveaway | number
+	giveawayOrId: GiveawayModule | number
 ) {
 	const id =
 		typeof giveawayOrId === "number" ? giveawayOrId : giveawayOrId.id;
@@ -58,7 +58,7 @@ export default async function toEndedDashboard(
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		components.buttons.rerollWinners(),
+		components.buttons.rerollWinners().setDisabled(true),
 		components.buttons.rerollAllWinners()
 	);
 
@@ -94,7 +94,7 @@ export default async function toEndedDashboard(
 			case "reactivate": {
 				await giveaway.edit(
 					{
-						active: true
+						ended: false
 					},
 					{
 						nowOutdated: {
@@ -180,7 +180,7 @@ export default async function toEndedDashboard(
 
 						return map;
 					},
-					new Map<string, Array<WinnerData>>()
+					new Map<string, Array<Winner>>()
 				);
 
 				const members = await interaction.guild.members.fetch();
@@ -192,29 +192,18 @@ export default async function toEndedDashboard(
 
 						const string = winnerData
 							.map((data) => {
-								const {
-									accepted,
-									createdAt,
-									prizeId,
-									quantityWon
-								} = data;
+								const { claimed, createdAt, prizeId } = data;
 
 								const prize = giveaway.prizes.find(
 									(prize) => prize.id === prizeId
 								);
 
-								const claimed = accepted
-									? "Accepted"
-									: "Not accepted";
+								const claimedStr = claimed
+									? "Claimed"
+									: "Not claimed";
 
 								const name =
 									prize?.name ?? `Unknown prize (${prizeId})`;
-
-								const n =
-									prize?.quantity &&
-									prize.quantity !== quantityWon
-										? `${quantityWon}/${prize.quantity}`
-										: quantityWon;
 
 								const time = createdAt.toLocaleString("en-GB", {
 									dateStyle: "medium",
@@ -222,7 +211,7 @@ export default async function toEndedDashboard(
 									timeZone: "UTC"
 								});
 
-								return `→ ${n} ${name} - ${claimed}, won at ${time}`;
+								return `→ 1x ${name} - ${claimedStr}. Won at ${time}`;
 							})
 							.join("\n");
 
@@ -249,7 +238,7 @@ export default async function toEndedDashboard(
 			case "rerollWinners": {
 				const prizes = await giveawayManager.getPrizes({
 					giveawayId: giveaway.id,
-					winnerAccepted: false
+					claimed: false
 				});
 
 				const entries = [...giveaway.entriesUserIds];
@@ -262,7 +251,7 @@ export default async function toEndedDashboard(
 				await rollAndSign({
 					entries,
 					giveaway,
-					ignoreAccepted: true,
+					ignoreClaimed: true,
 					ignoreRequirements: false,
 					prizes,
 					prizesQuantity,
@@ -280,7 +269,7 @@ export default async function toEndedDashboard(
 				await rollAndSign({
 					entries,
 					giveaway,
-					ignoreAccepted: false,
+					ignoreClaimed: false,
 					ignoreRequirements: false,
 					prizes,
 					prizesQuantity,

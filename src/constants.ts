@@ -24,12 +24,12 @@ export const EMOJIS = {
 	HEART_BREAK: "💔",
 	SWEAT_SMILE: "😅",
 	STAR_EYES: "🤩",
-	INACTIVE: "🔸",
 	NO_ENTRY: "⛔",
 	PENSIVE: "🥺",
 	HIGHER: "🔺",
 	SPARKS: "✨",
 	UNLOCK: "🔓",
+	ENDED: "🔸",
 	ERROR: "<:Error:1061984813650804799>",
 	LOWER: "🔻",
 	SHUSH: "🤫",
@@ -62,7 +62,8 @@ export const GIVEAWAY = {
 } as const;
 
 export const PRIZE = {
-	MAX_QUANTITY_LEN: 3,
+	MAX_QUANTITY: 10, // -- MATCH THESE
+	MAX_QUANTITY_LEN: 2, // MATCH THESE
 	MAX_ADDITIONAL_INFO_LEN: 70,
 	MAX_TITLE_LEN: 30
 } as const;

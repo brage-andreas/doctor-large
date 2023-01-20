@@ -1,4 +1,4 @@
-import { type AutoroleData } from "@prisma/client";
+import { type Autorole } from "@prisma/client";
 import { stripIndents } from "common-tags";
 import {
 	EmbedBuilder,
@@ -11,11 +11,11 @@ import {
 import { COLORS, EMOJIS } from "../constants.js";
 import type AutoroleManager from "../database/autorole.js";
 
-export default class Autorole {
+export default class AutoroleModule {
 	public readonly manager: AutoroleManager;
 	public readonly client: Client<true>;
 	public readonly guild: Guild;
-	public data: AutoroleData;
+	public data: Autorole;
 
 	public activated: boolean;
 	public lastEditedAt: Date | null;
@@ -25,7 +25,7 @@ export default class Autorole {
 	public validRoles: Array<Role>;
 
 	public constructor(
-		data: AutoroleData,
+		data: Autorole,
 		guild: Guild,
 		autoroleManager: AutoroleManager
 	) {

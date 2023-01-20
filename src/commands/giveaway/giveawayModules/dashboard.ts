@@ -42,7 +42,7 @@ export default async function toDashboard(
 		return;
 	}
 
-	if (!giveaway.active) {
+	if (giveaway.ended) {
 		await toEndedDashboard(interaction, giveawayManager, giveaway);
 
 		return;

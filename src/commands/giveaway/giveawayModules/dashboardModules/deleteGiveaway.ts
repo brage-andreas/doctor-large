@@ -39,8 +39,8 @@ export default async function toDeleteGiveaway(
 		? `</my-giveaways:${myGiveawaysCommand.id}>`
 		: "/my-giveaways";
 
-	const isConcludedString = !giveaway.active
-		? `\n\n${EMOJIS.WARN} It is recommended to keep concluded giveaways. They can still be seen in the ${myGiveaways} command.`
+	const isConcludedString = giveaway.ended
+		? `\n\n${EMOJIS.WARN} It is recommended to keep ended giveaways. They can still be seen in the ${myGiveaways} command.`
 		: "";
 
 	const accept = await yesNo({
@@ -71,7 +71,7 @@ export default async function toDeleteGiveaway(
 	const createdWithinFifteenMinutes =
 		Date.now() - giveaway.createdAt.getTime() <= 900_000; // 900 000 ms = 15 min
 
-	if (!createdWithinFifteenMinutes && giveaway.active) {
+	if (!createdWithinFifteenMinutes) {
 		const accept2 = await yesNo({
 			yesStyle: ButtonStyle.Danger,
 			noStyle: ButtonStyle.Secondary,

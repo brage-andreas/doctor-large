@@ -1,13 +1,13 @@
-import type Prize from "../../../../../modules/Prize.js";
+import type PrizeModule from "../../../../../modules/Prize.js";
 
 export default function roll(options: {
 	entries: Array<string>;
-	ignoreAccepted: boolean;
-	prizes: Array<Prize>;
+	ignoreClaimed: boolean;
+	prizes: Array<PrizeModule>;
 	prizesQuantity: number;
 	winnerQuantity: number;
 }) {
-	const { ignoreAccepted, winnerQuantity, prizesQuantity, prizes, entries } =
+	const { entries, prizes, prizesQuantity, winnerQuantity, ignoreClaimed } =
 		options;
 
 	if (!entries.length || !prizesQuantity || !winnerQuantity) {
@@ -20,15 +20,14 @@ export default function roll(options: {
 	const prizesWithOneWinner = prizes.flatMap((prize) => {
 		let length = prize.quantity;
 
-		if (ignoreAccepted) {
+		if (ignoreClaimed) {
 			const winnerArray = [...prize.winners.values()];
-			const toOmit = winnerArray.reduce(
-				(n, { accepted, quantityWon }) =>
-					accepted ? n + quantityWon : n,
-				0
+			const newLength = winnerArray.reduce(
+				(n, { claimed }) => (claimed ? n - 1 : n),
+				prize.quantity
 			);
 
-			length = prize.quantity - toOmit;
+			length = newLength;
 		}
 
 		return Array.from({ length }, () => {

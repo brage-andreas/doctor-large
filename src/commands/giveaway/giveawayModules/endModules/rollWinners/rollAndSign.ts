@@ -1,19 +1,19 @@
 import type Giveaway from "../../../../../modules/Giveaway.js";
-import type Prize from "../../../../../modules/Prize.js";
+import type PrizeModule from "../../../../../modules/Prize.js";
 import roll from "./roll.js";
 
 export async function rollAndSign(options: {
 	entries: Array<string>;
 	giveaway: Giveaway;
-	ignoreAccepted: boolean;
+	ignoreClaimed: boolean;
 	ignoreRequirements: boolean;
-	prizes: Array<Prize>;
+	prizes: Array<PrizeModule>;
 	prizesQuantity: number;
 	winnerQuantity: number;
 }) {
 	const {
 		giveaway,
-		ignoreAccepted,
+		ignoreClaimed,
 		ignoreRequirements,
 		prizes,
 		prizesQuantity,
@@ -40,26 +40,29 @@ export async function rollAndSign(options: {
 		});
 	}
 
-	if (ignoreAccepted) {
+	if (ignoreClaimed) {
 		for (const prize of giveaway.prizes) {
-			const keep: Array<string> = [];
+			const ids: Array<string> = [];
 
 			prize.winners.forEach((winner) => {
-				if (winner.accepted) {
-					keep.push(winner.userId);
+				if (winner.claimed) {
+					ids.push(winner.userId);
 				}
 			});
 
-			await giveaway.manager.deleteWinners({ keep, prizeId: prize.id });
+			await giveaway.manager.deleteWinners({
+				inPrize: prize.id,
+				winnersToKeep: ids
+			});
 		}
 	}
 
 	const dataMap = roll({
 		entries,
+		ignoreClaimed,
 		prizes,
 		prizesQuantity,
-		winnerQuantity,
-		ignoreAccepted
+		winnerQuantity
 	});
 
 	if (!dataMap?.size) {
@@ -67,15 +70,10 @@ export async function rollAndSign(options: {
 	}
 
 	for (const [prizeId, data] of dataMap.entries()) {
-		for (const { userId, quantityWon } of data) {
-			await giveaway.manager.upsertWinner({
-				quantityWon,
-				userId,
-				prize: {
-					connect: {
-						id: prizeId
-					}
-				}
+		for (const { userId } of data) {
+			await giveaway.manager.createWinner({
+				prizeId,
+				userId
 			});
 		}
 	}

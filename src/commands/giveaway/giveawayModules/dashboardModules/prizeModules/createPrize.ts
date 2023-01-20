@@ -43,7 +43,7 @@ export default async function toCreatePrize(
 		.setMinLength(1)
 		.setCustomId("prizeQuantity")
 		.setRequired(true)
-		.setLabel("Quantity")
+		.setLabel("Quantity (max 10)")
 		.setStyle(TextInputStyle.Short);
 
 	const row = (component: TextInputBuilder) =>
@@ -69,13 +69,12 @@ export default async function toCreatePrize(
 		const quantityString =
 			modalInteraction.fields.getTextInputValue("prizeQuantity");
 
-		const maxQuantity = Number("9".repeat(PRIZE.MAX_QUANTITY_LEN));
 		let quantity = parseInt(quantityString) || 1;
 
 		if (quantity < 1) {
 			quantity = 1;
-		} else if (maxQuantity < quantity) {
-			quantity = maxQuantity;
+		} else if (PRIZE.MAX_QUANTITY < quantity) {
+			quantity = PRIZE.MAX_QUANTITY;
 		}
 
 		const { id } = await giveawayManager.createPrize({

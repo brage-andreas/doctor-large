@@ -1,11 +1,11 @@
 import type { Prisma } from "@prisma/client";
 import { type Guild } from "discord.js";
-import Autorole from "../modules/Autorole.js";
+import AutoroleModule from "../modules/Autorole.js";
 import prisma from "./prisma.js";
 
 export default class AutoroleManager {
 	public readonly guild: Guild;
-	public readonly prisma = prisma.autoroleData;
+	public readonly prisma = prisma.autorole;
 	private initialized = false;
 
 	public constructor(guild: Guild) {
@@ -34,11 +34,11 @@ export default class AutoroleManager {
 			where: { guildId: this.guild.id }
 		});
 
-		return new Autorole(data, this.guild, this);
+		return new AutoroleModule(data, this.guild, this);
 	}
 
 	public async update(
-		data: Omit<Prisma.AutoroleDataUpdateInput, "guildId" | "lastEditedAt">
+		data: Omit<Prisma.AutoroleUpdateInput, "guildId" | "lastEditedAt">
 	) {
 		if (!this.initialized) {
 			throw new Error("Autorole manager has not been initialized.");
@@ -49,6 +49,6 @@ export default class AutoroleManager {
 			data
 		});
 
-		return new Autorole(data_, this.guild, this);
+		return new AutoroleModule(data_, this.guild, this);
 	}
 }

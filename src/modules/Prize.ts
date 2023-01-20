@@ -1,16 +1,16 @@
-import { type PrizeData, type WinnerData } from "@prisma/client";
+import { type Prize, type Winner } from "@prisma/client";
 import { oneLine } from "common-tags";
 import { EmbedBuilder, type Client, type Guild } from "discord.js";
 import { COLORS } from "../constants.js";
-import type Giveaway from "./Giveaway.js";
+import type GiveawayModule from "./Giveaway.js";
 
-export default class Prize {
-	public data: PrizeData & { winners: Array<WinnerData>; giveaway: Giveaway };
+export default class PrizeModule {
+	public data: Prize & { winners: Array<Winner>; giveaway: GiveawayModule };
 	public guild: Guild;
 	public client: Client;
 
 	public additionalInfo: string | null;
-	public giveaway: Giveaway;
+	public giveaway: GiveawayModule;
 	public giveawayId: number;
 	public id: number;
 	public name: string;
@@ -19,10 +19,10 @@ export default class Prize {
 	/**
 	 * Mapped by userId
 	 */
-	public winners: Map<string, WinnerData>;
+	public winners: Map<string, Winner>;
 
 	public constructor(
-		data: PrizeData & { winners: Array<WinnerData>; giveaway: Giveaway },
+		data: Prize & { winners: Array<Winner>; giveaway: GiveawayModule },
 		guild: Guild
 	) {
 		this.data = data;
@@ -40,11 +40,11 @@ export default class Prize {
 			map.set(winner.userId, winner);
 
 			return map;
-		}, new Map<string, WinnerData>());
+		}, new Map<string, Winner>());
 	}
 
 	public clone() {
-		return new Prize(this.data, this.guild);
+		return new PrizeModule(this.data, this.guild);
 	}
 
 	public toShortString() {
@@ -56,10 +56,8 @@ export default class Prize {
 
 	public toEmbed() {
 		const winners = [...this.winners.values()].map(
-			({ userId, quantityWon, accepted }) =>
-				`<@${userId}> won ${quantityWon}x ${
-					!accepted ? "(Not accepted)" : ""
-				}`
+			({ userId, claimed }) =>
+				`<@${userId}> won 1x ${!claimed ? "(Not claimed)" : ""}`
 		);
 
 		return new EmbedBuilder()
