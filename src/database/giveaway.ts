@@ -313,7 +313,7 @@ export default class GiveawayManager {
 			| Array<number>
 			| GiveawayModule
 			| GiveawayWithIncludes
-			| { winnersToKeep: Array<string>; inPrize: number }
+			| { winnersToKeep: Array<number>; inPrize: number }
 	) {
 		let ids: Array<number>;
 
@@ -323,7 +323,7 @@ export default class GiveawayManager {
 			return await this.prisma.winner.deleteMany({
 				where: {
 					prizeId,
-					userId: {
+					id: {
 						notIn: winnersToKeep
 					}
 				}
