@@ -65,8 +65,8 @@ export default async function toDashboard(
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		components.buttons.editGiveaway(),
 		components.buttons.managePrizes(),
+		components.buttons.editGiveaway(),
 		components.buttons.endGiveaway(),
 		components.buttons.resetData(),
 		components.buttons.deleteGiveaway()
