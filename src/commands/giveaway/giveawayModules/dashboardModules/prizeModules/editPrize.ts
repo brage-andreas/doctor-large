@@ -1,3 +1,4 @@
+import { oneLine } from "common-tags";
 import {
 	ActionRowBuilder,
 	ModalBuilder,
@@ -5,7 +6,7 @@ import {
 	TextInputStyle,
 	type ButtonInteraction
 } from "discord.js";
-import { PRIZE } from "../../../../../constants.js";
+import { EMOJIS, PRIZE } from "../../../../../constants.js";
 import type GiveawayManager from "../../../../../database/giveaway.js";
 import {
 	ModalCollector,
@@ -77,13 +78,14 @@ export default async function toEditPrize(
 		const quantityString =
 			modalInteraction.fields.getTextInputValue("prizeQuantity");
 
-		const maxQuantity = Number("9".repeat(PRIZE.MAX_QUANTITY_LEN));
-		let quantity = parseInt(quantityString) || 1;
+		const quantityNumber = parseInt(quantityString);
+		const originalQuantity = isNaN(quantityNumber) ? 1 : quantityNumber;
+		let quantity = originalQuantity;
 
 		if (quantity < 1) {
 			quantity = 1;
-		} else if (maxQuantity < quantity) {
-			quantity = maxQuantity;
+		} else if (PRIZE.MAX_QUANTITY < quantity) {
+			quantity = PRIZE.MAX_QUANTITY;
 		}
 
 		await giveawayManager.editPrize({
@@ -100,6 +102,16 @@ export default async function toEditPrize(
 		new Logger({ prefix: "GIVEAWAY", interaction }).log(
 			`Edited prize #${prize.id} in giveaway #${giveawayId}`
 		);
+
+		if (quantity !== originalQuantity) {
+			await interaction.followUp({
+				ephemeral: true,
+				content: oneLine`
+					${EMOJIS.WARN} The quantity must be between 1 and ${PRIZE.MAX_QUANTITY}.
+					Therefore, the quantity was set to **${quantity}**, instead of ${originalQuantity}.
+				`
+			});
+		}
 
 		toPrizeDashboard(
 			modalInteraction,
