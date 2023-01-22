@@ -64,16 +64,19 @@ const stringFromEnteredGiveaways = (giveaways: Array<GiveawayModule>) => {
 	return strArray.join("\n\n");
 };
 
+// TODO: redo
 const prizeToString = (prize: PrizeModule, winnerUserId: string) => {
-	const winner = prize.winners.get(winnerUserId);
+	const winner = prize.winners.find(
+		(winner) => winner.userId === winnerUserId
+	);
 
 	if (!winner) {
 		return null;
 	}
 
-	const emoji = !winner.claimed ? ` (${EMOJIS.WARN} Not claimed)` : "";
+	const status = !winner.claimed ? ` (${EMOJIS.WARN} Not claimed)` : "";
 
-	return `→ 1x ${prize.name}${emoji}`;
+	return `→ 1x ${prize.name}${status}`;
 };
 
 const run = async (interaction: CommandModuleInteractions) => {

@@ -42,16 +42,29 @@ export default async function acceptPrize(
 
 	const prizes = giveaway.prizesOf(userId);
 
+	// TODO: redo
 	const prizeToString = (prize: PrizeModule) => {
 		const name = `**${prize.name}**`;
 		const additionalInfo = prize.additionalInfo
 			? ` | ${prize.additionalInfo}`
 			: "";
 
+		const winner = prize.winners.find((winner) => winner.userId === userId);
+
+		if (!winner) {
+			return "Something went wrong";
+		}
+
 		return `1x ${name}${additionalInfo}`;
 	};
 
-	if (prizes.every((prize) => prize.winners.get(userId)!.claimed)) {
+	if (
+		prizes.every((prize) =>
+			prize.winners
+				.filter((winner) => winner.userId === userId)
+				.every((winner) => winner.claimed)
+		)
+	) {
 		interaction.followUp({
 			content: stripIndents`
 				${EMOJIS.V} You have already claimed all your prizes. You're all set! ${

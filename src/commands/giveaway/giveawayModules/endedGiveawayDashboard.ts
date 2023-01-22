@@ -1,4 +1,3 @@
-import { type Winner } from "@prisma/client";
 import { source, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
@@ -11,6 +10,7 @@ import {
 import components from "../../../components/index.js";
 import { EMOJIS } from "../../../constants.js";
 import type GiveawayManager from "../../../database/giveaway.js";
+import s from "../../../helpers/s.js";
 import type GiveawayModule from "../../../modules/Giveaway.js";
 import toDashboard from "./dashboard.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
@@ -165,59 +165,46 @@ export default async function toEndedDashboard(
 			}
 
 			case "showAllWinners": {
-				const prizesSortedByWinners = giveaway.prizes.reduce(
-					(map, prize) => {
-						prize.winners.forEach((winnerData) => {
-							const previousPrizes = map.get(winnerData.userId);
-
-							map.set(
-								winnerData.userId,
-								previousPrizes?.length
-									? [...previousPrizes, winnerData]
-									: [winnerData]
-							);
-						});
-
-						return map;
-					},
-					new Map<string, Array<Winner>>()
-				);
-
 				const members = await interaction.guild.members.fetch();
 
-				const string = [...prizesSortedByWinners.entries()]
-					.map(([userId, winnerData]) => {
-						const member = members.get(userId);
-						const userTag = member?.user.tag ?? "Unknown user";
+				const string = giveaway.prizes
+					.map((prize, i, { length }) => {
+						const pI = (i + 1)
+							.toString()
+							.padStart(length.toString().length, "0");
 
-						const string = winnerData
-							.map((data) => {
-								const { claimed, createdAt, prizeId } = data;
+						const winners = prize.winners.map(
+							(data, i, { length }) => {
+								const member = members.get(data.userId);
+								const userTag =
+									member?.user.tag ?? "Unknown user";
 
-								const prize = giveaway.prizes.find(
-									(prize) => prize.id === prizeId
-								);
+								const wI = (i + 1)
+									.toString()
+									.padStart(length.toString().length, "0");
 
-								const claimedStr = claimed
+								const claimedStr = data.claimed
 									? "Claimed"
 									: "Not claimed";
 
-								const name =
-									prize?.name ?? `Unknown prize (${prizeId})`;
+								const time = data.createdAt.toLocaleString(
+									"en-GB",
+									{
+										dateStyle: "medium",
+										timeStyle: "medium",
+										timeZone: "UTC"
+									}
+								);
 
-								const time = createdAt.toLocaleString("en-GB", {
-									dateStyle: "medium",
-									timeStyle: "long",
-									timeZone: "UTC"
-								});
+								return `→ ${wI} ${userTag} - ${claimedStr}. Won at ${time} UTC`;
+							}
+						);
 
-								return `→ 1x ${name} - ${claimedStr}. Won at ${time}`;
-							})
-							.join("\n");
+						const wN = winners.length;
 
 						return source`
-							${userTag} (${userId})
-							  ${string}
+							${pI} ${prize.name} (${wN}/${prize.quantity} ${s("winner", wN)})
+							${" ".repeat(pI.length)} ${winners.join("\n")}
 						`;
 					})
 					.join("\n\n");
@@ -251,7 +238,7 @@ export default async function toEndedDashboard(
 				await rollAndSign({
 					entries,
 					giveaway,
-					ignoreClaimed: true,
+					overrideClaimed: true,
 					ignoreRequirements: false,
 					prizes,
 					prizesQuantity,
@@ -269,7 +256,7 @@ export default async function toEndedDashboard(
 				await rollAndSign({
 					entries,
 					giveaway,
-					ignoreClaimed: false,
+					overrideClaimed: false,
 					ignoreRequirements: false,
 					prizes,
 					prizesQuantity,

@@ -21,16 +21,16 @@ import { type GiveawayWithIncludes } from "../typings/database.js";
 import PrizeModule from "./Prize.js";
 
 export default class GiveawayModule {
-	public readonly manager: GiveawayManager;
+	public data: GiveawayWithIncludes;
 	public readonly client: Client<true>;
 	public readonly guild: Guild;
-	public data: GiveawayWithIncludes;
+	public readonly manager: GiveawayManager;
 
 	// -- Raw data --
-	public ended: boolean;
 	public channelId: string | null;
 	public createdAt: Date;
 	public description: string;
+	public ended: boolean;
 	public endTimestamp: string | null;
 	public entriesLocked: boolean;
 	public guildId: string;
@@ -39,9 +39,9 @@ export default class GiveawayModule {
 	public hostUserTag: string;
 	public id: number;
 	public lastEditedAt: Date | null;
-	public publishedMessageUpdated: boolean;
 	public minimumAccountAge: string | null;
 	public publishedMessageId: string | null;
+	public publishedMessageUpdated: boolean;
 	public title: string;
 	public winnerMessageId: string | null;
 	public winnerMessageUpdated: boolean;
@@ -334,13 +334,15 @@ export default class GiveawayModule {
 	}
 
 	public prizesOf(userId: string) {
-		return this.prizes.filter((prize) => prize.winners.has(userId));
+		return this.prizes.filter((prize) =>
+			prize.winners.some((winner) => winner.userId === userId)
+		);
 	}
 
 	public winnersUserIds(forceRefresh?: boolean) {
 		if (this._winnersUserIds === null || forceRefresh) {
-			this._winnersUserIds = this.prizes.reduce((set, e) => {
-				e.winners.forEach((winner) => set.add(winner.userId));
+			this._winnersUserIds = this.prizes.reduce((set, { winners }) => {
+				[...winners].forEach((winner) => set.add(winner.userId));
 
 				return set;
 			}, new Set<string>());
