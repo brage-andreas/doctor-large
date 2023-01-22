@@ -43,7 +43,7 @@ export default function roll(options: {
 	const random = (setOrArray: Array<string> | Set<string>) => {
 		const array = "size" in setOrArray ? [...setOrArray] : setOrArray;
 
-		return array.at(Math.floor(Math.random() * array.length))!;
+		return array[Math.floor(Math.random() * array.length)];
 	};
 
 	const getRandomUserId = () => {
