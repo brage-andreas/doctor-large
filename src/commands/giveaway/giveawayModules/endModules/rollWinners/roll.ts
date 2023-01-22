@@ -2,12 +2,12 @@ import type PrizeModule from "../../../../../modules/Prize.js";
 
 export default function roll(options: {
 	entries: Array<string>;
-	ignoreClaimed: boolean;
+	overrideClaimed: boolean;
 	prizes: Array<PrizeModule>;
 	prizesQuantity: number;
 	winnerQuantity: number;
 }) {
-	const { entries, prizes, prizesQuantity, winnerQuantity, ignoreClaimed } =
+	const { entries, overrideClaimed, prizes, prizesQuantity, winnerQuantity } =
 		options;
 
 	if (!entries.length || !prizesQuantity || !winnerQuantity) {
@@ -20,7 +20,7 @@ export default function roll(options: {
 	const prizesWithOneWinner = prizes.flatMap((prize) => {
 		let length = prize.quantity;
 
-		if (ignoreClaimed) {
+		if (overrideClaimed) {
 			const winnerArray = [...prize.winners.values()];
 			const newLength = winnerArray.reduce(
 				(n, { claimed }) => (claimed ? n - 1 : n),
