@@ -5,16 +5,16 @@ import roll from "./roll.js";
 export async function rollAndSign(options: {
 	entries: Array<string>;
 	giveaway: Giveaway;
-	ignoreClaimed: boolean;
 	ignoreRequirements: boolean;
+	overrideClaimed: boolean;
 	prizes: Array<PrizeModule>;
 	prizesQuantity: number;
 	winnerQuantity: number;
 }) {
 	const {
 		giveaway,
-		ignoreClaimed,
 		ignoreRequirements,
+		overrideClaimed,
 		prizes,
 		prizesQuantity,
 		winnerQuantity
@@ -40,13 +40,13 @@ export async function rollAndSign(options: {
 		});
 	}
 
-	if (ignoreClaimed) {
+	if (overrideClaimed) {
 		for (const prize of giveaway.prizes) {
-			const ids: Array<string> = [];
+			const ids: Array<number> = [];
 
 			prize.winners.forEach((winner) => {
 				if (winner.claimed) {
-					ids.push(winner.userId);
+					ids.push(winner.id);
 				}
 			});
 
@@ -55,11 +55,13 @@ export async function rollAndSign(options: {
 				winnersToKeep: ids
 			});
 		}
+	} else {
+		await giveaway.manager.deleteWinners(giveaway.data);
 	}
 
 	const dataMap = roll({
 		entries,
-		ignoreClaimed,
+		overrideClaimed,
 		prizes,
 		prizesQuantity,
 		winnerQuantity
