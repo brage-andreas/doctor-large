@@ -113,16 +113,19 @@ export default async function toEndGiveaway(
 		return toDashboard(interaction, id);
 	}
 
+	const endedGiveawayButton = new ButtonBuilder()
+		.setCustomId("giveaway-ended")
+		.setDisabled(true)
+		.setLabel("This giveaway has ended!")
+		.setStyle(ButtonStyle.Secondary);
+
+	const endedGiveawayRow =
+		new ActionRowBuilder<ButtonBuilder>().setComponents(
+			endedGiveawayButton
+		);
+
 	await giveaway.publishedMessage?.edit({
-		components: [
-			new ActionRowBuilder<ButtonBuilder>().addComponents(
-				new ButtonBuilder()
-					.setLabel("This giveaway has ended!")
-					.setStyle(ButtonStyle.Secondary)
-					.setCustomId("giveaway-ended")
-					.setDisabled(true)
-			)
-		]
+		components: [endedGiveawayRow]
 	});
 
 	await giveaway.edit(
@@ -132,7 +135,7 @@ export default async function toEndGiveaway(
 		},
 		{
 			nowOutdated: {
-				publishedMessage: true
+				publishedMessage: undefined
 			}
 		}
 	);
