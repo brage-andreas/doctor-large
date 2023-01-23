@@ -298,7 +298,7 @@ export default class GiveawayManager {
 		});
 	}
 
-	public async createWinner(...args: Array<Prisma.WinnerCreateManyInput>) {
+	public async createWinners(...args: Array<Prisma.WinnerCreateManyInput>) {
 		return await this.prisma.winner.createMany({
 			data: args
 		});
