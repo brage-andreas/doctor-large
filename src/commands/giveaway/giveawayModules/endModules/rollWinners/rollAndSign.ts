@@ -59,7 +59,7 @@ export async function rollAndSign(options: {
 		await giveaway.manager.deleteWinners(giveaway.data);
 	}
 
-	const dataMap = roll({
+	const data = roll({
 		entries,
 		overrideClaimed,
 		prizes,
@@ -67,16 +67,11 @@ export async function rollAndSign(options: {
 		winnerQuantity
 	});
 
-	if (!dataMap?.size) {
+	if (!data?.length) {
 		return;
 	}
 
-	for (const [prizeId, data] of dataMap.entries()) {
-		for (const { userId } of data) {
-			await giveaway.manager.createWinner({
-				prizeId,
-				userId
-			});
-		}
-	}
+	console.log(data);
+
+	await giveaway.manager.createWinners(...data);
 }

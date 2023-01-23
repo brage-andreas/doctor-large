@@ -17,10 +17,10 @@ export default function roll(options: {
 	const alwaysFullBucket = new Set(entries);
 	const oneTimeBucket = new Set(entries);
 
-	const prizesWithOneWinner = prizes.flatMap((prize) => {
+	const prizeIdsToRoll = prizes.flatMap((prize) => {
 		let length = prize.quantity;
 
-		if (overrideClaimed) {
+		if (!overrideClaimed) {
 			const winnerArray = [...prize.winners.values()];
 			const newLength = winnerArray.reduce(
 				(n, { claimed }) => (claimed ? n - 1 : n),
@@ -30,14 +30,7 @@ export default function roll(options: {
 			length = newLength;
 		}
 
-		return Array.from({ length }, () => {
-			const clone = prize.clone();
-
-			clone.data.quantity = 1;
-			clone.quantity = 1;
-
-			return clone;
-		});
+		return Array.from({ length }, () => prize.id);
 	});
 
 	const random = (setOrArray: Array<string> | Set<string>) => {
@@ -58,16 +51,12 @@ export default function roll(options: {
 	};
 
 	let delegatedPrizes = 0;
-	const winners: Array<string> = [];
-	const winnerMap: Map<
-		number,
-		Array<{ userId: string; quantityWon: number }>
-	> = new Map();
+	const winners: Array<{ prizeId: number; userId: string }> = [];
 
-	for (let i = 0; i < prizesWithOneWinner.length; i++) {
-		const currentPrize = prizesWithOneWinner.at(i);
+	for (let i = 0; i < prizeIdsToRoll.length; i++) {
+		const currentPrizeId = prizeIdsToRoll.at(i);
 
-		if (!currentPrize) {
+		if (!currentPrizeId) {
 			continue;
 		}
 
@@ -76,35 +65,26 @@ export default function roll(options: {
 		// used so you reuse the same winners for the prizes remaining
 		const winnersFilledButNotPrizes = delegatedPrizes === winnerQuantity;
 
-		const randomWinnerUserId = winnersFilledButNotPrizes
-			? random(winners)
-			: getRandomUserId();
+		let randomWinnerUserId: string;
+		winnersFilledButNotPrizes;
 
-		if (!winnersFilledButNotPrizes) {
-			winners.push(randomWinnerUserId);
-		} else {
+		if (winnersFilledButNotPrizes) {
+			randomWinnerUserId = random(
+				winners.map(({ userId: winnerUserId }) => winnerUserId)
+			);
+
 			delegatedPrizes--;
+		} else {
+			randomWinnerUserId = getRandomUserId();
 		}
 
-		const currentEntry = winnerMap.get(currentPrize.id) ?? [];
-
-		const ifAlreadyWonThisPrize = currentEntry.find(
-			(e) => e.userId === randomWinnerUserId
-		);
-
-		const winnersOfThisPrize = currentEntry.filter(
-			(e) => e.userId !== randomWinnerUserId
-		);
-
-		winnersOfThisPrize.push({
-			userId: randomWinnerUserId,
-			quantityWon: (ifAlreadyWonThisPrize?.quantityWon ?? 0) + 1
+		winners.push({
+			prizeId: currentPrizeId,
+			userId: randomWinnerUserId
 		});
-
-		winnerMap.set(currentPrize.id, winnersOfThisPrize);
 
 		delegatedPrizes++;
 	}
 
-	return winnerMap;
+	return winners;
 }
