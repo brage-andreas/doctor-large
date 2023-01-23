@@ -52,23 +52,29 @@ export default async function toEndedDashboard(
 		buttonArray.push(components.buttons.publishWinners());
 	}
 
-	const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		...buttonArray,
-		components.buttons.showAllWinners()
-	);
+	const rows = [
+		new ActionRowBuilder<ButtonBuilder>().addComponents(
+			components.buttons.showAllWinners(),
+			...buttonArray
+		),
 
-	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		components.buttons.rerollWinners().setDisabled(true),
-		components.buttons.rerollAllWinners()
-	);
+		new ActionRowBuilder<ButtonBuilder>().addComponents(
+			components.buttons.rerollWinners(),
+			components.buttons.rerollAllWinners()
+		),
+		new ActionRowBuilder<ButtonBuilder>().addComponents(
+			components.buttons.deleteUnclaimedWinners(),
+			components.buttons.deleteAllWinners()
+		),
 
-	const row3 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		components.buttons.reactivateGiveaway(),
-		components.buttons.deleteGiveaway()
-	);
+		new ActionRowBuilder<ButtonBuilder>().addComponents(
+			components.buttons.reactivateGiveaway(),
+			components.buttons.deleteGiveaway()
+		)
+	];
 
 	const msg = await interaction.editReply({
-		components: [row1, row2, row3],
+		components: rows,
 		...giveaway.toDashboardOverview()
 	});
 
@@ -91,7 +97,7 @@ export default async function toEndedDashboard(
 		await buttonInteraction.deferUpdate();
 
 		switch (buttonInteraction.customId) {
-			case "reactivate": {
+			case "reactivateGiveaway": {
 				await giveaway.edit(
 					{
 						ended: false
@@ -238,7 +244,7 @@ export default async function toEndedDashboard(
 				await rollAndSign({
 					entries,
 					giveaway,
-					overrideClaimed: true,
+					overrideClaimed: false,
 					ignoreRequirements: false,
 					prizes,
 					prizesQuantity,
@@ -256,7 +262,7 @@ export default async function toEndedDashboard(
 				await rollAndSign({
 					entries,
 					giveaway,
-					overrideClaimed: false,
+					overrideClaimed: true,
 					ignoreRequirements: false,
 					prizes,
 					prizesQuantity,
@@ -265,6 +271,8 @@ export default async function toEndedDashboard(
 
 				return toEndedDashboard(interaction, giveawayManager, giveaway);
 			}
+
+			// TODO: delete winners
 		}
 	});
 

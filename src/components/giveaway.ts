@@ -317,11 +317,11 @@ const enterGiveawayButton = (id: number) =>
 // -----------------------
 
 /**
- * ID: reactivate
+ * ID: reactivateGiveaway
  */
-const reactivateButton = new ButtonBuilder()
-	.setCustomId("reactivate")
-	.setLabel("Reactivate")
+const reactivateGiveawayButton = new ButtonBuilder()
+	.setCustomId("reactivateGiveaway")
+	.setLabel("Reactivate giveaway")
 	.setStyle(ButtonStyle.Secondary);
 
 /**
@@ -362,7 +362,7 @@ const showAllWinnersButton = new ButtonBuilder()
 const rerollWinnersButton = new ButtonBuilder()
 	.setCustomId("rerollWinners")
 	.setLabel("Reroll unclaimed")
-	.setStyle(ButtonStyle.Success);
+	.setStyle(ButtonStyle.Secondary);
 
 /**
  * ID: rerollAllWinners
@@ -370,6 +370,22 @@ const rerollWinnersButton = new ButtonBuilder()
 const rerollAllWinnersButton = new ButtonBuilder()
 	.setCustomId("rerollAllWinners")
 	.setLabel("Reroll all")
+	.setStyle(ButtonStyle.Danger);
+
+/**
+ * ID: deleteUnclaimedWinners
+ */
+const deleteUnclaimedWinnersButton = new ButtonBuilder()
+	.setCustomId("deleteUnclaimedWinners")
+	.setLabel("Delete unclaimed")
+	.setStyle(ButtonStyle.Secondary);
+
+/**
+ * ID: deleteAllWinners
+ */
+const deleteAllWinnersButton = new ButtonBuilder()
+	.setCustomId("deleteAllWinners")
+	.setLabel("Delete all")
 	.setStyle(ButtonStyle.Danger);
 
 // -----------------------
@@ -492,9 +508,9 @@ const buttons = {
 	enterGiveaway: (id: number) => enterGiveawayButton(id),
 
 	/**
-	 * ID: reactivate
+	 * ID: reactivateGiveaway
 	 */
-	reactivateGiveaway: () => reactivateButton,
+	reactivateGiveaway: () => reactivateGiveawayButton,
 
 	/**
 	 * ID: publishWinners
@@ -524,7 +540,17 @@ const buttons = {
 	/**
 	 * ID: rerollAllWinners
 	 */
-	rerollAllWinners: () => rerollAllWinnersButton
+	rerollAllWinners: () => rerollAllWinnersButton,
+
+	/**
+	 * ID: deleteUnclaimedWinners
+	 */
+	deleteUnclaimedWinners: () => deleteUnclaimedWinnersButton,
+
+	/**
+	 * ID: deleteAllWinners
+	 */
+	deleteAllWinners: () => deleteAllWinnersButton
 } as const;
 
 export const giveaway = {
