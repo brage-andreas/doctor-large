@@ -519,10 +519,12 @@ export default class GiveawayModule {
 			: null;
 
 		const winnersStr = this.winnersUserIds().size
-			? `→ Winners: **${this.winnersUserIds().size}**/${
+			? `→ Unique winners: **${this.winnersUserIds().size}**/${
 					this.winnerQuantity
 			  }`
-			: "→ No winners";
+			: `→ ${
+					this.entriesUserIds.size ? `${EMOJIS.WARN} ` : ""
+			  }No winners`;
 
 		const publishedOutdated = this.publishedMessageIsOutdated
 			? `${EMOJIS.WARN} The published message is outdated. Republish the giveaway.`
