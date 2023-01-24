@@ -272,7 +272,19 @@ export default async function toEndedDashboard(
 				return toEndedDashboard(interaction, giveawayManager, giveaway);
 			}
 
-			// TODO: delete winners
+			case "deleteUnclaimedWinners": {
+				await giveawayManager.deleteWinners(giveaway.data, {
+					onlyDeleteUnclaimed: true
+				});
+
+				return toEndedDashboard(interaction, giveawayManager, giveaway);
+			}
+
+			case "deleteAllWinners": {
+				await giveawayManager.deleteWinners(giveaway.data);
+
+				return toEndedDashboard(interaction, giveawayManager, giveaway);
+			}
 		}
 	});
 
