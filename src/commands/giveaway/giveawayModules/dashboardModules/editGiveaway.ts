@@ -29,8 +29,8 @@ export default async function toEditGiveaway(
 		return;
 	}
 
-	const editGiveawayModal = components.modals.editGiveaway(
-		giveaway.id,
+	const editGiveawayModal = components.modals.editGiveaway.component(
+		giveaway.guildRelativeId,
 		giveaway.title,
 		giveaway.description,
 		giveaway.winnerQuantity

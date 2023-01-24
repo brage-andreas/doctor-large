@@ -2,11 +2,11 @@ import { oneLine } from "common-tags";
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
-	ButtonStyle,
 	PermissionFlagsBits,
 	RoleSelectMenuBuilder,
 	type RESTPostAPIApplicationCommandsJSONBody
 } from "discord.js";
+import { components } from "../../components/index.js";
 import AutoroleManager from "../../database/autorole.js";
 import Logger from "../../logger/logger.js";
 import {
@@ -23,26 +23,6 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 		PermissionFlagsBits.ManageRoles | PermissionFlagsBits.ManageGuild
 	).toString()
 };
-
-const turnOnButton = new ButtonBuilder()
-	.setLabel("Turn on")
-	.setCustomId("autoroleEnable")
-	.setStyle(ButtonStyle.Success);
-
-const turnOffButton = new ButtonBuilder()
-	.setLabel("Turn off")
-	.setCustomId("autoroleDisable")
-	.setStyle(ButtonStyle.Danger);
-
-const roleSelect = new RoleSelectMenuBuilder()
-	.setCustomId("autoroleSelect")
-	.setMinValues(1)
-	.setMaxValues(10);
-
-const clearRolesButton = new ButtonBuilder()
-	.setCustomId("autoroleClear")
-	.setStyle(ButtonStyle.Secondary)
-	.setLabel("Clear roles");
 
 const run = async (interaction: CommandModuleInteractions) => {
 	if (!interaction.isChatInputCommand()) {
@@ -61,12 +41,14 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 		const row1 =
 			new ActionRowBuilder<RoleSelectMenuBuilder>().setComponents(
-				roleSelect
+				components.selects.roleSelect(1, 10)
 			);
 
 		const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
-			clearRolesButton,
-			autorole.activated ? turnOffButton : turnOnButton
+			components.buttons.clearRoles(),
+			autorole.activated
+				? components.buttons.disable()
+				: components.buttons.enable()
 		);
 
 		const msg = await interaction.editReply({
@@ -90,7 +72,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 			let active = autorole.activated ?? false;
 			let roles = [...autorole.roleIds];
 
-			if (i.customId === "autoroleSelect") {
+			if (i.customId === components.selects.roleSelect().data.custom_id) {
 				if (!i.isRoleSelectMenu()) {
 					return;
 				}
@@ -104,7 +86,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 						to [${roles.join(", ")}]
 					`
 				);
-			} else if (i.customId === "autoroleClear") {
+			} else if (i.customId === components.buttons.clearRoles().data.) {
 				roles = [];
 
 				logger.log(

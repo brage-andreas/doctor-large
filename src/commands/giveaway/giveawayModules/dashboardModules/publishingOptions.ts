@@ -59,9 +59,9 @@ export default async function toPublishingOptions(
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
 		components.buttons.back(),
-		components.buttons.lastChannel(),
-		components.buttons.editCurrentMessage(),
-		components.buttons.recallCurrentMessage()
+		components.buttons.lastChannel.component(),
+		components.buttons.editCurrentMessage.component(),
+		components.buttons.recallCurrentMessage.component()
 	);
 
 	const logger = new Logger({ prefix: "GIVEAWAY", interaction });
@@ -137,7 +137,7 @@ export default async function toPublishingOptions(
 				allowedMentions: { parse: ["everyone", "roles"] },
 				components: [
 					new ActionRowBuilder<ButtonBuilder>().setComponents(
-						components.buttons.enterGiveaway(id)
+						components.buttons.enterGiveaway.component(id)
 					)
 				],
 				content: giveaway.pingRolesMentions?.join(" "),
