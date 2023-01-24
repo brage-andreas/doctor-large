@@ -10,397 +10,413 @@ import {
 import { EMOJIS, GIVEAWAY } from "../constants.js";
 import { modalId } from "../helpers/ModalCollector.js";
 
+interface ComponentParams {
+	customId?: true;
+}
+
+function wrap<T extends ButtonBuilder | ModalBuilder>(): () => T;
+function wrap<T extends ButtonBuilder | ModalBuilder>(): ({
+	customId
+}: ComponentParams) => string;
+function wrap<T extends ButtonBuilder | ModalBuilder>(): ({
+	customId
+}: ComponentParams) => T | string {
+	return ({ customId }: ComponentParams): T | string =>
+		customId
+			? publishGiveawayButton.customId
+			: publishGiveawayButton.component;
+}
+
 // -----------------------
 //         CREATE
 // -----------------------
 
-/**
- * ID: title
- */
-const modalGiveawayTitle = new TextInputBuilder()
-	.setCustomId("title")
-	.setLabel("Title")
-	.setMaxLength(GIVEAWAY.MAX_TITLE_LEN)
-	.setStyle(TextInputStyle.Short)
-	.setRequired(true)
-	.setPlaceholder("Christmas Giveaway 2022!");
+const modalGiveawayTitle = {
+	customId: "title", // ------ Match these
+	component: new TextInputBuilder()
+		.setCustomId("title") // Match these // Match these
+		.setLabel("Title")
+		.setMaxLength(GIVEAWAY.MAX_TITLE_LEN)
+		.setStyle(TextInputStyle.Short)
+		.setRequired(true)
+		.setPlaceholder("Christmas Giveaway 2022!")
+} as const;
 
-/**
- * ID: description
- */
-const modalGiveawayDescription = new TextInputBuilder()
-	.setCustomId("description")
-	.setLabel(`Description (max ${GIVEAWAY.MAX_DESCRIPTION_LINES} lines)`)
-	.setMaxLength(GIVEAWAY.MAX_DESCRIPTION_LEN)
-	.setStyle(TextInputStyle.Paragraph)
-	.setPlaceholder(
-		oneLine`
+const modalGiveawayDescription = {
+	customId: "description", // ------ Match these
+	component: new TextInputBuilder()
+		.setCustomId("description") // Match these
+		.setLabel(`Description (max ${GIVEAWAY.MAX_DESCRIPTION_LINES} lines)`)
+		.setMaxLength(GIVEAWAY.MAX_DESCRIPTION_LEN)
+		.setStyle(TextInputStyle.Paragraph)
+		.setPlaceholder(
+			oneLine`
 				It's this time of year again!
 				This is a thanks for a good year 💝
 			`
-	);
+		)
+} as const;
+
+const modalGiveawaywinnerQuantity = {
+	customId: "winnerQuantity", // ------ Match these
+	component: new TextInputBuilder()
+		.setCustomId("winnerQuantity") // Match these
+		.setLabel("Number of winners")
+		.setMaxLength(GIVEAWAY.MAX_WINNER_QUANTITY_LEN)
+		.setStyle(TextInputStyle.Short)
+		.setPlaceholder("1")
+} as const;
 
 /**
- * ID: winnerQuantity
- */
-const modalGiveawaywinnerQuantity = new TextInputBuilder()
-	.setCustomId("winnerQuantity")
-	.setLabel("Number of winners")
-	.setMaxLength(GIVEAWAY.MAX_WINNER_QUANTITY_LEN)
-	.setStyle(TextInputStyle.Short)
-	.setPlaceholder("1");
-
-/**
- * ID: createGiveaway
- *
  * Children: title, description, winnerQuantity
  */
-const createOptionsModal = new ModalBuilder()
-	.setTitle("Create a giveaway")
-	.setCustomId(modalId())
-	.setComponents(
-		new ActionRowBuilder<TextInputBuilder>().addComponents(
-			modalGiveawayTitle
-		),
-		new ActionRowBuilder<TextInputBuilder>().addComponents(
-			modalGiveawayDescription
-		),
-		new ActionRowBuilder<TextInputBuilder>().addComponents(
-			modalGiveawaywinnerQuantity
+const createOptionsModal = {
+	customId: "CUSTOM",
+	component: new ModalBuilder()
+		.setTitle("Create a giveaway")
+		.setCustomId(modalId())
+		.setComponents(
+			new ActionRowBuilder<TextInputBuilder>().addComponents(
+				modalGiveawayTitle.component
+			),
+			new ActionRowBuilder<TextInputBuilder>().addComponents(
+				modalGiveawayDescription.component
+			),
+			new ActionRowBuilder<TextInputBuilder>().addComponents(
+				modalGiveawaywinnerQuantity.component
+			)
 		)
-	);
+} as const;
 
 // -----------------------
 //          EDIT
 // -----------------------
 
-/**
- * ID: newTitle
- */
-const modalGiveawayNewTitle = (oldTitle: string) =>
-	new TextInputBuilder()
-		.setCustomId("newTitle")
-		.setLabel("New Title")
-		.setMaxLength(GIVEAWAY.MAX_TITLE_LEN)
-		.setStyle(TextInputStyle.Short)
-		.setRequired(true)
-		.setValue(oldTitle)
-		.setPlaceholder(oldTitle);
+const modalGiveawayNewTitle = {
+	customId: "newTitle", // ------ Match these
+	component: (oldTitle: string) =>
+		new TextInputBuilder()
+			.setCustomId("newTitle") // Match these
+			.setLabel("New Title")
+			.setMaxLength(GIVEAWAY.MAX_TITLE_LEN)
+			.setStyle(TextInputStyle.Short)
+			.setRequired(true)
+			.setValue(oldTitle)
+			.setPlaceholder(oldTitle)
+} as const;
 
 const emptyString = `${EMOJIS.SLEEP} Whoa so empty — there is no description`;
 
-/**
- * ID: newDescription
- */
-const modalGiveawayNewDescription = (oldDescription: string | null) => {
-	const builder = new TextInputBuilder()
-		.setCustomId("newDescription")
-		.setLabel(
-			`New description (max ${GIVEAWAY.MAX_DESCRIPTION_LINES} lines)`
-		)
-		.setMaxLength(GIVEAWAY.MAX_DESCRIPTION_LEN)
-		.setStyle(TextInputStyle.Paragraph)
-		.setRequired(true);
+const modalGiveawayNewDescription = {
+	customId: "newDescription", // ------ Match these
+	component: (oldDescription: string | null) => {
+		const builder = new TextInputBuilder()
+			.setCustomId("newDescription") // Match these
+			.setLabel(
+				`New description (max ${GIVEAWAY.MAX_DESCRIPTION_LINES} lines)`
+			)
+			.setMaxLength(GIVEAWAY.MAX_DESCRIPTION_LEN)
+			.setStyle(TextInputStyle.Paragraph)
+			.setRequired(true);
 
-	if (oldDescription) {
-		builder.setValue(oldDescription);
-		builder.setPlaceholder(oldDescription ?? emptyString);
+		if (oldDescription) {
+			builder.setValue(oldDescription);
+			builder.setPlaceholder(oldDescription ?? emptyString);
+		}
+
+		return builder;
 	}
+} as const;
 
-	return builder;
-};
-
-/**
- * ID: newWinnerQuantity
- */
-const modalGiveawayNewWinnerQuantity = (oldNumberOfWinners: number) =>
-	new TextInputBuilder()
-		.setCustomId("newWinnerQuantity")
-		.setLabel("New number of winners")
-		.setMaxLength(GIVEAWAY.MAX_WINNER_QUANTITY_LEN)
-		.setStyle(TextInputStyle.Short)
-		.setRequired(true)
-		.setValue(oldNumberOfWinners.toString())
-		.setPlaceholder(oldNumberOfWinners.toString());
+const modalGiveawayNewWinnerQuantity = {
+	customId: "newWinnerQuantity", // ------ Match these
+	component: (oldNumberOfWinners: number) =>
+		new TextInputBuilder()
+			.setCustomId("newWinnerQuantity") // Match these
+			.setLabel("New number of winners")
+			.setMaxLength(GIVEAWAY.MAX_WINNER_QUANTITY_LEN)
+			.setStyle(TextInputStyle.Short)
+			.setRequired(true)
+			.setValue(oldNumberOfWinners.toString())
+			.setPlaceholder(oldNumberOfWinners.toString())
+} as const;
 
 /**
- * ID: editGiveaway
- *
  * Children: newTitle, newDescription, newWinnerQuantity
  */
-const editOptionsModal = (
-	id: number,
-	oldTitle: string,
-	oldDescription: string | null,
-	oldWinnerQuantity: number
-) =>
-	new ModalBuilder()
-		.setTitle(`Edit giveaway #${id} (3 min)`)
-		.setCustomId(modalId())
-		.setComponents(
-			new ActionRowBuilder<TextInputBuilder>().addComponents(
-				modalGiveawayNewTitle(oldTitle)
-			),
-			new ActionRowBuilder<TextInputBuilder>().addComponents(
-				modalGiveawayNewDescription(oldDescription)
-			),
-			new ActionRowBuilder<TextInputBuilder>().addComponents(
-				modalGiveawayNewWinnerQuantity(oldWinnerQuantity)
+const editOptionsModal = {
+	customId: "CUSTOM",
+	component: (
+		id: number,
+		oldTitle: string,
+		oldDescription: string | null,
+		oldWinnerQuantity: number
+	) =>
+		new ModalBuilder()
+			.setTitle(`Edit giveaway #${id} (3 min)`)
+			.setCustomId(modalId())
+			.setComponents(
+				new ActionRowBuilder<TextInputBuilder>().addComponents(
+					modalGiveawayNewTitle.component(oldTitle)
+				),
+				new ActionRowBuilder<TextInputBuilder>().addComponents(
+					modalGiveawayNewDescription.component(oldDescription)
+				),
+				new ActionRowBuilder<TextInputBuilder>().addComponents(
+					modalGiveawayNewWinnerQuantity.component(oldWinnerQuantity)
+				)
 			)
-		);
+} as const;
 
 // -----------------------
 //        DASHBOARD
 // -----------------------
 
-/**
- * ID: publishGiveaway
- */
-const publishGiveawayButton = new ButtonBuilder()
-	.setCustomId("publishGiveaway")
-	.setStyle(ButtonStyle.Success)
-	.setLabel("Publish");
+const publishGiveawayButton = {
+	customId: "publishGiveaway", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("publishGiveaway") // Match these
+		.setStyle(ButtonStyle.Success)
+		.setLabel("Publish")
+} as const;
 
-/**
- * ID: publishingOptions
- */
-const publishingOptionsButton = new ButtonBuilder()
-	.setCustomId("publishingOptions")
-	.setStyle(ButtonStyle.Success)
-	.setLabel("Publishing Options");
+const publishingOptionsButton = {
+	customId: "publishingOptions", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("publishingOptions") // Match these
+		.setStyle(ButtonStyle.Success)
+		.setLabel("Publishing Options")
+} as const;
 
-/**
- * ID: lockEntries
- */
-const lockGiveawayEntriesButton = new ButtonBuilder()
-	.setCustomId("lockEntries")
-	.setStyle(ButtonStyle.Secondary)
-	.setEmoji(EMOJIS.LOCK)
-	.setLabel("Lock entries");
+const lockGiveawayEntriesButton = {
+	customId: "lockEntries", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("lockEntries") // Match these
+		.setStyle(ButtonStyle.Secondary)
+		.setEmoji(EMOJIS.LOCK)
+		.setLabel("Lock entries")
+} as const;
 
-/**
- * ID: unlockEntries
- */
-const unlockGiveawayEntriesButton = new ButtonBuilder()
-	.setCustomId("unlockEntries")
-	.setStyle(ButtonStyle.Secondary)
-	.setEmoji(EMOJIS.UNLOCK)
-	.setLabel("Unlock entries");
+const unlockGiveawayEntriesButton = {
+	customId: "unlockEntries", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("unlockEntries") // Match these
+		.setStyle(ButtonStyle.Secondary)
+		.setEmoji(EMOJIS.UNLOCK)
+		.setLabel("Unlock entries")
+} as const;
 
-/**
- * ID: setEndDate
- */
-const setEndDateButton = new ButtonBuilder()
-	.setCustomId("setEndDate")
-	.setStyle(ButtonStyle.Secondary)
-	.setLabel("Set end date");
+const setEndDateButton = {
+	customId: "setEndDate", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("setEndDate") // Match these
+		.setStyle(ButtonStyle.Secondary)
+		.setLabel("Set end date")
+} as const;
 
-/**
- * ID: setRequiredRoles
- */
-const setRequiredRolesButton = new ButtonBuilder()
-	.setCustomId("setRequiredRoles")
-	.setStyle(ButtonStyle.Secondary)
-	.setLabel("Set required roles");
+const setRequiredRolesButton = {
+	customId: "setRequiredRoles", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("setRequiredRoles") // Match these
+		.setStyle(ButtonStyle.Secondary)
+		.setLabel("Set required roles")
+} as const;
 
-/**
- * ID: clearRequiredRoles
- */
-const clearRequiredRolesButton = new ButtonBuilder()
-	.setCustomId("clearRequiredRoles")
-	.setStyle(ButtonStyle.Secondary)
-	.setLabel("Clear required roles");
+const clearRequiredRolesButton = {
+	customId: "clearRequiredRoles", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("clearRequiredRoles") // Match these
+		.setStyle(ButtonStyle.Secondary)
+		.setLabel("Clear required roles")
+} as const;
 
-/**
- * ID: setRequiredRolesToAtEveryone
- */
-const setPingRolesToAtEveryoneButton = new ButtonBuilder()
-	.setCustomId("setPingRolesToAtEveryone")
-	.setStyle(ButtonStyle.Primary)
-	.setLabel("Set to @everyone");
+const setPingRolesToAtEveryoneButton = {
+	customId: "setPingRolesToAtEveryone", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("setPingRolesToAtEveryone") // Match these
+		.setStyle(ButtonStyle.Primary)
+		.setLabel("Set to @everyone")
+} as const;
 
-/**
- * ID: setPingRoles
- */
-const setPingRolesButton = new ButtonBuilder()
-	.setCustomId("setPingRoles")
-	.setStyle(ButtonStyle.Secondary)
-	.setLabel("Set ping roles");
+const setPingRolesButton = {
+	customId: "setPingRoles", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("setPingRoles") // Match these
+		.setStyle(ButtonStyle.Secondary)
+		.setLabel("Set ping roles")
+} as const;
 
-/**
- * ID: clearPingRoles
- */
-const clearPingRolesButton = new ButtonBuilder()
-	.setCustomId("clearPingRoles")
-	.setStyle(ButtonStyle.Secondary)
-	.setLabel("Clear ping roles");
+const clearPingRolesButton = {
+	customId: "clearPingRoles", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("clearPingRoles") // Match these
+		.setStyle(ButtonStyle.Secondary)
+		.setLabel("Clear ping roles")
+} as const;
 
-/**
- * ID: editGiveaway
- */
-const editGiveawayButton = new ButtonBuilder()
-	.setCustomId("editGiveaway")
-	.setStyle(ButtonStyle.Primary)
-	.setEmoji(EMOJIS.EDIT)
-	.setLabel("Edit");
+const editGiveawayButton = {
+	customId: "editGiveaway", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("editGiveaway") // Match these
+		.setStyle(ButtonStyle.Primary)
+		.setEmoji(EMOJIS.EDIT)
+		.setLabel("Edit")
+} as const;
 
-/**
- * ID: managePrizes
- */
-const manageGiveawayPrizesButton = new ButtonBuilder()
-	.setCustomId("managePrizes")
-	.setStyle(ButtonStyle.Success)
-	.setLabel("Manage prizes");
+const manageGiveawayPrizesButton = {
+	customId: "managePrizes", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("managePrizes") // Match these
+		.setStyle(ButtonStyle.Success)
+		.setLabel("Manage prizes")
+} as const;
 
-/**
- * ID: endGiveaway
- */
-const endGiveawayButton = new ButtonBuilder()
-	.setCustomId("endGiveaway")
-	.setStyle(ButtonStyle.Primary)
-	.setLabel("End giveaway");
+const endGiveawayButton = {
+	customId: "endGiveaway", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("endGiveaway") // Match these
+		.setStyle(ButtonStyle.Primary)
+		.setLabel("End giveaway")
+} as const;
 
-/**
- * ID: resetData
- */
-const resetDataButton = new ButtonBuilder()
-	.setCustomId("resetData")
-	.setStyle(ButtonStyle.Primary)
-	.setLabel("Reset data");
+const resetDataButton = {
+	customId: "resetData", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("resetData") // Match these
+		.setStyle(ButtonStyle.Primary)
+		.setLabel("Reset data")
+} as const;
 
-/**
- * ID: deleteGiveaway
- */
-const deleteGiveawayButton = new ButtonBuilder()
-	.setCustomId("deleteGiveaway")
-	.setStyle(ButtonStyle.Danger)
-	.setLabel("Delete giveaway");
+const deleteGiveawayButton = {
+	customId: "deleteGiveaway", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("deleteGiveaway") // Match these
+		.setStyle(ButtonStyle.Danger)
+		.setLabel("Delete giveaway")
+} as const;
 
 // -----------------------
 
-/**
- * ID: lastChannel
- */
-const lastChannelButton = new ButtonBuilder()
-	.setCustomId("lastChannel")
-	.setLabel("Use the previous channel")
-	.setStyle(ButtonStyle.Primary);
+const lastChannelButton = {
+	customId: "lastChannel", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("lastChannel") // Match these
+		.setLabel("Use the previous channel")
+		.setStyle(ButtonStyle.Primary)
+} as const;
 
-/**
- * ID: editCurrent
- */
-const editCurrentMessageButton = new ButtonBuilder()
-	.setCustomId("editCurrent")
-	.setLabel("Edit current message")
-	.setStyle(ButtonStyle.Success);
-
-/**
- * ID: recallCurrent
- */
-const recallCurrentMessageButton = new ButtonBuilder()
-	.setCustomId("recallCurrent")
-	.setLabel("Recall current message")
-	.setStyle(ButtonStyle.Danger);
-
-/**
- * ID: enter-giveaway-{id}
- */
-const enterGiveawayButton = (id: number) =>
-	new ButtonBuilder()
-		.setCustomId(`enter-giveaway-${id}`)
-		.setLabel("Enter")
+const editCurrentMessageButton = {
+	customId: "editCurrent", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("editCurrent") // Match these
+		.setLabel("Edit current message")
 		.setStyle(ButtonStyle.Success)
-		.setEmoji(EMOJIS.ENTER_GIVEAWAY_EMOJI);
+} as const;
+
+const recallCurrentMessageButton = {
+	customId: "recallCurrent", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("recallCurrent") // Match these
+		.setLabel("Recall current message")
+		.setStyle(ButtonStyle.Danger)
+} as const;
+
+const enterGiveawayButton = {
+	customId: "CUSTOM",
+	component: (id: number) =>
+		new ButtonBuilder()
+			.setCustomId(`enter-giveaway-${id}`)
+			.setLabel("Enter")
+			.setStyle(ButtonStyle.Success)
+			.setEmoji(EMOJIS.ENTER_GIVEAWAY_EMOJI)
+} as const;
 
 // -----------------------
 //     ENDED DASHBOARD
 // -----------------------
 
-/**
- * ID: reactivateGiveaway
- */
-const reactivateGiveawayButton = new ButtonBuilder()
-	.setCustomId("reactivateGiveaway")
-	.setLabel("Reactivate giveaway")
-	.setStyle(ButtonStyle.Secondary);
+const reactivateGiveawayButton = {
+	customId: "reactivateGiveaway", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("reactivateGiveaway") // Match these
+		.setLabel("Reactivate giveaway")
+		.setStyle(ButtonStyle.Secondary)
+} as const;
 
-/**
- * ID: publishWinners
- */
-const publishWinnersButton = new ButtonBuilder()
-	.setCustomId("publishWinners")
-	.setLabel("Publish winners")
-	.setStyle(ButtonStyle.Success);
+const publishWinnersButton = {
+	customId: "publishWinners", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("publishWinners") // Match these
+		.setLabel("Publish winners")
+		.setStyle(ButtonStyle.Success)
+} as const;
 
-/**
- * ID: republishWinners
- */
-const republishWinnersButton = new ButtonBuilder()
-	.setCustomId("republishWinners")
-	.setLabel("Republish winners")
-	.setStyle(ButtonStyle.Success);
+const republishWinnersButton = {
+	customId: "republishWinners", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("republishWinners") // Match these
+		.setLabel("Republish winners")
+		.setStyle(ButtonStyle.Success)
+} as const;
 
-/**
- * ID: unpublishWinners
- */
-const unpublishWinnersButton = new ButtonBuilder()
-	.setCustomId("unpublishWinners")
-	.setLabel("Unpublish winners")
-	.setStyle(ButtonStyle.Secondary);
+const unpublishWinnersButton = {
+	customId: "unpublishWinners", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("unpublishWinners") // Match these
+		.setLabel("Unpublish winners")
+		.setStyle(ButtonStyle.Secondary)
+} as const;
 
-/**
- * ID: showAllWinners
- */
-const showAllWinnersButton = new ButtonBuilder()
-	.setCustomId("showAllWinners")
-	.setLabel("Show all winners")
-	.setStyle(ButtonStyle.Primary);
+const showAllWinnersButton = {
+	customId: "showAllWinners", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("showAllWinners") // Match these
+		.setLabel("Show all winners")
+		.setStyle(ButtonStyle.Primary)
+} as const;
 
-/**
- * ID: rerollWinners
- */
-const rerollWinnersButton = new ButtonBuilder()
-	.setCustomId("rerollWinners")
-	.setLabel("Reroll unclaimed")
-	.setStyle(ButtonStyle.Secondary);
+const rerollWinnersButton = {
+	customId: "rerollWinners", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("rerollWinners") // Match these
+		.setLabel("Reroll unclaimed")
+		.setStyle(ButtonStyle.Secondary)
+} as const;
 
-/**
- * ID: rerollAllWinners
- */
-const rerollAllWinnersButton = new ButtonBuilder()
-	.setCustomId("rerollAllWinners")
-	.setLabel("Reroll all")
-	.setStyle(ButtonStyle.Danger);
+const rerollAllWinnersButton = {
+	customId: "rerollAllWinners", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("rerollAllWinners") // Match these
+		.setLabel("Reroll all")
+		.setStyle(ButtonStyle.Danger)
+} as const;
 
-/**
- * ID: deleteUnclaimedWinners
- */
-const deleteUnclaimedWinnersButton = new ButtonBuilder()
-	.setCustomId("deleteUnclaimedWinners")
-	.setLabel("Delete unclaimed")
-	.setStyle(ButtonStyle.Secondary);
+const deleteUnclaimedWinnersButton = {
+	customId: "deleteUnclaimedWinners", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("deleteUnclaimedWinners") // Match these
+		.setLabel("Delete unclaimed")
+		.setStyle(ButtonStyle.Secondary)
+} as const;
 
-/**
- * ID: deleteAllWinners
- */
-const deleteAllWinnersButton = new ButtonBuilder()
-	.setCustomId("deleteAllWinners")
-	.setLabel("Delete all")
-	.setStyle(ButtonStyle.Danger);
+const deleteAllWinnersButton = {
+	customId: "deleteAllWinners", // ------ Match these
+	component: new ButtonBuilder()
+		.setCustomId("deleteAllWinners") // Match these
+		.setLabel("Delete all")
+		.setStyle(ButtonStyle.Danger)
+} as const;
 
 // -----------------------
 
 const modals = {
 	/**
-	 * ID: createGiveaway
-	 *
 	 * Children: title, description, numberOfWinners
 	 */
-	createGiveaway: () => createOptionsModal,
+	createGiveaway: ({ customId }: ComponentParams) =>
+		customId ? createOptionsModal.customId : createOptionsModal.component,
 
 	/**
-	 * ID: editGiveaway
-	 *
 	 * Children: newTitle, newDescription, newWinnerQuantity
 	 */
 	editGiveaway: (
@@ -408,152 +424,141 @@ const modals = {
 		oldTitle: string,
 		oldDescription: string | null,
 		oldWinnerQuantity: number
-	) => editOptionsModal(id, oldTitle, oldDescription, oldWinnerQuantity)
+	) =>
+		editOptionsModal.component(
+			id,
+			oldTitle,
+			oldDescription,
+			oldWinnerQuantity
+		)
 } as const;
 
 const buttons = {
-	/**
-	 * ID: publishGiveaway
-	 */
-	publishGiveaway: () => publishGiveawayButton,
+	publishGiveaway: ({ customId }: ComponentParams) =>
+		customId
+			? publishGiveawayButton.customId
+			: publishGiveawayButton.component,
 
-	/**
-	 * ID: publishingOptions
-	 */
-	publishingOptions: () => publishingOptionsButton,
+	publishingOptions: ({ customId }: ComponentParams) =>
+		customId
+			? publishingOptionsButton.customId
+			: publishingOptionsButton.component,
 
-	/**
-	 * ID: lockEntries
-	 */
-	lockEntries: () => lockGiveawayEntriesButton,
+	lockEntries: ({ customId }: ComponentParams) =>
+		customId
+			? lockGiveawayEntriesButton.customId
+			: lockGiveawayEntriesButton.component,
 
-	/**
-	 * ID: unlockEntries
-	 */
-	unlockEntries: () => unlockGiveawayEntriesButton,
+	unlockEntries: ({ customId }: ComponentParams) =>
+		customId
+			? unlockGiveawayEntriesButton.customId
+			: unlockGiveawayEntriesButton.component,
 
-	/**
-	 * ID: setEndDate
-	 */
-	setEndDate: () => setEndDateButton,
+	setEndDate: ({ customId }: ComponentParams) =>
+		customId ? setEndDateButton.customId : setEndDateButton.component,
 
-	/**
-	 * ID: setRequiredRoles
-	 */
-	setRequiredRoles: () => setRequiredRolesButton,
+	setRequiredRoles: ({ customId }: ComponentParams) =>
+		customId
+			? setRequiredRolesButton.customId
+			: setRequiredRolesButton.component,
 
-	/**
-	 * ID: setPingRoles
-	 */
-	setPingRoles: () => setPingRolesButton,
+	setPingRoles: ({ customId }: ComponentParams) =>
+		customId ? setPingRolesButton.customId : setPingRolesButton.component,
 
-	/**
-	 * ID: editGiveaway
-	 */
-	editGiveaway: () => editGiveawayButton,
+	editGiveaway: ({ customId }: ComponentParams) =>
+		customId ? editGiveawayButton.customId : editGiveawayButton.component,
 
-	/**
-	 * ID: managePrizes
-	 */
-	managePrizes: () => manageGiveawayPrizesButton,
+	managePrizes: ({ customId }: ComponentParams) =>
+		customId
+			? manageGiveawayPrizesButton.customId
+			: manageGiveawayPrizesButton.component,
 
-	/**
-	 * ID: endGiveaway
-	 */
-	endGiveaway: () => endGiveawayButton,
+	endGiveaway: ({ customId }: ComponentParams) =>
+		customId ? endGiveawayButton.customId : endGiveawayButton.component,
 
-	/**
-	 * ID: resetData
-	 */
-	resetData: () => resetDataButton,
+	resetData: ({ customId }: ComponentParams) =>
+		customId ? resetDataButton.customId : resetDataButton.component,
 
-	/**
-	 * ID: deleteGiveaway
-	 */
-	deleteGiveaway: () => deleteGiveawayButton,
+	deleteGiveaway: ({ customId }: ComponentParams) =>
+		customId
+			? deleteGiveawayButton.customId
+			: deleteGiveawayButton.component,
 
-	/**
-	 * ID: clearRequiredRoles
-	 */
-	clearRequiredRoles: () => clearRequiredRolesButton,
+	clearRequiredRoles: ({ customId }: ComponentParams) =>
+		customId
+			? clearRequiredRolesButton.customId
+			: clearRequiredRolesButton.component,
 
-	/**
-	 * ID: setPingRolesToAtEveryone
-	 */
-	setPingRolesToAtEveryone: () => setPingRolesToAtEveryoneButton,
+	setPingRolesToAtEveryone: ({ customId }: ComponentParams) =>
+		customId
+			? setPingRolesToAtEveryoneButton.customId
+			: setPingRolesToAtEveryoneButton.component,
 
-	/**
-	 * ID: clearPingRoles
-	 */
-	clearPingRoles: () => clearPingRolesButton,
+	clearPingRoles: ({ customId }: ComponentParams) =>
+		customId
+			? clearPingRolesButton.customId
+			: clearPingRolesButton.component,
 
-	/**
-	 * ID: lastChannel
-	 */
-	lastChannel: () => lastChannelButton,
+	lastChannel: ({ customId }: ComponentParams) =>
+		customId ? lastChannelButton.customId : lastChannelButton.component,
 
-	/**
-	 * ID: editCurrent
-	 */
-	editCurrentMessage: () => editCurrentMessageButton,
+	editCurrentMessage: ({ customId }: ComponentParams) =>
+		customId
+			? editCurrentMessageButton.customId
+			: editCurrentMessageButton.component,
 
-	/**
-	 * ID: recallCurrent
-	 */
-	recallCurrentMessage: () => recallCurrentMessageButton,
+	recallCurrentMessage: ({ customId }: ComponentParams) =>
+		customId
+			? recallCurrentMessageButton.customId
+			: recallCurrentMessageButton.component,
 
-	/**
-	 * ID: enter-giveaway-{id}
-	 */
-	enterGiveaway: (id: number) => enterGiveawayButton(id),
+	enterGiveaway: (id: number) => enterGiveawayButton.component(id),
 
-	/**
-	 * ID: reactivateGiveaway
-	 */
-	reactivateGiveaway: () => reactivateGiveawayButton,
+	reactivateGiveaway: ({ customId }: ComponentParams) =>
+		customId
+			? reactivateGiveawayButton.customId
+			: reactivateGiveawayButton.component,
 
-	/**
-	 * ID: publishWinners
-	 */
-	publishWinners: () => publishWinnersButton,
+	publishWinners: ({ customId }: ComponentParams) =>
+		customId
+			? publishWinnersButton.customId
+			: publishWinnersButton.component,
 
-	/**
-	 * ID: republishWinners
-	 */
-	republishWinners: () => republishWinnersButton,
+	republishWinners: ({ customId }: ComponentParams) =>
+		customId
+			? republishWinnersButton.customId
+			: republishWinnersButton.component,
 
-	/**
-	 * ID: unpublishWinners
-	 */
-	unpublishWinners: () => unpublishWinnersButton,
+	unpublishWinners: ({ customId }: ComponentParams) =>
+		customId
+			? unpublishWinnersButton.customId
+			: unpublishWinnersButton.component,
 
-	/**
-	 * ID: showAllWinners
-	 */
-	showAllWinners: () => showAllWinnersButton,
+	showAllWinners: ({ customId }: ComponentParams) =>
+		customId
+			? showAllWinnersButton.customId
+			: showAllWinnersButton.component,
 
-	/**
-	 * ID: rerollWinners
-	 */
-	rerollWinners: () => rerollWinnersButton,
+	rerollWinners: ({ customId }: ComponentParams) =>
+		customId ? rerollWinnersButton.customId : rerollWinnersButton.component,
 
-	/**
-	 * ID: rerollAllWinners
-	 */
-	rerollAllWinners: () => rerollAllWinnersButton,
+	rerollAllWinners: ({ customId }: ComponentParams) =>
+		customId
+			? rerollAllWinnersButton.customId
+			: rerollAllWinnersButton.component,
 
-	/**
-	 * ID: deleteUnclaimedWinners
-	 */
-	deleteUnclaimedWinners: () => deleteUnclaimedWinnersButton,
+	deleteUnclaimedWinners: ({ customId }: ComponentParams) =>
+		customId
+			? deleteUnclaimedWinnersButton.customId
+			: deleteUnclaimedWinnersButton.component,
 
-	/**
-	 * ID: deleteAllWinners
-	 */
-	deleteAllWinners: () => deleteAllWinnersButton
+	deleteAllWinners: ({ customId }: ComponentParams) =>
+		customId
+			? deleteAllWinnersButton.customId
+			: deleteAllWinnersButton.component
 } as const;
 
 export const giveaway = {
 	buttons,
 	modals
-};
+} as const;
