@@ -309,31 +309,28 @@ export default class GiveawayManager {
 	}
 
 	public async deleteWinners(
-		prizeIds:
-			| Array<number>
-			| GiveawayModule
-			| GiveawayWithIncludes
-			| { winnersToKeep: Array<number>; inPrize: number }
+		prizeIds: Array<number> | GiveawayModule | GiveawayWithIncludes,
+		options?: {
+			onlyDeleteUnclaimed?: true;
+		}
 	) {
 		let ids: Array<number>;
-
-		if ("winnersToKeep" in prizeIds) {
-			const { inPrize: prizeId, winnersToKeep } = prizeIds;
-
-			return await this.prisma.winner.deleteMany({
-				where: {
-					prizeId,
-					id: {
-						notIn: winnersToKeep
-					}
-				}
-			});
-		}
 
 		if ("length" in prizeIds) {
 			ids = prizeIds;
 		} else {
 			ids = prizeIds.prizes.map((prize) => prize.id);
+		}
+
+		if (options?.onlyDeleteUnclaimed) {
+			return await this.prisma.winner.deleteMany({
+				where: {
+					prizeId: {
+						in: ids
+					},
+					claimed: false
+				}
+			});
 		}
 
 		return await this.prisma.winner.deleteMany({
