@@ -590,6 +590,16 @@ const deleteButton = {
 			.setLabel("Delete")
 };
 
+const endedGiveawayButton = {
+	customId: "giveaway-ended",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("giveaway-ended")
+			.setDisabled(true)
+			.setLabel("This giveaway has ended!")
+			.setStyle(ButtonStyle.Secondary)
+};
+
 // -------------
 
 const selects = {
@@ -627,6 +637,7 @@ const buttons = {
 	publishWinners: publishWinnersButton,
 	showAllWinners: showAllWinnersButton,
 	viewAllEntered: viewAllEnteredButton,
+	endedGiveaway: endedGiveawayButton,
 	enterGiveaway: enterGiveawayButton,
 	rerollWinners: rerollWinnersButton,
 	unlockEntries: unlockGiveawayEntriesButton,
