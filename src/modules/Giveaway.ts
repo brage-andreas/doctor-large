@@ -498,15 +498,18 @@ export default class GiveawayModule {
 		const descriptionStr =
 			this.description ?? `${EMOJIS.WARN} There is no set description`;
 
-		const numberOfWinnersStr = `→ Number of winners: ${this.winnerQuantity}`;
 		const createdStr = `→ Created: ${longStamp(this.createdAt)}`;
 		const entriesStr = `→ Entries: ${this.entriesUserIds.size}`;
-		const endedStr = `→ Ended: ${this.ended ? "Yes" : "No"}`;
 		const hostStr = `→ Host: ${this.hostUserTag} (${this.hostUserId})`;
 		const idStr = `#${this.guildRelativeId}`;
+		const numberOfWinnersStr = `→ Number of winners: ${this.winnerQuantity}`;
+
+		const endedStr = `→ Ended: ${
+			this.ended ? `${EMOJIS.ENDED} Yes` : "No"
+		}`;
 
 		const lockEntriesStr = `→ Entries locked: ${
-			this.entriesLocked ? "Yes" : "No"
+			this.entriesLocked ? `${EMOJIS.LOCK} Yes` : "No"
 		}`;
 
 		const publishedStr = `→ Published: ${
@@ -542,10 +545,10 @@ export default class GiveawayModule {
 		`;
 
 		const optionsField = stripIndents`
-			${endStr}
 			${endedStr}
-			${publishedStr}
 			${lockEntriesStr}
+			${publishedStr}
+			${endStr}
 			${numberOfWinnersStr}
 			${minimumAccountAgeStr}
 		`;
@@ -554,7 +557,7 @@ export default class GiveawayModule {
 			.setTitle(this.title)
 			.setDescription(descriptionStr)
 			.setFooter({
-				text: `Giveaway ${idStr} (${this.id}) • Last edited`
+				text: `Giveaway ${idStr} • Last edited`
 			})
 			.setTimestamp(this.lastEditedAt)
 			.setColor(
@@ -643,7 +646,13 @@ export default class GiveawayModule {
 	}
 
 	public endedEmbed(): Partial<MessageCreateOptions> {
-		const winners = this.winnersUserIds();
+		const myGiveawaysCommand = this.client.application.commands.cache.find(
+			(command) => command.name === "my-giveaways"
+		);
+
+		const myGiveawaysMention = myGiveawaysCommand
+			? `</my-giveaways:${myGiveawaysCommand.id}>`
+			: "the /my-giveaways command";
 
 		const embed = new EmbedBuilder()
 			.setColor(COLORS.GREEN)
@@ -652,24 +661,12 @@ export default class GiveawayModule {
 			)
 			.setFooter({
 				text: `Giveaway #${this.guildRelativeId} • Hosted by ${this.hostUserTag}`
-			});
+			}).setDescription(stripIndents`
+			${EMOJIS.STAR_EYES} The winners have been notified in DMs.
+			If you have DMs turned off, use ${myGiveawaysMention}.
 
-		// TODO: mention the command
-
-		if (winners.size) {
-			embed.setDescription(stripIndents`
-					${EMOJIS.STAR_EYES} The winners have been notified in DM's.
-					If you have DM's turned off, check the /my-giveaways command.
-		
-					Congratulations, everyone! ${EMOJIS.TADA}
-				`);
-		} else {
-			embed.setDescription(stripIndents`
-					There were no winners.
-		
-					Uh.. congratulations!
-				`);
-		}
+			Congratulations, everyone! ${EMOJIS.TADA}
+		`);
 
 		return {
 			embeds: [embed],
