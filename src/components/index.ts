@@ -204,16 +204,6 @@ const setRequiredRolesButton = {
 		})
 } as const;
 
-const clearRequiredRolesButton = {
-	customId: "clearRequiredRoles",
-	component: () =>
-		new ButtonBuilder({
-			customId: "clearRequiredRoles",
-			style: ButtonStyle.Secondary,
-			label: "Clear required roles"
-		})
-} as const;
-
 const setPingRolesToAtEveryoneButton = {
 	customId: "setPingRolesToAtEveryone",
 	component: () =>
@@ -231,16 +221,6 @@ const setPingRolesButton = {
 			customId: "setPingRoles",
 			style: ButtonStyle.Secondary,
 			label: "Set ping roles"
-		})
-} as const;
-
-const clearPingRolesButton = {
-	customId: "clearPingRoles",
-	component: () =>
-		new ButtonBuilder({
-			customId: "clearPingRoles",
-			style: ButtonStyle.Secondary,
-			label: "Clear ping roles"
 		})
 } as const;
 
@@ -474,13 +454,23 @@ const channelSelectMenu = {
 			.setMinValues(min)
 };
 
-const clearRolesButton = {
-	customId: "clearRoles",
+const clearButton = {
+	customId: "clear",
 	component: () =>
 		new ButtonBuilder({
-			customId: "clearRoles",
-			style: ButtonStyle.Secondary,
-			label: "Clear roles"
+			customId: "clear",
+			label: "Clear",
+			style: ButtonStyle.Danger
+		})
+} as const;
+
+const createButton = {
+	customId: "create",
+	component: () =>
+		new ButtonBuilder({
+			customId: "create",
+			label: "Create",
+			style: ButtonStyle.Success
 		})
 } as const;
 
@@ -555,6 +545,53 @@ const noButton = {
 			.setLabel("No")
 };
 
+const resetLevel4Button = {
+	customId: "resetLevel4",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("resetLevel4")
+			.setLabel("Level 4")
+			.setStyle(ButtonStyle.Danger)
+};
+
+const resetLevel3Button = {
+	customId: "resetLevel3",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("resetLevel3")
+			.setLabel("Level 3")
+			.setStyle(ButtonStyle.Secondary)
+};
+
+const resetLevel2Button = {
+	customId: "resetLevel2",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("resetLevel2")
+			.setLabel("Level 2")
+			.setStyle(ButtonStyle.Secondary)
+};
+
+const resetLevel1Button = {
+	customId: "resetLevel1",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("resetLevel1")
+			.setLabel("Level 1")
+			.setStyle(ButtonStyle.Success)
+};
+
+const deleteButton = {
+	customId: "delete",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("delete")
+			.setStyle(ButtonStyle.Danger)
+			.setLabel("Delete")
+};
+
+// -------------
+
 const selects = {
 	channelSelect: channelSelectMenu,
 	roleSelect: roleSelectMenu
@@ -576,7 +613,6 @@ const buttons = {
 	setPingRolesToAtEveryone: setPingRolesToAtEveryoneButton,
 	deleteUnclaimedWinners: deleteUnclaimedWinnersButton,
 	recallCurrentMessage: recallCurrentMessageButton,
-	clearRequiredRoles: clearRequiredRolesButton,
 	editCurrentMessage: editCurrentMessageButton,
 	reactivateGiveaway: reactivateGiveawayButton,
 	publishingOptions: publishingOptionsButton,
@@ -587,7 +623,6 @@ const buttons = {
 	unpublishWinners: unpublishWinnersButton,
 	acceptAllPrizes: acceptAllPrizesButton,
 	publishGiveaway: publishGiveawayButton,
-	clearPingRoles: clearPingRolesButton,
 	deleteGiveaway: deleteGiveawayButton,
 	publishWinners: publishWinnersButton,
 	showAllWinners: showAllWinnersButton,
@@ -602,11 +637,17 @@ const buttons = {
 	endGiveaway: endGiveawayButton,
 	lastChannel: lastChannelButton,
 	lockEntries: lockGiveawayEntriesButton,
-	clearRoles: clearRolesButton,
+	resetLevel1: resetLevel1Button,
+	resetLevel2: resetLevel2Button,
+	resetLevel3: resetLevel3Button,
+	resetLevel4: resetLevel4Button,
 	setEndDate: setEndDateButton,
 	resetData: resetDataButton,
 	disable: disableButton,
+	delete_: deleteButton,
+	create: createButton,
 	enable: enableButton,
+	clear: clearButton,
 	back: backButton,
 	edit: editButton,
 	yes: yesButton,

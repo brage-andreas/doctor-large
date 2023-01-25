@@ -41,22 +41,11 @@ export async function rollAndSign(options: {
 	}
 
 	if (overrideClaimed) {
-		for (const prize of giveaway.prizes) {
-			const ids: Array<number> = [];
-
-			prize.winners.forEach((winner) => {
-				if (winner.claimed) {
-					ids.push(winner.id);
-				}
-			});
-
-			await giveaway.manager.deleteWinners({
-				inPrize: prize.id,
-				winnersToKeep: ids
-			});
-		}
-	} else {
 		await giveaway.manager.deleteWinners(giveaway.data);
+	} else {
+		await giveaway.manager.deleteWinners(giveaway.data, {
+			onlyDeleteUnclaimed: true
+		});
 	}
 
 	const data = roll({

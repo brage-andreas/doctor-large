@@ -1,9 +1,9 @@
 import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
-	RoleSelectMenuBuilder,
 	type ButtonBuilder,
-	type ButtonInteraction
+	type ButtonInteraction,
+	type RoleSelectMenuBuilder
 } from "discord.js";
 import components from "../../../../components/index.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
@@ -22,11 +22,6 @@ export default async function toSetPingRoles(
 		return;
 	}
 
-	const pingRolesSelect = new RoleSelectMenuBuilder()
-		.setCustomId("pingRolesSelect")
-		.setMinValues(1)
-		.setMaxValues(10);
-
 	const choosePingRoleStr = stripIndents`
 			Select the roles you want to ping when publishing the giveaway.
 			
@@ -37,14 +32,17 @@ export default async function toSetPingRoles(
 			}
 		`;
 
+	const { back, clear, setPingRolesToAtEveryone } = components.buttons;
+	const { roleSelect } = components.selects;
+
 	const row1 = new ActionRowBuilder<RoleSelectMenuBuilder>().setComponents(
-		pingRolesSelect
+		roleSelect.component(1, 10)
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		components.buttons.back(),
-		components.buttons.clearPingRoles(),
-		components.buttons.setPingRolesToAtEveryone()
+		back.component(),
+		clear.component(),
+		setPingRolesToAtEveryone.component()
 	);
 
 	const updateMsg = await interaction.editReply({
@@ -57,11 +55,11 @@ export default async function toSetPingRoles(
 	});
 
 	switch (component.customId) {
-		case "back": {
+		case back.customId: {
 			break;
 		}
 
-		case "setPingRolesToAtEveryone": {
+		case setPingRolesToAtEveryone.customId: {
 			await component.deferUpdate();
 
 			new Logger({ prefix: "GIVEAWAY", interaction }).log(
@@ -82,7 +80,7 @@ export default async function toSetPingRoles(
 			break;
 		}
 
-		case "clearPingRoles": {
+		case clear.customId: {
 			await component.deferUpdate();
 
 			new Logger({ prefix: "GIVEAWAY", interaction }).log(
@@ -103,7 +101,7 @@ export default async function toSetPingRoles(
 			break;
 		}
 
-		case "pingRolesSelect": {
+		case roleSelect.customId: {
 			if (!component.isRoleSelectMenu()) {
 				return;
 			}

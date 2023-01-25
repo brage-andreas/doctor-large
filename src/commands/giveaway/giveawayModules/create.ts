@@ -8,7 +8,7 @@ import toDashboard from "./dashboard.js";
 export default async function (
 	interaction: ChatInputCommandInteraction<"cached">
 ) {
-	const modal = components.modals.createGiveaway();
+	const modal = components.modals.createGiveaway.component();
 
 	await interaction.showModal(modal);
 

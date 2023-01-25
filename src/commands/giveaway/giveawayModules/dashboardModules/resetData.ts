@@ -1,9 +1,9 @@
 import { stripIndent, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
-	ButtonBuilder,
 	ButtonStyle,
 	ComponentType,
+	type ButtonBuilder,
 	type ButtonInteraction
 } from "discord.js";
 import components from "../../../../components/index.js";
@@ -34,32 +34,15 @@ export default async function toResetData(
 		return;
 	}
 
-	const resetLevel4Button = new ButtonBuilder()
-		.setCustomId("resetLevel4")
-		.setLabel("Level 4")
-		.setStyle(ButtonStyle.Danger);
-
-	const resetLevel3Button = new ButtonBuilder()
-		.setCustomId("resetLevel3")
-		.setLabel("Level 3")
-		.setStyle(ButtonStyle.Secondary);
-
-	const resetLevel2Button = new ButtonBuilder()
-		.setCustomId("resetLevel2")
-		.setLabel("Level 2")
-		.setStyle(ButtonStyle.Secondary);
-
-	const resetLevel1Button = new ButtonBuilder()
-		.setCustomId("resetLevel1")
-		.setLabel("Level 1")
-		.setStyle(ButtonStyle.Success);
+	const { back, resetLevel1, resetLevel2, resetLevel3, resetLevel4 } =
+		components.buttons;
 
 	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		components.buttons.back(),
-		resetLevel4Button,
-		resetLevel3Button,
-		resetLevel2Button,
-		resetLevel1Button
+		back.component(),
+		resetLevel4.component(),
+		resetLevel3.component(),
+		resetLevel2.component(),
+		resetLevel1.component()
 	);
 
 	const msg = await interaction.editReply({
@@ -109,11 +92,11 @@ export default async function toResetData(
 		await buttonInteraction.deferUpdate();
 
 		switch (buttonInteraction.customId) {
-			case "back": {
+			case back.customId: {
 				return collector.stop();
 			}
 
-			case "resetLevel4": {
+			case resetLevel4.customId: {
 				const accept = await yesNo({
 					yesStyle: ButtonStyle.Danger,
 					noStyle: ButtonStyle.Secondary,
@@ -153,7 +136,7 @@ export default async function toResetData(
 				return collector.stop();
 			}
 
-			case "resetLevel3": {
+			case resetLevel3.customId: {
 				const accept = await yesNo({
 					yesStyle: ButtonStyle.Danger,
 					noStyle: ButtonStyle.Secondary,
@@ -194,7 +177,7 @@ export default async function toResetData(
 				return collector.stop();
 			}
 
-			case "resetLevel2": {
+			case resetLevel2.customId: {
 				const accept = await yesNo({
 					yesStyle: ButtonStyle.Danger,
 					noStyle: ButtonStyle.Secondary,
@@ -232,7 +215,7 @@ export default async function toResetData(
 				return collector.stop();
 			}
 
-			case "resetLevel1": {
+			case resetLevel1.customId: {
 				const accept = await yesNo({
 					yesStyle: ButtonStyle.Danger,
 					noStyle: ButtonStyle.Secondary,

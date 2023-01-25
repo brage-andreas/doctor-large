@@ -1,8 +1,7 @@
 import {
 	ActionRowBuilder,
-	ButtonBuilder,
-	ButtonStyle,
 	ComponentType,
+	type ButtonBuilder,
 	type ButtonInteraction,
 	type ModalSubmitInteraction
 } from "discord.js";
@@ -30,20 +29,12 @@ export default async function toPrizeDashboard(
 		return toManagePrizes(interaction, giveawayId, giveawayManager);
 	}
 
-	const editButton = new ButtonBuilder()
-		.setCustomId("editPrize")
-		.setStyle(ButtonStyle.Primary)
-		.setLabel("Edit");
-
-	const deleteButton = new ButtonBuilder()
-		.setCustomId("deletePrize")
-		.setStyle(ButtonStyle.Danger)
-		.setLabel("Delete");
+	const { back, edit, delete_ } = components.buttons;
 
 	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		components.buttons.back(),
-		editButton,
-		deleteButton
+		back.component(),
+		edit.component(),
+		delete_.component()
 	);
 
 	const msg = await interaction.editReply({
@@ -69,7 +60,7 @@ export default async function toPrizeDashboard(
 
 	collector.on("collect", async (buttonInteraction) => {
 		switch (buttonInteraction.customId) {
-			case "back": {
+			case back.customId: {
 				await buttonInteraction.deferUpdate();
 
 				return toManagePrizes(
@@ -79,7 +70,7 @@ export default async function toPrizeDashboard(
 				);
 			}
 
-			case "editPrize": {
+			case edit.customId: {
 				return toEditPrize(
 					buttonInteraction,
 					prize,
@@ -88,7 +79,7 @@ export default async function toPrizeDashboard(
 				);
 			}
 
-			case "deletePrize": {
+			case delete_.customId: {
 				await buttonInteraction.deferUpdate();
 
 				await giveawayManager.deletePrize(prize.id);

@@ -1,9 +1,9 @@
 import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
-	RoleSelectMenuBuilder,
 	type ButtonBuilder,
-	type ButtonInteraction
+	type ButtonInteraction,
+	type RoleSelectMenuBuilder
 } from "discord.js";
 import components from "../../../../components/index.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
@@ -22,11 +22,6 @@ export default async function toSetRequiredRoles(
 		return;
 	}
 
-	const requiredRolesSelect = new RoleSelectMenuBuilder()
-		.setCustomId("requiredRolesSelect")
-		.setMinValues(1)
-		.setMaxValues(10);
-
 	const chooseRequiredRoleStr = stripIndents`
 			Select the roles you require entrants to have.
 			
@@ -37,13 +32,16 @@ export default async function toSetRequiredRoles(
 			}
 		`;
 
+	const { back, clear } = components.buttons;
+	const { roleSelect } = components.selects;
+
 	const row1 = new ActionRowBuilder<RoleSelectMenuBuilder>().setComponents(
-		requiredRolesSelect
+		roleSelect.component(1, 10)
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		components.buttons.back(),
-		components.buttons.clearRequiredRoles()
+		back.component(),
+		clear.component()
 	);
 
 	const updateMsg = await interaction.editReply({
@@ -58,11 +56,11 @@ export default async function toSetRequiredRoles(
 	await component.deferUpdate();
 
 	switch (component.customId) {
-		case "back": {
+		case back.customId: {
 			break;
 		}
 
-		case "requiredRolesSelect": {
+		case roleSelect.customId: {
 			if (!component.isRoleSelectMenu()) {
 				return;
 			}
@@ -85,7 +83,7 @@ export default async function toSetRequiredRoles(
 			break;
 		}
 
-		case "clearRequiredRoles": {
+		case clear.customId: {
 			new Logger({ prefix: "GIVEAWAY", interaction }).log(
 				`Cleared required roles of giveaway #${giveaway.id}`
 			);

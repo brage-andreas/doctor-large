@@ -48,28 +48,43 @@ export default async function toDashboard(
 		return;
 	}
 
+	const {
+		publishingOptions,
+		publishGiveaway,
+		unlockEntries,
+		lockEntries,
+		setEndDate,
+		setRequiredRoles,
+		setPingRoles,
+		managePrizes,
+		edit,
+		endGiveaway,
+		resetData,
+		deleteGiveaway
+	} = components.buttons;
+
 	const publishButton = giveaway.publishedMessageId
-		? components.buttons.publishingOptions()
-		: components.buttons.publishGiveaway();
+		? publishingOptions.component()
+		: publishGiveaway.component();
 
 	const lockEntriesButton = giveaway.entriesLocked
-		? components.buttons.unlockEntries()
-		: components.buttons.lockEntries();
+		? unlockEntries.component()
+		: lockEntries.component();
 
 	const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		publishButton,
 		lockEntriesButton,
-		components.buttons.setEndDate().setDisabled(true),
-		components.buttons.setRequiredRoles(),
-		components.buttons.setPingRoles()
+		setEndDate.component().setDisabled(true),
+		setRequiredRoles.component(),
+		setPingRoles.component()
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		components.buttons.managePrizes(),
-		components.buttons.editGiveaway(),
-		components.buttons.endGiveaway(),
-		components.buttons.resetData(),
-		components.buttons.deleteGiveaway()
+		managePrizes.component(),
+		edit.component(),
+		endGiveaway.component(),
+		resetData.component(),
+		deleteGiveaway.component()
 	);
 
 	const msg = await interaction.editReply({
@@ -94,7 +109,7 @@ export default async function toDashboard(
 
 	collector.on("collect", async (buttonInteraction) => {
 		switch (buttonInteraction.customId) {
-			case "publishGiveaway": {
+			case publishGiveaway.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toPublishGiveaway(
@@ -106,7 +121,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "publishingOptions": {
+			case publishingOptions.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toPublishingOptions(
@@ -118,7 +133,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "lockEntries": {
+			case lockEntries.customId: {
 				await buttonInteraction.deferUpdate();
 
 				await giveaway.edit(
@@ -137,7 +152,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "unlockEntries": {
+			case unlockEntries.customId: {
 				await buttonInteraction.deferUpdate();
 
 				await giveaway.edit(
@@ -156,7 +171,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "setEndDate": {
+			case setEndDate.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toSetEndDate(buttonInteraction, giveawayId, giveawayManager);
@@ -164,7 +179,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "setRequiredRoles": {
+			case setRequiredRoles.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toSetRequiredRoles(
@@ -176,7 +191,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "setPingRoles": {
+			case setPingRoles.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toSetPingRoles(buttonInteraction, giveawayId, giveawayManager);
@@ -184,7 +199,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "editGiveaway": {
+			case edit.customId: {
 				// await buttonInteraction.deferUpdate();
 				// Showing modal
 
@@ -193,7 +208,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "managePrizes": {
+			case managePrizes.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
@@ -201,7 +216,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "endGiveaway": {
+			case endGiveaway.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toEndGiveaway(buttonInteraction, giveawayId, giveawayManager);
@@ -209,7 +224,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "resetData": {
+			case resetData.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toResetData(buttonInteraction, giveawayId, giveawayManager);
@@ -217,7 +232,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "deleteGiveaway": {
+			case deleteGiveaway.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toDeleteGiveaway(

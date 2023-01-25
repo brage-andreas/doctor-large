@@ -14,7 +14,7 @@ import s from "../../../helpers/s.js";
 import type GiveawayModule from "../../../modules/Giveaway.js";
 import toDashboard from "./dashboard.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
-import { publishWinners } from "./endModules/publishWinners.js";
+import { toPublishWinners } from "./endModules/publishWinners.js";
 import { rollAndSign } from "./endModules/rollWinners/rollAndSign.js";
 
 export default async function toEndedDashboard(
@@ -43,33 +43,46 @@ export default async function toEndedDashboard(
 
 	const buttonArray: Array<ButtonBuilder> = [];
 
+	const {
+		republishWinners,
+		unpublishWinners,
+		publishWinners,
+		showAllWinners,
+		rerollWinners,
+		rerollAllWinners,
+		deleteUnclaimedWinners,
+		deleteAllWinners,
+		reactivateGiveaway,
+		deleteGiveaway
+	} = components.buttons;
+
 	if (giveaway.winnersArePublished()) {
 		buttonArray.push(
-			components.buttons.republishWinners(),
-			components.buttons.unpublishWinners()
+			republishWinners.component(),
+			unpublishWinners.component()
 		);
 	} else {
-		buttonArray.push(components.buttons.publishWinners());
+		buttonArray.push(publishWinners.component());
 	}
 
 	const rows = [
 		new ActionRowBuilder<ButtonBuilder>().addComponents(
-			components.buttons.showAllWinners(),
+			showAllWinners.component(),
 			...buttonArray
 		),
 
 		new ActionRowBuilder<ButtonBuilder>().addComponents(
-			components.buttons.rerollWinners(),
-			components.buttons.rerollAllWinners()
+			rerollWinners.component(),
+			rerollAllWinners.component()
 		),
 		new ActionRowBuilder<ButtonBuilder>().addComponents(
-			components.buttons.deleteUnclaimedWinners(),
-			components.buttons.deleteAllWinners()
+			deleteUnclaimedWinners.component(),
+			deleteAllWinners.component()
 		),
 
 		new ActionRowBuilder<ButtonBuilder>().addComponents(
-			components.buttons.reactivateGiveaway(),
-			components.buttons.deleteGiveaway()
+			reactivateGiveaway.component(),
+			deleteGiveaway.component()
 		)
 	];
 
@@ -97,7 +110,7 @@ export default async function toEndedDashboard(
 		await buttonInteraction.deferUpdate();
 
 		switch (buttonInteraction.customId) {
-			case "reactivateGiveaway": {
+			case reactivateGiveaway.customId: {
 				await giveaway.edit(
 					{
 						ended: false
@@ -112,15 +125,15 @@ export default async function toEndedDashboard(
 				return toDashboard(buttonInteraction, giveaway.id);
 			}
 
-			case "publishWinners": {
-				return void publishWinners(buttonInteraction, giveaway.id);
+			case publishWinners.customId: {
+				return void toPublishWinners(buttonInteraction, giveaway.id);
 			}
 
-			case "republishWinners": {
-				return void publishWinners(buttonInteraction, giveaway.id);
+			case republishWinners.customId: {
+				return void toPublishWinners(buttonInteraction, giveaway.id);
 			}
 
-			case "unpublishWinners": {
+			case unpublishWinners.customId: {
 				const channel = giveaway.channel;
 
 				if (!channel) {
@@ -162,7 +175,7 @@ export default async function toEndedDashboard(
 				return toEndedDashboard(interaction, giveawayManager, giveaway);
 			}
 
-			case "deleteGiveaway": {
+			case deleteGiveaway.customId: {
 				return toDeleteGiveaway(
 					buttonInteraction,
 					giveaway.id,
@@ -170,7 +183,7 @@ export default async function toEndedDashboard(
 				);
 			}
 
-			case "showAllWinners": {
+			case showAllWinners.customId: {
 				const members = await interaction.guild.members.fetch();
 
 				const string = giveaway.prizes
@@ -228,7 +241,7 @@ export default async function toEndedDashboard(
 				return toEndedDashboard(interaction, giveawayManager, giveaway);
 			}
 
-			case "rerollWinners": {
+			case rerollWinners.customId: {
 				const prizes = await giveawayManager.getPrizes({
 					giveawayId: giveaway.id,
 					claimed: false
@@ -254,7 +267,7 @@ export default async function toEndedDashboard(
 				return toEndedDashboard(interaction, giveawayManager, giveaway);
 			}
 
-			case "rerollAllWinners": {
+			case rerollAllWinners.customId: {
 				const entries = [...giveaway.entriesUserIds];
 				const prizesQuantity = giveaway.prizesQuantity();
 				const { winnerQuantity, prizes } = giveaway;
@@ -272,7 +285,7 @@ export default async function toEndedDashboard(
 				return toEndedDashboard(interaction, giveawayManager, giveaway);
 			}
 
-			case "deleteUnclaimedWinners": {
+			case deleteUnclaimedWinners.customId: {
 				await giveawayManager.deleteWinners(giveaway.data, {
 					onlyDeleteUnclaimed: true
 				});
@@ -280,7 +293,7 @@ export default async function toEndedDashboard(
 				return toEndedDashboard(interaction, giveawayManager, giveaway);
 			}
 
-			case "deleteAllWinners": {
+			case deleteAllWinners.customId: {
 				await giveawayManager.deleteWinners(giveaway.data);
 
 				return toEndedDashboard(interaction, giveawayManager, giveaway);

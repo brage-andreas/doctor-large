@@ -51,23 +51,15 @@ export default async function toManagePrizes(
 		prizesButtons.slice(5, 10)
 	].filter((e) => e.length);
 
-	const createButton = new ButtonBuilder()
-		.setCustomId("createPrize")
-		.setStyle(ButtonStyle.Success)
-		.setLabel("Create prize")
+	const { back, create, clear } = components.buttons;
+
+	const createButton = create
+		.component()
 		.setDisabled(10 <= giveaway.prizes.length);
-
-	const clearButton = new ButtonBuilder()
-		.setCustomId("clearPrizes")
-		.setStyle(ButtonStyle.Danger)
-		.setLabel("Clear prizes")
-		.setDisabled(!sortedPrizeButtons.length);
-
-	const backButton = components.buttons.back();
 
 	const rows = [
 		...sortedPrizeButtons,
-		[backButton, createButton, clearButton]
+		[back.component(), createButton, clear.component()]
 	].map((buttonArray) =>
 		new ActionRowBuilder<ButtonBuilder>().setComponents(buttonArray)
 	);
@@ -133,17 +125,17 @@ export default async function toManagePrizes(
 
 	collector.on("collect", async (buttonInteraction) => {
 		switch (buttonInteraction.customId) {
-			case "back": {
+			case back.customId: {
 				await buttonInteraction.deferUpdate();
 
 				return toDashboard(buttonInteraction, id);
 			}
 
-			case "createPrize": {
+			case create.customId: {
 				return toCreatePrize(buttonInteraction, id, giveawayManager);
 			}
 
-			case "clearPrizes": {
+			case clear.customId: {
 				await buttonInteraction.deferUpdate();
 
 				if (giveaway.winnersUserIds().size) {

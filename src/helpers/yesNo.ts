@@ -17,7 +17,9 @@ export default async function yesNo(options: {
 	timeActive?: number;
 	yesStyle?: ButtonStyle;
 	noStyle?: ButtonStyle;
-	medium: Exclude<Interaction, AutocompleteInteraction> | Message;
+	medium:
+		| Exclude<Interaction<"cached">, AutocompleteInteraction>
+		| Message<true>;
 	data: Exclude<MessageEditOptions, "Components">;
 	filter?(interaction: ButtonInteraction): boolean;
 }): Promise<boolean> {
@@ -35,8 +37,13 @@ export default async function yesNo(options: {
 		no.component(noStyle)
 	);
 
-	const method = medium instanceof Message ? medium.edit : medium.editReply;
-	const message = await method({ ...data, components: [row] });
+	let message: Message<true>;
+
+	if (medium instanceof Message) {
+		message = await medium.edit({ ...data, components: [row] });
+	} else {
+		message = await medium.editReply({ ...data, components: [row] });
+	}
 
 	return new Promise((resolve, reject) => {
 		const collector = message.createMessageComponentCollector({
