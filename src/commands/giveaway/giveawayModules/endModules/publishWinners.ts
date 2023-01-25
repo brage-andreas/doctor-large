@@ -12,7 +12,7 @@ import GiveawayManager from "../../../../database/giveaway.js";
 import Logger from "../../../../logger/logger.js";
 import toEndedDashboard from "../endedGiveawayDashboard.js";
 
-export async function publishWinners(
+export async function toPublishWinners(
 	interaction: RepliableInteraction<"cached">,
 	id: number
 ) {
@@ -200,7 +200,7 @@ export async function republishWinners(
 	const currentMessage = await giveaway.winnerMessage?.fetch();
 
 	if (!currentMessage) {
-		await publishWinners(interaction, id);
+		await toPublishWinners(interaction, id);
 
 		return;
 	}
