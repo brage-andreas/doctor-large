@@ -1,11 +1,10 @@
 import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
-	ChannelSelectMenuBuilder,
-	ChannelType,
 	PermissionFlagsBits,
 	type ButtonBuilder,
 	type ButtonInteraction,
+	type ChannelSelectMenuBuilder,
 	type ComponentType,
 	type NewsChannel,
 	type TextChannel
@@ -37,12 +36,6 @@ export default async function toPublishingOptions(
 		return;
 	}
 
-	const channelSelectMenu = new ChannelSelectMenuBuilder()
-		.setCustomId("channelSelect")
-		.setMinValues(1)
-		.setMaxValues(1)
-		.setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement);
-
 	const chooseChannelStr = stripIndents`
 		Select the channel you would like to publish the giveaway in.
 
@@ -53,15 +46,19 @@ export default async function toPublishingOptions(
 		}
 	`;
 
+	const { channelSelect } = components.selects;
+	const { back, lastChannel, editCurrentMessage, recallCurrentMessage } =
+		components.buttons;
+
 	const row1 = new ActionRowBuilder<ChannelSelectMenuBuilder>().setComponents(
-		channelSelectMenu
+		channelSelect.component()
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		components.buttons.back(),
-		components.buttons.lastChannel.component(),
-		components.buttons.editCurrentMessage.component(),
-		components.buttons.recallCurrentMessage.component()
+		back.component(),
+		lastChannel.component(),
+		editCurrentMessage.component(),
+		recallCurrentMessage.component()
 	);
 
 	const logger = new Logger({ prefix: "GIVEAWAY", interaction });
@@ -83,7 +80,7 @@ export default async function toPublishingOptions(
 			filter: (i) => i.user.id === interaction.user.id
 		});
 
-		if (componentInteraction.customId === "back") {
+		if (componentInteraction.customId === back.customId) {
 			await componentInteraction.deferUpdate();
 
 			toDashboard(interaction, id);
@@ -92,8 +89,8 @@ export default async function toPublishingOptions(
 		}
 
 		if (
-			componentInteraction.customId === "channelSelect" ||
-			componentInteraction.customId === "lastChannel"
+			componentInteraction.customId === channelSelect.customId ||
+			componentInteraction.customId === lastChannel.customId
 		) {
 			await componentInteraction.deferUpdate();
 
@@ -175,8 +172,8 @@ export default async function toPublishingOptions(
 		}
 
 		if (
-			componentInteraction.customId === "editCurrent" ||
-			componentInteraction.customId === "recallCurrent"
+			componentInteraction.customId === editCurrentMessage.customId ||
+			componentInteraction.customId === recallCurrentMessage.customId
 		) {
 			await componentInteraction.deferUpdate();
 
@@ -217,7 +214,8 @@ export default async function toPublishingOptions(
 				return;
 			}
 
-			const isEdit = componentInteraction.customId === "editCurrent";
+			const isEdit =
+				componentInteraction.customId === editCurrentMessage.customId;
 
 			const content = giveaway.pingRolesMentions?.join(" ");
 
@@ -225,7 +223,7 @@ export default async function toPublishingOptions(
 
 			const rows = [
 				new ActionRowBuilder<ButtonBuilder>().setComponents(
-					components.buttons.enterGiveaway(id)
+					components.buttons.enterGiveaway.component(id)
 				)
 			];
 

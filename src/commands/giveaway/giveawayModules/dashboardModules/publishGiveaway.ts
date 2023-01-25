@@ -1,11 +1,10 @@
 import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
-	ChannelSelectMenuBuilder,
-	ChannelType,
 	PermissionFlagsBits,
 	type ButtonBuilder,
 	type ButtonInteraction,
+	type ChannelSelectMenuBuilder,
 	type GuildTextBasedChannel,
 	type NewsChannel,
 	type TextChannel
@@ -52,12 +51,6 @@ export default async function toPublishGiveaway(
 		return toDashboard(interaction, id);
 	}
 
-	const channelSelectMenu = new ChannelSelectMenuBuilder()
-		.setCustomId("channelSelect")
-		.setMinValues(1)
-		.setMaxValues(1)
-		.setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement);
-
 	const chooseChannelStr = stripIndents`
 		Select the channel you would like to publish the giveaway in.
 
@@ -68,16 +61,19 @@ export default async function toPublishGiveaway(
 		}
 	`;
 
+	const { enterGiveaway, lastChannel, back } = components.buttons;
+	const { channelSelect } = components.selects;
+
 	const row1 = new ActionRowBuilder<ChannelSelectMenuBuilder>().setComponents(
-		channelSelectMenu
+		channelSelect.component()
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		components.buttons.back()
+		back.component()
 	);
 
 	if (giveaway.channelId) {
-		row2.addComponents(components.buttons.lastChannel());
+		row2.addComponents(lastChannel.component());
 	}
 
 	const retry = async (message?: string) => {
@@ -97,15 +93,15 @@ export default async function toPublishGiveaway(
 
 		await componentInteraction.deferUpdate();
 
-		if (componentInteraction.customId === "back") {
+		if (componentInteraction.customId === back.customId) {
 			toDashboard(interaction, id);
 
 			return;
 		}
 
 		if (
-			componentInteraction.customId === "channelSelect" ||
-			componentInteraction.customId === "prizesStr"
+			componentInteraction.customId === channelSelect.customId ||
+			componentInteraction.customId === lastChannel.customId
 		) {
 			let channel: GuildTextBasedChannel;
 
@@ -151,7 +147,7 @@ export default async function toPublishGiveaway(
 				},
 				components: [
 					new ActionRowBuilder<ButtonBuilder>().setComponents(
-						components.buttons.enterGiveaway(id)
+						enterGiveaway.component(id)
 					)
 				],
 				content: giveaway.pingRolesMentions?.join(" "),

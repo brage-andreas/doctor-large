@@ -1,14 +1,15 @@
 import {
 	ActionRowBuilder,
-	ButtonBuilder,
 	ButtonStyle,
 	ComponentType,
 	Message,
 	type AutocompleteInteraction,
+	type ButtonBuilder,
 	type ButtonInteraction,
 	type Interaction,
 	type MessageEditOptions
 } from "discord.js";
+import components from "../components/index.js";
 import { EMOJIS } from "../constants.js";
 
 export default async function yesNo(options: {
@@ -27,30 +28,15 @@ export default async function yesNo(options: {
 	const noStyle = options.noStyle ?? ButtonStyle.Danger;
 	const time = options.timeActive ?? 60_000;
 
-	const yesButton = new ButtonBuilder()
-		.setCustomId("yes")
-		.setEmoji(EMOJIS.V)
-		.setStyle(yesStyle)
-		.setLabel("Yes");
+	const { yes, no } = components.buttons;
 
-	const noButton = new ButtonBuilder()
-		.setCustomId("no")
-		.setEmoji(EMOJIS.X)
-		.setStyle(noStyle)
-		.setLabel("No");
-
-	const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		yesButton,
-		noButton
+	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
+		yes.component(yesStyle),
+		no.component(noStyle)
 	);
 
-	let message: Message;
-
-	if (medium instanceof Message) {
-		message = await medium.edit({ ...data, components: [row] });
-	} else {
-		message = await medium.editReply({ ...data, components: [row] });
-	}
+	const method = medium instanceof Message ? medium.edit : medium.editReply;
+	const message = await method({ ...data, components: [row] });
 
 	return new Promise((resolve, reject) => {
 		const collector = message.createMessageComponentCollector({
@@ -74,7 +60,7 @@ export default async function yesNo(options: {
 		collector.on("collect", async (collectedInteraction) => {
 			await collectedInteraction.deferUpdate().catch(() => null);
 
-			if (collectedInteraction.customId === "yes") {
+			if (collectedInteraction.customId === yes.customId) {
 				resolve(undefined);
 			} else {
 				reject();

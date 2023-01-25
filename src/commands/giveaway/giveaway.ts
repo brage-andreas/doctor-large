@@ -15,18 +15,18 @@ import sendToCreate from "./giveawayModules/create.js";
 import sendToDashboard from "./giveawayModules/dashboard.js";
 
 const data: RESTPostAPIApplicationCommandsJSONBody = {
-	name: "giveaway",
-	dm_permission: false,
-	description: "Configuration for giveaways.",
 	default_member_permissions: PermissionFlagsBits.ManageGuild.toString(),
+	description: "Configuration for giveaways.",
+	dm_permission: false,
+	name: "giveaway",
 	options: [
 		{
 			name: "dashboard",
-			description: oneLine`
-				Shows a dashboard where you can view current giveaways,
-				or a specific giveaway to manage it.
-			`,
 			type: ApplicationCommandOptionType.Subcommand,
+			description: oneLine`
+			Shows a dashboard where you can view current giveaways,
+			or a specific giveaway to manage it.
+			`,
 			options: [
 				{
 					name: "giveaway",
@@ -39,8 +39,8 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 			]
 		},
 		{
-			name: "create",
 			description: "Create and customise a new giveaway.",
+			name: "create",
 			type: ApplicationCommandOptionType.Subcommand
 		}
 	]

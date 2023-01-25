@@ -1,12 +1,12 @@
 import { oneLine } from "common-tags";
 import {
 	ActionRowBuilder,
-	ButtonBuilder,
 	PermissionFlagsBits,
-	RoleSelectMenuBuilder,
-	type RESTPostAPIApplicationCommandsJSONBody
+	type ButtonBuilder,
+	type RESTPostAPIApplicationCommandsJSONBody,
+	type RoleSelectMenuBuilder
 } from "discord.js";
-import { components } from "../../components/index.js";
+import components from "../../components/index.js";
 import AutoroleManager from "../../database/autorole.js";
 import Logger from "../../logger/logger.js";
 import {
@@ -41,14 +41,14 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 		const row1 =
 			new ActionRowBuilder<RoleSelectMenuBuilder>().setComponents(
-				components.selects.roleSelect(1, 10)
+				components.selects.roleSelect.component(1, 10)
 			);
 
 		const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
-			components.buttons.clearRoles(),
+			components.buttons.clearRoles.component(),
 			autorole.activated
-				? components.buttons.disable()
-				: components.buttons.enable()
+				? components.buttons.disable.component()
+				: components.buttons.enable.component()
 		);
 
 		const msg = await interaction.editReply({
@@ -72,7 +72,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 			let active = autorole.activated ?? false;
 			let roles = [...autorole.roleIds];
 
-			if (i.customId === components.selects.roleSelect().data.custom_id) {
+			if (i.customId === components.selects.roleSelect.customId) {
 				if (!i.isRoleSelectMenu()) {
 					return;
 				}
@@ -86,7 +86,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 						to [${roles.join(", ")}]
 					`
 				);
-			} else if (i.customId === components.buttons.clearRoles().data.) {
+			} else if (i.customId === components.buttons.clearRoles.customId) {
 				roles = [];
 
 				logger.log(
@@ -96,11 +96,11 @@ const run = async (interaction: CommandModuleInteractions) => {
 						to [${roles.join(", ")}]
 					`
 				);
-			} else if (i.customId === "autoroleEnable") {
+			} else if (i.customId === components.buttons.enable.customId) {
 				active = true;
 
 				logger.log("Activated autorole");
-			} else if (i.customId === "autoroleDisable") {
+			} else if (i.customId === components.buttons.disable.customId) {
 				active = false;
 				logger.log("Deactivated autorole");
 			}

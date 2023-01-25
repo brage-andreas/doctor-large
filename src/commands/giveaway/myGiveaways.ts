@@ -158,25 +158,28 @@ const run = async (interaction: CommandModuleInteractions) => {
 		winnerUserId: id
 	});
 
-	const acceptAllButton = notAcceptedPrizes.length
-		? components.buttons.acceptAllPrizes()
+	const { acceptAllPrizes, viewAllEntered, viewAllPrizes, viewAllHosted } =
+		components.buttons;
+
+	const acceptAllPrizesButton = notAcceptedPrizes.length
+		? acceptAllPrizes.component()
 		: null;
 
 	const viewAllEnteredButton = entered.length
-		? components.buttons.viewAllEntered()
+		? viewAllEntered.component()
 		: null;
 
 	const viewAllPrizesButton = prizes.length
-		? components.buttons.viewAllPrizes()
+		? viewAllPrizes.component()
 		: null;
 
 	const viewAllHostedButton = hosted.length
-		? components.buttons.viewAllHosted()
+		? viewAllHosted.component()
 		: null;
 
 	const getButtonArray = () =>
 		[
-			acceptAllButton,
+			acceptAllPrizesButton,
 			viewAllEnteredButton,
 			viewAllPrizesButton,
 			viewAllHostedButton
@@ -234,7 +237,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 	collector.on("collect", async (buttonInteraction) => {
 		await buttonInteraction.deferUpdate();
 
-		if (buttonInteraction.customId === "acceptAllPrizes") {
+		if (buttonInteraction.customId === acceptAllPrizes.customId) {
 			for (const prize of notAcceptedPrizes) {
 				await giveawayManager.setWinnerClaimed({
 					claimed: true,
@@ -274,7 +277,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 			});
 		};
 
-		if (buttonInteraction.customId === "viewAllEntered") {
+		if (buttonInteraction.customId === viewAllEntered.customId) {
 			const string = source`
 				Entered giveaways (${entered.length}):
 				
@@ -294,7 +297,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 			});
 		}
 
-		if (buttonInteraction.customId === "viewAllPrizes") {
+		if (buttonInteraction.customId === viewAllPrizes.customId) {
 			const prizes_ = await getPrizes();
 
 			const prizesStr = prizes_
@@ -316,7 +319,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 			});
 		}
 
-		if (buttonInteraction.customId === "viewAllHosted") {
+		if (buttonInteraction.customId === viewAllHosted.customId) {
 			const string = source`
 				Hosted giveaways (${hosted.length}):
 				

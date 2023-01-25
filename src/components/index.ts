@@ -2,6 +2,8 @@ import { oneLine } from "common-tags";
 import {
 	ButtonBuilder,
 	ButtonStyle,
+	ChannelSelectMenuBuilder,
+	ChannelType,
 	ComponentType,
 	ModalBuilder,
 	RoleSelectMenuBuilder,
@@ -45,25 +47,27 @@ const modalGiveawaywinnerQuantity = () =>
 /**
  * Children: title, description, winnerQuantity
  */
-const createOptionsModal = () =>
-	new ModalBuilder({
-		customId: modalId(),
-		title: "Create a giveaway",
-		components: [
-			{
-				type: ComponentType.ActionRow,
-				components: [modalGiveawayTitle()]
-			},
-			{
-				type: ComponentType.ActionRow,
-				components: [modalGiveawayDescription()]
-			},
-			{
-				type: ComponentType.ActionRow,
-				components: [modalGiveawaywinnerQuantity()]
-			}
-		]
-	});
+const createOptionsModal = {
+	component: () =>
+		new ModalBuilder({
+			customId: modalId(),
+			title: "Create a giveaway",
+			components: [
+				{
+					type: ComponentType.ActionRow,
+					components: [modalGiveawayTitle()]
+				},
+				{
+					type: ComponentType.ActionRow,
+					components: [modalGiveawayDescription()]
+				},
+				{
+					type: ComponentType.ActionRow,
+					components: [modalGiveawaywinnerQuantity()]
+				}
+			]
+		})
+} as const;
 
 const modalGiveawayNewTitle = (oldTitle: string) =>
 	new TextInputBuilder({
@@ -109,298 +113,452 @@ const modalGiveawayNewWinnerQuantity = (oldNumberOfWinners: number) =>
 /**
  * Children: newTitle, newDescription, newWinnerQuantity
  */
-const editOptionsModal = (
-	guildRelativeId: number,
-	oldDescription: string | null,
-	oldTitle: string,
-	oldWinnerQuantity: number
-) =>
-	new ModalBuilder({
-		customId: modalId(),
-		title: `Edit giveaway #${guildRelativeId}`,
-		components: [
-			{
-				type: ComponentType.ActionRow,
-				components: [modalGiveawayNewTitle(oldTitle)]
-			},
-			{
-				type: ComponentType.ActionRow,
-				components: [modalGiveawayNewDescription(oldDescription)]
-			},
-			{
-				type: ComponentType.ActionRow,
-				components: [modalGiveawayNewWinnerQuantity(oldWinnerQuantity)]
-			}
-		]
-	});
+const editOptionsModal = {
+	component: (
+		guildRelativeId: number,
+		oldDescription: string | null,
+		oldTitle: string,
+		oldWinnerQuantity: number
+	) =>
+		new ModalBuilder({
+			customId: modalId(),
+			title: `Edit giveaway #${guildRelativeId}`,
+			components: [
+				{
+					type: ComponentType.ActionRow,
+					components: [modalGiveawayNewTitle(oldTitle)]
+				},
+				{
+					type: ComponentType.ActionRow,
+					components: [modalGiveawayNewDescription(oldDescription)]
+				},
+				{
+					type: ComponentType.ActionRow,
+					components: [
+						modalGiveawayNewWinnerQuantity(oldWinnerQuantity)
+					]
+				}
+			]
+		})
+} as const;
 
-const publishGiveawayButton = () =>
-	new ButtonBuilder({
-		customId: "publishGiveaway",
-		style: ButtonStyle.Success,
-		label: "Publish"
-	});
+const publishGiveawayButton = {
+	customId: "publishGiveaway",
+	component: () =>
+		new ButtonBuilder({
+			customId: "publishGiveaway",
+			style: ButtonStyle.Success,
+			label: "Publish"
+		})
+} as const;
 
-const publishingOptionsButton = () =>
-	new ButtonBuilder({
-		customId: "publishingOptions",
-		style: ButtonStyle.Success,
-		label: "Publishing Options"
-	});
+const publishingOptionsButton = {
+	customId: "publishingOptions",
+	component: () =>
+		new ButtonBuilder({
+			customId: "publishingOptions",
+			style: ButtonStyle.Success,
+			label: "Publishing Options"
+		})
+} as const;
 
-const lockGiveawayEntriesButton = () =>
-	new ButtonBuilder({
-		customId: "lockEntries",
-		style: ButtonStyle.Secondary,
-		emoji: EMOJIS.LOCK,
-		label: "Lock entries"
-	});
+const lockGiveawayEntriesButton = {
+	customId: "lockEntries",
+	component: () =>
+		new ButtonBuilder({
+			customId: "lockEntries",
+			style: ButtonStyle.Secondary,
+			emoji: EMOJIS.LOCK,
+			label: "Lock entries"
+		})
+} as const;
 
-const unlockGiveawayEntriesButton = () =>
-	new ButtonBuilder({
-		customId: "unlockEntries",
-		emoji: EMOJIS.UNLOCK,
-		label: "Unlock entries",
-		style: ButtonStyle.Secondary
-	});
+const unlockGiveawayEntriesButton = {
+	customId: "unlockEntries",
+	component: () =>
+		new ButtonBuilder({
+			customId: "unlockEntries",
+			emoji: EMOJIS.UNLOCK,
+			label: "Unlock entries",
+			style: ButtonStyle.Secondary
+		})
+} as const;
 
-const setEndDateButton = () =>
-	new ButtonBuilder({
-		customId: "setEndDate",
-		style: ButtonStyle.Secondary,
-		label: "Set end date"
-	});
+const setEndDateButton = {
+	customId: "setEndDate",
+	component: () =>
+		new ButtonBuilder({
+			customId: "setEndDate",
+			style: ButtonStyle.Secondary,
+			label: "Set end date"
+		})
+} as const;
 
-const setRequiredRolesButton = () =>
-	new ButtonBuilder({
-		customId: "setRequiredRoles",
-		style: ButtonStyle.Secondary,
-		label: "Set required roles"
-	});
+const setRequiredRolesButton = {
+	customId: "setRequiredRoles",
+	component: () =>
+		new ButtonBuilder({
+			customId: "setRequiredRoles",
+			style: ButtonStyle.Secondary,
+			label: "Set required roles"
+		})
+} as const;
 
-const clearRequiredRolesButton = () =>
-	new ButtonBuilder({
-		customId: "clearRequiredRoles",
-		style: ButtonStyle.Secondary,
-		label: "Clear required roles"
-	});
+const clearRequiredRolesButton = {
+	customId: "clearRequiredRoles",
+	component: () =>
+		new ButtonBuilder({
+			customId: "clearRequiredRoles",
+			style: ButtonStyle.Secondary,
+			label: "Clear required roles"
+		})
+} as const;
 
-const setPingRolesToAtEveryoneButton = () =>
-	new ButtonBuilder({
-		customId: "setPingRolesToAtEveryone",
-		style: ButtonStyle.Primary,
-		label: "Set to @everyone"
-	});
+const setPingRolesToAtEveryoneButton = {
+	customId: "setPingRolesToAtEveryone",
+	component: () =>
+		new ButtonBuilder({
+			customId: "setPingRolesToAtEveryone",
+			style: ButtonStyle.Primary,
+			label: "Set to @everyone"
+		})
+} as const;
 
-const setPingRolesButton = () =>
-	new ButtonBuilder({
-		customId: "setPingRoles",
-		style: ButtonStyle.Secondary,
-		label: "Set ping roles"
-	});
+const setPingRolesButton = {
+	customId: "setPingRoles",
+	component: () =>
+		new ButtonBuilder({
+			customId: "setPingRoles",
+			style: ButtonStyle.Secondary,
+			label: "Set ping roles"
+		})
+} as const;
 
-const clearPingRolesButton = () =>
-	new ButtonBuilder({
-		customId: "clearPingRoles",
-		style: ButtonStyle.Secondary,
-		label: "Clear ping roles"
-	});
+const clearPingRolesButton = {
+	customId: "clearPingRoles",
+	component: () =>
+		new ButtonBuilder({
+			customId: "clearPingRoles",
+			style: ButtonStyle.Secondary,
+			label: "Clear ping roles"
+		})
+} as const;
 
-const editButton = () =>
-	new ButtonBuilder({
-		customId: "edit",
-		style: ButtonStyle.Primary,
-		emoji: EMOJIS.EDIT,
-		label: "Edit"
-	});
+const editButton = {
+	customId: "edit",
+	component: () =>
+		new ButtonBuilder({
+			customId: "edit",
+			style: ButtonStyle.Primary,
+			emoji: EMOJIS.EDIT,
+			label: "Edit"
+		})
+} as const;
 
-const manageGiveawayPrizesButton = () =>
-	new ButtonBuilder({
-		customId: "managePrizes",
-		style: ButtonStyle.Success,
-		label: "Manage prizes"
-	});
+const manageGiveawayPrizesButton = {
+	customId: "managePrizes",
+	component: () =>
+		new ButtonBuilder({
+			customId: "managePrizes",
+			style: ButtonStyle.Success,
+			label: "Manage prizes"
+		})
+} as const;
 
-const endGiveawayButton = () =>
-	new ButtonBuilder({
-		customId: "endGiveaway",
-		style: ButtonStyle.Primary,
-		label: "End giveaway"
-	});
+const endGiveawayButton = {
+	customId: "endGiveaway",
+	component: () =>
+		new ButtonBuilder({
+			customId: "endGiveaway",
+			style: ButtonStyle.Primary,
+			label: "End giveaway"
+		})
+} as const;
 
-const resetDataButton = () =>
-	new ButtonBuilder({
-		customId: "resetData",
-		style: ButtonStyle.Primary,
-		label: "Reset data"
-	});
+const resetDataButton = {
+	customId: "resetData",
+	component: () =>
+		new ButtonBuilder({
+			customId: "resetData",
+			style: ButtonStyle.Primary,
+			label: "Reset data"
+		})
+} as const;
 
-const deleteGiveawayButton = () =>
-	new ButtonBuilder({
-		customId: "deleteGiveaway",
-		style: ButtonStyle.Danger,
-		label: "Delete giveaway"
-	});
+const deleteGiveawayButton = {
+	customId: "deleteGiveaway",
+	component: () =>
+		new ButtonBuilder({
+			customId: "deleteGiveaway",
+			style: ButtonStyle.Danger,
+			label: "Delete giveaway"
+		})
+} as const;
 
-const lastChannelButton = () =>
-	new ButtonBuilder({
-		customId: "lastChannel",
-		label: "Use the previous channel",
-		style: ButtonStyle.Primary
-	});
+const lastChannelButton = {
+	customId: "lastChannel",
+	component: () =>
+		new ButtonBuilder({
+			customId: "lastChannel",
+			label: "Use the previous channel",
+			style: ButtonStyle.Primary
+		})
+} as const;
 
-const editCurrentMessageButton = () =>
-	new ButtonBuilder({
-		customId: "editCurrent",
-		label: "Edit current message",
-		style: ButtonStyle.Success
-	});
+const editCurrentMessageButton = {
+	customId: "editCurrent",
+	component: () =>
+		new ButtonBuilder({
+			customId: "editCurrent",
+			label: "Edit current message",
+			style: ButtonStyle.Success
+		})
+} as const;
 
-const recallCurrentMessageButton = () =>
-	new ButtonBuilder({
-		customId: "recallCurrent",
-		label: "Recall current message",
-		style: ButtonStyle.Danger
-	});
+const recallCurrentMessageButton = {
+	customId: "recallCurrent",
+	component: () =>
+		new ButtonBuilder({
+			customId: "recallCurrent",
+			label: "Recall current message",
+			style: ButtonStyle.Danger
+		})
+} as const;
 
-const enterGiveawayButton = (id: number) =>
-	new ButtonBuilder({
-		customId: `enter-,iveaway-${id}`,
-		label: "Enter",
-		style: ButtonStyle.Success,
-		emoji: EMOJIS.ENTER_GIVEAWAY_EMOJI
-	});
+const enterGiveawayButton = {
+	customId: (id: number) => `enter-giveaway-${id}`,
+	component: (id: number) =>
+		new ButtonBuilder({
+			customId: `enter-giveaway-${id}`,
+			label: "Enter",
+			style: ButtonStyle.Success,
+			emoji: EMOJIS.ENTER_GIVEAWAY_EMOJI
+		})
+} as const;
 
-const reactivateGiveawayButton = () =>
-	new ButtonBuilder({
-		customId: "reactivateGiveaway",
-		label: "Reactivate giveaway",
-		style: ButtonStyle.Secondary
-	});
+const reactivateGiveawayButton = {
+	customId: "reactivateGiveaway",
+	component: () =>
+		new ButtonBuilder({
+			customId: "reactivateGiveaway",
+			label: "Reactivate giveaway",
+			style: ButtonStyle.Secondary
+		})
+} as const;
 
-const publishWinnersButton = () =>
-	new ButtonBuilder({
-		customId: "publishWinners",
-		label: "Publish winners",
-		style: ButtonStyle.Success
-	});
+const publishWinnersButton = {
+	customId: "publishWinners",
+	component: () =>
+		new ButtonBuilder({
+			customId: "publishWinners",
+			label: "Publish winners",
+			style: ButtonStyle.Success
+		})
+} as const;
 
-const republishWinnersButton = () =>
-	new ButtonBuilder({
-		customId: "republishWinners",
-		label: "Republish winners",
-		style: ButtonStyle.Success
-	});
+const republishWinnersButton = {
+	customId: "republishWinners",
+	component: () =>
+		new ButtonBuilder({
+			customId: "republishWinners",
+			label: "Republish winners",
+			style: ButtonStyle.Success
+		})
+} as const;
 
-const unpublishWinnersButton = () =>
-	new ButtonBuilder({
-		customId: "unpublishWinners",
-		label: "Unpublish winners",
-		style: ButtonStyle.Secondary
-	});
+const unpublishWinnersButton = {
+	customId: "unpublishWinners",
+	component: () =>
+		new ButtonBuilder({
+			customId: "unpublishWinners",
+			label: "Unpublish winners",
+			style: ButtonStyle.Secondary
+		})
+} as const;
 
-const showAllWinnersButton = () =>
-	new ButtonBuilder({
-		customId: "showAllWinners",
-		label: "Show all winners",
-		style: ButtonStyle.Primary
-	});
+const showAllWinnersButton = {
+	customId: "showAllWinners",
+	component: () =>
+		new ButtonBuilder({
+			customId: "showAllWinners",
+			label: "Show all winners",
+			style: ButtonStyle.Primary
+		})
+} as const;
 
-const rerollWinnersButton = () =>
-	new ButtonBuilder({
-		customId: "rerollWinners",
-		label: "Reroll unclaimed",
-		style: ButtonStyle.Secondary
-	});
+const rerollWinnersButton = {
+	customId: "rerollWinners",
+	component: () =>
+		new ButtonBuilder({
+			customId: "rerollWinners",
+			label: "Reroll unclaimed",
+			style: ButtonStyle.Secondary
+		})
+} as const;
 
-const rerollAllWinnersButton = () =>
-	new ButtonBuilder({
-		customId: "rerollAllWinners",
-		label: "Reroll all",
-		style: ButtonStyle.Danger
-	});
+const rerollAllWinnersButton = {
+	customId: "rerollAllWinners",
+	component: () =>
+		new ButtonBuilder({
+			customId: "rerollAllWinners",
+			label: "Reroll all",
+			style: ButtonStyle.Danger
+		})
+} as const;
 
-const deleteUnclaimedWinnersButton = () =>
-	new ButtonBuilder({
-		customId: "deleteUnclaimedWinners",
-		label: "Delete unclaimed",
-		style: ButtonStyle.Secondary
-	});
+const deleteUnclaimedWinnersButton = {
+	customId: "deleteUnclaimedWinners",
+	component: () =>
+		new ButtonBuilder({
+			customId: "deleteUnclaimedWinners",
+			label: "Delete unclaimed",
+			style: ButtonStyle.Secondary
+		})
+} as const;
 
-const deleteAllWinnersButton = () =>
-	new ButtonBuilder({
-		customId: "deleteAllWinners",
-		label: "Delete all",
-		style: ButtonStyle.Danger
-	});
+const deleteAllWinnersButton = {
+	customId: "deleteAllWinners",
+	component: () =>
+		new ButtonBuilder({
+			customId: "deleteAllWinners",
+			label: "Delete all",
+			style: ButtonStyle.Danger
+		})
+} as const;
 
-const enableButton = () =>
-	new ButtonBuilder({
-		customId: "enable",
-		label: "Enable",
-		style: ButtonStyle.Success
-	});
+const enableButton = {
+	customId: "enable",
+	component: () =>
+		new ButtonBuilder({
+			customId: "enable",
+			label: "Enable",
+			style: ButtonStyle.Success
+		})
+} as const;
 
-const disableButton = () =>
-	new ButtonBuilder({
-		label: "Disable",
-		customId: "disable",
-		style: ButtonStyle.Danger
-	});
+const disableButton = {
+	customId: "disable",
+	component: () =>
+		new ButtonBuilder({
+			label: "Disable",
+			customId: "disable",
+			style: ButtonStyle.Danger
+		})
+} as const;
 
-const roleSelectMenu = (min = 1, max = 10) =>
-	new RoleSelectMenuBuilder({
-		customId: "roleSelect",
-		minValues: min,
-		maxValues: max
-	});
+const roleSelectMenu = {
+	customId: "roleSelect",
+	component: (min = 1, max = 10) =>
+		new RoleSelectMenuBuilder({
+			customId: "roleSelect",
+			minValues: min,
+			maxValues: max
+		})
+} as const;
 
-const clearRolesButton = () =>
-	new ButtonBuilder({
-		customId: "clearRoles",
-		style: ButtonStyle.Secondary,
-		label: "Clear roles"
-	});
+const channelSelectMenu = {
+	customId: "channelSelect",
+	component: ({
+		channelTypes = [ChannelType.GuildText, ChannelType.GuildAnnouncement],
+		max = 1,
+		min = 1
+	}: {
+		channelTypes?: Array<ChannelType>;
+		max?: number;
+		min?: number;
+	} = {}) =>
+		new ChannelSelectMenuBuilder()
+			.setChannelTypes(channelTypes)
+			.setCustomId("channelSelect")
+			.setMaxValues(max)
+			.setMinValues(min)
+};
 
-const backButton = () =>
-	new ButtonBuilder({
-		customId: "back",
-		label: "Back",
-		style: ButtonStyle.Secondary
-	});
+const clearRolesButton = {
+	customId: "clearRoles",
+	component: () =>
+		new ButtonBuilder({
+			customId: "clearRoles",
+			style: ButtonStyle.Secondary,
+			label: "Clear roles"
+		})
+} as const;
 
-const acceptAllPrizesButton = () =>
-	new ButtonBuilder({
-		customId: "acceptAllPrizes",
-		emoji: EMOJIS.TADA,
-		label: "Accept all prizes",
-		style: ButtonStyle.Success
-	});
+const backButton = {
+	customId: "back",
+	component: () =>
+		new ButtonBuilder({
+			customId: "back",
+			label: "Back",
+			style: ButtonStyle.Secondary
+		})
+} as const;
 
-const viewAllEnteredButton = () =>
-	new ButtonBuilder({
-		customId: "viewAllEntered",
-		label: "View entered",
-		style: ButtonStyle.Secondary
-	});
+const acceptAllPrizesButton = {
+	customId: "acceptAllPrizes",
+	component: () =>
+		new ButtonBuilder({
+			customId: "acceptAllPrizes",
+			emoji: EMOJIS.TADA,
+			label: "Accept all prizes",
+			style: ButtonStyle.Success
+		})
+} as const;
 
-const viewAllPrizesButton = () =>
-	new ButtonBuilder({
-		customId: "viewAllPrizes",
-		label: "View prizes",
-		style: ButtonStyle.Secondary
-	});
+const viewAllEnteredButton = {
+	customId: "viewAllEntered",
+	component: () =>
+		new ButtonBuilder({
+			customId: "viewAllEntered",
+			label: "View entered",
+			style: ButtonStyle.Secondary
+		})
+} as const;
 
-const viewAllHostedButton = () =>
-	new ButtonBuilder({
-		customId: "viewAllHosted",
-		label: "View hosted",
-		style: ButtonStyle.Secondary
-	});
+const viewAllPrizesButton = {
+	customId: "viewAllPrizes",
+	component: () =>
+		new ButtonBuilder({
+			customId: "viewAllPrizes",
+			label: "View prizes",
+			style: ButtonStyle.Secondary
+		})
+} as const;
+
+const viewAllHostedButton = {
+	customId: "viewAllHosted",
+	component: () =>
+		new ButtonBuilder({
+			customId: "viewAllHosted",
+			label: "View hosted",
+			style: ButtonStyle.Secondary
+		})
+} as const;
+
+const yesButton = {
+	customId: "yes",
+	component: (style: ButtonStyle) =>
+		new ButtonBuilder()
+			.setCustomId("yes")
+			.setEmoji(EMOJIS.V)
+			.setStyle(style)
+			.setLabel("Yes")
+};
+
+const noButton = {
+	customId: "no",
+	component: (style: ButtonStyle) =>
+		new ButtonBuilder()
+			.setCustomId("no")
+			.setEmoji(EMOJIS.X)
+			.setStyle(style)
+			.setLabel("No")
+};
 
 const selects = {
+	channelSelect: channelSelectMenu,
 	roleSelect: roleSelectMenu
-};
+} as const;
 
 const modals = {
 	/**
@@ -450,13 +608,15 @@ const buttons = {
 	disable: disableButton,
 	enable: enableButton,
 	back: backButton,
-	edit: editButton
-};
+	edit: editButton,
+	yes: yesButton,
+	no: noButton
+} as const;
 
 const components = {
 	buttons,
 	modals,
 	selects
-};
+} as const;
 
 export default components;
