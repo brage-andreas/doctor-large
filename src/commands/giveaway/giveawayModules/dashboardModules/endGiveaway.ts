@@ -1,10 +1,11 @@
 import { oneLine, stripIndent, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
-	ButtonBuilder,
 	ButtonStyle,
+	type ButtonBuilder,
 	type ButtonInteraction
 } from "discord.js";
+import components from "../../../../components/index.js";
 import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
 import s from "../../../../helpers/s.js";
@@ -113,21 +114,6 @@ export default async function toEndGiveaway(
 		return toDashboard(interaction, id);
 	}
 
-	const endedGiveawayButton = new ButtonBuilder()
-		.setCustomId("giveaway-ended")
-		.setDisabled(true)
-		.setLabel("This giveaway has ended!")
-		.setStyle(ButtonStyle.Secondary);
-
-	const endedGiveawayRow =
-		new ActionRowBuilder<ButtonBuilder>().setComponents(
-			endedGiveawayButton
-		);
-
-	await giveaway.publishedMessage?.edit({
-		components: [endedGiveawayRow]
-	});
-
 	await giveaway.edit(
 		{
 			ended: true,
@@ -135,10 +121,22 @@ export default async function toEndGiveaway(
 		},
 		{
 			nowOutdated: {
-				publishedMessage: undefined
+				publishedMessage: false
 			}
 		}
 	);
+
+	const endedGiveawayRow =
+		new ActionRowBuilder<ButtonBuilder>().setComponents(
+			components.buttons.endedGiveaway.component()
+		);
+
+	await giveaway.publishedMessage?.edit({
+		allowedMentions: { parse: ["roles", "everyone"] },
+		components: [endedGiveawayRow],
+		content: giveaway.pingRolesMentions?.join(" "),
+		embeds: [giveaway.toEmbed()]
+	});
 
 	new Logger({
 		prefix: "GIVEAWAY",
