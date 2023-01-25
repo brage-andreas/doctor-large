@@ -1,7 +1,6 @@
 import { source, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
-	ApplicationCommandOptionType,
 	AttachmentBuilder,
 	ComponentType,
 	type ButtonBuilder,
@@ -10,6 +9,7 @@ import {
 import components from "../../components/index.js";
 import { EMOJIS } from "../../constants.js";
 import GiveawayManager from "../../database/giveaway.js";
+import hideOption from "../../helpers/hideOption.js";
 import s from "../../helpers/s.js";
 import Logger from "../../logger/logger.js";
 import type GiveawayModule from "../../modules/Giveaway.js";
@@ -23,13 +23,7 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 	name: "my-giveaways",
 	dm_permission: false,
 	description: "View all the giveaways you have participated in.",
-	options: [
-		{
-			name: "hide",
-			description: "Whether to hide this command (True)",
-			type: ApplicationCommandOptionType.Boolean
-		}
-	]
+	options: [hideOption]
 };
 
 const no = (n: number) => (n ? `**${n}**` : "no");
@@ -74,7 +68,7 @@ const prizeToString = (prize: PrizeModule, winnerUserId: string) => {
 		return null;
 	}
 
-	const status = !winner.claimed ? ` (${EMOJIS.WARN} Not claimed)` : "";
+	const status = !winner.claimed ? " (Not claimed)" : "";
 
 	return `→ 1x ${prize.name}${status}`;
 };
@@ -84,14 +78,13 @@ const run = async (interaction: CommandModuleInteractions) => {
 		return;
 	}
 
-	const logger = new Logger({ prefix: "MY GIVEAWAYS", interaction });
-
 	const hide = interaction.options.getBoolean("hide") ?? true;
 
-	const id = interaction.user.id;
+	const logger = new Logger({ prefix: "MY GIVEAWAYS", interaction });
 
 	const giveawayManager = new GiveawayManager(interaction.guild);
 
+	const id = interaction.user.id;
 	const entered = await giveawayManager.getAll({ entryUserId: id });
 	const hosted = await giveawayManager.getAll({ hostUserId: id });
 

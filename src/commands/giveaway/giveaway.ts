@@ -5,6 +5,7 @@ import {
 	type RESTPostAPIApplicationCommandsJSONBody
 } from "discord.js";
 import { EMOJIS } from "../../constants.js";
+import hideOption from "../../helpers/hideOption.js";
 import Logger from "../../logger/logger.js";
 import {
 	type Command,
@@ -29,19 +30,21 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 			`,
 			options: [
 				{
-					name: "giveaway",
-					type: ApplicationCommandOptionType.Integer,
+					autocomplete: true,
 					description:
 						"Which giveaway should be managed in the dashboard.",
-					autocomplete: true,
-					required: true
-				}
+					name: "giveaway",
+					required: true,
+					type: ApplicationCommandOptionType.Integer
+				},
+				hideOption
 			]
 		},
 		{
 			description: "Create and customise a new giveaway.",
 			name: "create",
-			type: ApplicationCommandOptionType.Subcommand
+			type: ApplicationCommandOptionType.Subcommand,
+			options: [hideOption]
 		}
 	]
 };
@@ -55,9 +58,11 @@ const run = async (interaction: CommandModuleInteractions) => {
 		return;
 	}
 
+	const hide = interaction.options.getBoolean("hide") ?? true;
+
 	switch (interaction.options.getSubcommand()) {
 		case "dashboard": {
-			await interaction.deferReply({ ephemeral: true });
+			await interaction.deferReply({ ephemeral: hide });
 			const id = interaction.options.getInteger("giveaway", true);
 
 			if (id === -1) {
