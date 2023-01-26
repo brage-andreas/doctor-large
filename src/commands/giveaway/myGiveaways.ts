@@ -207,9 +207,10 @@ const run = async (interaction: CommandModuleInteractions) => {
 			buttonInteraction.user.id === interaction.user.id,
 		componentType: ComponentType.Button,
 		time: 120_000,
-		// if there are 2 buttons, 2 will be max
-		// if there are 3 buttons, 3 will be max etc.
-		max: getButtonArray().length
+		// If there are 2 buttons, 3 will be max
+		// If there are 3 buttons, 4 will be max etc.
+		// One more since accepting all prizes will let you see prizes again
+		max: getButtonArray().length + 1
 	});
 
 	collector.on("ignore", (buttonInteraction) => {
@@ -245,6 +246,9 @@ const run = async (interaction: CommandModuleInteractions) => {
 				} prize(s): ${notAcceptedPrizes.map((p) => p.id).join(", ")}`
 			);
 
+			acceptAllPrizesButton?.setDisabled(true);
+			viewAllPrizesButton?.setDisabled(false);
+
 			await buttonInteraction.editReply({
 				content: getContent(await getPrizes())
 			});
@@ -277,7 +281,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 				${entered.map((giveaway) => giveaway.toFullString()).join("\n\n")}
 			`;
 
-			await buttonInteraction.editReply({
+			await buttonInteraction.followUp({
 				files: [getAttachment(string)]
 			});
 
@@ -299,7 +303,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 			const string = `Won prizes (${prizes_.length}):\n\n${prizesStr}`;
 
-			await buttonInteraction.editReply({
+			await buttonInteraction.followUp({
 				files: [getAttachment(string)]
 			});
 
@@ -319,7 +323,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 				${hosted.map((giveaway) => giveaway.toFullString()).join("\n\n")}
 			`;
 
-			await buttonInteraction.editReply({
+			await buttonInteraction.followUp({
 				files: [getAttachment(string)]
 			});
 
