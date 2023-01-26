@@ -30,8 +30,9 @@ export default class GiveawayModule {
 	public channelId: string | null;
 	public createdAt: Date;
 	public description: string;
+	public endAutomationLevel;
+	public endDate: Date | null;
 	public ended: boolean;
-	public endTimestamp: string | null;
 	public entriesLocked: boolean;
 	public guildId: string;
 	public guildRelativeId: number;
@@ -72,19 +73,20 @@ export default class GiveawayModule {
 		// -- Raw data --
 		this.publishedMessageUpdated = data.publishedMessageUpdated;
 		this.winnerMessageUpdated = data.winnerMessageUpdated;
+		this.endAutomationLevel = data.endAutomationLevel;
 		this.publishedMessageId = data.publishedMessageId;
 		this.minimumAccountAge = data.minimumAccountAge;
 		this.guildRelativeId = data.guildRelativeId;
 		this.winnerMessageId = data.winnerMessageId;
 		this.winnerQuantity = data.winnerQuantity;
 		this.entriesLocked = data.entriesLocked;
-		this.endTimestamp = data.endTimestamp;
 		this.lastEditedAt = data.lastEditedAt;
 		this.description = data.description;
 		this.hostUserTag = data.hostUserTag;
 		this.hostUserId = data.hostUserId;
 		this.channelId = data.channelId;
 		this.createdAt = data.createdAt;
+		this.endDate = data.endDate;
 		this.guildId = data.guildId;
 		this.ended = data.ended;
 		this.title = data.title;
@@ -207,14 +209,17 @@ export default class GiveawayModule {
 				},
 				data: {
 					channelId: null,
-					endTimestamp: null,
+					endAutomationLevel: "End",
+					endDate: null,
 					entriesLocked: false,
 					entriesUserIds: [],
 					minimumAccountAge: null,
 					pingRolesIds: [],
 					publishedMessageId: null,
+					publishedMessageUpdated: false,
 					requiredRolesIds: [],
-					winnerMessageId: null
+					winnerMessageId: null,
+					winnerMessageUpdated: false
 				}
 			});
 		};
@@ -246,7 +251,8 @@ export default class GiveawayModule {
 				},
 				data: {
 					channelId: null,
-					endTimestamp: null,
+					endAutomationLevel: "End",
+					endDate: null,
 					entriesLocked: false,
 					minimumAccountAge: null,
 					pingRolesIds: [],
@@ -483,8 +489,8 @@ export default class GiveawayModule {
 			${pingRolesWarning ?? ""}
 		`;
 
-		const endStr = this.endTimestamp
-			? `→ End date: ${longStamp(this.endTimestamp)}`
+		const endStr = this.endDate
+			? `→ End date: ${longStamp(this.endDate)}`
 			: `→ End date: ${EMOJIS.WARN} No set end date.`;
 
 		const prizesName = this.prizes.length
@@ -613,8 +619,8 @@ export default class GiveawayModule {
 				: "None"
 		}`;
 
-		const endStr = this.endTimestamp
-			? `→ The giveaway will end: ${longStamp(this.endTimestamp)}`
+		const endStr = this.endDate
+			? `→ The giveaway will end: ${longStamp(this.endDate)}`
 			: "→ The giveaway has no set end date. Enter while you can!";
 
 		const prizesStr = this.prizes.length

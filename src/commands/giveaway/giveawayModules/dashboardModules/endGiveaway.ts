@@ -72,12 +72,12 @@ export default async function toEndGiveaway(
 		This will lock the entries and deactivate the giveaway.
 	`;
 
-	if (giveaway.endTimestamp) {
-		const inFuture = Number(giveaway.endTimestamp) < Date.now();
+	if (giveaway.endDate) {
+		const inFuture = Number(giveaway.endDate) < Date.now();
 
 		content += oneLine`
 			The giveaway ${inFuture ? "is" : "was"} set to
-			end ${timestamp(giveaway.endTimestamp, "R")}.
+			end ${timestamp(giveaway.endDate, "R")}.
 		`;
 	}
 
