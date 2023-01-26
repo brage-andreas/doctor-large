@@ -600,6 +600,48 @@ const endedGiveawayButton = {
 			.setStyle(ButtonStyle.Secondary)
 };
 
+const setDateButton = {
+	customId: "setDate",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("setDate")
+			.setLabel("Set date")
+			.setStyle(ButtonStyle.Primary)
+};
+
+const clearDateButton = {
+	customId: "setDate",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("setDate")
+			.setLabel("Set date")
+			.setStyle(ButtonStyle.Primary)
+};
+
+const roundDateToNearestHourButton = {
+	customId: "roundToNearestHour",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("roundToNearestHour")
+			.setLabel("Round to nearest hour")
+			.setStyle(ButtonStyle.Secondary)
+};
+
+const adjustDate = ({
+	label,
+	customId
+}: {
+	label: string;
+	customId: string;
+}) => ({
+	customId,
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId(customId)
+			.setLabel(label)
+			.setStyle(ButtonStyle.Secondary)
+});
+
 // -------------
 
 const selects = {
@@ -622,6 +664,7 @@ const modals = {
 const buttons = {
 	setPingRolesToAtEveryone: setPingRolesToAtEveryoneButton,
 	deleteUnclaimedWinners: deleteUnclaimedWinnersButton,
+	roundDateToNearestHour: roundDateToNearestHourButton,
 	recallCurrentMessage: recallCurrentMessageButton,
 	editCurrentMessage: editCurrentMessageButton,
 	reactivateGiveaway: reactivateGiveawayButton,
@@ -653,16 +696,19 @@ const buttons = {
 	resetLevel3: resetLevel3Button,
 	resetLevel4: resetLevel4Button,
 	setEndDate: setEndDateButton,
+	clearDate: clearDateButton,
 	resetData: resetDataButton,
-	disable: disableButton,
 	delete_: deleteButton,
+	disable: disableButton,
+	setDate: setDateButton,
 	create: createButton,
 	enable: enableButton,
 	clear: clearButton,
 	back: backButton,
 	edit: editButton,
 	yes: yesButton,
-	no: noButton
+	no: noButton,
+	adjustDate
 } as const;
 
 const components = {
