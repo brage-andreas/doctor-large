@@ -14,13 +14,31 @@ model Autorole {
   roleIds      String[] @default([])
 }
 
-model Winner {
-  claimed   Boolean  @default(false)
-  createdAt DateTime @default(now())
-  id        Int      @id @default(autoincrement())
-  prize     Prize    @relation(fields: [prizeId], references: [id], onDelete: NoAction)
-  prizeId   Int
-  userId    String
+model Giveaway {
+  channelId               String?
+  createdAt               DateTime           @default(now())
+  description             String
+  endAutomationLevel      EndAutomationLevel @default(End)
+  endDate                 DateTime?
+  ended                   Boolean            @default(false)
+  entriesLocked           Boolean            @default(false)
+  entriesUserIds          String[]           @default([])
+  guildId                 String
+  guildRelativeId         Int
+  hostUserId              String
+  hostUserTag             String
+  id                      Int                @id @default(autoincrement())
+  lastEditedAt            DateTime           @default(now()) @updatedAt
+  minimumAccountAge       String?
+  pingRolesIds            String[]           @default([])
+  prizes                  Prize[]
+  publishedMessageId      String?
+  publishedMessageUpdated Boolean            @default(false)
+  requiredRolesIds        String[]           @default([])
+  title                   String
+  winnerMessageId         String?
+  winnerMessageUpdated    Boolean            @default(false)
+  winnerQuantity          Int                @default(1)
 }
 
 model Prize {
@@ -34,28 +52,18 @@ model Prize {
   winners        Winner[]
 }
 
-model Giveaway {
-  ended                   Boolean  @default(false)
-  channelId               String?
-  createdAt               DateTime @default(now())
-  description             String
-  endTimestamp            String?
-  entriesLocked           Boolean  @default(false)
-  entriesUserIds          String[] @default([])
-  guildId                 String
-  guildRelativeId         Int
-  hostUserId              String
-  hostUserTag             String
-  id                      Int      @id @default(autoincrement())
-  lastEditedAt            DateTime @default(now()) @updatedAt
-  minimumAccountAge       String?
-  pingRolesIds            String[] @default([])
-  prizes                  Prize[]
-  publishedMessageId      String?
-  publishedMessageUpdated Boolean  @default(false)
-  requiredRolesIds        String[] @default([])
-  title                   String
-  winnerMessageId         String?
-  winnerMessageUpdated    Boolean  @default(false)
-  winnerQuantity          Int      @default(1)
+model Winner {
+  claimed   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  prize     Prize    @relation(fields: [prizeId], references: [id], onDelete: NoAction)
+  prizeId   Int
+  userId    String
+}
+
+enum EndAutomationLevel {
+  None
+  End
+  Roll
+  PublishAndDM
 }
