@@ -12,11 +12,11 @@ import GiveawayManager from "../../../database/giveaway.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import toEditGiveaway from "./dashboardModules/editGiveaway.js";
 import toEndGiveaway from "./dashboardModules/endGiveaway.js";
+import toEndOptions from "./dashboardModules/endOptions.js";
 import toManagePrizes from "./dashboardModules/managePrizes.js";
 import toPublishGiveaway from "./dashboardModules/publishGiveaway.js";
 import toPublishingOptions from "./dashboardModules/publishingOptions.js";
 import toResetData from "./dashboardModules/resetData.js";
-import toSetEndDate from "./dashboardModules/setEndDate.js";
 import toSetPingRoles from "./dashboardModules/setPingRoles.js";
 import toSetRequiredRoles from "./dashboardModules/setRequiredRoles.js";
 import toEndedDashboard from "./endedGiveawayDashboard.js";
@@ -174,7 +174,7 @@ export default async function toDashboard(
 			case setEndDate.customId: {
 				await buttonInteraction.deferUpdate();
 
-				toSetEndDate(buttonInteraction, giveawayId, giveawayManager);
+				toEndOptions(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
