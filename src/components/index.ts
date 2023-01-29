@@ -184,16 +184,6 @@ const unlockGiveawayEntriesButton = {
 		})
 } as const;
 
-const setEndDateButton = {
-	customId: "setEndDate",
-	component: () =>
-		new ButtonBuilder({
-			customId: "setEndDate",
-			style: ButtonStyle.Secondary,
-			label: "Set end date"
-		})
-} as const;
-
 const setRequiredRolesButton = {
 	customId: "setRequiredRoles",
 	component: () =>
@@ -245,13 +235,13 @@ const manageGiveawayPrizesButton = {
 		})
 } as const;
 
-const endGiveawayButton = {
-	customId: "endGiveaway",
+const endOptionsButton = {
+	customId: "endOptions",
 	component: () =>
 		new ButtonBuilder({
-			customId: "endGiveaway",
+			customId: "endOptions",
 			style: ButtonStyle.Primary,
-			label: "End giveaway"
+			label: "End options"
 		})
 } as const;
 
@@ -452,7 +442,7 @@ const channelSelectMenu = {
 			.setCustomId("channelSelect")
 			.setMaxValues(max)
 			.setMinValues(min)
-};
+} as const;
 
 const clearButton = {
 	customId: "clear",
@@ -533,7 +523,7 @@ const yesButton = {
 			.setEmoji(EMOJIS.V)
 			.setStyle(style)
 			.setLabel("Yes")
-};
+} as const;
 
 const noButton = {
 	customId: "no",
@@ -543,7 +533,7 @@ const noButton = {
 			.setEmoji(EMOJIS.X)
 			.setStyle(style)
 			.setLabel("No")
-};
+} as const;
 
 const resetLevel4Button = {
 	customId: "resetLevel4",
@@ -552,7 +542,7 @@ const resetLevel4Button = {
 			.setCustomId("resetLevel4")
 			.setLabel("Level 4")
 			.setStyle(ButtonStyle.Danger)
-};
+} as const;
 
 const resetLevel3Button = {
 	customId: "resetLevel3",
@@ -561,7 +551,7 @@ const resetLevel3Button = {
 			.setCustomId("resetLevel3")
 			.setLabel("Level 3")
 			.setStyle(ButtonStyle.Secondary)
-};
+} as const;
 
 const resetLevel2Button = {
 	customId: "resetLevel2",
@@ -570,7 +560,7 @@ const resetLevel2Button = {
 			.setCustomId("resetLevel2")
 			.setLabel("Level 2")
 			.setStyle(ButtonStyle.Secondary)
-};
+} as const;
 
 const resetLevel1Button = {
 	customId: "resetLevel1",
@@ -579,7 +569,7 @@ const resetLevel1Button = {
 			.setCustomId("resetLevel1")
 			.setLabel("Level 1")
 			.setStyle(ButtonStyle.Success)
-};
+} as const;
 
 const deleteButton = {
 	customId: "delete",
@@ -588,7 +578,7 @@ const deleteButton = {
 			.setCustomId("delete")
 			.setStyle(ButtonStyle.Danger)
 			.setLabel("Delete")
-};
+} as const;
 
 const endedGiveawayButton = {
 	customId: "giveaway-ended",
@@ -598,7 +588,7 @@ const endedGiveawayButton = {
 			.setDisabled(true)
 			.setLabel("This giveaway has ended!")
 			.setStyle(ButtonStyle.Secondary)
-};
+} as const;
 
 const setDateButton = {
 	customId: "setDate",
@@ -607,16 +597,16 @@ const setDateButton = {
 			.setCustomId("setDate")
 			.setLabel("Set date")
 			.setStyle(ButtonStyle.Primary)
-};
+} as const;
 
 const clearDateButton = {
-	customId: "setDate",
+	customId: "clearDate",
 	component: () =>
 		new ButtonBuilder()
-			.setCustomId("setDate")
-			.setLabel("Set date")
+			.setCustomId("clearDate")
+			.setLabel("Clear date")
 			.setStyle(ButtonStyle.Primary)
-};
+} as const;
 
 const roundDateToNearestHourButton = {
 	customId: "roundToNearestHour",
@@ -625,22 +615,26 @@ const roundDateToNearestHourButton = {
 			.setCustomId("roundToNearestHour")
 			.setLabel("Round to nearest hour")
 			.setStyle(ButtonStyle.Secondary)
-};
+} as const;
 
-const adjustDate = ({
-	label,
-	customId
-}: {
-	label: string;
-	customId: string;
-}) => ({
-	customId,
+const endGiveawayButton = {
+	customId: "endGiveaway",
 	component: () =>
 		new ButtonBuilder()
-			.setCustomId(customId)
-			.setLabel(label)
-			.setStyle(ButtonStyle.Secondary)
-});
+			.setCustomId("endGiveaway")
+			.setLabel("End giveaway")
+			.setStyle(ButtonStyle.Danger)
+} as const;
+
+const adjustDate = ({ label, customId }: { label: string; customId: string }) =>
+	({
+		customId,
+		component: () =>
+			new ButtonBuilder()
+				.setCustomId(customId)
+				.setLabel(label)
+				.setStyle(ButtonStyle.Secondary)
+	} as const);
 
 // -------------
 
@@ -695,7 +689,7 @@ const buttons = {
 	resetLevel2: resetLevel2Button,
 	resetLevel3: resetLevel3Button,
 	resetLevel4: resetLevel4Button,
-	setEndDate: setEndDateButton,
+	endOptions: endOptionsButton,
 	clearDate: clearDateButton,
 	resetData: resetDataButton,
 	delete_: deleteButton,
