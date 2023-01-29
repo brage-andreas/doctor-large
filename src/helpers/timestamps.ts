@@ -21,8 +21,12 @@ export const timestamp = (
 	return `<t:${seconds}:${style}>`;
 };
 
-export const longStamp = (dateOrTimestamp: Date | number | string) => {
+export const longStamp = (
+	dateOrTimestamp: Date | number | string,
+	options?: { extraLong?: true }
+) => {
 	const seconds = _getSeconds(dateOrTimestamp);
+	const style = options?.extraLong ? "F" : "d";
 
-	return `<t:${seconds}:d> (<t:${seconds}:R>)`;
+	return `<t:${seconds}:${style}> (<t:${seconds}:R>)`;
 };
