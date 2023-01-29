@@ -11,7 +11,6 @@ import { EMOJIS } from "../../../constants.js";
 import GiveawayManager from "../../../database/giveaway.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import toEditGiveaway from "./dashboardModules/editGiveaway.js";
-import toEndGiveaway from "./dashboardModules/endGiveaway.js";
 import toEndOptions from "./dashboardModules/endOptions.js";
 import toManagePrizes from "./dashboardModules/managePrizes.js";
 import toPublishGiveaway from "./dashboardModules/publishGiveaway.js";
@@ -53,12 +52,11 @@ export default async function toDashboard(
 		publishGiveaway,
 		unlockEntries,
 		lockEntries,
-		setEndDate,
+		endOptions,
 		setRequiredRoles,
 		setPingRoles,
 		managePrizes,
 		edit,
-		endGiveaway,
 		resetData,
 		deleteGiveaway
 	} = components.buttons;
@@ -73,8 +71,8 @@ export default async function toDashboard(
 
 	const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		publishButton,
+		endOptions.component(),
 		lockEntriesButton,
-		setEndDate.component().setDisabled(true),
 		setRequiredRoles.component(),
 		setPingRoles.component()
 	);
@@ -82,7 +80,6 @@ export default async function toDashboard(
 	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		managePrizes.component(),
 		edit.component(),
-		endGiveaway.component(),
 		resetData.component(),
 		deleteGiveaway.component()
 	);
@@ -171,7 +168,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case setEndDate.customId: {
+			case endOptions.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toEndOptions(buttonInteraction, giveawayId, giveawayManager);
@@ -212,14 +209,6 @@ export default async function toDashboard(
 				await buttonInteraction.deferUpdate();
 
 				toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
-
-				break;
-			}
-
-			case endGiveaway.customId: {
-				await buttonInteraction.deferUpdate();
-
-				toEndGiveaway(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
