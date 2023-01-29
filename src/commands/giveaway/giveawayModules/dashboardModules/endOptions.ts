@@ -1,8 +1,9 @@
-import { stripIndents } from "common-tags";
+import { oneLine, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
-	ButtonBuilder,
 	ComponentType,
+	EmbedBuilder,
+	type ButtonBuilder,
 	type ButtonInteraction
 } from "discord.js";
 import ms from "ms";
@@ -10,7 +11,7 @@ import components from "../../../../components/index.js";
 import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
 import { longStamp } from "../../../../helpers/timestamps.js";
-import toDashboard from "../dashboard.js";
+import toEndGiveaway from "./endGiveaway.js";
 
 export default async function toEndOptions(
 	interaction: ButtonInteraction<"cached">,
@@ -41,7 +42,7 @@ export default async function toEndOptions(
 		adjustDate
 	} = components.buttons;
 
-	const adjustments = ["15 minutes", "1 hour", "1 day", "1 week", "1 month"];
+	const adjustments = ["15 minutes", "1 hour", "1 day", "1 week", "30 days"];
 
 	const plusButtons = adjustments.map((time) =>
 		adjustDate({ label: `+${time}`, customId: `+${ms(time)}` })
@@ -52,9 +53,9 @@ export default async function toEndOptions(
 	);
 
 	const { endDate } = giveaway;
-	const HOUR_IN_MS = 1000 * 60 * 60;
 
-	const isRounded = endDate && endDate.getTime() % HOUR_IN_MS === 0;
+	//  hour in milliseconds = 3_600_000
+	const isRounded = endDate && endDate.getTime() % 3_600_000 === 0;
 	const roundedDate = endDate && new Date(endDate);
 
 	if (roundedDate) {
@@ -65,22 +66,41 @@ export default async function toEndOptions(
 		}
 	}
 
-	const endDateContent: Array<string> = [];
+	const endOptionsEmbed = new EmbedBuilder()
+		.setTitle("End options")
+		.addFields({
+			name: "End automation level",
+			value: stripIndents`
+				Define what should happen when the giveaway ends.
+				The host will be notified in DMs when the giveaway ends.
+				Note: You will always have the option to do this manually at any time.
+
+				• None: No automation.
+				• End: End the giveaway; no one can enter.
+				• Roll: Roll the winners. 
+				• Publish: Publish the winners. This will also notify them.
+			`
+		});
 
 	if (endDate) {
-		endDateContent.push(`The end date is set to: ${longStamp(endDate)}.`);
+		endOptionsEmbed.setDescription(
+			oneLine`
+				The end date is set to:
+				${longStamp(endDate, { extraLong: true })}.
+			`
+		);
 	} else {
-		endDateContent.push("The end date is not set.");
+		endOptionsEmbed.setDescription("The end date is not set.");
 	}
 
 	const msg = await interaction.editReply({
 		components: [
 			new ActionRowBuilder<ButtonBuilder>().setComponents(
 				setDate.component(),
-				clearDate.component().setDisabled(Boolean(endDate)),
+				clearDate.component().setDisabled(!endDate),
 				roundDateToNearestHour
 					.component()
-					.setDisabled(Boolean(endDate) && Boolean(isRounded)),
+					.setDisabled(!endDate && Boolean(isRounded)),
 				endGiveaway.component()
 			),
 			new ActionRowBuilder<ButtonBuilder>().setComponents(
@@ -108,13 +128,13 @@ export default async function toEndOptions(
 	});
 
 	collector.on("collect", async (buttonInteraction) => {
-		const adjustDateRegExp = /^(?<prefix>+|-)(?<time>\d+)$/;
+		const adjustDateRegExp = /^(?<prefix>\+|-)(?<time>\d+)$/;
 
 		switch (buttonInteraction.customId) {
 			case setDate.customId: {
 				//
 
-				break;
+				return toEndOptions(interaction, id, giveawayManager);
 			}
 
 			case clearDate.customId: {
@@ -129,24 +149,52 @@ export default async function toEndOptions(
 					}
 				);
 
-				break;
+				return toEndOptions(interaction, id, giveawayManager);
 			}
 
 			case roundDateToNearestHour.customId: {
-				break;
+				await giveaway.edit(
+					{
+						endDate: roundedDate
+					},
+					{
+						nowOutdated: {
+							publishedMessage: true
+						}
+					}
+				);
+
+				return toEndOptions(interaction, id, giveawayManager);
 			}
 
 			case endGiveaway.customId: {
-				break;
+				return toEndGiveaway(buttonInteraction, id, giveawayManager);
 			}
 		}
 
 		const groups =
 			buttonInteraction.customId.match(adjustDateRegExp)?.groups;
 
-		const negative = groups?.prefix;
+		const operator = groups?.prefix;
 		const milliseconds = groups?.time;
-	});
 
-	await toDashboard(interaction, id);
+		const newTimestamp = eval(
+			`${endDate || Date.now()}${operator}${milliseconds}`
+		);
+
+		const newEndDate = new Date(newTimestamp);
+
+		await giveaway.edit(
+			{
+				endDate: newEndDate
+			},
+			{
+				nowOutdated: {
+					publishedMessage: true
+				}
+			}
+		);
+
+		return toEndOptions(interaction, id, giveawayManager);
+	});
 }
