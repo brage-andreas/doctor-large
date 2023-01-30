@@ -614,7 +614,7 @@ const roundDateToNearestHourButton = {
 		new ButtonBuilder()
 			.setCustomId("roundToNearestHour")
 			.setLabel("Round to nearest hour")
-			.setStyle(ButtonStyle.Secondary)
+			.setStyle(ButtonStyle.Primary)
 } as const;
 
 const endGiveawayButton = {
@@ -626,7 +626,51 @@ const endGiveawayButton = {
 			.setStyle(ButtonStyle.Danger)
 } as const;
 
-const adjustDate = ({ label, customId }: { label: string; customId: string }) =>
+const endLevelNoneButton = {
+	customId: "endLevelNone",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("endLevelNone")
+			.setLabel("None")
+			.setStyle(ButtonStyle.Primary)
+} as const;
+
+const endLevelEndButton = {
+	customId: "endLevelEnd",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("endLevelEnd")
+			.setLabel("End")
+			.setStyle(ButtonStyle.Primary)
+} as const;
+
+const endLevelRollButton = {
+	customId: "endLevelRoll",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("endLevelRoll")
+			.setLabel("Roll")
+			.setStyle(ButtonStyle.Primary)
+} as const;
+
+const endLevelPublishButton = {
+	customId: "endLevelPublish",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("endLevelPublish")
+			.setLabel("Publish")
+			.setStyle(ButtonStyle.Primary)
+} as const;
+
+const adjustDate = ({
+	label,
+	customId,
+	disabled = false
+}: {
+	label: string;
+	customId: string;
+	disabled?: boolean;
+}) =>
 	({
 		customId,
 		component: () =>
@@ -634,6 +678,7 @@ const adjustDate = ({ label, customId }: { label: string; customId: string }) =>
 				.setCustomId(customId)
 				.setLabel(label)
 				.setStyle(ButtonStyle.Secondary)
+				.setDisabled(disabled)
 	} as const);
 
 // -------------
@@ -669,6 +714,7 @@ const buttons = {
 	setRequiredRoles: setRequiredRolesButton,
 	unpublishWinners: unpublishWinnersButton,
 	acceptAllPrizes: acceptAllPrizesButton,
+	endLevelPublish: endLevelPublishButton,
 	publishGiveaway: publishGiveawayButton,
 	deleteGiveaway: deleteGiveawayButton,
 	publishWinners: publishWinnersButton,
@@ -680,9 +726,12 @@ const buttons = {
 	unlockEntries: unlockGiveawayEntriesButton,
 	viewAllHosted: viewAllHostedButton,
 	viewAllPrizes: viewAllPrizesButton,
+	endLevelNone: endLevelNoneButton,
+	endLevelRoll: endLevelRollButton,
 	managePrizes: manageGiveawayPrizesButton,
 	setPingRoles: setPingRolesButton,
 	endGiveaway: endGiveawayButton,
+	endLevelEnd: endLevelEndButton,
 	lastChannel: lastChannelButton,
 	lockEntries: lockGiveawayEntriesButton,
 	resetLevel1: resetLevel1Button,
