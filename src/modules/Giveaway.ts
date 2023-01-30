@@ -682,17 +682,22 @@ export default class GiveawayModule {
 	}
 
 	public async edit(
-		data: Prisma.GiveawayUpdateInput,
-		options: {
-			nowOutdated:
-				| "none"
-				| {
-						publishedMessage?: boolean;
-						winnerMessage?: boolean;
-				  };
+		data: Prisma.GiveawayUpdateInput & {
+			nowOutdated: {
+				none?: boolean;
+				publishedMessage?: boolean;
+				winnerMessage?: boolean;
+			};
 		}
 	) {
-		if (typeof options.nowOutdated === "string") {
+		const { nowOutdated } = data;
+
+		if (
+			nowOutdated.none ||
+			(!nowOutdated.none &&
+				!nowOutdated.publishedMessage &&
+				!nowOutdated.winnerMessage)
+		) {
 			return await this.manager.edit({
 				where: { id: this.id },
 				data
@@ -701,12 +706,12 @@ export default class GiveawayModule {
 
 		const publishedMessageUpdated =
 			this.isPublished() || data.publishedMessageId
-				? options.nowOutdated.publishedMessage
+				? nowOutdated.publishedMessage
 				: undefined;
 
 		const winnerMessageUpdated =
 			this.winnersArePublished() || data.winnerMessageId
-				? options.nowOutdated.winnerMessage
+				? nowOutdated.winnerMessage
 				: undefined;
 
 		return await this.manager.edit({

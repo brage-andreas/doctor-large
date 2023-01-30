@@ -123,16 +123,12 @@ export async function toPublishWinners(
 		`Published winners of giveaway #${id} in #${channel.name} (${channel.id})`
 	);
 
-	await giveaway.edit(
-		{
-			winnerMessageId: message.id
-		},
-		{
-			nowOutdated: {
-				winnerMessage: false
-			}
+	await giveaway.edit({
+		winnerMessageId: message.id,
+		nowOutdated: {
+			winnerMessage: false
 		}
-	);
+	});
 
 	await interaction.followUp({
 		ephemeral: true,
@@ -226,14 +222,11 @@ export async function republishWinners(
 		})
 		.catch(() => null);
 
-	await giveaway.edit(
-		{},
-		{
-			nowOutdated: {
-				winnerMessage: false
-			}
+	await giveaway.edit({
+		nowOutdated: {
+			winnerMessage: false
 		}
-	);
+	});
 
 	await interaction.followUp({
 		ephemeral: true,

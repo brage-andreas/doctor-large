@@ -111,16 +111,12 @@ export default async function toEndedDashboard(
 
 		switch (buttonInteraction.customId) {
 			case reactivateGiveaway.customId: {
-				await giveaway.edit(
-					{
-						ended: false
-					},
-					{
-						nowOutdated: {
-							publishedMessage: true
-						}
+				await giveaway.edit({
+					ended: false,
+					nowOutdated: {
+						publishedMessage: true
 					}
-				);
+				});
 
 				return toDashboard(buttonInteraction, giveaway.id);
 			}
@@ -153,16 +149,12 @@ export default async function toEndedDashboard(
 
 				await giveaway.winnerMessage?.delete();
 
-				await giveaway.edit(
-					{
-						winnerMessageId: null
-					},
-					{
-						nowOutdated: {
-							winnerMessage: false
-						}
+				await giveaway.edit({
+					winnerMessageId: null,
+					nowOutdated: {
+						winnerMessage: false
 					}
-				);
+				});
 
 				await interaction.editReply({
 					content: stripIndents`

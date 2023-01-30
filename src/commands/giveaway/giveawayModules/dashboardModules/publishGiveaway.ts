@@ -154,17 +154,13 @@ export default async function toPublishGiveaway(
 				embeds: [giveaway.toEmbed()]
 			});
 
-			await giveaway.edit(
-				{
-					publishedMessageId: msg.id,
-					channelId: channel.id
-				},
-				{
-					nowOutdated: {
-						publishedMessage: false
-					}
+			await giveaway.edit({
+				publishedMessageId: msg.id,
+				channelId: channel.id,
+				nowOutdated: {
+					publishedMessage: false
 				}
-			);
+			});
 
 			new Logger({ prefix: "GIVEAWAY", interaction }).log(
 				`Published giveaway #${id} in ${channel.name} (${channel.id})`

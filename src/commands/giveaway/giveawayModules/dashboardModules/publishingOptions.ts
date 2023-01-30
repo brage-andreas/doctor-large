@@ -158,17 +158,13 @@ export default async function toPublishingOptions(
 				`Republished giveaway #${giveaway.id} in ${channel.name} (${channelId})`
 			);
 
-			giveaway.edit(
-				{
-					publishedMessageId: message.id,
-					channelId
-				},
-				{
-					nowOutdated: {
-						publishedMessage: false
-					}
+			giveaway.edit({
+				publishedMessageId: message.id,
+				channelId,
+				nowOutdated: {
+					publishedMessage: false
 				}
-			);
+			});
 		}
 
 		if (
@@ -281,18 +277,14 @@ export default async function toPublishingOptions(
 			}
 
 			if (successOrURL) {
-				await giveaway.edit(
-					{
-						publishedMessageId: isEdit
-							? giveaway.publishedMessageId
-							: null
-					},
-					{
-						nowOutdated: {
-							publishedMessage: false
-						}
+				await giveaway.edit({
+					publishedMessageId: isEdit
+						? giveaway.publishedMessageId
+						: null,
+					nowOutdated: {
+						publishedMessage: false
 					}
-				);
+				});
 
 				toDashboard(componentInteraction, id);
 			}

@@ -133,16 +133,12 @@ export default async function toDashboard(
 			case lockEntries.customId: {
 				await buttonInteraction.deferUpdate();
 
-				await giveaway.edit(
-					{
-						entriesLocked: true
-					},
-					{
-						nowOutdated: {
-							publishedMessage: true
-						}
+				await giveaway.edit({
+					entriesLocked: true,
+					nowOutdated: {
+						publishedMessage: true
 					}
-				);
+				});
 
 				toDashboard(buttonInteraction, giveawayId);
 
@@ -152,16 +148,12 @@ export default async function toDashboard(
 			case unlockEntries.customId: {
 				await buttonInteraction.deferUpdate();
 
-				await giveaway.edit(
-					{
-						entriesLocked: false
-					},
-					{
-						nowOutdated: {
-							publishedMessage: true
-						}
+				await giveaway.edit({
+					entriesLocked: false,
+					nowOutdated: {
+						publishedMessage: true
 					}
-				);
+				});
 
 				toDashboard(buttonInteraction, giveawayId);
 

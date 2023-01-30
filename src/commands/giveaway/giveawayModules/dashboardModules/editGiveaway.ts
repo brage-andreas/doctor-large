@@ -78,19 +78,15 @@ export default async function toEditGiveaway(
 				`Edited giveaway #${id}`
 			);
 
-			await giveaway.edit(
-				{
-					title,
-					description,
-					winnerQuantity
-				},
-				{
-					nowOutdated: {
-						publishedMessage: true,
-						winnerMessage: true
-					}
+			await giveaway.edit({
+				title,
+				description,
+				winnerQuantity,
+				nowOutdated: {
+					publishedMessage: true,
+					winnerMessage: true
 				}
-			);
+			});
 		}
 
 		await toDashboard(modalInteraction, id);

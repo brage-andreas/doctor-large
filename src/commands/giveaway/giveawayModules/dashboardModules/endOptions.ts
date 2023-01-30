@@ -214,16 +214,12 @@ export default async function toEndOptions(
 		}
 
 		const endLevel = async (newLevel: EndAutomationLevel) => {
-			await giveaway.edit(
-				{
-					endAutomationLevel: newLevel
-				},
-				{
-					nowOutdated: {
-						publishedMessage: true
-					}
+			await giveaway.edit({
+				endAutomationLevel: newLevel,
+				nowOutdated: {
+					publishedMessage: true
 				}
-			);
+			});
 
 			return toEndOptions(buttonInteraction, id, giveawayManager);
 		};
@@ -236,31 +232,23 @@ export default async function toEndOptions(
 			}
 
 			case clearDate.customId: {
-				await giveaway.edit(
-					{
-						endDate: null
-					},
-					{
-						nowOutdated: {
-							publishedMessage: true
-						}
+				await giveaway.edit({
+					endDate: null,
+					nowOutdated: {
+						publishedMessage: true
 					}
-				);
+				});
 
 				return toEndOptions(buttonInteraction, id, giveawayManager);
 			}
 
 			case roundDateToNearestHour.customId: {
-				await giveaway.edit(
-					{
-						endDate: roundedDate
-					},
-					{
-						nowOutdated: {
-							publishedMessage: true
-						}
+				await giveaway.edit({
+					endDate: roundedDate,
+					nowOutdated: {
+						publishedMessage: true
 					}
-				);
+				});
 
 				return toEndOptions(buttonInteraction, id, giveawayManager);
 			}
@@ -307,16 +295,12 @@ export default async function toEndOptions(
 
 			const newEndDate = new Date(newTimestamp);
 
-			await giveaway.edit(
-				{
-					endDate: newEndDate
-				},
-				{
-					nowOutdated: {
-						publishedMessage: true
-					}
+			await giveaway.edit({
+				endDate: newEndDate,
+				nowOutdated: {
+					publishedMessage: true
 				}
-			);
+			});
 		}
 
 		return toEndOptions(buttonInteraction, id, giveawayManager);

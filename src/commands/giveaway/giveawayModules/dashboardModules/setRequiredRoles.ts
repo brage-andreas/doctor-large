@@ -69,16 +69,12 @@ export default async function toSetRequiredRoles(
 				`Edited required roles of giveaway #${giveaway.id}`
 			);
 
-			await giveaway.edit(
-				{
-					requiredRolesIds: component.values
-				},
-				{
-					nowOutdated: {
-						publishedMessage: true
-					}
+			await giveaway.edit({
+				requiredRolesIds: component.values,
+				nowOutdated: {
+					publishedMessage: true
 				}
-			);
+			});
 
 			break;
 		}
@@ -88,16 +84,12 @@ export default async function toSetRequiredRoles(
 				`Cleared required roles of giveaway #${giveaway.id}`
 			);
 
-			await giveaway.edit(
-				{
-					requiredRolesIds: []
-				},
-				{
-					nowOutdated: {
-						publishedMessage: true
-					}
+			await giveaway.edit({
+				requiredRolesIds: [],
+				nowOutdated: {
+					publishedMessage: true
 				}
-			);
+			});
 
 			break;
 		}

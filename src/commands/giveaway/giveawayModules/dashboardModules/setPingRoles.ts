@@ -66,16 +66,12 @@ export default async function toSetPingRoles(
 				`Set ping roles of giveaway #${giveaway.id} to @everyone`
 			);
 
-			await giveaway.edit(
-				{
-					pingRolesIds: [interaction.guild.roles.everyone.id]
-				},
-				{
-					nowOutdated: {
-						publishedMessage: true
-					}
+			await giveaway.edit({
+				pingRolesIds: [interaction.guild.roles.everyone.id],
+				nowOutdated: {
+					publishedMessage: true
 				}
-			);
+			});
 
 			break;
 		}
@@ -87,16 +83,12 @@ export default async function toSetPingRoles(
 				`Cleared ping roles of giveaway #${giveaway.id}`
 			);
 
-			await giveaway.edit(
-				{
-					pingRolesIds: []
-				},
-				{
-					nowOutdated: {
-						publishedMessage: true
-					}
+			await giveaway.edit({
+				pingRolesIds: [],
+				nowOutdated: {
+					publishedMessage: true
 				}
-			);
+			});
 
 			break;
 		}
@@ -112,16 +104,12 @@ export default async function toSetPingRoles(
 				`Edited ping roles of giveaway #${giveaway.id}`
 			);
 
-			await giveaway.edit(
-				{
-					pingRolesIds: component.values
-				},
-				{
-					nowOutdated: {
-						publishedMessage: true
-					}
+			await giveaway.edit({
+				pingRolesIds: component.values,
+				nowOutdated: {
+					publishedMessage: true
 				}
-			);
+			});
 
 			break;
 		}

@@ -115,17 +115,13 @@ export default async function toEndGiveaway(
 		return toEndOptions(interaction, id, giveawayManager);
 	}
 
-	await giveaway.edit(
-		{
-			ended: true,
-			entriesLocked: true
-		},
-		{
-			nowOutdated: {
-				publishedMessage: false
-			}
+	await giveaway.edit({
+		ended: true,
+		entriesLocked: true,
+		nowOutdated: {
+			publishedMessage: false
 		}
-	);
+	});
 
 	const endedGiveawayRow =
 		new ActionRowBuilder<ButtonBuilder>().setComponents(
