@@ -25,6 +25,7 @@ model Giveaway {
   entriesUserIds          String[]           @default([])
   guildId                 String
   guildRelativeId         Int
+  hostNotifiedBeforeEnd   Boolean            @default(false)
   hostUserId              String
   hostUserTag             String
   id                      Int                @id @default(autoincrement())
