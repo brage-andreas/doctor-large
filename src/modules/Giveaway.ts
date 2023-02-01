@@ -30,7 +30,7 @@ export default class GiveawayModule {
 	public channelId: string | null;
 	public createdAt: Date;
 	public description: string;
-	public endAutomationLevel;
+	public endAutomation;
 	public endDate: Date | null;
 	public ended: boolean;
 	public entriesLocked: boolean;
@@ -73,12 +73,12 @@ export default class GiveawayModule {
 		// -- Raw data --
 		this.publishedMessageUpdated = data.publishedMessageUpdated;
 		this.winnerMessageUpdated = data.winnerMessageUpdated;
-		this.endAutomationLevel = data.endAutomationLevel;
 		this.publishedMessageId = data.publishedMessageId;
 		this.minimumAccountAge = data.minimumAccountAge;
 		this.guildRelativeId = data.guildRelativeId;
 		this.winnerMessageId = data.winnerMessageId;
 		this.winnerQuantity = data.winnerQuantity;
+		this.endAutomation = data.endAutomation;
 		this.entriesLocked = data.entriesLocked;
 		this.lastEditedAt = data.lastEditedAt;
 		this.description = data.description;
@@ -209,7 +209,7 @@ export default class GiveawayModule {
 				},
 				data: {
 					channelId: null,
-					endAutomationLevel: "End",
+					endAutomation: "End",
 					endDate: null,
 					entriesLocked: false,
 					entriesUserIds: [],
@@ -251,7 +251,7 @@ export default class GiveawayModule {
 				},
 				data: {
 					channelId: null,
-					endAutomationLevel: "End",
+					endAutomation: "End",
 					endDate: null,
 					entriesLocked: false,
 					minimumAccountAge: null,
