@@ -1,4 +1,4 @@
-import { type EndAutomationLevel } from "@prisma/client";
+import { type EndAutomation } from "@prisma/client";
 import { oneLine, source, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
@@ -36,7 +36,7 @@ export default async function toEndOptions(
 		return;
 	}
 
-	const { endDate, endAutomationLevel } = giveaway;
+	const { endDate, endAutomation: endAutomationLevel } = giveaway;
 
 	const minTime = () => Date.now() + GIVEAWAY.MIN_END_DATE_BUFFER;
 
@@ -213,9 +213,9 @@ export default async function toEndOptions(
 			await buttonInteraction.deferUpdate();
 		}
 
-		const endLevel = async (newLevel: EndAutomationLevel) => {
+		const endLevel = async (newLevel: EndAutomation) => {
 			await giveaway.edit({
-				endAutomationLevel: newLevel,
+				endAutomation: newLevel,
 				nowOutdated: {
 					publishedMessage: true
 				}

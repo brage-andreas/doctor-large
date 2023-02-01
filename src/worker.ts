@@ -9,6 +9,7 @@ import prisma from "./database/prisma.js";
 import Logger from "./logger/logger.js";
 
 const __filename = fileURLToPath(import.meta.url);
+const dmBuffer = GIVEAWAY.END_HOST_DM_BEFORE_END;
 let once = true;
 
 export default function spawnWorker(params: {
@@ -34,9 +35,7 @@ export default function spawnWorker(params: {
 				/* --- Giveaways --- */
 				/* ----------------- */
 
-				const lte = new Date(
-					Date.now() + GIVEAWAY.END_HOST_DM_BEFORE_END
-				).toISOString();
+				const lte = new Date(Date.now() + dmBuffer).toISOString();
 
 				const all = await prisma.giveaway.findMany({
 					where: {
@@ -48,14 +47,28 @@ export default function spawnWorker(params: {
 				});
 
 				const [toEnd, toNotify] = all.reduce(
-					([toEnd, toNotify], g) => {
-						if (g.endDate && g.endDate.getTime() <= Date.now()) {
-							toEnd.push(g);
-						} else if (!g.hostNotifiedBeforeEnd) {
-							toNotify.push(g);
+					([toEnd, toNotifyBefore], giveaway) => {
+						const { endDate } = giveaway;
+
+						if (!endDate) {
+							return [toEnd, toNotifyBefore];
 						}
 
-						return [toEnd, toNotify];
+						const hasEnded = endDate.getTime() <= Date.now();
+
+						const bufferBeforeMax =
+							endDate.getTime() <= Date.now() + dmBuffer;
+
+						const bufferBeforeMin =
+							endDate.getTime() <= Date.now() + dmBuffer * 0.8;
+
+						if (hasEnded) {
+							toEnd.push(giveaway);
+						} else if (bufferBeforeMax && bufferBeforeMin) {
+							toNotifyBefore.push(giveaway);
+						}
+
+						return [toEnd, toNotifyBefore];
 					},
 					[[], []] as [Array<Giveaway>, Array<Giveaway>]
 				);
@@ -63,7 +76,7 @@ export default function spawnWorker(params: {
 				for (const giveaway of toNotify) {
 					const {
 						channelId,
-						endAutomationLevel,
+						endAutomation,
 						guildId,
 						guildRelativeId,
 						hostUserId,
@@ -89,7 +102,7 @@ export default function spawnWorker(params: {
 						  → Giveaway ${guildRelativeId} (in ${guild})
 						    \`${title}\`
 						
-						End automation is set to: ${endAutomationLevel}
+						End automation is set to: ${endAutomation}
 						
 						Here is a link to the giveaway:
 						${url}
@@ -102,7 +115,7 @@ export default function spawnWorker(params: {
 							id: giveaway.id
 						},
 						data: {
-							hostNotifiedBeforeEnd: true
+							hostNotified: "BufferBefore"
 						}
 					});
 				}
