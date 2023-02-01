@@ -16,30 +16,30 @@ model Autorole {
 
 model Giveaway {
   channelId               String?
-  createdAt               DateTime           @default(now())
+  createdAt               DateTime      @default(now())
   description             String
-  endAutomationLevel      EndAutomationLevel @default(End)
+  endAutomation           EndAutomation @default(End)
   endDate                 DateTime?
-  ended                   Boolean            @default(false)
-  entriesLocked           Boolean            @default(false)
-  entriesUserIds          String[]           @default([])
+  ended                   Boolean       @default(false)
+  entriesLocked           Boolean       @default(false)
+  entriesUserIds          String[]      @default([])
   guildId                 String
   guildRelativeId         Int
-  hostNotifiedBeforeEnd   Boolean            @default(false)
+  hostNotified            HostNotified  @default(No)
   hostUserId              String
   hostUserTag             String
-  id                      Int                @id @default(autoincrement())
-  lastEditedAt            DateTime           @default(now()) @updatedAt
+  id                      Int           @id @default(autoincrement())
+  lastEditedAt            DateTime      @default(now()) @updatedAt
   minimumAccountAge       String?
-  pingRolesIds            String[]           @default([])
+  pingRolesIds            String[]      @default([])
   prizes                  Prize[]
   publishedMessageId      String?
-  publishedMessageUpdated Boolean            @default(false)
-  requiredRolesIds        String[]           @default([])
+  publishedMessageUpdated Boolean       @default(false)
+  requiredRolesIds        String[]      @default([])
   title                   String
   winnerMessageId         String?
-  winnerMessageUpdated    Boolean            @default(false)
-  winnerQuantity          Int                @default(1)
+  winnerMessageUpdated    Boolean       @default(false)
+  winnerQuantity          Int           @default(1)
 }
 
 model Prize {
@@ -57,14 +57,21 @@ model Winner {
   claimed   Boolean  @default(false)
   createdAt DateTime @default(now())
   id        Int      @id @default(autoincrement())
+  notified  Boolean  @default(false)
   prize     Prize    @relation(fields: [prizeId], references: [id], onDelete: NoAction)
   prizeId   Int
   userId    String
 }
 
-enum EndAutomationLevel {
+enum EndAutomation {
   None
   End
   Roll
   Publish
+}
+
+enum HostNotified {
+  No
+  BufferBefore
+  OnEnd
 }
