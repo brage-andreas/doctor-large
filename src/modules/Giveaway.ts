@@ -1,4 +1,4 @@
-import { type Prisma } from "@prisma/client";
+import { type HostNotified, type Prisma } from "@prisma/client";
 import { oneLine, source, stripIndents } from "common-tags";
 import {
 	EmbedBuilder,
@@ -36,6 +36,7 @@ export default class GiveawayModule {
 	public entriesLocked: boolean;
 	public guildId: string;
 	public guildRelativeId: number;
+	public hostNotified: HostNotified;
 	public hostUserId: string;
 	public hostUserTag: string;
 	public id: number;
@@ -80,6 +81,7 @@ export default class GiveawayModule {
 		this.winnerQuantity = data.winnerQuantity;
 		this.endAutomation = data.endAutomation;
 		this.entriesLocked = data.entriesLocked;
+		this.hostNotified = data.hostNotified;
 		this.lastEditedAt = data.lastEditedAt;
 		this.description = data.description;
 		this.hostUserTag = data.hostUserTag;
