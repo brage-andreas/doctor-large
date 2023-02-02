@@ -35,7 +35,10 @@ export default function spawnWorker(params: {
 				/* --- Giveaways --- */
 				/* ----------------- */
 
-				const lte = new Date(Date.now() + dmBuffer).toISOString();
+				const now = Date.now();
+				const nowWithBuffer = now + dmBuffer;
+
+				const lte = new Date(nowWithBuffer).toISOString();
 
 				const all = await prisma.giveaway.findMany({
 					where: {
@@ -54,17 +57,16 @@ export default function spawnWorker(params: {
 							return [toEnd, toNotifyBefore];
 						}
 
-						const hasEnded = endDate.getTime() <= Date.now();
+						const hasEnded = endDate.getTime() <= now;
 
-						const bufferBeforeMax =
-							endDate.getTime() <= Date.now() + dmBuffer;
-
-						const bufferBeforeMin =
-							endDate.getTime() <= Date.now() + dmBuffer * 0.8;
+						const withinBuffer =
+							giveaway.hostNotified !== "BufferBefore" &&
+							nowWithBuffer * 0.8 <= endDate.getTime() &&
+							endDate.getTime() <= nowWithBuffer;
 
 						if (hasEnded) {
 							toEnd.push(giveaway);
-						} else if (bufferBeforeMax && bufferBeforeMin) {
+						} else if (withinBuffer) {
 							toNotifyBefore.push(giveaway);
 						}
 
@@ -120,9 +122,54 @@ export default function spawnWorker(params: {
 					});
 				}
 
-				toEnd;
-
 				/* ----------------- */
+
+				for (const giveaway of toEnd) {
+					const {
+						channelId,
+						endAutomation,
+						guildId,
+						guildRelativeId,
+						hostUserId,
+						publishedMessageId,
+						title
+					} = giveaway;
+
+					const guild =
+						client.guilds.cache.get(guildId)?.name ??
+						"unknown server";
+
+					const url =
+						channelId && publishedMessageId
+							? `https://discord.com/channels/${guildId}/${channelId}/${publishedMessageId}`
+							: null;
+
+					const timeLeft = ms(GIVEAWAY.END_HOST_DM_BEFORE_END, {
+						long: true
+					});
+
+					const string = source`
+						A giveaway you are hosting just ended in ${timeLeft}
+						  → Giveaway ${guildRelativeId} (in ${guild})
+						    \`${title}\`
+						
+						End automation was set to: ${endAutomation}
+						
+						Here is a link to the giveaway:
+						${url}
+					`;
+
+					client.users.send(hostUserId, string).catch(() => null);
+
+					await prisma.giveaway.update({
+						where: {
+							id: giveaway.id
+						},
+						data: {
+							hostNotified: "OnEnd"
+						}
+					});
+				}
 			})();
 		}, 60_000);
 	}
