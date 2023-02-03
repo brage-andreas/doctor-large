@@ -540,8 +540,26 @@ export default class GiveawayModule {
 			: "";
 
 		const winnerOutdated = this.winnerMessageIsOutdated
-			? `\n${EMOJIS.WARN} The winner announcement is outdated. Republish the winners.`
+			? `${EMOJIS.WARN} The winner announcement is outdated. Republish the winners.`
 			: "";
+
+		const missingParts: Array<string> = [];
+
+		if (!this.prizesQuantity()) {
+			missingParts.push("Add one or more prizes");
+		}
+
+		if (!this.channelId) {
+			missingParts.push("Publish the giveaway");
+		}
+
+		const cannotEnd =
+			!this.prizesQuantity() || this.channelId
+				? source`
+					${EMOJIS.ERROR} The giveaway cannot be ended:
+					  → ${missingParts.join("\n→ ")}
+				`
+				: "";
 
 		const infoField = stripIndents`
 			${hostStr}
@@ -599,7 +617,8 @@ export default class GiveawayModule {
 
 		return {
 			content:
-				[publishedOutdated, winnerOutdated].join("\n") || undefined,
+				[cannotEnd, publishedOutdated, winnerOutdated].join("\n\n") ||
+				undefined,
 			embeds: [embed]
 		};
 	}
