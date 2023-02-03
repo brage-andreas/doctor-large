@@ -167,8 +167,26 @@ export default async function toEndOptions(
 		endOptionsEmbed.setDescription("The end date is not set.");
 	}
 
+	const missingParts: Array<string> = [];
+
+	if (!giveaway.prizesQuantity()) {
+		missingParts.push("Add one or more prizes");
+	}
+
+	if (!giveaway.channelId) {
+		missingParts.push("Publish the giveaway");
+	}
+
+	const cannotEnd =
+		!giveaway.prizesQuantity() || giveaway.channelId
+			? source`
+				${EMOJIS.ERROR} The giveaway cannot be ended:
+				  → ${missingParts.join("\n→ ")}
+			`
+			: undefined;
+
 	const msg = await interaction.editReply({
-		content: null,
+		content: cannotEnd,
 		components: [
 			new ActionRowBuilder<ButtonBuilder>().setComponents(
 				setDate.component(),
