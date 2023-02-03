@@ -9,6 +9,7 @@ import prisma from "./database/prisma.js";
 import Logger from "./logger/logger.js";
 
 const __filename = fileURLToPath(import.meta.url);
+const dmBuffer = GIVEAWAY.END_HOST_DM_BEFORE_END;
 let once = true;
 
 export default function spawnWorker(params: {
@@ -34,9 +35,10 @@ export default function spawnWorker(params: {
 				/* --- Giveaways --- */
 				/* ----------------- */
 
-				const lte = new Date(
-					Date.now() + GIVEAWAY.END_HOST_DM_BEFORE_END
-				).toISOString();
+				const now = Date.now();
+				const nowWithBuffer = now + dmBuffer;
+
+				const lte = new Date(nowWithBuffer).toISOString();
 
 				const all = await prisma.giveaway.findMany({
 					where: {
@@ -48,14 +50,27 @@ export default function spawnWorker(params: {
 				});
 
 				const [toEnd, toNotify] = all.reduce(
-					([toEnd, toNotify], g) => {
-						if (g.endDate && g.endDate.getTime() <= Date.now()) {
-							toEnd.push(g);
-						} else if (!g.hostNotifiedBeforeEnd) {
-							toNotify.push(g);
+					([toEnd, toNotifyBefore], giveaway) => {
+						const { endDate } = giveaway;
+
+						if (!endDate) {
+							return [toEnd, toNotifyBefore];
 						}
 
-						return [toEnd, toNotify];
+						const hasEnded = endDate.getTime() <= now;
+
+						const withinBuffer =
+							giveaway.hostNotified !== "BufferBefore" &&
+							nowWithBuffer * 0.8 <= endDate.getTime() &&
+							endDate.getTime() <= nowWithBuffer;
+
+						if (hasEnded) {
+							toEnd.push(giveaway);
+						} else if (withinBuffer) {
+							toNotifyBefore.push(giveaway);
+						}
+
+						return [toEnd, toNotifyBefore];
 					},
 					[[], []] as [Array<Giveaway>, Array<Giveaway>]
 				);
@@ -63,7 +78,7 @@ export default function spawnWorker(params: {
 				for (const giveaway of toNotify) {
 					const {
 						channelId,
-						endAutomationLevel,
+						endAutomation,
 						guildId,
 						guildRelativeId,
 						hostUserId,
@@ -89,7 +104,7 @@ export default function spawnWorker(params: {
 						  → Giveaway ${guildRelativeId} (in ${guild})
 						    \`${title}\`
 						
-						End automation is set to: ${endAutomationLevel}
+						End automation is set to: ${endAutomation}
 						
 						Here is a link to the giveaway:
 						${url}
@@ -102,14 +117,59 @@ export default function spawnWorker(params: {
 							id: giveaway.id
 						},
 						data: {
-							hostNotifiedBeforeEnd: true
+							hostNotified: "BufferBefore"
 						}
 					});
 				}
 
-				toEnd;
-
 				/* ----------------- */
+
+				for (const giveaway of toEnd) {
+					const {
+						channelId,
+						endAutomation,
+						guildId,
+						guildRelativeId,
+						hostUserId,
+						publishedMessageId,
+						title
+					} = giveaway;
+
+					const guild =
+						client.guilds.cache.get(guildId)?.name ??
+						"unknown server";
+
+					const url =
+						channelId && publishedMessageId
+							? `https://discord.com/channels/${guildId}/${channelId}/${publishedMessageId}`
+							: null;
+
+					const timeLeft = ms(GIVEAWAY.END_HOST_DM_BEFORE_END, {
+						long: true
+					});
+
+					const string = source`
+						A giveaway you are hosting just ended in ${timeLeft}
+						  → Giveaway ${guildRelativeId} (in ${guild})
+						    \`${title}\`
+						
+						End automation was set to: ${endAutomation}
+						
+						Here is a link to the giveaway:
+						${url}
+					`;
+
+					client.users.send(hostUserId, string).catch(() => null);
+
+					await prisma.giveaway.update({
+						where: {
+							id: giveaway.id
+						},
+						data: {
+							hostNotified: "OnEnd"
+						}
+					});
+				}
 			})();
 		}, 60_000);
 	}

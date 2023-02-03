@@ -129,6 +129,8 @@ export default async function enterGiveaway(
 
 	giveaway.edit({
 		entriesUserIds: [...entrants],
-		nowOutdated: { none: true }
+		nowOutdated: {
+			none: true
+		}
 	});
 }

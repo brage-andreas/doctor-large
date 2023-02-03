@@ -55,6 +55,7 @@ export const INTENTS: Array<GatewayIntentBits> = [
 ];
 
 export const GIVEAWAY = {
+	// This will work badly if it is under a minute
 	END_HOST_DM_BEFORE_END: 1_800_000, // 30 minutes
 	MAX_DESCRIPTION_LEN: 200,
 	MAX_DESCRIPTION_LINES: 20,
