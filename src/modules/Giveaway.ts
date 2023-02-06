@@ -342,9 +342,33 @@ export default class GiveawayModule {
 	}
 
 	public prizesOf(userId: string) {
-		return this.prizes.filter((prize) =>
-			prize.winners.some((winner) => winner.userId === userId)
-		);
+		/*this.manager.prisma.winner.groupBy({
+			by: ["id"],
+			where: {
+				prize: {
+					giveawayId: this.id
+				}
+			}
+		});
+
+		return this.prizes.reduce((prizes, prize) => {
+			const winner = prize.winners.find(
+				(winner) => winner.userId === userId
+			);
+
+			if (winner) {
+				const modifiedPrize = prize as Exclude<
+					PrizeModule,
+					"winners"
+				> & { winner: Winner };
+
+				modifiedPrize.winner = winner;
+
+				prizes.push(modifiedPrize);
+			}
+
+			return prizes;
+		}, [] as Array<Exclude<PrizeModule, "winners"> & { winner: Winner }>);*/
 	}
 
 	public winnersUserIds(forceRefresh?: boolean) {
