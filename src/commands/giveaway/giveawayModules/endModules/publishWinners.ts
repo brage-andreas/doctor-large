@@ -5,11 +5,13 @@ import {
 	ButtonStyle,
 	PermissionFlagsBits,
 	type Message,
+	type MessageCreateOptions,
 	type RepliableInteraction
 } from "discord.js";
 import { EMOJIS } from "../../../../constants.js";
 import GiveawayManager from "../../../../database/giveaway.js";
 import Logger from "../../../../logger/logger.js";
+import type GiveawayModule from "../../../../modules/Giveaway.js";
 import toEndedDashboard from "../endedGiveawayDashboard.js";
 
 export async function toPublishWinners(
@@ -244,4 +246,63 @@ export async function republishWinners(
 	);
 
 	toEndedDashboard(interaction, giveawayManager, giveaway);
+}
+
+export async function publishOrRepublishWinners(
+	giveaway: GiveawayModule,
+	{ preferEditing }: { preferEditing: boolean } = { preferEditing: false }
+) {
+	const acceptPrizeButton = new ButtonBuilder()
+		.setCustomId(`accept-prize-${giveaway.id}`)
+		.setLabel("Accept prize")
+		.setEmoji(EMOJIS.STAR_EYES)
+		.setStyle(ButtonStyle.Success);
+
+	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
+		acceptPrizeButton
+	);
+
+	const data: MessageCreateOptions = {
+		allowedMentions: { users: [...giveaway.winnersUserIds()] },
+		content: [...giveaway.winnersUserIds()]
+			.map((id) => `<@${id}>`)
+			.join(" "),
+		embeds: [],
+		components: [row]
+	};
+
+	const id =
+		giveaway.winnerMessage &&
+		(await giveaway.winnerMessage
+			.fetch()
+			.then((m) => m?.id)
+			.catch(() => undefined));
+
+	let sent = false;
+
+	if (preferEditing && id) {
+		sent = await giveaway.winnerMessage
+			?.edit(data)
+			.then(() => true)
+			.catch(() => false);
+	}
+
+	if (!sent && giveaway.channel) {
+		sent = await giveaway.channel
+			.send(data)
+			.then(() => true)
+			.catch(() => false);
+	}
+
+	await giveaway.edit({
+		nowOutdated: {
+			winnerMessage: false
+		}
+	});
+
+	for (const winnerId of giveaway.winnersUserIds()) {
+		for (const prize of giveaway.prizesOf(winnerId)) {
+			prize.winner.userId;
+		}
+	}
 }
