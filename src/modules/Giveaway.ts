@@ -342,33 +342,51 @@ export default class GiveawayModule {
 	}
 
 	public prizesOf(userId: string) {
-		/*this.manager.prisma.winner.groupBy({
-			by: ["id"],
-			where: {
-				prize: {
-					giveawayId: this.id
+		if (!this.winnersUserIds().has(userId)) {
+			return;
+		}
+
+		const map = new Map<
+			string,
+			Array<{ prize: PrizeModule; count: number }>
+		>();
+
+		const prizes = this.prizes.filter((prize) =>
+			prize.winners.some((winner) => winner.userId === userId)
+		);
+
+		prizes.forEach((prize) => {
+			const winners = prize.winners.filter((w) => w.userId === userId);
+
+			winners.forEach((winner) => {
+				const current = map.get(winner.userId);
+
+				if (!current) {
+					map.set(winner.userId, [{ prize, count: 1 }]);
+
+					return;
 				}
-			}
+
+				const index = current.findIndex(
+					(obj) => obj.prize.id === prize.id
+				);
+
+				const currentObj = -1 < index && current.at(index);
+
+				if (currentObj) {
+					const { prize, count } = currentObj;
+
+					current.splice(index, 1);
+					current.push({ prize, count: count + 1 });
+				} else {
+					current.push({ prize, count: 1 });
+				}
+
+				map.set(winner.userId, current);
+			});
 		});
 
-		return this.prizes.reduce((prizes, prize) => {
-			const winner = prize.winners.find(
-				(winner) => winner.userId === userId
-			);
-
-			if (winner) {
-				const modifiedPrize = prize as Exclude<
-					PrizeModule,
-					"winners"
-				> & { winner: Winner };
-
-				modifiedPrize.winner = winner;
-
-				prizes.push(modifiedPrize);
-			}
-
-			return prizes;
-		}, [] as Array<Exclude<PrizeModule, "winners"> & { winner: Winner }>);*/
+		return map;
 	}
 
 	public winnersUserIds(forceRefresh?: boolean) {
