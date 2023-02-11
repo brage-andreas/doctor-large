@@ -2,6 +2,7 @@ import { stripIndents } from "common-tags";
 import { ButtonStyle, type ButtonInteraction } from "discord.js";
 import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
+import commandMention from "../../../../helpers/commandMention.js";
 import yesNo from "../../../../helpers/yesNo.js";
 import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
@@ -29,15 +30,7 @@ export default async function toDeleteGiveaway(
 		return;
 	}
 
-	const myGiveawaysCommand = await interaction.client.application.commands
-		.fetch()
-		.then((commands) =>
-			commands.find((command) => command.name === "my-giveaways")
-		);
-
-	const myGiveaways = myGiveawaysCommand
-		? `</my-giveaways:${myGiveawaysCommand.id}>`
-		: "/my-giveaways";
+	const myGiveaways = await commandMention("my-giveaways", interaction);
 
 	const isConcludedString = giveaway.ended
 		? `\n\n${EMOJIS.WARN} It is recommended to keep ended giveaways. They can still be seen in the ${myGiveaways} command.`

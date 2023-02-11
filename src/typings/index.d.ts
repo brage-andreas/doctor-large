@@ -1,3 +1,4 @@
+import type { Prize, Winner } from "@prisma/client";
 import type {
 	AutocompleteInteraction,
 	ChatInputCommandInteraction,
@@ -32,4 +33,10 @@ export interface Command {
 
 export interface CommandImport {
 	getCommand(): Command;
+}
+
+interface PrizesOfMapObj {
+	prize: Prize;
+	winner: Winner;
+	count: number;
 }

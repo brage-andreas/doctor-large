@@ -1,4 +1,4 @@
-import { type HostNotified, type Prisma } from "@prisma/client";
+import { type HostNotified, type Prisma, type Winner } from "@prisma/client";
 import { oneLine, source, stripIndents } from "common-tags";
 import {
 	EmbedBuilder,
@@ -18,6 +18,7 @@ import { listify } from "../helpers/listify.js";
 import s from "../helpers/s.js";
 import { longStamp } from "../helpers/timestamps.js";
 import { type GiveawayWithIncludes } from "../typings/database.js";
+import { type PrizesOfMapObj } from "../typings/index.js";
 import PrizeModule from "./Prize.js";
 
 export default class GiveawayModule {
@@ -55,6 +56,7 @@ export default class GiveawayModule {
 	public pingRolesIds: Set<string>;
 	public prizes: Array<PrizeModule>;
 	public requiredRolesIds: Set<string>;
+	public winners: Array<Winner & { prize: PrizeModule }>;
 	// ----------------------
 
 	// -- Cache --
@@ -115,6 +117,12 @@ export default class GiveawayModule {
 		this.prizes = data.prizes.map(
 			(prize) => new PrizeModule({ ...prize, giveaway: this }, guild)
 		);
+
+		this.winners = this.prizes.reduce((winners, prize) => {
+			winners.concat(prize.winners.map((w) => ({ ...w, prize })));
+
+			return winners;
+		}, [] as Array<Winner & { prize: PrizeModule }>);
 		// ----------------------
 	}
 
@@ -341,52 +349,99 @@ export default class GiveawayModule {
 		return this._prizesQuantity;
 	}
 
-	public prizesOf(userId: string) {
-		if (!this.winnersUserIds().has(userId)) {
-			return;
-		}
-
+	/**
+	 * Mapped by user id
+	 */
+	public prizesOfAllWinners() {
 		const map = new Map<
 			string,
-			Array<{ prize: PrizeModule; count: number }>
+			{ claimed: Array<PrizesOfMapObj>; unclaimed: Array<PrizesOfMapObj> }
 		>();
 
-		const prizes = this.prizes.filter((prize) =>
-			prize.winners.some((winner) => winner.userId === userId)
-		);
+		this.winnersUserIds().forEach((id) => {
+			const prizes = this.prizesOf(id);
 
-		prizes.forEach((prize) => {
-			const winners = prize.winners.filter((w) => w.userId === userId);
+			if (!prizes) {
+				return;
+			}
 
-			winners.forEach((winner) => {
-				const current = map.get(winner.userId);
-
-				if (!current) {
-					map.set(winner.userId, [{ prize, count: 1 }]);
-
-					return;
-				}
-
-				const index = current.findIndex(
-					(obj) => obj.prize.id === prize.id
-				);
-
-				const currentObj = -1 < index && current.at(index);
-
-				if (currentObj) {
-					const { prize, count } = currentObj;
-
-					current.splice(index, 1);
-					current.push({ prize, count: count + 1 });
-				} else {
-					current.push({ prize, count: 1 });
-				}
-
-				map.set(winner.userId, current);
+			map.set(id, {
+				claimed: [...prizes.claimed.values()],
+				unclaimed: [...prizes.unclaimed.values()]
 			});
 		});
 
+		if (!map.size) {
+			return null;
+		}
+
 		return map;
+	}
+
+	/**
+	 * Mapped by prize ID
+	 */
+	public prizesOf(userId: string) {
+		if (!this.winnersUserIds().has(userId)) {
+			return null;
+		}
+
+		// TODO: refactor
+		const prizesBundled = this.winners.reduce(
+			(prizes, winner) => {
+				const { prize, prizeId, claimed } = winner;
+				let newPrizes: {
+					claimed: Map<number, PrizesOfMapObj>;
+					unclaimed: Map<number, PrizesOfMapObj>;
+				} = { claimed: new Map(), unclaimed: new Map() };
+
+				if (winner.userId !== userId) {
+					return prizes;
+				}
+
+				const oldClaimed: PrizesOfMapObj = prizes.claimed.get(
+					prizeId
+				) ?? { prize, winner, count: 0 };
+
+				const oldUnclaimed: PrizesOfMapObj = prizes.unclaimed.get(
+					prizeId
+				) ?? { prize, winner, count: 0 };
+
+				if (claimed) {
+					const newClaimed: Map<number, PrizesOfMapObj> =
+						prizes.claimed.set(prizeId, {
+							prize,
+							winner,
+							count: oldClaimed.count + 1
+						});
+
+					newPrizes = {
+						unclaimed: prizes.unclaimed,
+						claimed: newClaimed
+					};
+				} else {
+					const newUnclaimed: Map<number, PrizesOfMapObj> =
+						prizes.unclaimed.set(prizeId, {
+							prize,
+							winner,
+							count: oldUnclaimed.count + 1
+						});
+
+					newPrizes = {
+						unclaimed: newUnclaimed,
+						claimed: prizes.claimed
+					};
+				}
+
+				return newPrizes;
+			},
+			{ claimed: new Map(), unclaimed: new Map() } as {
+				claimed: Map<number, PrizesOfMapObj>;
+				unclaimed: Map<number, PrizesOfMapObj>;
+			}
+		);
+
+		return prizesBundled;
 	}
 
 	public winnersUserIds(forceRefresh?: boolean) {

@@ -10,6 +10,7 @@ import {
 } from "discord.js";
 import { EMOJIS } from "../../../../constants.js";
 import GiveawayManager from "../../../../database/giveaway.js";
+import commandMention from "../../../../helpers/commandMention.js";
 import Logger from "../../../../logger/logger.js";
 import type GiveawayModule from "../../../../modules/Giveaway.js";
 import toEndedDashboard from "../endedGiveawayDashboard.js";
@@ -271,16 +272,9 @@ export async function publishOrRepublishWinners(
 		components: [row]
 	};
 
-	const id =
-		giveaway.winnerMessage &&
-		(await giveaway.winnerMessage
-			.fetch()
-			.then((m) => m?.id)
-			.catch(() => undefined));
-
 	let sent = false;
 
-	if (preferEditing && id) {
+	if (preferEditing && giveaway.winnerMessage) {
 		sent = await giveaway.winnerMessage
 			?.edit(data)
 			.then(() => true)
@@ -300,9 +294,31 @@ export async function publishOrRepublishWinners(
 		}
 	});
 
-	for (const winnerId of giveaway.winnersUserIds()) {
-		for (const prize of giveaway.prizesOf(winnerId)) {
-			prize.winner.userId;
-		}
+	const myGiveaways = await commandMention("my-giveaways", giveaway.client);
+	let tally = 0;
+
+	for (const userId of giveaway.winnersUserIds()) {
+		giveaway.client.users
+			.send(
+				userId,
+				stripIndents`
+				${EMOJIS.TADA} You just won a giveaway in ${giveaway.guild.name}!
+				Make sure to claim the prize ${EMOJIS.GRIN}
+
+				Use ${myGiveaways} in the server to see your prizes.
+			`
+			)
+			.catch(() => null)
+			.then(() => void tally++);
 	}
+
+	new Logger({
+		color: "grey",
+		prefix: "PUB. WIN.",
+		guild: giveaway.guild
+	}).log(
+		`Published winners of giveaway #${giveaway.id}. Sent DMs to ${tally}/${
+			giveaway.winnersUserIds().size
+		} winners`
+	);
 }
