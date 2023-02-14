@@ -25,7 +25,7 @@ model Giveaway {
   entriesUserIds          String[]      @default([])
   guildId                 String
   guildRelativeId         Int
-  hostNotified            HostNotified  @default(No)
+  hostNotified            HostNotified  @default(None)
   hostUserId              String
   hostUserTag             String
   id                      Int           @id @default(autoincrement())
@@ -71,7 +71,7 @@ enum EndAutomation {
 }
 
 enum HostNotified {
-  No
+  None
   BufferBefore
   OnEnd
 }
