@@ -1,10 +1,12 @@
-import type { Prize, Winner } from "@prisma/client";
+import type { Giveaway, Prize, Winner } from "@prisma/client";
 import type {
 	AutocompleteInteraction,
 	ChatInputCommandInteraction,
 	ContextMenuCommandInteraction,
 	RESTPostAPIApplicationCommandsJSONBody
 } from "discord.js";
+
+type Prop<T extends object, P extends keyof T> = T[P];
 
 export type EventFn = (...args: Array<unknown>) => Promise<unknown> | unknown;
 
@@ -40,3 +42,8 @@ interface PrizesOfMapObj {
 	winner: Winner;
 	count: number;
 }
+
+export type GiveawayId = Prop<Giveaway, "id">;
+export type PrizeId = Prop<Prize, "id">;
+export type WinnerId = Prop<Winner, "id">;
+export type Snowflake = string;
