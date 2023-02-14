@@ -1,4 +1,9 @@
-import { type HostNotified, type Prisma, type Winner } from "@prisma/client";
+import {
+	type Giveaway,
+	type HostNotified,
+	type Prisma,
+	type Winner
+} from "@prisma/client";
 import { oneLine, source, stripIndents } from "common-tags";
 import {
 	EmbedBuilder,
@@ -18,10 +23,20 @@ import { listify } from "../helpers/listify.js";
 import s from "../helpers/s.js";
 import { longStamp } from "../helpers/timestamps.js";
 import { type GiveawayWithIncludes } from "../typings/database.js";
-import { type PrizesOfMapObj } from "../typings/index.js";
+import {
+	type GiveawayId,
+	type PrizeId,
+	type PrizesOfMapObj,
+	type Snowflake
+} from "../typings/index.js";
 import PrizeModule from "./Prize.js";
 
-export default class GiveawayModule {
+type ModifiedGiveaway = Omit<
+	Giveaway,
+	"entriesUserIds" | "pingRolesIds" | "requiredRolesIds"
+>;
+
+export default class GiveawayModule implements ModifiedGiveaway {
 	public data: GiveawayWithIncludes;
 	public readonly client: Client<true>;
 	public readonly guild: Guild;
@@ -40,8 +55,8 @@ export default class GiveawayModule {
 	public hostNotified: HostNotified;
 	public hostUserId: string;
 	public hostUserTag: string;
-	public id: number;
-	public lastEditedAt: Date | null;
+	public id: GiveawayId;
+	public lastEditedAt: Date;
 	public minimumAccountAge: string | null;
 	public publishedMessageId: string | null;
 	public publishedMessageUpdated: boolean;
@@ -52,10 +67,10 @@ export default class GiveawayModule {
 	// --------------
 
 	// -- Manipulated data --
-	public entriesUserIds: Set<string>;
-	public pingRolesIds: Set<string>;
+	public entriesUserIds: Set<Snowflake>;
+	public pingRolesIds: Set<Snowflake>;
 	public prizes: Array<PrizeModule>;
-	public requiredRolesIds: Set<string>;
+	public requiredRolesIds: Set<Snowflake>;
 	public winners: Array<Winner & { prize: PrizeModule }>;
 	// ----------------------
 
@@ -354,7 +369,7 @@ export default class GiveawayModule {
 	 */
 	public prizesOfAllWinners() {
 		const map = new Map<
-			string,
+			Snowflake,
 			{ claimed: Array<PrizesOfMapObj>; unclaimed: Array<PrizesOfMapObj> }
 		>();
 
@@ -436,8 +451,8 @@ export default class GiveawayModule {
 				return newPrizes;
 			},
 			{ claimed: new Map(), unclaimed: new Map() } as {
-				claimed: Map<number, PrizesOfMapObj>;
-				unclaimed: Map<number, PrizesOfMapObj>;
+				claimed: Map<PrizeId, PrizesOfMapObj>;
+				unclaimed: Map<PrizeId, PrizesOfMapObj>;
 			}
 		);
 
