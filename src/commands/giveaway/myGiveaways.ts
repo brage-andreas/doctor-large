@@ -1,8 +1,9 @@
-import { source, stripIndents } from "common-tags";
+import { source } from "common-tags";
 import {
 	ActionRowBuilder,
 	AttachmentBuilder,
 	ComponentType,
+	EmbedBuilder,
 	type ButtonBuilder,
 	type RESTPostAPIApplicationCommandsJSONBody
 } from "discord.js";
@@ -10,13 +11,12 @@ import components from "../../components/index.js";
 import { EMOJIS } from "../../constants.js";
 import GiveawayManager from "../../database/giveaway.js";
 import hideOption from "../../helpers/hideOption.js";
-import s from "../../helpers/s.js";
 import Logger from "../../logger/logger.js";
-import type GiveawayModule from "../../modules/Giveaway.js";
-import type PrizeModule from "../../modules/Prize.js";
 import {
 	type Command,
-	type CommandModuleInteractions
+	type CommandModuleInteractions,
+	type GiveawayId,
+	type PrizesOfMapObj
 } from "../../typings/index.js";
 
 const data: RESTPostAPIApplicationCommandsJSONBody = {
@@ -24,53 +24,6 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 	dm_permission: false,
 	description: "View all the giveaways you have participated in.",
 	options: [hideOption]
-};
-
-const no = (n: number) => (n ? `**${n}**` : "no");
-
-const stringFromEnteredGiveaways = (giveaways: Array<GiveawayModule>) => {
-	const activeGiveaways = giveaways
-		.filter((g) => !g.ended)
-		.map((g) => g.toShortString());
-
-	const endedGiveaways = giveaways
-		.filter((g) => g.ended)
-		.map((g) => g.toShortString());
-
-	const strArray = [];
-
-	if (activeGiveaways.length) {
-		strArray.push(
-			`Active (${activeGiveaways.length}):\n→ ${activeGiveaways.join(
-				"\n→ "
-			)}`
-		);
-	}
-
-	if (endedGiveaways.length) {
-		strArray.push(
-			`Ended (${endedGiveaways.length}):\n→ ${endedGiveaways.join(
-				"\n→ "
-			)}`
-		);
-	}
-
-	return strArray.join("\n\n");
-};
-
-// TODO: redo
-const prizeToString = (prize: PrizeModule, winnerUserId: string) => {
-	const winner = prize.winners.find(
-		(winner) => winner.userId === winnerUserId
-	);
-
-	if (!winner) {
-		return null;
-	}
-
-	const status = !winner.claimed ? " (Not claimed)" : "";
-
-	return `→ 1x ${prize.name}${status}`;
 };
 
 const run = async (interaction: CommandModuleInteractions) => {
@@ -84,7 +37,8 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 	const giveawayManager = new GiveawayManager(interaction.guild);
 
-	const id = interaction.user.id;
+	const { id } = interaction.user;
+
 	const entered = await giveawayManager.getAll({ entryUserId: id });
 	const hosted = await giveawayManager.getAll({ hostUserId: id });
 
@@ -99,62 +53,60 @@ const run = async (interaction: CommandModuleInteractions) => {
 		return;
 	}
 
-	await interaction.deferReply({ ephemeral: hide });
+	let allPrizesAccepted = true;
+	let winCount = 0;
 
-	// this is so it can update if the user presses the "accept all" button
-	const getPrizes = async () =>
-		await giveawayManager.getPrizes({ winnerUserId: id });
-
-	const prizes = await getPrizes();
-
-	const getContent = (prizes: Array<PrizeModule>) => {
-		const prizesStr = prizes.length
-			? `\n\n**Won prizes (${prizes.length})**\n→ ${prizes
-					.map((prize) => prize.toShortString())
-					.join("\n→ ")}`
-			: "";
-
-		const enteredStr = entered.length
-			? stringFromEnteredGiveaways(entered)
-			: `None. ${EMOJIS.CRY}`;
-
-		const hostEntries = hosted.reduce(
-			(acc, g) => acc + g.entriesUserIds.size,
-			0
-		);
-
-		const hostedStr = hosted.length
-			? stripIndents`
-				**Hosted giveaways**
-				You have hosted **${hosted.length}** ${s(
-					"giveaway",
-					hosted.length
-			  )} with a total of **${hostEntries}** ${
-					hostEntries === 1 ? "entry" : "entries"
-			  }.
-			`
-			: "";
-
-		return stripIndents`
-			You have entered ${no(entered.length)} ${s("giveaway", entered.length)}.
-			You have won ${no(prizes.length)} ${s("prize", prizes.length)}.
-
-			**Entered giveaways**
-			${enteredStr}${prizesStr}
-
-			${hostedStr}
-		`;
+	const prizeCount = {
+		all: 0,
+		claimed: 0,
+		unclaimed: 0
 	};
 
-	const notAcceptedPrizes = await giveawayManager.getPrizes({
-		claimed: false,
-		winnerUserId: id
-	});
+	const prizes = entered.reduce(
+		(map, g) => {
+			const prizes = g.prizesOf(id);
+
+			if (!prizes?.claimed.size && !prizes?.unclaimed.size) {
+				return map;
+			}
+
+			const old = map.get(g.guildRelativeId) ?? {
+				claimed: [],
+				unclaimed: []
+			};
+
+			if (allPrizesAccepted && prizes.unclaimed.size) {
+				allPrizesAccepted = true;
+			}
+
+			map.set(g.guildRelativeId, {
+				claimed: old.claimed.concat([...prizes.claimed.values()]),
+				unclaimed: old.unclaimed.concat([...prizes.unclaimed.values()])
+			});
+
+			prizeCount.all += prizes.claimed.size + prizes.unclaimed.size;
+			prizeCount.claimed += prizes.claimed.size;
+			prizeCount.unclaimed += prizes.unclaimed.size;
+
+			winCount++;
+
+			return map;
+		},
+		new Map<
+			GiveawayId,
+			{
+				claimed: Array<PrizesOfMapObj>;
+				unclaimed: Array<PrizesOfMapObj>;
+			}
+		>()
+	);
+
+	await interaction.deferReply({ ephemeral: hide });
 
 	const { acceptAllPrizes, viewAllEntered, viewAllPrizes, viewAllHosted } =
 		components.buttons;
 
-	const acceptAllPrizesButton = notAcceptedPrizes.length
+	const acceptAllPrizesButton = !allPrizesAccepted
 		? acceptAllPrizes.component()
 		: null;
 
@@ -162,9 +114,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 		? viewAllEntered.component()
 		: null;
 
-	const viewAllPrizesButton = prizes.length
-		? viewAllPrizes.component()
-		: null;
+	const viewAllPrizesButton = prizes.size ? viewAllPrizes.component() : null;
 
 	const viewAllHostedButton = hosted.length
 		? viewAllHosted.component()
@@ -188,12 +138,63 @@ const run = async (interaction: CommandModuleInteractions) => {
 			: [];
 	};
 
+	const prizesArr = (noLimits?: true) =>
+		[...prizes.entries()].map(([id, { claimed, unclaimed }]) => {
+			const arr = [...unclaimed, ...claimed].map((p, i, arr) => {
+				const { name } = p.prize;
+				const claim = p.winner.claimed;
+
+				const str = `${p.count}x ${name}${claim ? " (UNCLAIMED)" : ""}`;
+
+				return `${i === arr.length - 1 ? "└─" : "├─"} ${str}`;
+			});
+
+			if (noLimits) {
+				return source`
+				Giveaway #${id}:
+				  ${arr.join("\n")}
+			`;
+			}
+
+			return source`
+				Giveaway #${id}:
+				  ${arr.slice(0, 10).join("\n")}
+				  ${10 < arr.length ? `... and ${arr.length - 10} more` : ""}
+			`;
+		});
+
+	const MAX_LEN = 3900; // arbitrary - must be 4096 or under but there are also fields;
+	let description = "";
+
+	for (const chunk of prizesArr()) {
+		if (MAX_LEN <= description.length + chunk.length) {
+			break;
+		}
+
+		description += `\n\n${chunk}`;
+	}
+
+	const embed = new EmbedBuilder()
+		.setTitle("My Giveaways")
+		.setDescription(description || "You have no prizes.")
+		.setFields({
+			name: "Stats",
+			value: source`
+					Entered: ${entered.length}
+					  └─ Won: ${winCount}
+					Hosted: ${hosted.length}
+					Prizes: ${prizeCount.all}
+					  ├─ Claimed: ${prizeCount.claimed}
+					  └─ Unclaimed: ${prizeCount.unclaimed}
+				`
+		});
+
 	const rows = getRows();
 
 	const msg = await interaction.editReply({
 		components: rows,
-		content: getContent(prizes),
-		embeds: []
+		content: null,
+		embeds: [embed]
 	});
 
 	logger.log("Sent overview");
@@ -231,27 +232,38 @@ const run = async (interaction: CommandModuleInteractions) => {
 	collector.on("collect", async (buttonInteraction) => {
 		await buttonInteraction.deferUpdate();
 
+		let n = 0;
+
 		if (buttonInteraction.customId === acceptAllPrizes.customId) {
-			for (const prize of notAcceptedPrizes) {
+			const unclaimed = [...prizes.values()].flatMap((p) => p.unclaimed);
+
+			for (const obj of unclaimed) {
 				await giveawayManager.setWinnerClaimed({
 					claimed: true,
-					prizeId: prize.id,
+					prizeId: obj.prize.id,
 					userId: interaction.user.id
 				});
+
+				n++;
 			}
 
 			logger.log(
-				`Bulk-accepted ${
-					notAcceptedPrizes.length
-				} prize(s): ${notAcceptedPrizes.map((p) => p.id).join(", ")}`
+				`Bulk-accepted ${n} prize(s): ${unclaimed
+					.map((p) => p.prize.id)
+					.join(", ")}`
 			);
 
 			acceptAllPrizesButton?.setDisabled(true);
 			viewAllPrizesButton?.setDisabled(false);
 
-			await buttonInteraction.editReply({
-				content: getContent(await getPrizes())
+			await buttonInteraction.followUp({
+				ephemeral: true,
+				content: `${EMOJIS.SPARKS} Accepted all prizes!`
 			});
+
+			collector.stop();
+
+			return run(interaction);
 		}
 
 		const getAttachment = (string: string) => {
@@ -270,7 +282,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 			`;
 
 			return new AttachmentBuilder(Buffer.from(text), {
-				name: `giveaways-${user.tag}-in-${guild.id}.txt`
+				name: `giveaways_${guild.id}_${user.id}.txt`
 			});
 		};
 
@@ -289,19 +301,15 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 			await interaction.editReply({
 				components: getRows(),
-				content: getContent(await getPrizes()),
-				embeds: []
+				content: null,
+				embeds: [embed]
 			});
 		}
 
 		if (buttonInteraction.customId === viewAllPrizes.customId) {
-			const prizes_ = await getPrizes();
+			const prizes = prizesArr(true).join("\n\n");
 
-			const prizesStr = prizes_
-				.map((prize_) => prizeToString(prize_, id))
-				.join("\n");
-
-			const string = `Won prizes (${prizes_.length}):\n\n${prizesStr}`;
+			const string = `Won prizes (${prizeCount}):\n\n${prizes}`;
 
 			await buttonInteraction.followUp({
 				files: [getAttachment(string)]
@@ -311,8 +319,8 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 			await interaction.editReply({
 				components: getRows(),
-				content: getContent(await getPrizes()),
-				embeds: []
+				content: null,
+				embeds: [embed]
 			});
 		}
 
@@ -331,8 +339,8 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 			await interaction.editReply({
 				components: getRows(),
-				content: getContent(await getPrizes()),
-				embeds: []
+				content: null,
+				embeds: [embed]
 			});
 		}
 	});
