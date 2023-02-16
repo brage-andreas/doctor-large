@@ -12,7 +12,8 @@ import ms from "ms";
 import components from "../../../../components/index.js";
 import { EMOJIS, GIVEAWAY } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
-import { longStamp } from "../../../../helpers/timestamps.js";
+import { longstamp } from "../../../../helpers/timestamps.js";
+import toDashboard from "../dashboard.js";
 import toEndGiveaway from "./endGiveaway.js";
 
 export default async function toEndOptions(
@@ -41,15 +42,16 @@ export default async function toEndOptions(
 	const minTime = () => Date.now() + GIVEAWAY.MIN_END_DATE_BUFFER;
 
 	const {
-		setDate,
+		adjustDate,
+		back,
 		clearDate,
-		roundDateToNearestHour,
 		endGiveaway,
-		endLevelNone,
 		endLevelEnd,
+		endLevelNone,
 		endLevelPublish,
 		endLevelRoll,
-		adjustDate
+		roundDateToNearestHour,
+		setDate
 	} = components.buttons;
 
 	const adjustments = ["15 minutes", "1 hour", "1 day", "1 week", "30 days"];
@@ -160,7 +162,7 @@ export default async function toEndOptions(
 		endOptionsEmbed.setDescription(
 			oneLine`
 				The end date is set to:
-				${longStamp(endDate, { extraLong: true })}.
+				${longstamp(endDate, { extraLong: true })}.
 			`
 		);
 	} else {
@@ -203,6 +205,7 @@ export default async function toEndOptions(
 				...minusButtons.map((button) => button.component())
 			),
 			new ActionRowBuilder<ButtonBuilder>().setComponents(
+				back.component(),
 				...endLevelButtons()
 			)
 		],
@@ -243,6 +246,10 @@ export default async function toEndOptions(
 		};
 
 		switch (buttonInteraction.customId) {
+			case back.customId: {
+				return toDashboard(buttonInteraction, id);
+			}
+
 			case setDate.customId: {
 				//
 
