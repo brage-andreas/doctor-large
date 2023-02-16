@@ -74,12 +74,10 @@ export default async function toEndGiveaway(
 	`;
 
 	if (giveaway.endDate) {
-		const inFuture = Number(giveaway.endDate) < Date.now();
+		const isWas = Number(giveaway.endDate) < Date.now() ? "is" : "was";
+		const time = timestamp(giveaway.endDate, "R");
 
-		content += oneLine`
-			The giveaway ${inFuture ? "is" : "was"} set to
-			end ${timestamp(giveaway.endDate, "R")}.
-		`;
+		content += `\nThe giveaway ${isWas} set to end ${time}.`;
 	}
 
 	if (prizesN < winnersN) {
