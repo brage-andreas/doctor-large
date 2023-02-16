@@ -21,7 +21,7 @@ import { COLORS, EMOJIS } from "../constants.js";
 import { default as GiveawayManager } from "../database/giveaway.js";
 import { listify } from "../helpers/listify.js";
 import s from "../helpers/s.js";
-import { longStamp } from "../helpers/timestamps.js";
+import { longstamp } from "../helpers/timestamps.js";
 import { type GiveawayWithIncludes } from "../typings/database.js";
 import {
 	type GiveawayId,
@@ -604,7 +604,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		`;
 
 		const endStr = this.endDate
-			? `→ End date: ${longStamp(this.endDate)}`
+			? `→ End date: ${longstamp(this.endDate)}`
 			: `→ End date: ${EMOJIS.WARN} No set end date.`;
 
 		const prizesName = this.prizes.length
@@ -618,7 +618,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const descriptionStr =
 			this.description ?? `${EMOJIS.WARN} There is no set description`;
 
-		const createdStr = `→ Created: ${longStamp(this.createdAt)}`;
+		const createdStr = `→ Created: ${longstamp(this.createdAt)}`;
 		const entriesStr = `→ Entries: ${this.entriesUserIds.size}`;
 		const hostStr = `→ Host: ${this.hostUserTag} (${this.hostUserId})`;
 		const idStr = `#${this.guildRelativeId}`;
@@ -668,7 +668,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		}
 
 		const cannotEnd =
-			!this.prizesQuantity() || this.channelId
+			!this.prizesQuantity() || !this.channelId
 				? source`
 					${EMOJIS.ERROR} The giveaway cannot be ended:
 					  → ${missingParts.join("\n→ ")}
@@ -753,7 +753,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		}`;
 
 		const endStr = this.endDate
-			? `→ The giveaway will end: ${longStamp(this.endDate)}`
+			? `→ The giveaway will end: ${longstamp(this.endDate)}`
 			: "→ The giveaway has no set end date. Enter while you can!";
 
 		const prizesStr = this.prizes.length
@@ -823,7 +823,8 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			};
 		}
 	) {
-		const { nowOutdated } = data;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const { nowOutdated, ...data_ } = data;
 
 		if (
 			nowOutdated.none ||
@@ -833,7 +834,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		) {
 			return await this.manager.edit({
 				where: { id: this.id },
-				data
+				data: data_
 			});
 		}
 
@@ -852,7 +853,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			data: {
 				publishedMessageUpdated,
 				winnerMessageUpdated,
-				...data
+				...data_
 			}
 		});
 	}

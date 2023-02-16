@@ -3,7 +3,7 @@ import { oneLine, stripIndents } from "common-tags";
 import { EmbedBuilder, type Client, type Guild } from "discord.js";
 import { COLORS } from "../constants.js";
 import type GiveawayManager from "../database/giveaway.js";
-import { longStamp } from "../helpers/timestamps.js";
+import { longstamp } from "../helpers/timestamps.js";
 import { type PrizeWithIncludes } from "../typings/database.js";
 import { type PrizeId } from "../typings/index.js";
 import type GiveawayModule from "./Giveaway.js";
@@ -60,7 +60,7 @@ export default class PrizeModule implements Prize {
 			.setFields({
 				name: "Info",
 				value: stripIndents`
-					Created: ${longStamp(this.createdAt)}
+					Created: ${longstamp(this.createdAt)}
 					Quantity: ${this.quantity}
 					Winners: ${this.winners.length || "None"}
 				`
