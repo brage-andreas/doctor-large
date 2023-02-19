@@ -1,3 +1,4 @@
+import { oneLine } from "common-tags";
 import { GatewayIntentBits } from "discord.js";
 import { type Color } from "./typings/index.js";
 
@@ -43,6 +44,7 @@ export const EMOJIS = {
 	TADA: "🎉",
 	THINK: "🤔",
 	UNLOCK: "🔓",
+	WIP: "🚧",
 	V: "<:Checkmark:1054081028962136104>",
 	WARN: "<:Warning:1061984815781531729>",
 	X: "<:Xmark:1054081030107185252>"
@@ -64,6 +66,8 @@ export const GIVEAWAY = {
 	MIN_END_DATE_BUFFER: 600_000 // 10 minutes
 } as const;
 
+export const MY_GIVEAWAYS_MAX_PRIZES = 5;
+
 export const PRIZE = {
 	MAX_QUANTITY: 10, // -- MATCH THESE
 	MAX_QUANTITY_LEN: 2, // MATCH THESE
@@ -74,3 +78,7 @@ export const PRIZE = {
 
 export const DEFAULT_LOGGER_PREFIX = "LOG" as const;
 export const DEFAULT_LOGGER_COLOR = "yellow" as Color;
+
+export const WIP_WARNING = oneLine`
+	> ${EMOJIS.WIP} This command is work-in-progress and might experience issues.
+`;
