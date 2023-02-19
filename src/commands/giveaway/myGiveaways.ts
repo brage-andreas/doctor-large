@@ -1,14 +1,17 @@
-import { source } from "common-tags";
+/* eslint-disable no-irregular-whitespace */
+import { source, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
 	AttachmentBuilder,
 	ComponentType,
 	EmbedBuilder,
 	type ButtonBuilder,
+	type ButtonInteraction,
+	type EmbedField,
 	type RESTPostAPIApplicationCommandsJSONBody
 } from "discord.js";
 import components from "../../components/index.js";
-import { EMOJIS } from "../../constants.js";
+import { COLORS, EMOJIS, MY_GIVEAWAYS_MAX_PRIZES } from "../../constants.js";
 import GiveawayManager from "../../database/giveaway.js";
 import hideOption from "../../helpers/hideOption.js";
 import Logger from "../../logger/logger.js";
@@ -26,12 +29,18 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 	options: [hideOption]
 };
 
-const run = async (interaction: CommandModuleInteractions) => {
+const run = async (
+	interaction: ButtonInteraction | CommandModuleInteractions
+) => {
 	if (!interaction.isChatInputCommand()) {
 		return;
 	}
 
 	const hide = interaction.options.getBoolean("hide") ?? true;
+
+	if (!interaction.isButton()) {
+		await interaction.deferReply({ ephemeral: hide });
+	}
 
 	const logger = new Logger({ prefix: "MY GIVEAWAYS", interaction });
 
@@ -53,7 +62,6 @@ const run = async (interaction: CommandModuleInteractions) => {
 		return;
 	}
 
-	let allPrizesAccepted = true;
 	let winCount = 0;
 
 	const prizeCount = {
@@ -75,18 +83,24 @@ const run = async (interaction: CommandModuleInteractions) => {
 				unclaimed: []
 			};
 
-			if (allPrizesAccepted && prizes.unclaimed.size) {
-				allPrizesAccepted = true;
-			}
-
 			map.set(g.guildRelativeId, {
 				claimed: old.claimed.concat([...prizes.claimed.values()]),
 				unclaimed: old.unclaimed.concat([...prizes.unclaimed.values()])
 			});
 
-			prizeCount.all += prizes.claimed.size + prizes.unclaimed.size;
-			prizeCount.claimed += prizes.claimed.size;
-			prizeCount.unclaimed += prizes.unclaimed.size;
+			const claimedSize = [...prizes.claimed.values()].reduce(
+				(acc, e) => acc + e.count,
+				0
+			);
+
+			const unclaimedSize = [...prizes.unclaimed.values()].reduce(
+				(acc, e) => acc + e.count,
+				0
+			);
+
+			prizeCount.all += claimedSize + unclaimedSize;
+			prizeCount.claimed += claimedSize;
+			prizeCount.unclaimed += unclaimedSize;
 
 			winCount++;
 
@@ -101,12 +115,10 @@ const run = async (interaction: CommandModuleInteractions) => {
 		>()
 	);
 
-	await interaction.deferReply({ ephemeral: hide });
-
 	const { acceptAllPrizes, viewAllEntered, viewAllPrizes, viewAllHosted } =
 		components.buttons;
 
-	const acceptAllPrizesButton = !allPrizesAccepted
+	const acceptAllPrizesButton = prizeCount.unclaimed
 		? acceptAllPrizes.component()
 		: null;
 
@@ -138,56 +150,71 @@ const run = async (interaction: CommandModuleInteractions) => {
 			: [];
 	};
 
-	const prizesArr = (noLimits?: true) =>
+	const prizesArr = (noLimits?: true): Array<EmbedField> =>
 		[...prizes.entries()].map(([id, { claimed, unclaimed }]) => {
-			const arr = [...unclaimed, ...claimed].map((p, i, arr) => {
+			const max = MY_GIVEAWAYS_MAX_PRIZES;
+			let n = 0;
+
+			const arr = [...unclaimed, ...claimed].map((p) => {
 				const { name } = p.prize;
 				const claim = p.winner.claimed;
 
-				const str = `${p.count}x ${name}${claim ? " (UNCLAIMED)" : ""}`;
+				n += p.count;
 
-				return `${i === arr.length - 1 ? "└─" : "├─"} ${str}`;
+				return `→ ${p.count}x ${name}${!claim ? " (UNCLAIMED)" : ""}`;
 			});
 
 			if (noLimits) {
-				return source`
-				Giveaway #${id}:
-				  ${arr.join("\n")}
-			`;
+				return {
+					name: `Giveaway #${id} (${n})`,
+					value: arr.join("\n"),
+					inline: true
+				};
 			}
 
-			return source`
-				Giveaway #${id}:
-				  ${arr.slice(0, 10).join("\n")}
-				  ${10 < arr.length ? `... and ${arr.length - 10} more` : ""}
-			`;
+			return {
+				name: `Giveaway #${id} (${n})`,
+				value: stripIndents`
+					${arr.slice(0, max).join("\n")}
+					${max < arr.length ? `... and ${arr.length - max} more` : ""}
+				`,
+				inline: true
+			};
 		});
 
 	const MAX_LEN = 3900; // arbitrary - must be 4096 or under but there are also fields;
-	let description = "";
+	const fields: Array<EmbedField> = [];
 
-	for (const chunk of prizesArr()) {
-		if (MAX_LEN <= description.length + chunk.length) {
+	for (const field of prizesArr()) {
+		const fieldTotalLen = fields.reduce(
+			(acc, e) => acc + e.name.length + e.value.length,
+			0
+		);
+
+		if (MAX_LEN <= fieldTotalLen + field.name.length + field.value.length) {
 			break;
 		}
 
-		description += `\n\n${chunk}`;
+		fields.push(field);
 	}
 
 	const embed = new EmbedBuilder()
+		.setColor(prizeCount.unclaimed ? COLORS.YELLOW : COLORS.GREEN)
 		.setTitle("My Giveaways")
-		.setDescription(description || "You have no prizes.")
-		.setFields({
-			name: "Stats",
-			value: source`
+		.setFields(
+			{
+				name: "Stats",
+				value: source`
 					Entered: ${entered.length}
-					  └─ Won: ${winCount}
+					​    └─ Won: ${winCount}
 					Hosted: ${hosted.length}
 					Prizes: ${prizeCount.all}
-					  ├─ Claimed: ${prizeCount.claimed}
-					  └─ Unclaimed: ${prizeCount.unclaimed}
+					​	 ├─ Claimed: ${prizeCount.claimed}
+					​	 └─ Unclaimed: ${prizeCount.unclaimed}
 				`
-		});
+			},
+			...fields
+		);
 
 	const rows = getRows();
 
@@ -263,21 +290,18 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 			collector.stop();
 
-			return run(interaction);
+			return run(buttonInteraction);
 		}
 
 		const getAttachment = (string: string) => {
-			const { createdAt, createdTimestamp, user, guild } =
-				buttonInteraction;
-
-			const userLine = `${user.tag} (${user.id})`;
+			const { createdAt, user, guild } = buttonInteraction;
 
 			// +8 is for the "User: .." prefix
 			const text = source`
-				Server: ${guild.name} (${guild.id})
-				  Date: ${createdAt.toUTCString()} (${createdTimestamp})
-				  User: ${userLine}
-				${"-".repeat(userLine.length + 8)}
+				> ${createdAt.toUTCString()}
+				> Server: ${guild.name} (${guild.id})
+				> User: ${user.tag} (${user.id})
+				  
 				${string}
 			`;
 
@@ -287,60 +311,88 @@ const run = async (interaction: CommandModuleInteractions) => {
 		};
 
 		if (buttonInteraction.customId === viewAllEntered.customId) {
+			const title = `Entered giveaways (${entered.length})`;
+			const sep = "-".repeat(title.length + 2);
+
 			const string = source`
-				Entered giveaways (${entered.length}):
-				
-				${entered.map((giveaway) => giveaway.toFullString()).join("\n\n")}
+				-${sep}-
+				| ${title} |
+				-${sep}-
+
+				${entered.map((g) => g.toFullString({ userId: id })).join("\n\n")}
 			`;
 
 			await buttonInteraction.followUp({
+				ephemeral: true,
 				files: [getAttachment(string)]
 			});
 
 			viewAllEnteredButton?.setDisabled(true);
 
 			await interaction.editReply({
-				components: getRows(),
-				content: null,
-				embeds: [embed]
+				components: getRows()
 			});
 		}
 
 		if (buttonInteraction.customId === viewAllPrizes.customId) {
-			const prizes = prizesArr(true).join("\n\n");
+			const title = `Won prizes (${prizeCount.all})`;
+			const tally = `${prizeCount.claimed} claimed`;
+			const tally2 = `${prizeCount.unclaimed} unclaimed`;
 
-			const string = `Won prizes (${prizeCount}):\n\n${prizes}`;
+			const max = Math.max(title.length, tally.length, tally2.length);
+			const pad = (string: string) => string.padEnd(max, " ");
+
+			const sep = "-".repeat(max + 2);
+
+			const mapFn = (e: EmbedField) =>
+				source`
+					${e.name}
+					  ${e.value}
+				`;
+
+			const string = source`
+				-${sep}-
+				| ${pad(title)} |
+				| ${pad(tally)} |
+				| ${pad(tally2)} |
+				-${sep}-
+				
+				${prizesArr(true).map(mapFn).join("\n\n")}
+			`;
 
 			await buttonInteraction.followUp({
+				ephemeral: true,
 				files: [getAttachment(string)]
 			});
 
 			viewAllPrizesButton?.setDisabled(true);
 
 			await interaction.editReply({
-				components: getRows(),
-				content: null,
-				embeds: [embed]
+				components: getRows()
 			});
 		}
 
 		if (buttonInteraction.customId === viewAllHosted.customId) {
+			const title = `Entered giveaways (${entered.length})`;
+			const sep = "-".repeat(title.length + 2);
+
 			const string = source`
-				Hosted giveaways (${hosted.length}):
+				-${sep}-
+				| ${title} |
+				-${sep}-
 				
-				${hosted.map((giveaway) => giveaway.toFullString()).join("\n\n")}
+				${hosted.map((g) => g.toFullString()).join("\n\n")}
 			`;
 
 			await buttonInteraction.followUp({
+				ephemeral: true,
 				files: [getAttachment(string)]
 			});
 
 			viewAllHostedButton?.setDisabled(true);
 
 			await interaction.editReply({
-				components: getRows(),
-				content: null,
-				embeds: [embed]
+				components: getRows()
 			});
 		}
 	});
