@@ -133,11 +133,11 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			(prize) => new PrizeModule({ ...prize, giveaway: this }, guild)
 		);
 
-		this.winners = this.prizes.reduce((winners, prize) => {
-			winners.concat(prize.winners.map((w) => ({ ...w, prize })));
-
-			return winners;
-		}, [] as Array<Winner & { prize: PrizeModule }>);
+		this.winners = this.prizes.reduce(
+			(winners, prize) =>
+				winners.concat(prize.winners.map((w) => ({ ...w, prize }))),
+			[] as Array<Winner & { prize: PrizeModule }>
+		);
 		// ----------------------
 	}
 
@@ -401,18 +401,17 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			return null;
 		}
 
-		// TODO: refactor
 		const prizesBundled = this.winners.reduce(
 			(prizes, winner) => {
+				if (winner.userId !== userId) {
+					return prizes;
+				}
+
 				const { prize, prizeId, claimed } = winner;
 				let newPrizes: {
 					claimed: Map<number, PrizesOfMapObj>;
 					unclaimed: Map<number, PrizesOfMapObj>;
 				} = { claimed: new Map(), unclaimed: new Map() };
-
-				if (winner.userId !== userId) {
-					return prizes;
-				}
 
 				const oldClaimed: PrizesOfMapObj = prizes.claimed.get(
 					prizeId
@@ -423,24 +422,22 @@ export default class GiveawayModule implements ModifiedGiveaway {
 				) ?? { prize, winner, count: 0 };
 
 				if (claimed) {
-					const newClaimed: Map<number, PrizesOfMapObj> =
-						prizes.claimed.set(prizeId, {
-							prize,
-							winner,
-							count: oldClaimed.count + 1
-						});
+					const newClaimed = prizes.claimed.set(prizeId, {
+						prize,
+						winner,
+						count: oldClaimed.count + 1
+					});
 
 					newPrizes = {
 						unclaimed: prizes.unclaimed,
 						claimed: newClaimed
 					};
 				} else {
-					const newUnclaimed: Map<number, PrizesOfMapObj> =
-						prizes.unclaimed.set(prizeId, {
-							prize,
-							winner,
-							count: oldUnclaimed.count + 1
-						});
+					const newUnclaimed = prizes.unclaimed.set(prizeId, {
+						prize,
+						winner,
+						count: oldUnclaimed.count + 1
+					});
 
 					newPrizes = {
 						unclaimed: newUnclaimed,
@@ -531,28 +528,25 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		`;
 	}
 
-	public toFullString() {
-		const winnerStr = `${this.winnerQuantity || "No"} ${s(
-			"winner",
-			this.winnerQuantity
-		)}`;
-
-		const prizesStr = `${this.prizesQuantity() || "no"} ${s(
-			"prize",
-			this.prizesQuantity()
-		)}`;
-
-		const entriesStr = `${this.entriesUserIds.size || "No"} ${s(
-			"entrant",
-			this.entriesUserIds.size
-		)}`;
-
+	public toFullString(options?: { userId: Snowflake }) {
+		const id = options?.userId;
 		const { ended } = this;
 
+		const idString = `#${this.guildRelativeId}`;
+		const prefix = `${" ".repeat(idString.length)} →`;
+
+		const isEntry = Boolean(id && this.entriesUserIds.has(id));
+		const isWinner = Boolean(id && this.winnersUserIds().has(id));
+
+		const entries = this.entriesUserIds.size || "None";
+		const prizes = this.prizesQuantity() || "None";
+		const winners = this.winnerQuantity || "None";
+
 		return source`
-			#${this.guildRelativeId} "${this.title}"
-			${ended ? "  → Ended\n" : ""}  → ${entriesStr}
-			  → ${winnerStr}, ${prizesStr}
+			#${this.guildRelativeId} ${ended ? "[ENDED] " : ""}${this.title}
+			${prefix} Entries: ${entries}${isEntry ? " <-- You" : ""}
+			${prefix} Winners: ${winners}${isWinner ? " <-- You" : ""}
+			${prefix} Prizes: ${prizes}
 		`;
 	}
 
