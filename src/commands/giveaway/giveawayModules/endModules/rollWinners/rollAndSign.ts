@@ -60,7 +60,5 @@ export async function rollAndSign(options: {
 		return;
 	}
 
-	console.log(data);
-
 	await giveaway.manager.createWinners(...data);
 }
