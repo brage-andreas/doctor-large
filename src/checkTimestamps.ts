@@ -224,8 +224,6 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 		});
 
 		if (giveaway.endAutomation === "Publish") {
-			console.log("publish");
-
 			await module.winnerMessage?.delete();
 
 			const acceptPrizeButton = new ButtonBuilder()

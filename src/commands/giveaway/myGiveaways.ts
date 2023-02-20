@@ -267,13 +267,11 @@ const run = async (
 			for (; n < unclaimed.length; n++) {
 				const obj = unclaimed[n];
 
-				console.log(`claimed ${obj.prize.id}`);
-
-				/*await giveawayManager.setWinnerClaimed({
+				await giveawayManager.setWinnerClaimed({
 					claimed: true,
 					prizeId: obj.prize.id,
 					userId: interaction.user.id
-				});*/
+				});
 			}
 
 			logger.log(
