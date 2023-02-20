@@ -41,8 +41,6 @@ export default async function toEndedDashboard(
 		return;
 	}
 
-	const buttonArray: Array<ButtonBuilder> = [];
-
 	const {
 		republishWinners,
 		unpublishWinners,
@@ -53,31 +51,53 @@ export default async function toEndedDashboard(
 		deleteUnclaimedWinners,
 		deleteAllWinners,
 		reactivateGiveaway,
+		rollWinners,
 		deleteGiveaway
 	} = components.buttons;
 
+	const publishWinnersButtons: Array<ButtonBuilder> = [];
+	const rollWinnersButtons: Array<ButtonBuilder> = [];
+
+	const unclaimedN = giveaway.winners.filter(
+		({ claimed }) => !claimed
+	).length;
+
+	const noWinners = !giveaway.winners.length;
+	const noUnclaimed = noWinners && !unclaimedN;
+
 	if (giveaway.winnersArePublished()) {
-		buttonArray.push(
+		publishWinnersButtons.push(
 			republishWinners.component(),
 			unpublishWinners.component()
 		);
 	} else {
-		buttonArray.push(publishWinners.component());
+		publishWinnersButtons.push(publishWinners.component());
+	}
+
+	if (noWinners) {
+		rollWinnersButtons.push(rollWinners.component());
+	} else {
+		rollWinnersButtons.push(
+			rerollWinners.component(unclaimedN).setDisabled(noUnclaimed),
+			rerollAllWinners
+				.component(giveaway.winners.length)
+				.setDisabled(noWinners)
+		);
 	}
 
 	const rows = [
 		new ActionRowBuilder<ButtonBuilder>().addComponents(
 			showAllWinners.component(),
-			...buttonArray
+			...publishWinnersButtons
 		),
 
 		new ActionRowBuilder<ButtonBuilder>().addComponents(
-			rerollWinners.component(),
-			rerollAllWinners.component()
+			...rollWinnersButtons
 		),
+
 		new ActionRowBuilder<ButtonBuilder>().addComponents(
-			deleteUnclaimedWinners.component(),
-			deleteAllWinners.component()
+			deleteUnclaimedWinners.component().setDisabled(noUnclaimed),
+			deleteAllWinners.component().setDisabled(noWinners)
 		),
 
 		new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -233,6 +253,7 @@ export default async function toEndedDashboard(
 				return toEndedDashboard(interaction, giveawayManager, giveaway);
 			}
 
+			case rollWinners.customId:
 			case rerollWinners.customId: {
 				const prizes = await giveawayManager.getPrizes({
 					giveawayId: giveaway.id,
