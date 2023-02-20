@@ -356,22 +356,32 @@ const showAllWinnersButton = {
 		})
 } as const;
 
-const rerollWinnersButton = {
-	customId: "rerollWinners",
+const rollWinnersButton = {
+	customId: "rollWinners",
 	component: () =>
 		new ButtonBuilder({
+			customId: "rollWinners",
+			label: "Roll winners",
+			style: ButtonStyle.Success
+		})
+} as const;
+
+const rerollWinnersButton = {
+	customId: "rerollWinners",
+	component: (n: number) =>
+		new ButtonBuilder({
 			customId: "rerollWinners",
-			label: "Reroll unclaimed",
+			label: `Reroll unclaimed (${n})`,
 			style: ButtonStyle.Secondary
 		})
 } as const;
 
 const rerollAllWinnersButton = {
 	customId: "rerollAllWinners",
-	component: () =>
+	component: (n: number) =>
 		new ButtonBuilder({
 			customId: "rerollAllWinners",
-			label: "Reroll all",
+			label: `Reroll all (${n})`,
 			style: ButtonStyle.Danger
 		})
 } as const;
@@ -738,6 +748,7 @@ const buttons = {
 	resetLevel2: resetLevel2Button,
 	resetLevel3: resetLevel3Button,
 	resetLevel4: resetLevel4Button,
+	rollWinners: rollWinnersButton,
 	endOptions: endOptionsButton,
 	clearDate: clearDateButton,
 	resetData: resetDataButton,
