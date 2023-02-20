@@ -13,7 +13,6 @@ import { timestamp } from "../../../../helpers/timestamps.js";
 import yesNo from "../../../../helpers/yesNo.js";
 import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
-import toEndOptions from "./endOptions.js";
 
 export default async function toEndGiveaway(
 	interaction: ButtonInteraction<"cached">,
@@ -110,7 +109,7 @@ export default async function toEndGiveaway(
 			})
 			.catch(() => null);
 
-		return toEndOptions(interaction, id, giveawayManager);
+		return toDashboard(interaction, id);
 	}
 
 	await giveaway.edit({
@@ -139,5 +138,5 @@ export default async function toEndGiveaway(
 		interaction
 	}).log(`Ended giveaway #${id}`);
 
-	await toEndOptions(interaction, id, giveawayManager);
+	await toDashboard(interaction, id);
 }
