@@ -142,6 +142,49 @@ export async function toPublishWinners(
 		`
 	});
 
+	interaction.editReply({
+		components: [],
+		embeds: [],
+		content: "Notifying the winners..."
+	});
+
+	const alreadyNotified = new Set<string>();
+
+	for (const w of giveaway.winners) {
+		if (w.notified || alreadyNotified.has(w.userId)) {
+			continue;
+		}
+
+		alreadyNotified.add(w.userId);
+
+		const url = message?.url ?? giveaway.publishedMessageURL ?? "";
+
+		const msg = stripIndents`
+			${EMOJIS.TADA} You just **won a giveaway** in ${giveaway.guild.name}!
+
+			Giveaway #${giveaway.guildRelativeId} ${giveaway.title}
+
+			Make sure to **claim your prize(s)**!
+			You can to do by using /my-giveaways in the server,
+			or clicking the "${EMOJIS.STAR_EYES} Accept Prize" button.
+
+			${url ? `Here is a link to the giveaway:\n${url}\n\n` : ""}GG!
+		`;
+
+		await interaction.client.users.send(w.userId, msg).catch(() => null);
+	}
+
+	await giveaway.manager.prisma.winner.updateMany({
+		where: {
+			id: {
+				in: giveaway.winners.map((w) => w.id)
+			}
+		},
+		data: {
+			notified: true
+		}
+	});
+
 	toEndedDashboard(interaction, giveawayManager, giveaway);
 }
 
