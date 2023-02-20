@@ -61,4 +61,6 @@ export async function rollAndSign(options: {
 	}
 
 	await giveaway.manager.createWinners(...data);
+
+	return new Set(data.map((e) => e.userId));
 }
