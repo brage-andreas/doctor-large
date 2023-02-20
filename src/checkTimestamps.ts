@@ -1,12 +1,17 @@
-import { type Giveaway } from "@prisma/client";
-import { source } from "common-tags";
-import { type Client } from "discord.js";
+import { oneLine, stripIndents } from "common-tags";
+import {
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
+	type Client,
+	type Message
+} from "discord.js";
 import { rollAndSign } from "./commands/giveaway/giveawayModules/endModules/rollWinners/rollAndSign.js";
 import { EMOJIS, GIVEAWAY } from "./constants.js";
 import prisma from "./database/prisma.js";
 import { longstamp } from "./helpers/timestamps.js";
-import Logger from "./logger/logger.js";
 import GiveawayModule from "./modules/Giveaway.js";
+import { type GiveawayWithIncludes } from "./typings/database.js";
 
 const DM_BUFFER = GIVEAWAY.END_HOST_DM_BEFORE_END;
 
@@ -36,6 +41,13 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 					endDate: { lte: lteWithBuffer }
 				}
 			]
+		},
+		include: {
+			prizes: {
+				include: {
+					winners: true
+				}
+			}
 		}
 	});
 
@@ -48,7 +60,7 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 				return [toEnd, toNotifyBefore];
 			}
 
-			const typeGuardedGiveaway = giveaway as Giveaway & {
+			const typeGuardedGiveaway = giveaway as GiveawayWithIncludes & {
 				endDate: Date;
 			};
 
@@ -68,8 +80,8 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 			return [toEnd, toNotifyBefore];
 		},
 		[[], []] as [
-			Array<Giveaway & { endDate: Date }>,
-			Array<Giveaway & { endDate: Date }>
+			Array<GiveawayWithIncludes & { endDate: Date }>,
+			Array<GiveawayWithIncludes & { endDate: Date }>
 		]
 	);
 
@@ -85,7 +97,7 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 			title
 		} = giveaway;
 
-		const guild =
+		const guildName =
 			client.guilds.cache.get(guildId)?.name ?? "unknown server";
 
 		const url =
@@ -95,18 +107,18 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 
 		const timeLeft = longstamp(endDate, { extraLong: true, reverse: true });
 
-		const string = source`
-				**Giveaway is about to end.**
+		const string = stripIndents`
+			**Giveaway is about to end.**
 
-				A giveaway you are hosting ends ${timeLeft}
-				  → Giveaway ${guildRelativeId} (in ${guild})
-					\`${title}\`
+			A giveaway you are hosting ends ${timeLeft}
 				
-				End automation is set to: ${endAutomation}
-				
-				Here is a link to the giveaway:
-				${url}
-			`;
+			#${guildRelativeId} ${title} (in ${guildName})
+			
+			End automation is set to: ${endAutomation}
+			
+			Here is a link to the giveaway:
+			${url}
+		`;
 
 		client.users.send(hostUserId, string).catch(() => null);
 
@@ -137,30 +149,45 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 			title
 		} = giveaway;
 
-		const guild =
-			client.guilds.cache.get(guildId)?.name ?? "unknown server";
+		const guild = client.guilds.cache.get(guildId);
+		const guildName = guild?.name ?? "unknown server";
+
+		const channel_ = channelId
+			? guild?.channels.cache.get(channelId)
+			: null;
+
+		const channel = channel_?.isTextBased() ? channel_ : null;
 
 		const url =
 			channelId && publishedMessageId
 				? `https://discord.com/channels/${guildId}/${channelId}/${publishedMessageId}`
 				: null;
 
-		const string = source`
-				**Giveaway has ended.**
+		const string = stripIndents`
+			**Giveaway has ended.**
 
-				A giveaway you are hosting just ended ${EMOJIS.SPARKS}
-				  → Giveaway ${guildRelativeId} (in ${guild})
-					\`${title}\`
-				
-				End automation was set to: ${endAutomation}
-				
-				Here is a link to the giveaway:
-				${url}
-			`;
+			A giveaway you are hosting just ended ${EMOJIS.SPARKS}.
+
+			#${guildRelativeId} ${title} (in ${guildName})
+			
+			End automation was set to: ${endAutomation}
+			
+			Here is a link to the giveaway:
+			${url}
+		`;
 
 		client.users.send(hostUserId, string).catch(() => null);
 
 		if (giveaway.endAutomation === "None") {
+			await prisma.giveaway.update({
+				where: {
+					id: giveaway.id
+				},
+				data: {
+					hostNotified: "OnEnd"
+				}
+			});
+
 			return;
 		}
 
@@ -169,60 +196,101 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 				id: giveaway.id
 			},
 			data: {
-				hostNotified: "BufferBefore",
+				hostNotified: "OnEnd",
 				ended: true,
 				entriesLocked: true
 			}
 		});
 
-		if (giveaway.endAutomation === "Roll") {
-			const giveawayWithIncludes = await prisma.giveaway.findUnique({
-				where: {
-					id: giveaway.id
-				},
-				include: {
-					prizes: {
-						include: {
-							winners: true
-						}
+		if (
+			(giveaway.endAutomation !== "Roll" &&
+				giveaway.endAutomation !== "Publish") ||
+			!guild
+		) {
+			continue;
+		}
+
+		const module = new GiveawayModule(giveaway, guild);
+
+		// TODO: set `notified` to true
+		const winnerBucket = await rollAndSign({
+			entries: giveaway.entriesUserIds,
+			giveaway: module,
+			ignoreRequirements: false,
+			overrideClaimed: false,
+			prizes: module.prizes,
+			prizesQuantity: module.prizesQuantity(),
+			winnerQuantity: module.winnerQuantity
+		});
+
+		if (giveaway.endAutomation === "Publish") {
+			console.log("publish");
+
+			await module.winnerMessage?.delete();
+
+			const acceptPrizeButton = new ButtonBuilder()
+				.setCustomId(`accept-prize-${giveaway.id}`)
+				.setLabel("Accept prize")
+				.setEmoji(EMOJIS.STAR_EYES)
+				.setStyle(ButtonStyle.Success);
+
+			const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
+				acceptPrizeButton
+			);
+
+			let message: Message<true> | null | undefined;
+
+			if (giveaway.publishedMessageId) {
+				message = await module.publishedMessage
+					?.reply({
+						...module.endedEmbed(),
+						components: [row]
+					})
+					.catch(() => null);
+			} else {
+				message = await channel
+					?.send({
+						...module.endedEmbed(),
+						components: [row]
+					})
+					.catch(() => null);
+			}
+
+			if (message) {
+				await prisma.giveaway.update({
+					where: {
+						id: giveaway.id
+					},
+					data: {
+						winnerMessageId: message.id,
+						winnerMessageUpdated: true
 					}
-				}
-			});
+				});
+			} else {
+				const msg = oneLine`
+					${EMOJIS.ERROR} Failed to publish winners for
+					#${giveaway.guildRelativeId} in ${guild.name}.
+				`;
 
-			const guild = client.guilds.cache.get(giveaway.guildId);
-
-			if (!giveawayWithIncludes) {
-				new Logger({
-					prefix: "WORKER",
-					color: "red"
-				}).log(
-					`Giveaway with includes failed to find giveaway for ID: ${giveaway.id}`
-				);
-
-				return;
+				client.users.send(hostUserId, msg).catch(() => null);
 			}
 
-			if (!guild) {
-				new Logger({
-					prefix: "WORKER",
-					color: "red"
-				}).log(
-					`Failed to find guild ${guildId} for giveaway ${giveaway.id}`
-				);
+			winnerBucket?.forEach((id) => {
+				const url = message?.url ?? module.publishedMessageURL ?? "";
 
-				return;
-			}
+				const msg = stripIndents`
+					${EMOJIS.TADA} You just **won a giveaway** in ${guild.name}!
 
-			const module = new GiveawayModule(giveawayWithIncludes, guild);
+					Giveaway #${giveaway.guildRelativeId} ${giveaway.title}
 
-			await rollAndSign({
-				entries: giveaway.entriesUserIds,
-				giveaway: module,
-				ignoreRequirements: false,
-				overrideClaimed: false,
-				prizes: module.prizes,
-				prizesQuantity: module.prizesQuantity(),
-				winnerQuantity: module.winnerQuantity
+					Make sure to **claim your prize(s)**!
+					You can to do by using /my-giveaways in the server,
+					or clicking the "${EMOJIS.STAR_EYES} Accept Prize" button.
+
+					${url ? `Here is a link to the giveaway:\n${url}\n\n` : ""}GG!
+				`;
+
+				client.users.send(id, msg).catch(() => null);
 			});
 		}
 	}
