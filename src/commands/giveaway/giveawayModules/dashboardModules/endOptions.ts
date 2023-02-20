@@ -10,7 +10,7 @@ import {
 } from "discord.js";
 import ms from "ms";
 import components from "../../../../components/index.js";
-import { EMOJIS, GIVEAWAY } from "../../../../constants.js";
+import { COLORS, EMOJIS, GIVEAWAY } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
 import { longstamp } from "../../../../helpers/timestamps.js";
 import toDashboard from "../dashboard.js";
@@ -89,21 +89,21 @@ export default async function toEndOptions(
 		switch (endAutomationLevel) {
 			case "Publish": {
 				publish.setDisabled();
-				setSuccess(none, end, roll, publish);
+				setSuccess(end, roll, publish);
 
 				break;
 			}
 
 			case "Roll": {
 				roll.setDisabled();
-				setSuccess(none, end, roll);
+				setSuccess(end, roll);
 
 				break;
 			}
 
 			case "End": {
 				end.setDisabled();
-				setSuccess(none, end);
+				setSuccess(end);
 
 				break;
 			}
@@ -138,20 +138,21 @@ export default async function toEndOptions(
 
 	const endOptionsEmbed = new EmbedBuilder()
 		.setTitle("End options")
+		.setColor(giveaway.endDate ? COLORS.GREEN : COLORS.RED)
 		.addFields({
 			name: "End automation level",
-			value: source`
+			value: stripIndents`
 				Define what should happen when the giveaway ends.
 				You can always end the giveaway manually.
 				The host will be notified: ${hostDMStr} before, and on end.
 
-				End automation levels:
-				  • None: No automation. The host will still be notified.
-				  • End: End the giveaway; no one can enter or leave.
-				  • Roll: Roll the winners. 
-				  • Publish: Publish the winners. This will also notify them.
+				Levels:
+				1. **None**: No automation. (The host will be notified as normal.)
+				2. **End**: End the giveaway; no one can enter or leave.
+				3. **Roll**: Roll the winners. This will also End.
+				4. **Publish**: Publish and notify the winners. This will also End and Roll.
 
-				Currently set to: ${endAutomationLevel}
+				Currently set to: **${endAutomationLevel}**
 			`
 		})
 		.setFooter({
@@ -172,18 +173,18 @@ export default async function toEndOptions(
 	const missingParts: Array<string> = [];
 
 	if (!giveaway.prizesQuantity()) {
-		missingParts.push("Add one or more prizes");
+		missingParts.push("→ Add one or more prizes");
 	}
 
 	if (!giveaway.channelId) {
-		missingParts.push("Publish the giveaway");
+		missingParts.push("→ Publish the giveaway");
 	}
 
 	const cannotEnd =
-		!giveaway.prizesQuantity() || giveaway.channelId
+		!giveaway.prizesQuantity() || !giveaway.channelId
 			? source`
 				${EMOJIS.ERROR} The giveaway cannot be ended:
-				  → ${missingParts.join("\n→ ")}
+				  ${missingParts.join("\n")}
 			`
 			: undefined;
 
