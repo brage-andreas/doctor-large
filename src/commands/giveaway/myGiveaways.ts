@@ -259,19 +259,21 @@ const run = async (
 	collector.on("collect", async (buttonInteraction) => {
 		await buttonInteraction.deferUpdate();
 
-		let n = 0;
-
 		if (buttonInteraction.customId === acceptAllPrizes.customId) {
 			const unclaimed = [...prizes.values()].flatMap((p) => p.unclaimed);
 
-			for (const obj of unclaimed) {
-				await giveawayManager.setWinnerClaimed({
+			let n = 0;
+
+			for (; n < unclaimed.length; n++) {
+				const obj = unclaimed[n];
+
+				console.log(`claimed ${obj.prize.id}`);
+
+				/*await giveawayManager.setWinnerClaimed({
 					claimed: true,
 					prizeId: obj.prize.id,
 					userId: interaction.user.id
-				});
-
-				n++;
+				});*/
 			}
 
 			logger.log(
