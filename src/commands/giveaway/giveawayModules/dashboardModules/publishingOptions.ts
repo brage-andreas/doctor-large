@@ -223,7 +223,7 @@ export default async function toPublishingOptions(
 				)
 			];
 
-			const successOrURL = isEdit
+			const urlOrNull = isEdit
 				? await channel.messages
 						.edit(giveaway.publishedMessageId, {
 							allowedMentions: {
@@ -244,17 +244,17 @@ export default async function toPublishingOptions(
 				interaction.followUp({
 					components: [],
 					ephemeral: true,
-					content: successOrURL
+					content: urlOrNull
 						? stripIndents`
 							${EMOJIS.SPARKS} Done! Giveaway has been edited in ${channel}.
 							
-							Here is a [link to your now perfected giveaway](<${successOrURL}>).
+							Here is a [link to your now perfected giveaway](<${urlOrNull}>).
 						`
 						: `${EMOJIS.WARN} I could not edit the message. Maybe it has been deleted?`,
 					embeds: []
 				});
 
-				if (successOrURL) {
+				if (urlOrNull) {
 					logger.log(
 						`Edited giveaway #${giveaway.id} in ${channel.name} (${channel.id})`
 					);
@@ -263,20 +263,20 @@ export default async function toPublishingOptions(
 				interaction.followUp({
 					components: [],
 					ephemeral: true,
-					content: successOrURL
+					content: urlOrNull
 						? `${EMOJIS.SPARKS} Done! Giveaway has been recalled from ${channel}. All data remain intact.`
 						: `${EMOJIS.WARN} I could not recall the Giveaway. The message might have already been deleted.`,
 					embeds: []
 				});
 
-				if (successOrURL) {
+				if (urlOrNull) {
 					logger.log(
 						`Recalled giveaway #${giveaway.id} from ${channel.name} (${channel.id})`
 					);
 				}
 			}
 
-			if (successOrURL) {
+			if (urlOrNull) {
 				await giveaway.edit({
 					publishedMessageId: isEdit
 						? giveaway.publishedMessageId
