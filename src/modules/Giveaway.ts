@@ -142,11 +142,19 @@ export default class GiveawayModule implements ModifiedGiveaway {
 	}
 
 	public get publishedMessageIsOutdated() {
-		return this.publishedMessageUpdated && Boolean(this.publishedMessageId);
+		if (!this.publishedMessageId) {
+			return false;
+		}
+
+		return !this.publishedMessageUpdated;
 	}
 
 	public get winnerMessageIsOutdated() {
-		return this.winnerMessageUpdated && Boolean(this.winnerMessageId);
+		if (!this.winnerMessageId) {
+			return false;
+		}
+
+		return !this.winnerMessageUpdated;
 	}
 
 	public get hasPingRoles() {
@@ -550,6 +558,27 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		`;
 	}
 
+	public cannotEndContent() {
+		const missingParts: Array<string> = [];
+
+		if (!this.prizesQuantity()) {
+			missingParts.push("→ Add one or more prizes");
+		}
+
+		if (!this.channelId) {
+			missingParts.push("→ Publish the giveaway");
+		}
+
+		if (!missingParts.length) {
+			return "";
+		}
+
+		return source`
+			${EMOJIS.ERROR} The giveaway cannot be ended:
+			  ${missingParts.join("\n")}
+		`;
+	}
+
 	public toDashboardOverview() {
 		const requiredRolesStr = this.requiredRolesIds.size
 			? `→ Required roles (${this.requiredRolesIds.size}): ${listify(
@@ -651,24 +680,6 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			? `${EMOJIS.WARN} The winner announcement is outdated. Republish the winners.`
 			: "";
 
-		const missingParts: Array<string> = [];
-
-		if (!this.prizesQuantity()) {
-			missingParts.push("Add one or more prizes");
-		}
-
-		if (!this.channelId) {
-			missingParts.push("Publish the giveaway");
-		}
-
-		const cannotEnd =
-			!this.prizesQuantity() || !this.channelId
-				? source`
-					${EMOJIS.ERROR} The giveaway cannot be ended:
-					  → ${missingParts.join("\n→ ")}
-				`
-				: "";
-
 		const infoField = stripIndents`
 			${hostStr}
 			${createdStr}
@@ -725,8 +736,11 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 		return {
 			content:
-				[cannotEnd, publishedOutdated, winnerOutdated].join("\n\n") ||
-				undefined,
+				[
+					this.cannotEndContent(),
+					publishedOutdated,
+					winnerOutdated
+				].join("\n\n") || undefined,
 			embeds: [embed]
 		};
 	}
@@ -869,7 +883,17 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			delete: async () =>
 				await channel.messages.delete(messageId).catch(() => null),
 			edit: async (data: MessageEditOptions) =>
-				await channel.messages.edit(messageId, data).catch(() => null)
+				await channel.messages.edit(messageId, data).catch(() => null),
+			reply: async (data: Omit<MessageCreateOptions, "reply">) =>
+				await channel
+					.send({
+						...data,
+						reply: {
+							messageReference: messageId,
+							failIfNotExists: false
+						}
+					})
+					.catch(() => null)
 		};
 	}
 }
