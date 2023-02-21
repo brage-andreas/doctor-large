@@ -1,6 +1,27 @@
 import { oneLine } from "common-tags";
-import { GatewayIntentBits } from "discord.js";
+import {
+	ActivityType,
+	GatewayIntentBits,
+	type ActivitiesOptions
+} from "discord.js";
 import { type Color } from "./typings/index.js";
+
+export const ACTIVITIES: Array<ActivitiesOptions> = [
+	{ type: ActivityType.Watching, name: "grapes ferment..." },
+	{ type: ActivityType.Watching, name: "grapes ferment..." },
+	{ type: ActivityType.Watching, name: "grapes ferment..." },
+	{ type: ActivityType.Playing, name: "in the Wine Cellar" },
+	{ type: ActivityType.Playing, name: "in the Wine Cellar" },
+	{ type: ActivityType.Playing, name: "in the Wine Cellar" },
+	{ type: ActivityType.Playing, name: "in the Bean Cave" },
+	{ type: ActivityType.Playing, name: "in the Bean Cave" },
+	{ type: ActivityType.Playing, name: "in the Bean Cave" },
+	{ type: ActivityType.Playing, name: "as melee sniper" },
+	{ type: ActivityType.Watching, name: "Boss Baby 2" },
+	{ type: ActivityType.Watching, name: "Fatmagic lose again" },
+	{ type: ActivityType.Watching, name: "QUANTUM GAMEPLAY" },
+	{ type: ActivityType.Watching, name: "27 Sep 2022" }
+];
 
 export const COMMAND_DIR = new URL("./commands", import.meta.url);
 export const EVENT_DIR = new URL("./events", import.meta.url);

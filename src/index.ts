@@ -2,7 +2,7 @@ import { Client } from "discord.js";
 import "dotenv/config";
 import { existsSync, lstatSync, readdirSync } from "fs";
 import process from "node:process";
-import { EVENT_DIR, INTENTS } from "./constants.js";
+import { ACTIVITIES, EVENT_DIR, INTENTS } from "./constants.js";
 import Logger from "./logger/logger.js";
 import { type EventFn, type EventImport } from "./typings/index.js";
 
@@ -11,6 +11,9 @@ const client = new Client({
 	allowedMentions: {
 		repliedUser: false,
 		parse: []
+	},
+	presence: {
+		activities: [ACTIVITIES[Math.floor(Math.random() * ACTIVITIES.length)]]
 	}
 });
 
