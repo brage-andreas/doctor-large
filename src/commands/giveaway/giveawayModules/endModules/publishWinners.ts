@@ -13,6 +13,7 @@ import GiveawayManager from "../../../../database/giveaway.js";
 import commandMention from "../../../../helpers/commandMention.js";
 import Logger from "../../../../logger/logger.js";
 import type GiveawayModule from "../../../../modules/Giveaway.js";
+import { type WinnerId } from "../../../../typings/index.js";
 import toEndedDashboard from "../endedGiveawayDashboard.js";
 
 export async function toPublishWinners(
@@ -149,6 +150,7 @@ export async function toPublishWinners(
 	});
 
 	const alreadyNotified = new Set<string>();
+	const ids: Array<WinnerId> = [];
 
 	for (const w of giveaway.winners) {
 		if (w.notified || alreadyNotified.has(w.userId)) {
@@ -156,6 +158,7 @@ export async function toPublishWinners(
 		}
 
 		alreadyNotified.add(w.userId);
+		ids.push(w.id);
 
 		const url = message?.url ?? giveaway.publishedMessageURL ?? "";
 
@@ -176,9 +179,7 @@ export async function toPublishWinners(
 
 	await giveaway.manager.prisma.winner.updateMany({
 		where: {
-			id: {
-				in: giveaway.winners.map((w) => w.id)
-			}
+			id: { in: ids }
 		},
 		data: {
 			notified: true
@@ -357,7 +358,7 @@ export async function publishOrRepublishWinners(
 
 	new Logger({
 		color: "grey",
-		prefix: "PUB. WIN.",
+		prefix: "PUB WIN",
 		guild: giveaway.guild
 	}).log(
 		`Published winners of giveaway #${giveaway.id}. Sent DMs to ${tally}/${
