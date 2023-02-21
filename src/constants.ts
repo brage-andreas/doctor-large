@@ -7,9 +7,9 @@ import {
 import { type Color } from "./typings/index.js";
 
 export const ACTIVITIES: Array<ActivitiesOptions> = [
-	{ type: ActivityType.Watching, name: "grapes ferment..." },
-	{ type: ActivityType.Watching, name: "grapes ferment..." },
-	{ type: ActivityType.Watching, name: "grapes ferment..." },
+	{ type: ActivityType.Watching, name: "grapes ferment" },
+	{ type: ActivityType.Watching, name: "grapes ferment" },
+	{ type: ActivityType.Watching, name: "grapes ferment" },
 	{ type: ActivityType.Playing, name: "in the Wine Cellar" },
 	{ type: ActivityType.Playing, name: "in the Wine Cellar" },
 	{ type: ActivityType.Playing, name: "in the Wine Cellar" },
