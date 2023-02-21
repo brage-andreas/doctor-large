@@ -51,8 +51,7 @@ const run = async (
 
 	if (!entered.length && !hosted.length) {
 		await interaction
-			.reply({
-				ephemeral: true,
+			.editReply({
 				content: `${EMOJIS.NO_ENTRY} You have not participated in any giveaways yet!`
 			})
 			.catch(() => null);
