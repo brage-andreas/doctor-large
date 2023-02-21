@@ -311,7 +311,7 @@ export default class GiveawayManager {
 	public async deleteWinners(
 		prizeIds: Array<number> | GiveawayModule | GiveawayWithIncludes,
 		options?: {
-			onlyDeleteUnclaimed?: true;
+			onlyDeleteUnclaimed?: boolean;
 		}
 	) {
 		let ids: Array<number>;
