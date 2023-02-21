@@ -30,16 +30,14 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 };
 
 const run = async (
-	interaction: ButtonInteraction | CommandModuleInteractions
+	interaction: ButtonInteraction<"cached"> | CommandModuleInteractions
 ) => {
-	if (!interaction.isChatInputCommand()) {
-		return;
-	}
+	if (interaction.isChatInputCommand()) {
+		const hide = interaction.options.getBoolean("hide") ?? true;
 
-	const hide = interaction.options.getBoolean("hide") ?? true;
-
-	if (!interaction.isButton()) {
 		await interaction.deferReply({ ephemeral: hide });
+	} else if (!interaction.isButton()) {
+		return;
 	}
 
 	const logger = new Logger({ prefix: "MY GIVEAWAYS", interaction });
