@@ -132,7 +132,7 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 				id: giveaway.id
 			},
 			data: {
-				hostNotified: "OnEnd"
+				hostNotified: "BufferBefore"
 			}
 		});
 	}
