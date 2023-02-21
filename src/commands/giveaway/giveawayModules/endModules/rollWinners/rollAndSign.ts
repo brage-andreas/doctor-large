@@ -1,5 +1,6 @@
 import type Giveaway from "../../../../../modules/Giveaway.js";
 import type PrizeModule from "../../../../../modules/Prize.js";
+import { type Snowflake, type WinnerId } from "../../../../../typings/index.js";
 import roll from "./roll.js";
 
 export async function rollAndSign(options: {
@@ -40,13 +41,9 @@ export async function rollAndSign(options: {
 		});
 	}
 
-	if (overrideClaimed) {
-		await giveaway.manager.deleteWinners(giveaway.data);
-	} else {
-		await giveaway.manager.deleteWinners(giveaway.data, {
-			onlyDeleteUnclaimed: true
-		});
-	}
+	await giveaway.manager.deleteWinners(giveaway.data, {
+		onlyDeleteUnclaimed: !overrideClaimed
+	});
 
 	const data = roll({
 		entries,
@@ -60,7 +57,13 @@ export async function rollAndSign(options: {
 		return;
 	}
 
-	await giveaway.manager.createWinners(...data);
+	const values = data.map((e) => `(${e.prizeId}, '${e.userId}')`).join(",\n");
 
-	return new Set(data.map((e) => e.userId));
+	return await giveaway.manager.prisma.$queryRawUnsafe<
+		Array<{ id: WinnerId; userId: Snowflake }>
+	>(
+		`INSERT INTO guilds."Winner"("prizeId", "userId")
+		 VALUES ${values}
+		 RETURNING id, "userId";`
+	);
 }
