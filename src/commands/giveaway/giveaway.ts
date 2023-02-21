@@ -5,6 +5,8 @@ import {
 	type RESTPostAPIApplicationCommandsJSONBody
 } from "discord.js";
 import { EMOJIS } from "../../constants.js";
+import hideOption from "../../helpers/hideOption.js";
+import Logger from "../../logger/logger.js";
 import {
 	type Command,
 	type CommandModuleInteractions
@@ -14,33 +16,35 @@ import sendToCreate from "./giveawayModules/create.js";
 import sendToDashboard from "./giveawayModules/dashboard.js";
 
 const data: RESTPostAPIApplicationCommandsJSONBody = {
-	name: "giveaway",
-	dm_permission: false,
-	description: "Configuration for giveaways.",
 	default_member_permissions: PermissionFlagsBits.ManageGuild.toString(),
+	description: "Configuration for giveaways.",
+	dm_permission: false,
+	name: "giveaway",
 	options: [
 		{
 			name: "dashboard",
-			description: oneLine`
-				Shows a dashboard where you can view current giveaways,
-				or a specific giveaway to manage it.
-			`,
 			type: ApplicationCommandOptionType.Subcommand,
+			description: oneLine`
+			Shows a dashboard where you can view current giveaways,
+			or a specific giveaway to manage it.
+			`,
 			options: [
 				{
-					name: "giveaway",
-					type: ApplicationCommandOptionType.Integer,
+					autocomplete: true,
 					description:
 						"Which giveaway should be managed in the dashboard.",
-					autocomplete: true,
-					required: true
-				}
+					name: "giveaway",
+					required: true,
+					type: ApplicationCommandOptionType.Integer
+				},
+				hideOption
 			]
 		},
 		{
-			name: "create",
 			description: "Create and customise a new giveaway.",
-			type: ApplicationCommandOptionType.Subcommand
+			name: "create",
+			type: ApplicationCommandOptionType.Subcommand,
+			options: [hideOption]
 		}
 	]
 };
@@ -54,9 +58,11 @@ const run = async (interaction: CommandModuleInteractions) => {
 		return;
 	}
 
+	const hide = interaction.options.getBoolean("hide") ?? true;
+
 	switch (interaction.options.getSubcommand()) {
 		case "dashboard": {
-			await interaction.deferReply({ ephemeral: true });
+			await interaction.deferReply({ ephemeral: hide });
 			const id = interaction.options.getInteger("giveaway", true);
 
 			if (id === -1) {
@@ -66,6 +72,10 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 				break;
 			}
+
+			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				`Opened dashboard of giveaway with ID #${id}`
+			);
 
 			sendToDashboard(interaction, id);
 			break;

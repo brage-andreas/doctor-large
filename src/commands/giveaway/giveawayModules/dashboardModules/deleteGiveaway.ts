@@ -2,9 +2,12 @@ import { stripIndents } from "common-tags";
 import { ButtonStyle, type ButtonInteraction } from "discord.js";
 import { EMOJIS } from "../../../../constants.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
+import commandMention from "../../../../helpers/commandMention.js";
 import yesNo from "../../../../helpers/yesNo.js";
 import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
+
+// TODO: delete published messages
 
 export default async function toDeleteGiveaway(
 	interaction: ButtonInteraction<"cached">,
@@ -19,7 +22,7 @@ export default async function toDeleteGiveaway(
 			content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.WARN} This giveaway does not exist. Try creating one or double-check the ID.
+				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			embeds: []
 		});
@@ -27,8 +30,10 @@ export default async function toDeleteGiveaway(
 		return;
 	}
 
-	const isConcludedString = !giveaway.active
-		? `\n\n${EMOJIS.WARN} It is recommended to keep concluded giveaways.`
+	const myGiveaways = await commandMention("my-giveaways", interaction);
+
+	const isConcludedString = giveaway.ended
+		? `\n\n${EMOJIS.WARN} It is recommended to keep ended giveaways. They can still be seen in the ${myGiveaways} command.`
 		: "";
 
 	const accept = await yesNo({
@@ -38,16 +43,18 @@ export default async function toDeleteGiveaway(
 		filter: () => true,
 		data: {
 			content: stripIndents`
-				${EMOJIS.DANGER} You are about to delete giveaway #${giveaway.guildRelativeId}.
+				${EMOJIS.WARN} You are about to delete giveaway #${giveaway.guildRelativeId}.
 				This will also include any prizes and winners.${isConcludedString}
 
 				Are you sure? Absolutely sure? This action will be **irreversible**.
-			`
+			`,
+			embeds: []
 		}
 	});
 
 	if (!accept) {
 		interaction.followUp({
+			ephemeral: true,
 			content: `Alright! Cancelled deleting giveaway #${giveaway.guildRelativeId}`
 		});
 
@@ -55,7 +62,7 @@ export default async function toDeleteGiveaway(
 	}
 
 	const createdWithinFifteenMinutes =
-		Date.now() - Number(giveaway.createdTimestamp) <= 900_000; // 900 000 ms = 15 min
+		Date.now() - giveaway.createdAt.getTime() <= 900_000; // 900 000 ms = 15 min
 
 	if (!createdWithinFifteenMinutes) {
 		const accept2 = await yesNo({
@@ -65,16 +72,18 @@ export default async function toDeleteGiveaway(
 			filter: () => true,
 			data: {
 				content: stripIndents`
-						${EMOJIS.DANGER} You are about to delete giveaway #${giveaway.guildRelativeId}.
-						This will also include any prizes and winners.${isConcludedString}
-		
-						ARE YOU ABSOLUTELY CERTAIN?
-					`
+					${EMOJIS.ERROR} You are about to delete giveaway #${giveaway.guildRelativeId}.
+					This will also include any prizes and winners.${isConcludedString}
+	
+					ARE YOU ABSOLUTELY CERTAIN?
+				`,
+				embeds: []
 			}
 		});
 
 		if (!accept2) {
 			interaction.followUp({
+				ephemeral: true,
 				content: `Alright! Cancelled deleting giveaway #${giveaway.guildRelativeId}`
 			});
 
@@ -82,7 +91,7 @@ export default async function toDeleteGiveaway(
 		}
 	}
 
-	await giveaway.delete({ withPrizesAndWinners: true });
+	await giveaway.delete({ withPublishedMessages: true });
 
 	new Logger({ prefix: "GIVEAWAY", interaction }).log(
 		`Deleted giveaway #${giveaway.id}`

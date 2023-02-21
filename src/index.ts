@@ -1,7 +1,9 @@
 import { Client } from "discord.js";
 import "dotenv/config";
 import { existsSync, lstatSync, readdirSync } from "fs";
-import { EVENT_DIR, INTENTS } from "./constants.js";
+import process from "node:process";
+import { ACTIVITIES, EVENT_DIR, INTENTS } from "./constants.js";
+import Logger from "./logger/logger.js";
 import { type EventFn, type EventImport } from "./typings/index.js";
 
 const client = new Client({
@@ -9,6 +11,9 @@ const client = new Client({
 	allowedMentions: {
 		repliedUser: false,
 		parse: []
+	},
+	presence: {
+		activities: [ACTIVITIES[Math.floor(Math.random() * ACTIVITIES.length)]]
 	}
 });
 
@@ -35,6 +40,10 @@ events.forEach((event, name) => {
 			event(...args);
 		}
 	});
+});
+
+process.on("unhandledRejection", (error) => {
+	new Logger({ prefix: "ERROR", color: "red" }).log(error);
 });
 
 client.login(process.env.BOT_TOKEN);

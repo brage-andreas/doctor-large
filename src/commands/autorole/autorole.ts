@@ -1,19 +1,18 @@
 import { oneLine } from "common-tags";
 import {
 	ActionRowBuilder,
-	ButtonBuilder,
-	ButtonStyle,
 	PermissionFlagsBits,
-	RoleSelectMenuBuilder,
-	type RESTPostAPIApplicationCommandsJSONBody
+	type ButtonBuilder,
+	type RESTPostAPIApplicationCommandsJSONBody,
+	type RoleSelectMenuBuilder
 } from "discord.js";
+import components from "../../components/index.js";
 import AutoroleManager from "../../database/autorole.js";
 import Logger from "../../logger/logger.js";
 import {
 	type Command,
 	type CommandModuleInteractions
 } from "../../typings/index.js";
-import formatAutorole from "./mod.autorole.format.js";
 
 const data: RESTPostAPIApplicationCommandsJSONBody = {
 	name: "autorole",
@@ -25,26 +24,6 @@ const data: RESTPostAPIApplicationCommandsJSONBody = {
 	).toString()
 };
 
-const turnOnButton = new ButtonBuilder()
-	.setLabel("Toggle autorole on")
-	.setCustomId("autoroleEnable")
-	.setStyle(ButtonStyle.Success);
-
-const turnOffButton = new ButtonBuilder()
-	.setLabel("Toggle autorole off")
-	.setCustomId("autoroleDisable")
-	.setStyle(ButtonStyle.Danger);
-
-const roleSelect = new RoleSelectMenuBuilder()
-	.setCustomId("autoroleSelect")
-	.setMinValues(1)
-	.setMaxValues(10);
-
-const clearRolesButton = new ButtonBuilder()
-	.setCustomId("autoroleClear")
-	.setStyle(ButtonStyle.Secondary)
-	.setLabel("Clear roles");
-
 const run = async (interaction: CommandModuleInteractions) => {
 	if (!interaction.isChatInputCommand()) {
 		return;
@@ -52,27 +31,30 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 	await interaction.deferReply({ ephemeral: true });
 
-	const autoroleManager = new AutoroleManager(interaction.guildId);
+	const autoroleManager = new AutoroleManager(interaction.guild);
 	await autoroleManager.initialize();
 
 	const logger = new Logger({ prefix: "AUTOROLE" });
 
 	const dashboard = async () => {
-		const data = await autoroleManager.get();
+		const autorole = await autoroleManager.get();
+
+		const { clear: clearRoles, disable, enable } = components.buttons;
+		const { roleSelect } = components.selects;
 
 		const row1 =
 			new ActionRowBuilder<RoleSelectMenuBuilder>().setComponents(
-				roleSelect
+				roleSelect.component(1, 10)
 			);
 
 		const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
-			clearRolesButton,
-			data.activated ? turnOffButton : turnOnButton
+			clearRoles.component(),
+			autorole.activated ? disable.component() : enable.component()
 		);
 
 		const msg = await interaction.editReply({
 			components: [row1, row2],
-			embeds: [formatAutorole(interaction, data)]
+			embeds: [autorole.toEmbed()]
 		});
 
 		const collector = msg.createMessageComponentCollector({
@@ -88,10 +70,10 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 			logger.setInteraction(i);
 
-			let active = data.activated ?? false;
-			let roles = data.roleIds;
+			let active = autorole.activated ?? false;
+			let roles = [...autorole.roleIds];
 
-			if (i.customId === "autoroleSelect") {
+			if (i.customId === roleSelect.customId) {
 				if (!i.isRoleSelectMenu()) {
 					return;
 				}
@@ -101,34 +83,31 @@ const run = async (interaction: CommandModuleInteractions) => {
 				logger.log(
 					oneLine`
 						Roles changed from
-						[${data.roleIds.join(", ")}]
+						[${[...autorole.roleIds].join(", ")}]
 						to [${roles.join(", ")}]
 					`
 				);
-			} else if (i.customId === "autoroleClear") {
+			} else if (i.customId === clearRoles.customId) {
 				roles = [];
 
 				logger.log(
 					oneLine`
 						Roles changed from
-						[${data.roleIds.join(", ")}]
+						[${[...autorole.roleIds].join(", ")}]
 						to [${roles.join(", ")}]
 					`
 				);
-			} else if (i.customId === "autoroleEnable") {
+			} else if (i.customId === enable.customId) {
 				active = true;
 
 				logger.log("Activated autorole");
-			} else if (i.customId === "autoroleDisable") {
+			} else if (i.customId === disable.customId) {
 				active = false;
 				logger.log("Deactivated autorole");
 			}
 
 			await autoroleManager.update({
 				activated: active,
-				lastEditedTimestamp: Date.now().toString(),
-				lastEditedUserId: i.user.id,
-				lastEditedUserTag: i.user.tag,
 				roleIds: roles
 			});
 

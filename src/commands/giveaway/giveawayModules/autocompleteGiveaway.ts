@@ -1,4 +1,4 @@
-import { type GiveawayData } from "@prisma/client";
+import { type Giveaway } from "@prisma/client";
 import { type AutocompleteInteraction } from "discord.js";
 import { EMOJIS } from "../../../constants.js";
 import GiveawayManager from "../../../database/giveaway.js";
@@ -28,7 +28,7 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 
 	const offsetGiveaways = await giveawayManager.getWithOffset(skip, 5);
 
-	const getName = (data: GiveawayData) => {
+	const getName = (data: Giveaway) => {
 		const id = data.guildRelativeId;
 
 		let placement: string = EMOJIS.LOWER;
@@ -41,8 +41,8 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 
 		let status = "";
 
-		if (!data.active) {
-			status = `${EMOJIS.INACTIVE} `;
+		if (data.ended) {
+			status = `${EMOJIS.ENDED} `;
 		} else if (data.entriesLocked) {
 			status = `${EMOJIS.LOCK} `;
 		}

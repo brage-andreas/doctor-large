@@ -1,16 +1,38 @@
 import { type TimestampStylesString } from "discord.js";
 
-export const timestamp = (
-	discordTimestamp: number | string,
-	timestampStyle: TimestampStylesString
-) => {
-	const timestamp = Math.floor(Number(discordTimestamp) / 1000);
+const _getSeconds = (dateOrTimestamp: Date | number | string) => {
+	let ms: number;
 
-	return `<t:${timestamp}:${timestampStyle}>`;
+	if (dateOrTimestamp instanceof Date) {
+		ms = dateOrTimestamp.getTime();
+	} else {
+		ms = Number(dateOrTimestamp) || 0;
+	}
+
+	return Math.floor(ms / 1000);
 };
 
-export const longStamp = (discordTimestamp: number | string) => {
-	const timestamp = Math.floor(Number(discordTimestamp) / 1000);
+export const timestamp = (
+	dateOrTimestamp: Date | number | string,
+	style: TimestampStylesString
+) => {
+	const seconds = _getSeconds(dateOrTimestamp);
 
-	return `<t:${timestamp}:d> (<t:${timestamp}:R>)`;
+	return `<t:${seconds}:${style}>`;
+};
+
+export const longstamp = (
+	dateOrTimestamp: Date | number | string,
+	options?: { extraLong?: true; reverse?: true }
+) => {
+	const style = options?.extraLong ? "F" : "d";
+
+	const main = timestamp(dateOrTimestamp, style);
+	const rel = timestamp(dateOrTimestamp, "R");
+
+	if (options?.reverse) {
+		return `${rel} (${main})`;
+	}
+
+	return `${main} (${rel})`;
 };

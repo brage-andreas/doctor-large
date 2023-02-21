@@ -1,45 +1,48 @@
-import { type PrizeData, type WinnerData } from "@prisma/client";
-import { oneLine } from "common-tags";
-import { type Client, type Guild } from "discord.js";
-import type Giveaway from "./Giveaway.js";
+import { type Prize, type Winner } from "@prisma/client";
+import { oneLine, stripIndents } from "common-tags";
+import { EmbedBuilder, type Client, type Guild } from "discord.js";
+import { COLORS } from "../constants.js";
+import type GiveawayManager from "../database/giveaway.js";
+import { longstamp } from "../helpers/timestamps.js";
+import { type PrizeWithIncludes } from "../typings/database.js";
+import { type PrizeId } from "../typings/index.js";
+import type GiveawayModule from "./Giveaway.js";
 
-export default class Prize {
-	public data: PrizeData & { winners: Array<WinnerData>; giveaway: Giveaway };
-	public guild: Guild;
-	public client: Client;
+export default class PrizeModule implements Prize {
+	public data: PrizeWithIncludes;
+	public readonly client: Client;
+	public readonly guild: Guild;
+	public readonly manager: GiveawayManager;
 
+	// -- Raw data --
 	public additionalInfo: string | null;
-	public giveaway: Giveaway;
+	public createdAt: Date;
+	public giveaway: GiveawayModule;
 	public giveawayId: number;
-	public id: number;
+	public id: PrizeId;
 	public name: string;
 	public quantity: number;
+	public winners: Array<Winner>;
+	// --------------
 
-	/**
-	 * Mapped by userId
-	 */
-	public winners: Map<string, WinnerData>;
-
-	public constructor(
-		data: PrizeData & { winners: Array<WinnerData>; giveaway: Giveaway },
-		guild: Guild
-	) {
-		this.data = data;
-		this.guild = guild;
+	public constructor(data: PrizeWithIncludes, guild: Guild) {
+		this.manager = data.giveaway.manager;
 		this.client = guild.client;
+		this.guild = guild;
+		this.data = data;
 
 		this.additionalInfo = data.additionalInfo;
 		this.giveawayId = data.giveawayId;
+		this.createdAt = data.createdAt;
 		this.giveaway = data.giveaway;
 		this.quantity = data.quantity;
+		this.winners = data.winners;
 		this.name = data.name;
 		this.id = data.id;
+	}
 
-		this.winners = data.winners.reduce((map, winner) => {
-			map.set(winner.userId, winner);
-
-			return map;
-		}, new Map<string, WinnerData>());
+	public clone() {
+		return new PrizeModule(this.data, this.guild);
 	}
 
 	public toShortString() {
@@ -47,5 +50,20 @@ export default class Prize {
 			${this.data.quantity}x ${this.data.name}
 			${this.data.additionalInfo ? `- ${this.data.additionalInfo}` : ""}
 		`;
+	}
+
+	public toEmbed() {
+		return new EmbedBuilder()
+			.setTitle(this.name)
+			.setDescription(this.additionalInfo || "No additional info.")
+			.setColor(this.winners.length ? COLORS.GREEN : COLORS.YELLOW)
+			.setFields({
+				name: "Info",
+				value: stripIndents`
+					Created: ${longstamp(this.createdAt)}
+					Quantity: ${this.quantity}
+					Winners: ${this.winners.length || "None"}
+				`
+			});
 	}
 }

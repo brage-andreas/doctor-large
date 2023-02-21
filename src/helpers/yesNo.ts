@@ -1,14 +1,15 @@
 import {
 	ActionRowBuilder,
-	ButtonBuilder,
 	ButtonStyle,
 	ComponentType,
 	Message,
 	type AutocompleteInteraction,
+	type ButtonBuilder,
 	type ButtonInteraction,
 	type Interaction,
 	type MessageEditOptions
 } from "discord.js";
+import components from "../components/index.js";
 import { EMOJIS } from "../constants.js";
 
 export default async function yesNo(options: {
@@ -16,7 +17,9 @@ export default async function yesNo(options: {
 	timeActive?: number;
 	yesStyle?: ButtonStyle;
 	noStyle?: ButtonStyle;
-	medium: Exclude<Interaction, AutocompleteInteraction> | Message;
+	medium:
+		| Exclude<Interaction<"cached">, AutocompleteInteraction>
+		| Message<true>;
 	data: Exclude<MessageEditOptions, "Components">;
 	filter?(interaction: ButtonInteraction): boolean;
 }): Promise<boolean> {
@@ -27,24 +30,14 @@ export default async function yesNo(options: {
 	const noStyle = options.noStyle ?? ButtonStyle.Danger;
 	const time = options.timeActive ?? 60_000;
 
-	const yesButton = new ButtonBuilder()
-		.setCustomId("yes")
-		.setEmoji(EMOJIS.V)
-		.setStyle(yesStyle)
-		.setLabel("Yes");
+	const { yes, no } = components.buttons;
 
-	const noButton = new ButtonBuilder()
-		.setCustomId("no")
-		.setEmoji(EMOJIS.X)
-		.setStyle(noStyle)
-		.setLabel("No");
-
-	const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		yesButton,
-		noButton
+	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
+		yes.component(yesStyle),
+		no.component(noStyle)
 	);
 
-	let message: Message;
+	let message: Message<true>;
 
 	if (medium instanceof Message) {
 		message = await medium.edit({ ...data, components: [row] });
@@ -62,17 +55,19 @@ export default async function yesNo(options: {
 
 		if (respondToIgnore) {
 			collector.on("ignore", (interaction) => {
-				interaction.reply({
-					content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
-					ephemeral: true
-				});
+				interaction
+					.reply({
+						content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
+						ephemeral: true
+					})
+					.catch(() => null);
 			});
 		}
 
-		collector.on("collect", async (interaction) => {
-			await interaction.deferUpdate();
+		collector.on("collect", async (collectedInteraction) => {
+			await collectedInteraction.deferUpdate().catch(() => null);
 
-			if (interaction.customId === "yes") {
+			if (collectedInteraction.customId === yes.customId) {
 				resolve(undefined);
 			} else {
 				reject();

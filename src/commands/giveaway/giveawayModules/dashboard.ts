@@ -2,33 +2,26 @@ import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
 	ComponentType,
+	type AutocompleteInteraction,
 	type ButtonBuilder,
-	type ButtonInteraction,
-	type CommandInteraction,
-	type ModalSubmitInteraction
+	type Interaction
 } from "discord.js";
-import { giveawayComponents } from "../../../components/index.js";
+import components from "../../../components/index.js";
 import { EMOJIS } from "../../../constants.js";
 import GiveawayManager from "../../../database/giveaway.js";
-import lastEditBy from "../../../helpers/lastEdit.js";
-import Logger from "../../../logger/logger.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import toEditGiveaway from "./dashboardModules/editGiveaway.js";
-import toEndGiveaway from "./dashboardModules/endGiveaway.js";
+import toEndOptions from "./dashboardModules/endOptions.js";
 import toManagePrizes from "./dashboardModules/managePrizes.js";
 import toPublishGiveaway from "./dashboardModules/publishGiveaway.js";
 import toPublishingOptions from "./dashboardModules/publishingOptions.js";
 import toResetData from "./dashboardModules/resetData.js";
-import toSetEndDate from "./dashboardModules/setEndDate.js";
 import toSetPingRoles from "./dashboardModules/setPingRoles.js";
 import toSetRequiredRoles from "./dashboardModules/setRequiredRoles.js";
 import toEndedDashboard from "./endedGiveawayDashboard.js";
 
 export default async function toDashboard(
-	interaction:
-		| ButtonInteraction<"cached">
-		| CommandInteraction<"cached">
-		| ModalSubmitInteraction<"cached">,
+	interaction: Exclude<Interaction<"cached">, AutocompleteInteraction>,
 	giveawayId: number
 ) {
 	const giveawayManager = new GiveawayManager(interaction.guild);
@@ -39,7 +32,7 @@ export default async function toDashboard(
 			content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.WARN} This giveaway does not exist. Try creating one or double-check the ID.
+				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			components: [],
 			embeds: []
@@ -48,47 +41,53 @@ export default async function toDashboard(
 		return;
 	}
 
-	if (!giveaway.active) {
+	if (giveaway.ended) {
 		await toEndedDashboard(interaction, giveawayManager, giveaway);
 
 		return;
 	}
 
+	const {
+		publishingOptions,
+		publishGiveaway,
+		unlockEntries,
+		lockEntries,
+		endOptions,
+		setRequiredRoles,
+		setPingRoles,
+		managePrizes,
+		edit,
+		resetData,
+		deleteGiveaway
+	} = components.buttons;
+
 	const publishButton = giveaway.publishedMessageId
-		? giveawayComponents.dashboard.row1.publishingOptionsButton()
-		: giveawayComponents.dashboard.row1.publishGiveawayButton();
+		? publishingOptions.component()
+		: publishGiveaway.component();
 
 	const lockEntriesButton = giveaway.entriesLocked
-		? giveawayComponents.dashboard.row1.unlockEntriesButton()
-		: giveawayComponents.dashboard.row1.lockEntriesButton();
+		? unlockEntries.component()
+		: lockEntries.component();
 
 	const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		publishButton,
+		endOptions.component(),
 		lockEntriesButton,
-		giveawayComponents.dashboard.row1.setEndDateButton(),
-		giveawayComponents.dashboard.row1.setRequiredRolesButton(),
-		giveawayComponents.dashboard.row1.setPingRolesButton()
+		setRequiredRoles.component(),
+		setPingRoles.component()
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		giveawayComponents.dashboard.row2.editButton(),
-		giveawayComponents.dashboard.row2.managePrizesButton(),
-		giveawayComponents.dashboard.row2.endGiveawayButton(),
-		giveawayComponents.dashboard.row2.resetDataButton(),
-		giveawayComponents.dashboard.row2.deleteGiveawayButton()
+		managePrizes.component(),
+		edit.component(),
+		resetData.component(),
+		deleteGiveaway.component()
 	);
 
 	const msg = await interaction.editReply({
-		content: giveaway.toDashboardOverviewString(),
 		components: [row1, row2],
-		embeds: []
+		...giveaway.toDashboardOverview()
 	});
-
-	// weird bug
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	new Logger({ prefix: "GIVEAWAY", interaction: interaction as any }).log(
-		`Opened dashboard of giveaway with ID #${giveawayId}`
-	);
 
 	const collector = msg.createMessageComponentCollector({
 		filter: (buttonInteraction) =>
@@ -107,7 +106,7 @@ export default async function toDashboard(
 
 	collector.on("collect", async (buttonInteraction) => {
 		switch (buttonInteraction.customId) {
-			case "publishGiveaway": {
+			case publishGiveaway.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toPublishGiveaway(
@@ -119,7 +118,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "publishingOptions": {
+			case publishingOptions.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toPublishingOptions(
@@ -131,14 +130,13 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "lockEntries": {
+			case lockEntries.customId: {
 				await buttonInteraction.deferUpdate();
 
-				await giveawayManager.edit({
-					where: { id: giveawayId },
-					data: {
-						entriesLocked: true,
-						...lastEditBy(interaction.user)
+				await giveaway.edit({
+					entriesLocked: true,
+					nowOutdated: {
+						publishedMessage: true
 					}
 				});
 
@@ -147,14 +145,13 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "unlockEntries": {
+			case unlockEntries.customId: {
 				await buttonInteraction.deferUpdate();
 
-				await giveawayManager.edit({
-					where: { id: giveawayId },
-					data: {
-						entriesLocked: false,
-						...lastEditBy(interaction.user)
+				await giveaway.edit({
+					entriesLocked: false,
+					nowOutdated: {
+						publishedMessage: true
 					}
 				});
 
@@ -163,15 +160,15 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "setEndDate": {
+			case endOptions.customId: {
 				await buttonInteraction.deferUpdate();
 
-				toSetEndDate(buttonInteraction, giveawayId, giveawayManager);
+				toEndOptions(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
-			case "setRequiredRoles": {
+			case setRequiredRoles.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toSetRequiredRoles(
@@ -183,7 +180,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "setPingRoles": {
+			case setPingRoles.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toSetPingRoles(buttonInteraction, giveawayId, giveawayManager);
@@ -191,7 +188,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "editGiveaway": {
+			case edit.customId: {
 				// await buttonInteraction.deferUpdate();
 				// Showing modal
 
@@ -200,7 +197,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "managePrizes": {
+			case managePrizes.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
@@ -208,15 +205,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "endGiveaway": {
-				await buttonInteraction.deferUpdate();
-
-				toEndGiveaway(buttonInteraction, giveawayId, giveawayManager);
-
-				break;
-			}
-
-			case "resetData": {
+			case resetData.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toResetData(buttonInteraction, giveawayId, giveawayManager);
@@ -224,7 +213,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case "deleteGiveaway": {
+			case deleteGiveaway.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toDeleteGiveaway(

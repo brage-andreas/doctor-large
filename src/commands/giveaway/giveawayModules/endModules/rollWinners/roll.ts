@@ -1,91 +1,90 @@
-import type Giveaway from "../../../../../modules/Giveaway.js";
-import type Prize from "../../../../../modules/Prize.js";
+import type PrizeModule from "../../../../../modules/Prize.js";
 
-export default function roll(entries: Array<string>, giveaway: Giveaway) {
-	const alwaysFullBucket = new Set(entries);
-	const oneTimeBucket = new Set(entries);
+export default function roll(options: {
+	entries: Array<string>;
+	overrideClaimed: boolean;
+	prizes: Array<PrizeModule>;
+	prizesQuantity: number;
+	winnerQuantity: number;
+}) {
+	const { entries, overrideClaimed, prizes, prizesQuantity, winnerQuantity } =
+		options;
 
-	const prizesQuantity = giveaway.prizesQuantity();
-	const winnerQuantity = giveaway.winnerQuantity;
-
-	const prizesWithOneWinner = giveaway.prizes.reduce((prizeArray, prize) => {
-		const arrayOfCurrentPrizes: Array<Prize> = Array.from(
-			{ length: prize.quantity },
-			() => {
-				const prizeCopy = structuredClone(prize);
-				prizeCopy.quantity = 1;
-
-				return prizeCopy;
-			}
-		);
-
-		prizeArray.push(...arrayOfCurrentPrizes);
-
-		return prizeArray;
-	}, [] as Array<Prize>);
-
-	if (!oneTimeBucket.size || !prizesQuantity || !winnerQuantity) {
+	if (!entries.length || !prizesQuantity || !winnerQuantity) {
 		return null;
 	}
 
-	const randomFromSet = (set: Set<string>) =>
-		[...set].at(Math.floor(Math.random() * set.size));
+	const alwaysFullBucket = new Set(entries);
+	const oneTimeBucket = new Set(entries);
 
-	const getWinner = () => {
-		if (!oneTimeBucket.size) {
-			const userId = randomFromSet(alwaysFullBucket)!;
+	const prizeIdsToRoll = prizes.flatMap((prize) => {
+		let length = prize.quantity;
 
-			return userId;
+		if (!overrideClaimed) {
+			const winnerArray = [...prize.winners.values()];
+			const newLength = winnerArray.reduce(
+				(n, { claimed }) => (claimed ? n - 1 : n),
+				prize.quantity
+			);
+
+			length = newLength;
 		}
 
-		const userId = randomFromSet(oneTimeBucket)!;
+		return Array.from({ length }, () => prize.id);
+	});
+
+	const random = (setOrArray: Array<string> | Set<string>) => {
+		const array = "size" in setOrArray ? [...setOrArray] : setOrArray;
+
+		return array[Math.floor(Math.random() * array.length)];
+	};
+
+	const getRandomUserId = () => {
+		if (!oneTimeBucket.size) {
+			return random(alwaysFullBucket);
+		}
+
+		const userId = random(oneTimeBucket);
 		oneTimeBucket.delete(userId);
 
 		return userId;
 	};
 
 	let delegatedPrizes = 0;
-	const winners: Array<string> = [];
-	const winnerMap: Map<
-		number,
-		Array<{ userId: string; quantityWon: number }>
-	> = new Map();
+	const winners: Array<{ prizeId: number; userId: string }> = [];
 
-	for (let i = 0; i < prizesQuantity; i++) {
-		const currentPrize = prizesWithOneWinner.at(i);
+	for (let i = 0; i < prizeIdsToRoll.length; i++) {
+		const currentPrizeId = prizeIdsToRoll.at(i);
 
-		if (currentPrize === undefined) {
+		if (!currentPrizeId) {
 			continue;
 		}
 
 		// if there are enough winners but the prizes aren't filled
+		// if say there are 1 winner but 10 prizes
+		// used so you reuse the same winners for the prizes remaining
 		const winnersFilledButNotPrizes = delegatedPrizes === winnerQuantity;
 
-		const randomWinner = winnersFilledButNotPrizes
-			? winners[Math.floor(Math.random() * winners.length)]
-			: getWinner();
+		let randomWinnerUserId: string;
+		winnersFilledButNotPrizes;
 
-		if (!winnersFilledButNotPrizes) {
-			winners.push(randomWinner);
-		} else {
+		if (winnersFilledButNotPrizes) {
+			randomWinnerUserId = random(
+				winners.map(({ userId: winnerUserId }) => winnerUserId)
+			);
+
 			delegatedPrizes--;
+		} else {
+			randomWinnerUserId = getRandomUserId();
 		}
 
-		const oldEntry = winnerMap.get(currentPrize.id) ?? [];
-		const previous = oldEntry.find((e) => e.userId === randomWinner);
-		const newArray = oldEntry.filter((e) => e.userId !== randomWinner);
-
-		const newObject = {
-			userId: randomWinner,
-			quantityWon: (previous?.quantityWon ?? 0) + 1
-		};
-
-		newArray.push(newObject);
-
-		winnerMap.set(currentPrize.id, newArray);
+		winners.push({
+			prizeId: currentPrizeId,
+			userId: randomWinnerUserId
+		});
 
 		delegatedPrizes++;
 	}
 
-	return winnerMap;
+	return winners;
 }

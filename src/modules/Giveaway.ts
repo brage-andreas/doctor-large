@@ -1,60 +1,92 @@
-import { type Prisma } from "@prisma/client";
-import { oneLine, source, stripIndents } from "common-tags";
 import {
+	type Giveaway,
+	type HostNotified,
+	type Prisma,
+	type Winner
+} from "@prisma/client";
+import { oneLine, source, stripIndent, stripIndents } from "common-tags";
+import {
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
 	EmbedBuilder,
 	PermissionFlagsBits,
 	type Client,
 	type Guild,
-	type GuildMember
+	type GuildMember,
+	type GuildTextBasedChannel,
+	type MessageCreateOptions,
+	type MessageEditOptions,
+	type Role
 } from "discord.js";
 import ms from "ms";
 import { COLORS, EMOJIS } from "../constants.js";
 import { default as GiveawayManager } from "../database/giveaway.js";
+import commandMention from "../helpers/commandMention.js";
 import { listify } from "../helpers/listify.js";
 import s from "../helpers/s.js";
-import { longStamp, timestamp } from "../helpers/timestamps.js";
-import { type GiveawayDataWithIncludes } from "../typings/database.js";
-import Prize from "./Prize.js";
+import { longstamp } from "../helpers/timestamps.js";
+import { type GiveawayWithIncludes } from "../typings/database.js";
+import {
+	type GiveawayId,
+	type PrizeId,
+	type PrizesOfMapObj,
+	type Snowflake,
+	type WinnerId
+} from "../typings/index.js";
+import PrizeModule from "./Prize.js";
 
-export default class Giveaway {
+type ModifiedGiveaway = Omit<
+	Giveaway,
+	"entriesUserIds" | "pingRolesIds" | "requiredRolesIds"
+>;
+
+export default class GiveawayModule implements ModifiedGiveaway {
+	public data: GiveawayWithIncludes;
+	public readonly client: Client<true>;
+	public readonly guild: Guild;
 	public readonly manager: GiveawayManager;
-	public client: Client<true>;
-	public data: GiveawayDataWithIncludes;
-	public guild: Guild;
 
 	// -- Raw data --
-	public active: boolean;
 	public channelId: string | null;
-	public description: string | null;
-	public endTimestamp: string | null;
+	public createdAt: Date;
+	public description: string;
+	public endAutomation;
+	public endDate: Date | null;
+	public ended: boolean;
 	public entriesLocked: boolean;
 	public guildId: string;
 	public guildRelativeId: number;
+	public hostNotified: HostNotified;
 	public hostUserId: string;
 	public hostUserTag: string;
-	public id: number;
-	public lastEditedUserId: string | null;
-	public lastEditedUserTag: string | null;
+	public id: GiveawayId;
+	public lastEditedAt: Date;
 	public minimumAccountAge: string | null;
 	public publishedMessageId: string | null;
+	public publishedMessageUpdated: boolean;
 	public title: string;
 	public winnerMessageId: string | null;
+	public winnerMessageUpdated: boolean;
 	public winnerQuantity: number;
 	// --------------
 
 	// -- Manipulated data --
-	public createdTimestamp: number;
-	public lastEditedTimestamp: number | null;
-	public entriesUserIds: Set<string>;
-	public pingRolesIds: Set<string>;
-	public prizes: Array<Prize>;
-	public requiredRolesIds: Set<string>;
+	public entriesUserIds: Set<Snowflake>;
+	public pingRolesIds: Set<Snowflake>;
+	public prizes: Array<PrizeModule>;
+	public requiredRolesIds: Set<Snowflake>;
+	public winners: Array<Winner & { prize: PrizeModule }>;
 	// ----------------------
 
+	// -- Cache --
+	public pingRoles: Array<Role>;
+	public requiredRoles: Array<Role>;
 	private _prizesQuantity: number | null = null;
 	private _winnersUserIds: Set<string> | null = null;
+	// -----------
 
-	public constructor(data: GiveawayDataWithIncludes, guild: Guild) {
+	public constructor(data: GiveawayWithIncludes, guild: Guild) {
 		this.client = guild.client;
 		this.guild = guild;
 		this.data = data;
@@ -62,55 +94,276 @@ export default class Giveaway {
 		this.manager = new GiveawayManager(guild);
 
 		// -- Raw data --
+		this.publishedMessageUpdated = data.publishedMessageUpdated;
+		this.winnerMessageUpdated = data.winnerMessageUpdated;
 		this.publishedMessageId = data.publishedMessageId;
-		this.lastEditedUserTag = data.lastEditedUserTag;
 		this.minimumAccountAge = data.minimumAccountAge;
-		this.lastEditedUserId = data.lastEditedUserId;
-		this.winnerMessageId = data.winnerMessageId;
 		this.guildRelativeId = data.guildRelativeId;
+		this.winnerMessageId = data.winnerMessageId;
 		this.winnerQuantity = data.winnerQuantity;
+		this.endAutomation = data.endAutomation;
 		this.entriesLocked = data.entriesLocked;
-		this.endTimestamp = data.endTimestamp;
+		this.hostNotified = data.hostNotified;
+		this.lastEditedAt = data.lastEditedAt;
 		this.description = data.description;
 		this.hostUserTag = data.hostUserTag;
 		this.hostUserId = data.hostUserId;
 		this.channelId = data.channelId;
+		this.createdAt = data.createdAt;
+		this.endDate = data.endDate;
 		this.guildId = data.guildId;
-		this.active = data.active;
+		this.ended = data.ended;
 		this.title = data.title;
 		this.id = data.id;
 		// --------------
 
 		// -- Manipulated data --
-		this.createdTimestamp = Number(data.createdTimestamp);
 		this.requiredRolesIds = new Set(data.requiredRolesIds);
 		this.entriesUserIds = new Set(data.entriesUserIds);
 		this.pingRolesIds = new Set(data.pingRolesIds);
 
-		this.lastEditedTimestamp = data.lastEditedTimestamp
-			? Number(data.lastEditedTimestamp)
-			: null;
+		this.pingRoles = data.pingRolesIds
+			.map((roleId) => guild.roles.cache.get(roleId))
+			.filter((roleOrUndefined) =>
+				Boolean(roleOrUndefined)
+			) as Array<Role>;
+
+		this.requiredRoles = data.requiredRolesIds
+			.map((roleId) => guild.roles.cache.get(roleId))
+			.filter((roleOrUndefined) =>
+				Boolean(roleOrUndefined)
+			) as Array<Role>;
 
 		this.prizes = data.prizes.map(
-			(prize) => new Prize({ ...prize, giveaway: this }, guild)
+			(prize) => new PrizeModule({ ...prize, giveaway: this }, guild)
+		);
+
+		this.winners = this.prizes.reduce(
+			(winners, prize) =>
+				winners.concat(prize.winners.map((w) => ({ ...w, prize }))),
+			[] as Array<Winner & { prize: PrizeModule }>
 		);
 		// ----------------------
 	}
 
+	public get publishedMessageIsOutdated() {
+		if (!this.publishedMessageId) {
+			return false;
+		}
+
+		return !this.publishedMessageUpdated;
+	}
+
+	public get winnerMessageIsOutdated() {
+		if (!this.winnerMessageId) {
+			return false;
+		}
+
+		return !this.winnerMessageUpdated;
+	}
+
+	public get hasPingRoles() {
+		return Boolean(this.pingRolesIds.size);
+	}
+
 	public get pingRolesMentions() {
-		if (!this.pingRolesIds.size) {
+		if (!this.hasPingRoles) {
 			return undefined;
 		}
 
-		return [...this.pingRolesIds].map((id) => `<@&${id}>`);
+		return this.pingRoles.map((role) => role.toString());
+	}
+
+	public get hasRequiredRoles() {
+		return Boolean(this.requiredRolesIds.size);
 	}
 
 	public get requiredRolesMentions() {
-		if (!this.requiredRolesIds.size) {
+		if (!this.hasRequiredRoles) {
 			return undefined;
 		}
 
-		return [...this.requiredRolesIds].map((id) => `<@&${id}>`);
+		return this.requiredRoles.map((role) => role.toString());
+	}
+
+	public get channel(): GuildTextBasedChannel | null {
+		const channel = this.channelId
+			? this.guild.channels.cache.get(this.channelId)
+			: undefined;
+
+		return channel?.isTextBased() ? channel : null;
+	}
+
+	public get publishedMessageURL(): string | null {
+		const gId = this.guildId;
+		const cId = this.channelId;
+		const mId = this.publishedMessageId;
+
+		if (!cId || !mId) {
+			return null;
+		}
+
+		return `https://discord.com/channels/${gId}/${cId}/${mId}`;
+	}
+
+	public get winnerMessageURL(): string | null {
+		const gId = this.guildId;
+		const cId = this.channelId;
+		const mId = this.winnerMessageId;
+
+		if (!cId || !mId) {
+			return null;
+		}
+
+		return `https://discord.com/channels/${gId}/${cId}/${mId}`;
+	}
+
+	public get publishedMessage() {
+		return this._editMessage(this.publishedMessageId);
+	}
+
+	public get winnerMessage() {
+		return this._editMessage(this.winnerMessageId);
+	}
+
+	public async reset(filter: {
+		entriesAndWinners?: boolean;
+		prizesAndWinners?: boolean;
+		winners?: boolean;
+		options?: boolean;
+		all?: boolean;
+	}): Promise<void> {
+		const resetAll = async () => {
+			await this.publishedMessage?.delete();
+			await this.winnerMessage?.delete();
+
+			await this.manager.deleteWinners(this.data).then(async () => {
+				await this.manager.deletePrizes(this.data);
+			});
+
+			await this.manager.edit({
+				where: {
+					id: this.id
+				},
+				data: {
+					channelId: null,
+					endAutomation: "End",
+					endDate: null,
+					entriesLocked: false,
+					entriesUserIds: [],
+					minimumAccountAge: null,
+					pingRolesIds: [],
+					publishedMessageId: null,
+					publishedMessageUpdated: false,
+					requiredRolesIds: [],
+					winnerMessageId: null,
+					winnerMessageUpdated: false
+				}
+			});
+		};
+
+		const resetEntriesAndWinners = async () => {
+			await this.winnerMessage?.delete();
+
+			await this.manager.deleteWinners(this.data);
+
+			await this.manager.edit({
+				where: {
+					id: this.id
+				},
+				data: {
+					entriesUserIds: [],
+					winnerMessageId: null,
+					winnerMessageUpdated: false
+				}
+			});
+		};
+
+		const resetOptions = async () => {
+			await this.publishedMessage?.delete();
+			await this.winnerMessage?.delete();
+
+			await this.manager.edit({
+				where: {
+					id: this.id
+				},
+				data: {
+					channelId: null,
+					endAutomation: "End",
+					endDate: null,
+					entriesLocked: false,
+					minimumAccountAge: null,
+					pingRolesIds: [],
+					publishedMessageId: null,
+					publishedMessageUpdated: false,
+					requiredRolesIds: [],
+					winnerMessageId: null,
+					winnerMessageUpdated: false
+				}
+			});
+		};
+
+		const resetPrizesAndWinners = async () => {
+			await this.publishedMessage?.delete();
+			await this.winnerMessage?.delete();
+
+			await this.manager.deleteWinners(this.data).then(async () => {
+				await this.manager.deletePrizes(this.data);
+			});
+
+			await this.manager.edit({
+				where: {
+					id: this.id
+				},
+				data: {
+					publishedMessageId: null,
+					publishedMessageUpdated: false,
+					winnerMessageId: null,
+					winnerMessageUpdated: false
+				}
+			});
+		};
+
+		const resetWinners = async () => {
+			await this.winnerMessage?.delete();
+
+			await this.manager.deleteWinners(this.data);
+
+			await this.manager.edit({
+				where: {
+					id: this.id
+				},
+				data: {
+					winnerMessageId: null,
+					winnerMessageUpdated: false
+				}
+			});
+		};
+
+		const { entriesAndWinners, prizesAndWinners, winners, options, all } =
+			filter;
+
+		if (all) {
+			await resetAll();
+
+			return;
+		}
+
+		if (entriesAndWinners) {
+			await resetEntriesAndWinners();
+		}
+
+		if (options) {
+			await resetOptions();
+		}
+
+		if (prizesAndWinners) {
+			await resetPrizesAndWinners();
+		}
+
+		if (winners) {
+			await resetWinners();
+		}
 	}
 
 	public prizesQuantity(forceRefresh?: boolean) {
@@ -124,28 +377,116 @@ export default class Giveaway {
 		return this._prizesQuantity;
 	}
 
+	/**
+	 * Mapped by user id
+	 */
+	public prizesOfAllWinners() {
+		const map = new Map<
+			Snowflake,
+			{ claimed: Array<PrizesOfMapObj>; unclaimed: Array<PrizesOfMapObj> }
+		>();
+
+		this.winnersUserIds().forEach((id) => {
+			const prizes = this.prizesOf(id);
+
+			if (!prizes) {
+				return;
+			}
+
+			map.set(id, {
+				claimed: [...prizes.claimed.values()],
+				unclaimed: [...prizes.unclaimed.values()]
+			});
+		});
+
+		if (!map.size) {
+			return null;
+		}
+
+		return map;
+	}
+
+	/**
+	 * Mapped by prize ID
+	 */
 	public prizesOf(userId: string) {
-		return this.prizes.filter((prize) => prize.winners.has(userId));
+		if (!this.winnersUserIds().has(userId)) {
+			return null;
+		}
+
+		const prizesBundled = this.winners.reduce(
+			(prizes, winner) => {
+				if (winner.userId !== userId) {
+					return prizes;
+				}
+
+				const { prize, prizeId, claimed } = winner;
+				let newPrizes: {
+					claimed: Map<number, PrizesOfMapObj>;
+					unclaimed: Map<number, PrizesOfMapObj>;
+				} = { claimed: new Map(), unclaimed: new Map() };
+
+				const oldClaimed: PrizesOfMapObj = prizes.claimed.get(
+					prizeId
+				) ?? { prize, winner, count: 0 };
+
+				const oldUnclaimed: PrizesOfMapObj = prizes.unclaimed.get(
+					prizeId
+				) ?? { prize, winner, count: 0 };
+
+				if (claimed) {
+					const newClaimed = prizes.claimed.set(prizeId, {
+						prize,
+						winner,
+						count: oldClaimed.count + 1
+					});
+
+					newPrizes = {
+						unclaimed: prizes.unclaimed,
+						claimed: newClaimed
+					};
+				} else {
+					const newUnclaimed = prizes.unclaimed.set(prizeId, {
+						prize,
+						winner,
+						count: oldUnclaimed.count + 1
+					});
+
+					newPrizes = {
+						unclaimed: newUnclaimed,
+						claimed: prizes.claimed
+					};
+				}
+
+				return newPrizes;
+			},
+			{ claimed: new Map(), unclaimed: new Map() } as {
+				claimed: Map<PrizeId, PrizesOfMapObj>;
+				unclaimed: Map<PrizeId, PrizesOfMapObj>;
+			}
+		);
+
+		return prizesBundled;
 	}
 
 	public winnersUserIds(forceRefresh?: boolean) {
 		if (this._winnersUserIds === null || forceRefresh) {
-			this._winnersUserIds = this.prizes.reduce((set, e) => {
-				e.winners.forEach((winner) => set.add(winner.userId));
-
-				return set;
-			}, new Set<string>());
+			this._winnersUserIds = new Set(this.winners.map((w) => w.userId));
 		}
 
 		return this._winnersUserIds;
 	}
 
-	public isPublished() {
+	public isPublished(): this is this & { publishedMessageId: string } {
 		return Boolean(this.publishedMessageId);
 	}
 
-	public hasRequiredRoles(member: GuildMember) {
-		if (!this.requiredRolesIds.size) {
+	public winnersArePublished(): this is this & { winnerMessageId: string } {
+		return Boolean(this.winnerMessageId);
+	}
+
+	public memberHasRequiredRoles(member: GuildMember) {
+		if (!this.hasRequiredRoles) {
 			return true;
 		}
 
@@ -166,16 +507,24 @@ export default class Giveaway {
 		return true;
 	}
 
-	public async delete(options?: { withPrizesAndWinners?: boolean }) {
-		const withPrizesAndWinners = options?.withPrizesAndWinners ?? true;
+	/**
+	 * Deletes all winners and prizes tied to the giveaway, and the giveaway itself.
+	 * Optional: Delete published messages, including the winner announcement.
+	 */
+	public async delete(options: { withPublishedMessages: boolean }) {
+		const { withPublishedMessages } = options;
 
-		if (withPrizesAndWinners) {
-			const prizesIds = this.prizes.map((prize) => prize.id);
+		if (withPublishedMessages) {
+			const channel = this.channel;
 
-			await this.manager.deleteWinners(prizesIds);
-			await this.manager.deletePrizes(prizesIds);
+			if (channel) {
+				await this.publishedMessage?.delete();
+				await this.winnerMessage?.delete();
+			}
 		}
 
+		await this.manager.deleteWinners(this.data);
+		await this.manager.deletePrizes(this.data);
 		await this.manager.delete(this.id);
 	}
 
@@ -188,36 +537,50 @@ export default class Giveaway {
 		`;
 	}
 
-	public toString() {
-		//
-	}
+	public toFullString(options?: { userId: Snowflake }) {
+		const id = options?.userId;
+		const { ended } = this;
 
-	public toFullString() {
-		const winnerStr = `${this.winnerQuantity || "No"} ${s(
-			"winner",
-			this.winnerQuantity
-		)}`;
+		const idString = `#${this.guildRelativeId}`;
+		const prefix = `${" ".repeat(idString.length)} →`;
 
-		const prizesStr = `${this.prizesQuantity() || "no"} ${s(
-			"prize",
-			this.prizesQuantity()
-		)}`;
+		const isEntry = Boolean(id && this.entriesUserIds.has(id));
+		const isWinner = Boolean(id && this.winnersUserIds().has(id));
 
-		const entriesStr = `${this.entriesUserIds.size || "No"} ${s(
-			"entrant",
-			this.entriesUserIds.size
-		)}`;
-
-		const { active } = this;
+		const entries = this.entriesUserIds.size || "None";
+		const prizes = this.prizesQuantity() || "None";
+		const winners = this.winnerQuantity || "None";
 
 		return source`
-			#${this.guildRelativeId} "${this.title}"
-			${!active ? "  → Inactive\n" : ""}  → ${entriesStr}
-			  → ${winnerStr}, ${prizesStr}
+			#${this.guildRelativeId} ${ended ? "[ENDED] " : ""}${this.title}
+			${prefix} Entries: ${entries}${isEntry ? " <-- You" : ""}
+			${prefix} Winners: ${winners}${isWinner ? " <-- You" : ""}
+			${prefix} Prizes: ${prizes}
 		`;
 	}
 
-	public toDashboardOverviewString() {
+	public cannotEndContent() {
+		const missingParts: Array<string> = [];
+
+		if (!this.prizesQuantity()) {
+			missingParts.push("→ Add one or more prizes");
+		}
+
+		if (!this.channelId) {
+			missingParts.push("→ Publish the giveaway");
+		}
+
+		if (!missingParts.length) {
+			return "";
+		}
+
+		return source`
+			${EMOJIS.ERROR} The giveaway cannot be ended:
+			  ${missingParts.join("\n")}
+		`;
+	}
+
+	public toDashboardOverview() {
 		const requiredRolesStr = this.requiredRolesIds.size
 			? `→ Required roles (${this.requiredRolesIds.size}): ${listify(
 					this.requiredRolesMentions!,
@@ -231,7 +594,7 @@ export default class Giveaway {
 				: "None"
 		}`;
 
-		const pingRolesStr = this.pingRolesIds.size
+		const pingRolesStr = this.hasPingRoles
 			? `→ Ping roles (${this.pingRolesIds.size}): ${listify(
 					this.pingRolesMentions!,
 					{ length: 10 }
@@ -257,92 +620,130 @@ export default class Giveaway {
 		`
 			: null;
 
-		const endStr = this.endTimestamp
-			? `→ End date: ${longStamp(this.endTimestamp)}`
-			: `→ End date: ${EMOJIS.WARN} The giveaway has no set end date. It will be open indefinitely!`;
+		const rolesStr = stripIndents`
+			${requiredRolesStr}
+			${pingRolesStr}
+			
+			${pingRolesWarning ?? ""}
+		`;
+
+		const endStr = this.endDate
+			? `→ End date: ${longstamp(this.endDate)}`
+			: `→ End date: ${EMOJIS.WARN} No set end date.`;
+
+		const prizesName = this.prizes.length
+			? `Prizes (${this.prizesQuantity()})`
+			: "Prizes";
 
 		const prizesStr = this.prizes.length
-			? `**Prizes** (${this.prizes.length}):\n${this.prizes
-					.map((prize) => prize.toShortString())
-					.join("\n")}`
-			: `**Prizes**: ${EMOJIS.WARN} There are no set prizes`;
+			? this.prizes.map((prize) => prize.toShortString()).join("\n")
+			: `${EMOJIS.WARN} No set prizes`;
 
-		const titleStr = `**Title**:\n\`\`\`\n${this.title}\n\`\`\``;
+		const descriptionStr =
+			this.description ?? `${EMOJIS.WARN} There is no set description`;
 
-		const descriptionStr = `**Description**:\n${
-			this.description
-				? `\`\`\`\n${this.description}\n\`\`\``
-				: `${EMOJIS.WARN} There is no set description`
+		const createdStr = `→ Created: ${longstamp(this.createdAt)}`;
+		const entriesStr = `→ Entries: ${this.entriesUserIds.size}`;
+		const hostStr = `→ Host: ${this.hostUserTag} (${this.hostUserId})`;
+		const idStr = `#${this.guildRelativeId}`;
+		const numberOfWinnersStr = `→ Number of winners: ${this.winnerQuantity}`;
+
+		const endedStr = `→ Ended: ${
+			this.ended ? `${EMOJIS.ENDED} Yes` : "No"
 		}`;
 
-		const idStr = `#${this.guildRelativeId}`;
-		const absoluteIdStr = `#${this.id}`;
-		const numberOfWinnersStr = `→ Number of winners: ${this.winnerQuantity}`;
-		const hostStr = `→ Host: ${this.hostUserTag} (${this.hostUserId})`;
-		const activeStr = `→ Active: ${this.active ? "Yes" : "No"}`;
-		const entriesStr = `→ Entries: ${this.entriesUserIds.size}`;
-		const createdStr = `→ Created: ${longStamp(this.createdTimestamp)}`;
-
 		const lockEntriesStr = `→ Entries locked: ${
-			this.entriesLocked ? "Yes" : "No"
+			this.entriesLocked ? `${EMOJIS.LOCK} Yes` : "No"
 		}`;
 
 		const publishedStr = `→ Published: ${
 			this.isPublished() ? "Yes" : "No"
 		}`;
 
-		const gId = this.guildId;
-		const cId = this.channelId;
-		const mId = this.publishedMessageId;
-		const messageUrl =
-			gId && cId && mId
-				? `→ [Link to giveaway](<https://discord.com/channels/${gId}/${cId}/${mId}>)`
-				: null;
+		const rawMessageUrl = this.publishedMessageURL;
+		const messageUrl = rawMessageUrl
+			? `→ [Link to giveaway](<${rawMessageUrl}>)`
+			: null;
 
 		const winnersStr = this.winnersUserIds().size
-			? oneLine`
-				→ Winners (${this.winnersUserIds().size}/${this.winnerQuantity}):
-				${[...this.winnersUserIds()].map((id) => `<@${id}> (${id})`).join(", ")}
-			`
-			: "→ No winners";
+			? `→ Unique winners: **${this.winnersUserIds().size}**/${
+					this.winnerQuantity
+			  }`
+			: `→ ${
+					this.entriesUserIds.size ? `${EMOJIS.WARN} ` : ""
+			  }No winners`;
 
-		const editTag = this.lastEditedUserTag;
-		const editUId = this.lastEditedUserId;
-		const editStamp = this.lastEditedTimestamp;
+		const publishedOutdated = this.publishedMessageIsOutdated
+			? `${EMOJIS.WARN} The published message is outdated. Republish the giveaway.`
+			: "";
 
-		const lastEditStr =
-			!editTag && !editUId && !editStamp
-				? "No edits"
-				: oneLine`
-					Last edited by:
-					${editTag ?? "Unknown tag"}
-					(${editUId ?? "Unknown ID"})
-					${editStamp ? timestamp(editStamp, "R") : "Unknown date"}
-				`;
+		const winnerOutdated = this.winnerMessageIsOutdated
+			? `${EMOJIS.WARN} The winner announcement is outdated. Republish the winners.`
+			: "";
 
-		return stripIndents`
-		${titleStr}
-		${descriptionStr}
-		${prizesStr}
+		const infoField = stripIndents`
+			${hostStr}
+			${createdStr}
+			${entriesStr}
+			${winnersStr}${messageUrl ? `\n${messageUrl}` : ""}
+		`;
 
-		**Info**:
-		${hostStr}
-		${createdStr}
-		${entriesStr}
-		${winnersStr}${messageUrl ? `\n${messageUrl}` : ""}
-		
-		**Options**:
-		${endStr}
-		${activeStr}
-		${publishedStr}
-		${lockEntriesStr}
-		${numberOfWinnersStr}
-		${minimumAccountAgeStr}
-		${requiredRolesStr}
-		${pingRolesStr} ${pingRolesWarning ? `\n\n${pingRolesWarning}` : ""}
+		const optionsField = stripIndents`
+			${endedStr}
+			${lockEntriesStr}
+			${publishedStr}
+			${endStr}
+			${numberOfWinnersStr}
+			${minimumAccountAgeStr}
+		`;
 
-		Giveaway ${idStr} (${absoluteIdStr}) • ${lastEditStr}
-	`;
+		const embed = new EmbedBuilder()
+			.setTitle(this.title)
+			.setDescription(descriptionStr)
+			.setFooter({
+				text: `Giveaway ${idStr} • Last edited`
+			})
+			.setTimestamp(this.lastEditedAt)
+			.setColor(
+				// published = green
+				// active = yellow
+				// ended = red
+				this.isPublished()
+					? COLORS.GREEN
+					: this.ended
+					? COLORS.RED
+					: COLORS.YELLOW
+			)
+			.setFields(
+				{
+					name: prizesName,
+					value: prizesStr
+				},
+				{
+					name: "Roles",
+					value: rolesStr
+				},
+				{
+					name: "Options",
+					value: optionsField,
+					inline: true
+				},
+				{
+					name: "Info",
+					value: infoField,
+					inline: true
+				}
+			);
+
+		return {
+			content:
+				[
+					this.cannotEndContent(),
+					publishedOutdated,
+					winnerOutdated
+				].join("\n\n") || undefined,
+			embeds: [embed]
+		};
 	}
 
 	public toEmbed() {
@@ -360,46 +761,46 @@ export default class Giveaway {
 				: "None"
 		}`;
 
-		const endStr = this.endTimestamp
-			? `→ The giveaway will end: ${longStamp(this.endTimestamp)}`
+		const endStr = this.endDate
+			? `→ The giveaway will end: ${longstamp(this.endDate)}`
 			: "→ The giveaway has no set end date. Enter while you can!";
 
 		const prizesStr = this.prizes.length
 			? this.prizes.map((prize) => prize.toShortString()).join("\n")
 			: `There are no set prizes. Maybe it is a secret? ${EMOJIS.SHUSH}`;
 
-		const descriptionStr = stripIndents`
-			${this.description ? `${this.description}\n\n` : ""}
-			**Info**
-			${winnerQuantityStr}
-			${endStr}
-			${requiredRolesStr}
-			${minimumAccountAgeStr}
-
-			**Prizes**
-			${prizesStr}
-		`;
-
 		return new EmbedBuilder()
 			.setTitle(this.title)
-			.setDescription(descriptionStr)
+			.setDescription(this.description)
 			.setColor(COLORS.GREEN)
 			.setFooter({
 				text: `Giveaway #${this.guildRelativeId} • Hosted by ${this.hostUserTag}`
-			});
+			})
+			.setFields(
+				{
+					name: "Info",
+					value: stripIndents`
+					${winnerQuantityStr}
+					${endStr}
+					${requiredRolesStr}
+					${minimumAccountAgeStr}
+				`
+				},
+				{
+					name: "Prizes",
+					value: prizesStr
+				}
+			);
 	}
 
-	public endedEmbed() {
-		const winners = this.winnersUserIds();
+	public endedEmbed(): Partial<MessageCreateOptions> {
+		const myGiveawaysCommand = this.client.application.commands.cache.find(
+			(command) => command.name === "my-giveaways"
+		);
 
-		const data = this.prizes
-			.flatMap((prize) =>
-				[...prize.winners.values()].map(
-					(winner) =>
-						`→ <@${winner.userId}> won **${winner.quantityWon}x ${prize.name}**`
-				)
-			)
-			.join("\n");
+		const myGiveawaysMention = myGiveawaysCommand
+			? `</my-giveaways:${myGiveawaysCommand.id}>`
+			: "the /my-giveaways command";
 
 		const embed = new EmbedBuilder()
 			.setColor(COLORS.GREEN)
@@ -408,36 +809,172 @@ export default class Giveaway {
 			)
 			.setFooter({
 				text: `Giveaway #${this.guildRelativeId} • Hosted by ${this.hostUserTag}`
-			});
+			}).setDescription(stripIndents`
+			${EMOJIS.STAR_EYES} The winners have been notified in DMs.
+			If you have DMs turned off, use ${myGiveawaysMention}.
 
-		if (winners.size) {
-			embed.setDescription(stripIndents`
-					The winners are: ${listify(
-						[...winners].map((userId) => `<@${userId}>`),
-						{ length: winners.size }
-					)}
-		
-					${data}
-		
-					Congratulations!
-				`);
-		} else {
-			embed.setDescription(stripIndents`
-					There were no winners.
-		
-					Uh.. congratulations!
-				`);
-		}
+			Congratulations, everyone! ${EMOJIS.TADA}
+		`);
 
-		return embed;
+		return {
+			embeds: [embed],
+			content: this.pingRolesMentions?.join(" "),
+			allowedMentions: { parse: ["everyone", "roles"] }
+		};
 	}
 
-	public async edit(data: Prisma.GiveawayDataUpdateInput) {
+	public async edit(
+		data: Prisma.GiveawayUpdateInput & {
+			nowOutdated: {
+				none?: boolean;
+				publishedMessage?: boolean;
+				winnerMessage?: boolean;
+			};
+		}
+	) {
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const { nowOutdated, ...data_ } = data;
+
+		if (
+			nowOutdated.none ||
+			(!nowOutdated.none &&
+				!nowOutdated.publishedMessage &&
+				!nowOutdated.winnerMessage)
+		) {
+			return await this.manager.edit({
+				where: { id: this.id },
+				data: data_
+			});
+		}
+
+		const publishedMessageUpdated =
+			this.isPublished() || data.publishedMessageId
+				? nowOutdated.publishedMessage
+				: undefined;
+
+		const winnerMessageUpdated =
+			this.winnersArePublished() || data.winnerMessageId
+				? nowOutdated.winnerMessage
+				: undefined;
+
 		return await this.manager.edit({
-			data,
-			where: {
-				id: this.id
+			where: { id: this.id },
+			data: {
+				publishedMessageUpdated,
+				winnerMessageUpdated,
+				...data_
 			}
 		});
+	}
+
+	public async dmWinners(options: {
+		includeNotified: boolean;
+		winners?: Array<{ id: WinnerId; userId: Snowflake }>;
+	}) {
+		const winners =
+			options.winners?.map((e) => ({ ...e, notified: false })) ??
+			this.winners;
+
+		if (!winners.length) {
+			return;
+		}
+
+		const myGiveaways = await commandMention("my-giveaways", this.client);
+
+		const alreadyNotified = new Set<string>();
+		const ids: Array<WinnerId> = [];
+
+		for (const { userId, notified, id } of winners) {
+			if (!options.includeNotified && notified) {
+				continue;
+			}
+
+			ids.push(id);
+
+			console.log(alreadyNotified);
+
+			if (alreadyNotified.has(userId)) {
+				continue;
+			}
+
+			alreadyNotified.add(userId);
+
+			if (notified) {
+				continue;
+			}
+
+			ids.push(id);
+
+			const content = stripIndent`
+				${EMOJIS.TADA} You just won a giveaway in ${this.guild.name}!
+
+				Make sure to **claim your prize(s)**!
+
+				Here is how:
+				  a) Use ${myGiveaways} in the server and claim your prizes.
+				  b) Click the "${EMOJIS.STAR_EYES} Accept Prize" button in the announcement.
+
+				GG!
+			`;
+
+			const url = this.winnerMessageURL;
+
+			const button = url
+				? new ButtonBuilder({
+						label: "Announcement Post",
+						style: ButtonStyle.Link,
+						url
+				  })
+				: undefined;
+
+			const components = button && [
+				new ActionRowBuilder<ButtonBuilder>().setComponents(button)
+			];
+
+			this.client.users
+				.send(userId, { content, components })
+				.catch(() => null)
+				.then(() => null);
+		}
+
+		await this.manager.prisma.winner.updateMany({
+			where: {
+				id: { in: ids }
+			},
+			data: {
+				notified: true
+			}
+		});
+	}
+
+	private _editMessage(messageId: string | null) {
+		if (!this.channelId || !messageId) {
+			return null;
+		}
+
+		const channel = this.channel;
+
+		if (!channel) {
+			return null;
+		}
+
+		return {
+			fetch: async () =>
+				await channel.messages.fetch(messageId).catch(() => null),
+			delete: async () =>
+				await channel.messages.delete(messageId).catch(() => null),
+			edit: async (data: MessageEditOptions) =>
+				await channel.messages.edit(messageId, data).catch(() => null),
+			reply: async (data: Omit<MessageCreateOptions, "reply">) =>
+				await channel
+					.send({
+						...data,
+						reply: {
+							messageReference: messageId,
+							failIfNotExists: false
+						}
+					})
+					.catch(() => null)
+		};
 	}
 }

@@ -2,8 +2,8 @@ import { oneLine, stripIndents } from "common-tags";
 import { type ButtonInteraction } from "discord.js";
 import { EMOJIS, REGEXP } from "../../constants.js";
 import GiveawayManager from "../../database/giveaway.js";
+import commandMention from "../../helpers/commandMention.js";
 import Logger from "../../logger/logger.js";
-import type Prize from "../../modules/Prize.js";
 
 export default async function acceptPrize(
 	interaction: ButtonInteraction<"cached">
@@ -42,25 +42,14 @@ export default async function acceptPrize(
 
 	const prizes = giveaway.prizesOf(userId);
 
-	const prizeToString = (prize: Prize) => {
-		const name = `**${prize.name}**`;
-		const quantity = `${prize.winners.get(userId)!.quantityWon}x`;
-		const additionalInfo = prize.additionalInfo
-			? ` | ${prize.additionalInfo}`
-			: "";
+	const myGiveaways = await commandMention("my-giveaway", interaction);
 
-		return `${quantity} ${name}${additionalInfo}`;
-	};
-
-	if (prizes.every((prize) => prize.winners.get(userId)!.accepted)) {
+	if (!prizes?.unclaimed.size) {
 		interaction.followUp({
 			content: stripIndents`
-				${EMOJIS.V} You have already claimed all your prizes. You're all set! ${
-				EMOJIS.GRIN
-			}
+				${EMOJIS.V} You have already claimed all your prizes. You're all set! ${EMOJIS.GRIN}
 
-				I'm sure you win a lot! So in case you need a reminder, you won:
-				→ ${prizes.map(prizeToString).join("\n→ ")}
+				Use ${myGiveaways} if you need a reminder of what your extraordinary success.
 			`,
 			ephemeral: true
 		});
@@ -72,8 +61,7 @@ export default async function acceptPrize(
 		content: stripIndents`
 			${EMOJIS.TADA} You have **now claimed** your prize! Woo!
 			
-			To remind you of your extraordinary success, you won:
-			→ ${prizes.map(prizeToString).join("\n→ ")}
+			Use ${myGiveaways} if you need a reminder of what your extraordinary success.
 		`,
 		ephemeral: true
 	});
@@ -84,15 +72,17 @@ export default async function acceptPrize(
 	}).log(
 		oneLine`
 			User ${interaction.user.tag} (${userId})
-			claimed prizes ${prizes.map((p) => `#${p.id}`).join(", ")}
+			claimed prizes ${[...prizes.unclaimed.keys()]
+				.map((prizeId) => `#${prizeId}`)
+				.join(", ")}
 			in giveaway #${giveaway.id}
 		`
 	);
 
-	for (const { id } of prizes) {
-		await giveawayManager.updateWinnerAcceptance({
-			accepted: true,
-			prizeId: id,
+	for (const { prize } of [...prizes.unclaimed.values()]) {
+		await giveawayManager.setWinnerClaimed({
+			claimed: true,
+			prizeId: prize.id,
 			userId
 		});
 	}

@@ -1,13 +1,12 @@
 import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
-	RoleSelectMenuBuilder,
 	type ButtonBuilder,
-	type ButtonInteraction
+	type ButtonInteraction,
+	type RoleSelectMenuBuilder
 } from "discord.js";
-import { giveawayComponents } from "../../../../components/index.js";
+import components from "../../../../components/index.js";
 import type GiveawayManager from "../../../../database/giveaway.js";
-import lastEditBy from "../../../../helpers/lastEdit.js";
 import { listify } from "../../../../helpers/listify.js";
 import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
@@ -23,11 +22,6 @@ export default async function toSetRequiredRoles(
 		return;
 	}
 
-	const requiredRolesSelect = new RoleSelectMenuBuilder()
-		.setCustomId("requiredRolesSelect")
-		.setMinValues(1)
-		.setMaxValues(10);
-
 	const chooseRequiredRoleStr = stripIndents`
 			Select the roles you require entrants to have.
 			
@@ -38,13 +32,16 @@ export default async function toSetRequiredRoles(
 			}
 		`;
 
+	const { back, clear } = components.buttons;
+	const { roleSelect } = components.selects;
+
 	const row1 = new ActionRowBuilder<RoleSelectMenuBuilder>().setComponents(
-		requiredRolesSelect
+		roleSelect.component(1, 10)
 	);
 
 	const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		giveawayComponents.dashboard.backButton(),
-		giveawayComponents.dashboard.clearRequiredRolesButton()
+		back.component(),
+		clear.component()
 	);
 
 	const updateMsg = await interaction.editReply({
@@ -56,50 +53,46 @@ export default async function toSetRequiredRoles(
 		filter: (i) => i.user.id === interaction.user.id
 	});
 
-	if (component.customId === "back") {
-		await component.deferUpdate();
+	await component.deferUpdate();
 
-		toDashboard(interaction, id);
-
-		return;
-	}
-
-	if (component.customId === "requiredRolesSelect") {
-		if (!component.isRoleSelectMenu()) {
-			return;
+	switch (component.customId) {
+		case back.customId: {
+			break;
 		}
 
-		await component.deferUpdate();
+		case roleSelect.customId: {
+			if (!component.isRoleSelectMenu()) {
+				return;
+			}
 
-		new Logger({ prefix: "GIVEAWAY", interaction }).log(
-			`Edited required roles of giveaway #${giveaway.id}`
-		);
+			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				`Edited required roles of giveaway #${giveaway.id}`
+			);
 
-		await giveawayManager.edit({
-			where: {
-				id: giveaway.id
-			},
-			data: {
+			await giveaway.edit({
 				requiredRolesIds: component.values,
-				...lastEditBy(interaction.user)
-			}
-		});
-	} else if (component.customId === "clearRequiredRoles") {
-		await component.deferUpdate();
+				nowOutdated: {
+					publishedMessage: true
+				}
+			});
 
-		new Logger({ prefix: "GIVEAWAY", interaction }).log(
-			`Cleared required roles of giveaway #${giveaway.id}`
-		);
+			break;
+		}
 
-		await giveawayManager.edit({
-			where: {
-				id: giveaway.id
-			},
-			data: {
+		case clear.customId: {
+			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				`Cleared required roles of giveaway #${giveaway.id}`
+			);
+
+			await giveaway.edit({
 				requiredRolesIds: [],
-				...lastEditBy(interaction.user)
-			}
-		});
+				nowOutdated: {
+					publishedMessage: true
+				}
+			});
+
+			break;
+		}
 	}
 
 	await toDashboard(interaction, id);

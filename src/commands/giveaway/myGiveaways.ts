@@ -1,93 +1,52 @@
+/* eslint-disable no-irregular-whitespace */
 import { source, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
-	ApplicationCommandOptionType,
 	AttachmentBuilder,
 	ComponentType,
+	EmbedBuilder,
 	type ButtonBuilder,
+	type ButtonInteraction,
+	type EmbedField,
 	type RESTPostAPIApplicationCommandsJSONBody
 } from "discord.js";
-import { myGiveawayComponents } from "../../components/index.js";
-import { EMOJIS } from "../../constants.js";
+import components from "../../components/index.js";
+import { COLORS, EMOJIS, MY_GIVEAWAYS_MAX_PRIZES } from "../../constants.js";
 import GiveawayManager from "../../database/giveaway.js";
-import s from "../../helpers/s.js";
+import hideOption from "../../helpers/hideOption.js";
 import Logger from "../../logger/logger.js";
-import type Giveaway from "../../modules/Giveaway.js";
-import type Prize from "../../modules/Prize.js";
 import {
 	type Command,
-	type CommandModuleInteractions
+	type CommandModuleInteractions,
+	type GiveawayId,
+	type PrizesOfMapObj
 } from "../../typings/index.js";
 
 const data: RESTPostAPIApplicationCommandsJSONBody = {
 	name: "my-giveaways",
 	dm_permission: false,
 	description: "View all the giveaways you have participated in.",
-	options: [
-		{
-			name: "hide",
-			description: "Whether to hide this command (True)",
-			type: ApplicationCommandOptionType.Boolean
-		}
-	]
+	options: [hideOption]
 };
 
-const no = (n: number) => (n ? `**${n}**` : "no");
-
-const stringFromEnteredGiveaways = (giveaways: Array<Giveaway>) => {
-	const activeGiveaways = giveaways
-		.filter((g) => g.active)
-		.map((g) => g.toShortString());
-
-	const inactiveGiveaways = giveaways
-		.filter((g) => !g.active)
-		.map((g) => g.toShortString());
-
-	const strArray = [];
-
-	if (activeGiveaways.length) {
-		strArray.push(
-			`Active (${activeGiveaways.length}):\n→ ${activeGiveaways.join(
-				"\n→ "
-			)}`
-		);
-	}
-
-	if (inactiveGiveaways.length) {
-		strArray.push(
-			`Inactive (${
-				inactiveGiveaways.length
-			}):\n→ ${inactiveGiveaways.join("\n→ ")}`
-		);
-	}
-
-	return strArray.join("\n\n");
-};
-
-const prizeToString = (prize: Prize, winnerUserId: string) => {
-	const winner = prize.winners.get(winnerUserId);
-
-	if (!winner) {
-		return null;
-	}
-
-	const emoji = !winner.accepted ? ` (${EMOJIS.WARN} Not accepted)` : "";
-
-	return `→ ${winner.quantityWon} ${prize.name}${emoji}`;
-};
-
-const run = async (interaction: CommandModuleInteractions) => {
+const run = async (
+	interaction: ButtonInteraction | CommandModuleInteractions
+) => {
 	if (!interaction.isChatInputCommand()) {
 		return;
 	}
 
-	const logger = new Logger({ prefix: "MY GIVEAWAYS", interaction });
-
 	const hide = interaction.options.getBoolean("hide") ?? true;
 
-	const id = interaction.user.id;
+	if (!interaction.isButton()) {
+		await interaction.deferReply({ ephemeral: hide });
+	}
+
+	const logger = new Logger({ prefix: "MY GIVEAWAYS", interaction });
 
 	const giveawayManager = new GiveawayManager(interaction.guild);
+
+	const { id } = interaction.user;
 
 	const entered = await giveawayManager.getAll({ entryUserId: id });
 	const hosted = await giveawayManager.getAll({ hostUserId: id });
@@ -103,77 +62,79 @@ const run = async (interaction: CommandModuleInteractions) => {
 		return;
 	}
 
-	await interaction.deferReply({ ephemeral: hide });
+	let winCount = 0;
 
-	// this is so it can update if the user presses the "accept all" button
-	const getPrizes = async () =>
-		await giveawayManager.getPrizes({ winnerUserId: id });
-
-	const prizes = await getPrizes();
-
-	const getContent = (prizes: Array<Prize>) => {
-		const prizesStr = prizes.length
-			? `\n\n**Won prizes (${prizes.length})**\n→ ${prizes
-					.map((prize) => prize.toShortString())
-					.join("\n→ ")}`
-			: "";
-
-		const enteredStr = entered.length
-			? stringFromEnteredGiveaways(entered)
-			: `None. ${EMOJIS.CRY}`;
-
-		const hostEntries = hosted.reduce(
-			(acc, g) => acc + g.entriesUserIds.size,
-			0
-		);
-
-		const hostedStr = hosted.length
-			? stripIndents`
-				**Hosted giveaways**
-				You have hosted **${hosted.length}** ${s(
-					"giveaway",
-					hosted.length
-			  )} with a total of **${hostEntries}** ${
-					hostEntries === 1 ? "entry" : "entries"
-			  }.
-			`
-			: "";
-
-		return stripIndents`
-			You have entered ${no(entered.length)} ${s("giveaway", entered.length)}.
-			You have won ${no(prizes.length)} ${s("prize", prizes.length)}.
-
-			**Entered giveaways**
-			${enteredStr}${prizesStr}
-
-			${hostedStr}
-		`;
+	const prizeCount = {
+		all: 0,
+		claimed: 0,
+		unclaimed: 0
 	};
 
-	const notAcceptedPrizes = await giveawayManager.getPrizes({
-		winnerAccepted: false,
-		winnerUserId: id
-	});
+	const prizes = entered.reduce(
+		(map, g) => {
+			const prizes = g.prizesOf(id);
 
-	const acceptAllButton = notAcceptedPrizes.length
-		? myGiveawayComponents.acceptAllPrizesButton()
+			if (!prizes?.claimed.size && !prizes?.unclaimed.size) {
+				return map;
+			}
+
+			const old = map.get(g.guildRelativeId) ?? {
+				claimed: [],
+				unclaimed: []
+			};
+
+			map.set(g.guildRelativeId, {
+				claimed: old.claimed.concat([...prizes.claimed.values()]),
+				unclaimed: old.unclaimed.concat([...prizes.unclaimed.values()])
+			});
+
+			const claimedSize = [...prizes.claimed.values()].reduce(
+				(acc, e) => acc + e.count,
+				0
+			);
+
+			const unclaimedSize = [...prizes.unclaimed.values()].reduce(
+				(acc, e) => acc + e.count,
+				0
+			);
+
+			prizeCount.all += claimedSize + unclaimedSize;
+			prizeCount.claimed += claimedSize;
+			prizeCount.unclaimed += unclaimedSize;
+
+			winCount++;
+
+			return map;
+		},
+		new Map<
+			GiveawayId,
+			{
+				claimed: Array<PrizesOfMapObj>;
+				unclaimed: Array<PrizesOfMapObj>;
+			}
+		>()
+	);
+
+	const { acceptAllPrizes, viewAllEntered, viewAllPrizes, viewAllHosted } =
+		components.buttons;
+
+	const acceptAllPrizesButton = prizeCount.unclaimed
+		? acceptAllPrizes.component()
 		: null;
 
 	const viewAllEnteredButton = entered.length
-		? myGiveawayComponents.viewAllEnteredButton()
+		? viewAllEntered.component()
 		: null;
 
-	const viewAllPrizesButton = prizes.length
-		? myGiveawayComponents.viewAllPrizesButton()
-		: null;
+	const viewAllPrizesButton = prizes.size ? viewAllPrizes.component() : null;
 
 	const viewAllHostedButton = hosted.length
-		? myGiveawayComponents.viewAllHostedButton()
+		? viewAllHosted.component()
 		: null;
 
 	const getButtonArray = () =>
 		[
-			acceptAllButton,
+			acceptAllPrizesButton,
 			viewAllEnteredButton,
 			viewAllPrizesButton,
 			viewAllHostedButton
@@ -189,12 +150,78 @@ const run = async (interaction: CommandModuleInteractions) => {
 			: [];
 	};
 
+	const prizesArr = (noLimits?: true): Array<EmbedField> =>
+		[...prizes.entries()].map(([id, { claimed, unclaimed }]) => {
+			const max = MY_GIVEAWAYS_MAX_PRIZES;
+			let n = 0;
+
+			const arr = [...unclaimed, ...claimed].map((p) => {
+				const { name } = p.prize;
+				const claim = p.winner.claimed;
+
+				n += p.count;
+
+				return `→ ${p.count}x ${name}${!claim ? " (UNCLAIMED)" : ""}`;
+			});
+
+			if (noLimits) {
+				return {
+					name: `Giveaway #${id} (${n})`,
+					value: arr.join("\n"),
+					inline: true
+				};
+			}
+
+			return {
+				name: `Giveaway #${id} (${n})`,
+				value: stripIndents`
+					${arr.slice(0, max).join("\n")}
+					${max < arr.length ? `... and ${arr.length - max} more` : ""}
+				`,
+				inline: true
+			};
+		});
+
+	const MAX_LEN = 3900; // arbitrary - must be 4096 or under but there are also fields;
+	const fields: Array<EmbedField> = [];
+
+	for (const field of prizesArr()) {
+		const fieldTotalLen = fields.reduce(
+			(acc, e) => acc + e.name.length + e.value.length,
+			0
+		);
+
+		if (MAX_LEN <= fieldTotalLen + field.name.length + field.value.length) {
+			break;
+		}
+
+		fields.push(field);
+	}
+
+	const embed = new EmbedBuilder()
+		.setColor(prizeCount.unclaimed ? COLORS.YELLOW : COLORS.GREEN)
+		.setTitle("My Giveaways")
+		.setFields(
+			{
+				name: "Stats",
+				value: source`
+					Entered: ${entered.length}
+					​    └─ Won: ${winCount}
+					Hosted: ${hosted.length}
+					Prizes: ${prizeCount.all}
+					​	 ├─ Claimed: ${prizeCount.claimed}
+					​	 └─ Unclaimed: ${prizeCount.unclaimed}
+				`
+			},
+			...fields
+		);
+
 	const rows = getRows();
 
 	const msg = await interaction.editReply({
 		components: rows,
-		content: getContent(prizes),
-		embeds: []
+		content: null,
+		embeds: [embed]
 	});
 
 	logger.log("Sent overview");
@@ -208,9 +235,10 @@ const run = async (interaction: CommandModuleInteractions) => {
 			buttonInteraction.user.id === interaction.user.id,
 		componentType: ComponentType.Button,
 		time: 120_000,
-		// if there are 2 buttons, 2 will be max
-		// if there are 3 buttons, 3 will be max etc.
-		max: getButtonArray().length
+		// If there are 2 buttons, 3 will be max
+		// If there are 3 buttons, 4 will be max etc.
+		// One more since accepting all prizes will let you see prizes again
+		max: getButtonArray().length + 1
 	});
 
 	collector.on("ignore", (buttonInteraction) => {
@@ -229,107 +257,142 @@ const run = async (interaction: CommandModuleInteractions) => {
 	});
 
 	collector.on("collect", async (buttonInteraction) => {
-		await buttonInteraction.deferReply({ ephemeral: true });
+		await buttonInteraction.deferUpdate();
 
-		if (buttonInteraction.customId === "acceptAllPrizes") {
-			for (const prize of notAcceptedPrizes) {
-				await giveawayManager.updateWinnerAcceptance({
-					accepted: true,
-					prizeId: prize.id,
-					userId: id
+		if (buttonInteraction.customId === acceptAllPrizes.customId) {
+			const unclaimed = [...prizes.values()].flatMap((p) => p.unclaimed);
+
+			let n = 0;
+
+			for (; n < unclaimed.length; n++) {
+				const obj = unclaimed[n];
+
+				await giveawayManager.setWinnerClaimed({
+					claimed: true,
+					prizeId: obj.prize.id,
+					userId: interaction.user.id
 				});
 			}
 
 			logger.log(
-				`Bulk-accepted ${
-					notAcceptedPrizes.length
-				} prize(s): ${notAcceptedPrizes.map((p) => p.id).join(", ")}`
+				`Bulk-accepted ${n} prize(s): ${unclaimed
+					.map((p) => p.prize.id)
+					.join(", ")}`
 			);
 
-			await buttonInteraction.editReply({
-				content: getContent(await getPrizes())
+			acceptAllPrizesButton?.setDisabled(true);
+			viewAllPrizesButton?.setDisabled(false);
+
+			await buttonInteraction.followUp({
+				ephemeral: true,
+				content: `${EMOJIS.SPARKS} Accepted all prizes!`
 			});
+
+			collector.stop();
+
+			return run(buttonInteraction);
 		}
 
 		const getAttachment = (string: string) => {
-			const { createdAt, createdTimestamp, user, guild } =
-				buttonInteraction;
-
-			const userLine = `${user.tag} (${user.id})`;
+			const { createdAt, user, guild } = buttonInteraction;
 
 			// +8 is for the "User: .." prefix
 			const text = source`
-				Server: ${guild.name} (${guild.id})
-				  Date: ${createdAt.toUTCString()} (${createdTimestamp})
-				  User: ${userLine}
-				${"-".repeat(userLine.length + 8)}
+				> ${createdAt.toUTCString()}
+				> Server: ${guild.name} (${guild.id})
+				> User: ${user.tag} (${user.id})
+				  
 				${string}
 			`;
 
 			return new AttachmentBuilder(Buffer.from(text), {
-				name: `giveaways-${user.tag}-in-${guild.id}.txt`
+				name: `giveaways_${guild.id}_${user.id}.txt`
 			});
 		};
 
-		if (buttonInteraction.customId === "viewAllEntered") {
+		if (buttonInteraction.customId === viewAllEntered.customId) {
+			const title = `Entered giveaways (${entered.length})`;
+			const sep = "-".repeat(title.length + 2);
+
 			const string = source`
-				Entered giveaways (${entered.length}):
-				
-				${entered.map((giveaway) => giveaway.toFullString()).join("\n\n")}
+				-${sep}-
+				| ${title} |
+				-${sep}-
+
+				${entered.map((g) => g.toFullString({ userId: id })).join("\n\n")}
 			`;
 
-			await buttonInteraction.editReply({
+			await buttonInteraction.followUp({
+				ephemeral: true,
 				files: [getAttachment(string)]
 			});
 
 			viewAllEnteredButton?.setDisabled(true);
 
 			await interaction.editReply({
-				components: getRows(),
-				content: getContent(await getPrizes()),
-				embeds: []
+				components: getRows()
 			});
 		}
 
-		if (buttonInteraction.customId === "viewAllPrizes") {
-			const prizes_ = await getPrizes();
+		if (buttonInteraction.customId === viewAllPrizes.customId) {
+			const title = `Won prizes (${prizeCount.all})`;
+			const tally = `${prizeCount.claimed} claimed`;
+			const tally2 = `${prizeCount.unclaimed} unclaimed`;
 
-			const prizesStr = prizes_
-				.map((prize_) => prizeToString(prize_, id))
-				.join("\n");
+			const max = Math.max(title.length, tally.length, tally2.length);
+			const pad = (string: string) => string.padEnd(max, " ");
 
-			const string = `Won prizes (${prizes_.length}):\n\n${prizesStr}`;
+			const sep = "-".repeat(max + 2);
 
-			await buttonInteraction.editReply({
+			const mapFn = (e: EmbedField) =>
+				source`
+					${e.name}
+					  ${e.value}
+				`;
+
+			const string = source`
+				-${sep}-
+				| ${pad(title)} |
+				| ${pad(tally)} |
+				| ${pad(tally2)} |
+				-${sep}-
+				
+				${prizesArr(true).map(mapFn).join("\n\n")}
+			`;
+
+			await buttonInteraction.followUp({
+				ephemeral: true,
 				files: [getAttachment(string)]
 			});
 
 			viewAllPrizesButton?.setDisabled(true);
 
 			await interaction.editReply({
-				components: getRows(),
-				content: getContent(await getPrizes()),
-				embeds: []
+				components: getRows()
 			});
 		}
 
-		if (buttonInteraction.customId === "viewAllHosted") {
+		if (buttonInteraction.customId === viewAllHosted.customId) {
+			const title = `Entered giveaways (${entered.length})`;
+			const sep = "-".repeat(title.length + 2);
+
 			const string = source`
-				Hosted giveaways (${hosted.length}):
+				-${sep}-
+				| ${title} |
+				-${sep}-
 				
-				${hosted.map((giveaway) => giveaway.toFullString()).join("\n\n")}
+				${hosted.map((g) => g.toFullString()).join("\n\n")}
 			`;
 
-			await buttonInteraction.editReply({
+			await buttonInteraction.followUp({
+				ephemeral: true,
 				files: [getAttachment(string)]
 			});
 
 			viewAllHostedButton?.setDisabled(true);
 
 			await interaction.editReply({
-				components: getRows(),
-				content: getContent(await getPrizes()),
-				embeds: []
+				components: getRows()
 			});
 		}
 	});
