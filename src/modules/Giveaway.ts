@@ -466,11 +466,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 	public winnersUserIds(forceRefresh?: boolean) {
 		if (this._winnersUserIds === null || forceRefresh) {
-			this._winnersUserIds = this.prizes.reduce((set, { winners }) => {
-				[...winners].forEach((winner) => set.add(winner.userId));
-
-				return set;
-			}, new Set<string>());
+			this._winnersUserIds = new Set(this.winners.map((w) => w.userId));
 		}
 
 		return this._winnersUserIds;
