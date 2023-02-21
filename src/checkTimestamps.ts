@@ -12,6 +12,7 @@ import prisma from "./database/prisma.js";
 import { longstamp } from "./helpers/timestamps.js";
 import GiveawayModule from "./modules/Giveaway.js";
 import { type GiveawayWithIncludes } from "./typings/database.js";
+import { type WinnerId } from "./typings/index.js";
 
 const DM_BUFFER = GIVEAWAY.END_HOST_DM_BEFORE_END;
 
@@ -273,23 +274,39 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 				client.users.send(hostUserId, msg).catch(() => null);
 			}
 
-			winnerBucket?.forEach((id) => {
-				const url = message?.url ?? module.publishedMessageURL ?? "";
+			const ids: Array<WinnerId> = [];
 
-				const msg = stripIndents`
-					${EMOJIS.TADA} You just **won a giveaway** in ${guild.name}!
+			if (winnerBucket) {
+				winnerBucket.forEach(({ userId, id }) => {
+					ids.push(id);
 
-					Giveaway #${giveaway.guildRelativeId} ${giveaway.title}
+					const url =
+						message?.url ?? module.publishedMessageURL ?? "";
 
-					Make sure to **claim your prize(s)**!
-					You can to do by using /my-giveaways in the server,
-					or clicking the "${EMOJIS.STAR_EYES} Accept Prize" button.
+					const msg = stripIndents`
+						${EMOJIS.TADA} You just **won a giveaway** in ${guild.name}!
 
-					${url ? `Here is a link to the giveaway:\n${url}\n\n` : ""}GG!
-				`;
+						Giveaway #${giveaway.guildRelativeId} ${giveaway.title}
 
-				client.users.send(id, msg).catch(() => null);
-			});
+						Make sure to **claim your prize(s)**!
+						You can to do by using /my-giveaways in the server,
+						or clicking the "${EMOJIS.STAR_EYES} Accept Prize" button.
+
+						${url ? `Here is a link to the giveaway:\n${url}\n\n` : ""}GG!
+					`;
+
+					client.users.send(userId, msg).catch(() => null);
+				});
+
+				await module.manager.prisma.winner.updateMany({
+					where: {
+						id: { in: ids }
+					},
+					data: {
+						notified: true
+					}
+				});
+			}
 		}
 	}
 };
