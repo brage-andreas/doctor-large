@@ -10,10 +10,8 @@ import {
 } from "discord.js";
 import { EMOJIS } from "../../../../constants.js";
 import GiveawayManager from "../../../../database/giveaway.js";
-import commandMention from "../../../../helpers/commandMention.js";
 import Logger from "../../../../logger/logger.js";
 import type GiveawayModule from "../../../../modules/Giveaway.js";
-import { type WinnerId } from "../../../../typings/index.js";
 import toEndedDashboard from "../endedGiveawayDashboard.js";
 
 export async function toPublishWinners(
@@ -149,42 +147,7 @@ export async function toPublishWinners(
 		content: "Notifying the winners..."
 	});
 
-	const alreadyNotified = new Set<string>();
-	const ids: Array<WinnerId> = [];
-
-	for (const w of giveaway.winners) {
-		if (w.notified || alreadyNotified.has(w.userId)) {
-			continue;
-		}
-
-		alreadyNotified.add(w.userId);
-		ids.push(w.id);
-
-		const url = message?.url ?? giveaway.publishedMessageURL ?? "";
-
-		const msg = stripIndents`
-			${EMOJIS.TADA} You just **won a giveaway** in ${giveaway.guild.name}!
-
-			Giveaway #${giveaway.guildRelativeId} ${giveaway.title}
-
-			Make sure to **claim your prize(s)**!
-			You can to do by using /my-giveaways in the server,
-			or clicking the "${EMOJIS.STAR_EYES} Accept Prize" button.
-
-			${url ? `Here is a link to the giveaway:\n${url}\n\n` : ""}GG!
-		`;
-
-		await interaction.client.users.send(w.userId, msg).catch(() => null);
-	}
-
-	await giveaway.manager.prisma.winner.updateMany({
-		where: {
-			id: { in: ids }
-		},
-		data: {
-			notified: true
-		}
-	});
+	await giveaway.dmWinners({ includeNotified: false });
 
 	toEndedDashboard(interaction, giveawayManager, giveaway);
 }
@@ -290,6 +253,8 @@ export async function republishWinners(
 		`Republished winners of giveaway #${giveaway.id} in #${channel.name} (${channel.id})`
 	);
 
+	await giveaway.dmWinners({ includeNotified: false });
+
 	toEndedDashboard(interaction, giveawayManager, giveaway);
 }
 
@@ -338,31 +303,13 @@ export async function publishOrRepublishWinners(
 		}
 	});
 
-	const myGiveaways = await commandMention("my-giveaways", giveaway.client);
-	let tally = 0;
-
-	for (const userId of giveaway.winnersUserIds()) {
-		giveaway.client.users
-			.send(
-				userId,
-				stripIndents`
-				${EMOJIS.TADA} You just won a giveaway in ${giveaway.guild.name}!
-				Make sure to claim the prize ${EMOJIS.GRIN}
-
-				Use ${myGiveaways} in the server to see your prizes.
-			`
-			)
-			.catch(() => null)
-			.then(() => void tally++);
-	}
+	giveaway.dmWinners({ includeNotified: false });
 
 	new Logger({
 		color: "grey",
 		prefix: "PUB WIN",
 		guild: giveaway.guild
 	}).log(
-		`Published winners of giveaway #${giveaway.id}. Sent DMs to ${tally}/${
-			giveaway.winnersUserIds().size
-		} winners`
+		`Published winners of giveaway #${giveaway.id}. Sent DMs to winners`
 	);
 }

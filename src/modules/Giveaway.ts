@@ -4,8 +4,11 @@ import {
 	type Prisma,
 	type Winner
 } from "@prisma/client";
-import { oneLine, source, stripIndents } from "common-tags";
+import { oneLine, source, stripIndent, stripIndents } from "common-tags";
 import {
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
 	EmbedBuilder,
 	PermissionFlagsBits,
 	type Client,
@@ -19,6 +22,7 @@ import {
 import ms from "ms";
 import { COLORS, EMOJIS } from "../constants.js";
 import { default as GiveawayManager } from "../database/giveaway.js";
+import commandMention from "../helpers/commandMention.js";
 import { listify } from "../helpers/listify.js";
 import s from "../helpers/s.js";
 import { longstamp } from "../helpers/timestamps.js";
@@ -27,7 +31,8 @@ import {
 	type GiveawayId,
 	type PrizeId,
 	type PrizesOfMapObj,
-	type Snowflake
+	type Snowflake,
+	type WinnerId
 } from "../typings/index.js";
 import PrizeModule from "./Prize.js";
 
@@ -858,6 +863,86 @@ export default class GiveawayModule implements ModifiedGiveaway {
 				publishedMessageUpdated,
 				winnerMessageUpdated,
 				...data_
+			}
+		});
+	}
+
+	public async dmWinners(options: {
+		includeNotified: boolean;
+		winners?: Array<{ id: WinnerId; userId: Snowflake }>;
+	}) {
+		const winners =
+			options.winners?.map((e) => ({ ...e, notified: false })) ??
+			this.winners;
+
+		if (!winners.length) {
+			return;
+		}
+
+		const myGiveaways = await commandMention("my-giveaways", this.client);
+
+		const alreadyNotified = new Set<string>();
+		const ids: Array<WinnerId> = [];
+
+		for (const { userId, notified, id } of winners) {
+			if (!options.includeNotified && notified) {
+				continue;
+			}
+
+			ids.push(id);
+
+			console.log(alreadyNotified);
+
+			if (alreadyNotified.has(userId)) {
+				continue;
+			}
+
+			alreadyNotified.add(userId);
+
+			if (notified) {
+				continue;
+			}
+
+			ids.push(id);
+
+			const content = stripIndent`
+				${EMOJIS.TADA} You just won a giveaway in ${this.guild.name}!
+
+				Make sure to **claim your prize(s)**!
+
+				Here is how:
+				  a) Use ${myGiveaways} in the server and claim your prizes.
+				  b) Click the "${EMOJIS.STAR_EYES} Accept Prize" button in the announcement.
+
+				GG!
+			`;
+
+			const url = this.winnerMessageURL;
+
+			const button = url
+				? new ButtonBuilder({
+						label: "Announcement Post",
+						style: ButtonStyle.Link,
+						url
+				  })
+				: undefined;
+
+			const components = button && [
+				new ActionRowBuilder<ButtonBuilder>().setComponents(button)
+			];
+
+			this.client.users
+				.send(userId, { content, components })
+				.catch(() => null)
+				.then(() => null);
+		}
+
+		await this.manager.prisma.winner.updateMany({
+			where: {
+				id: { in: ids }
+			},
+			data: {
+				notified: true
 			}
 		});
 	}
