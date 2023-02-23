@@ -9,10 +9,20 @@
 		"allowJs": true,
 		"checkJs": true,
 		"rootDir": "./src",
-		"outDir": "./dist",
-		"target": "ESNext",
 		"module": "ESNext",
-		"strict": true
+		"outDir": "./dist",
+		"strict": true,
+		"target": "ESNext",
+
+		"paths": {
+			"#components": ["./src/components/index.ts"],
+			"#constants": ["./src/constants.ts"],
+			"#database/*": ["./src/database/*"],
+			"#helpers/*": ["./src/helpers/*"],
+			"#logger": ["./src/logger/logger.ts"],
+			"#modules/*": ["./src/modules/*"],
+			"#typings/*": ["./src/typings/*"]
+		}
 	},
 	"include": ["./src/**/*"]
 }
