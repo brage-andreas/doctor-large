@@ -1,7 +1,7 @@
+import { EMOJIS, REGEXP } from "#constants";
+import commandMap from "#helpers/scripts/commandMap.js";
 import { oneLine } from "common-tags";
 import { type Interaction } from "discord.js";
-import { EMOJIS, REGEXP } from "../constants.js";
-import commandMap from "../helpers/scripts/commandMap.js";
 import acceptPrize from "./giveawayListeners/acceptPrize.js";
 import enterGiveaway from "./giveawayListeners/enterGiveaway.js";
 

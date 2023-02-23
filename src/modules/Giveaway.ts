@@ -1,3 +1,17 @@
+import { COLORS, EMOJIS } from "#constants";
+import { default as GiveawayManager } from "#database/giveaway.js";
+import commandMention from "#helpers/commandMention.js";
+import { listify } from "#helpers/listify.js";
+import s from "#helpers/s.js";
+import { longstamp } from "#helpers/timestamps.js";
+import { type GiveawayWithIncludes } from "#typings/database.js";
+import {
+	type GiveawayId,
+	type PrizeId,
+	type PrizesOfMapObj,
+	type Snowflake,
+	type WinnerId
+} from "#typings/index.js";
 import {
 	type Giveaway,
 	type HostNotified,
@@ -20,20 +34,6 @@ import {
 	type Role
 } from "discord.js";
 import ms from "ms";
-import { COLORS, EMOJIS } from "../constants.js";
-import { default as GiveawayManager } from "../database/giveaway.js";
-import commandMention from "../helpers/commandMention.js";
-import { listify } from "../helpers/listify.js";
-import s from "../helpers/s.js";
-import { longstamp } from "../helpers/timestamps.js";
-import { type GiveawayWithIncludes } from "../typings/database.js";
-import {
-	type GiveawayId,
-	type PrizeId,
-	type PrizesOfMapObj,
-	type Snowflake,
-	type WinnerId
-} from "../typings/index.js";
 import PrizeModule from "./Prize.js";
 
 type ModifiedGiveaway = Omit<

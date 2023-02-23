@@ -1,6 +1,6 @@
+import { REGEXP } from "#constants";
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord.js";
-import { REGEXP } from "../../constants.js";
 import getRawCommandData from "./getRawCommandData.js";
 
 export default async function ({

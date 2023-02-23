@@ -1,3 +1,7 @@
+import components from "#components";
+import { EMOJIS } from "#constants";
+import type GiveawayManager from "#database/giveaway.js";
+import Logger from "#logger";
 import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
@@ -9,10 +13,6 @@ import {
 	type NewsChannel,
 	type TextChannel
 } from "discord.js";
-import components from "../../../../components/index.js";
-import { EMOJIS } from "../../../../constants.js";
-import type GiveawayManager from "../../../../database/giveaway.js";
-import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
 
 export default async function toPublishGiveaway(

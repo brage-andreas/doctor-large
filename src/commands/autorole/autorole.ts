@@ -1,3 +1,10 @@
+import components from "#components";
+import AutoroleManager from "#database/autorole.js";
+import Logger from "#logger";
+import {
+	type Command,
+	type CommandModuleInteractions
+} from "#typings/index.js";
 import { oneLine } from "common-tags";
 import {
 	ActionRowBuilder,
@@ -6,13 +13,6 @@ import {
 	type RESTPostAPIApplicationCommandsJSONBody,
 	type RoleSelectMenuBuilder
 } from "discord.js";
-import components from "../../components/index.js";
-import AutoroleManager from "../../database/autorole.js";
-import Logger from "../../logger/logger.js";
-import {
-	type Command,
-	type CommandModuleInteractions
-} from "../../typings/index.js";
 
 const data: RESTPostAPIApplicationCommandsJSONBody = {
 	name: "autorole",

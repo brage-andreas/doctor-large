@@ -1,4 +1,4 @@
-import { type Color } from "../typings/index.js";
+import { type Color } from "#typings/index.js";
 
 const ansiColors: Record<string, string> = {
 	black: "\x1b[30m",

@@ -1,10 +1,9 @@
+import { ACTIVITIES, EVENT_DIR, INTENTS } from "#constants";
+import Logger from "#logger";
+import { type EventFn, type EventImport } from "#typings/index.js";
 import { Client } from "discord.js";
-import "dotenv/config";
 import { existsSync, lstatSync, readdirSync } from "fs";
 import process from "node:process";
-import { ACTIVITIES, EVENT_DIR, INTENTS } from "./constants.js";
-import Logger from "./logger/logger.js";
-import { type EventFn, type EventImport } from "./typings/index.js";
 
 const client = new Client({
 	intents: INTENTS,

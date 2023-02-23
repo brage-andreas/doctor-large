@@ -1,3 +1,5 @@
+import { EMOJIS, GIVEAWAY } from "#constants";
+import { modalId } from "#helpers/ModalCollector.js";
 import { oneLine } from "common-tags";
 import {
 	ButtonBuilder,
@@ -10,8 +12,6 @@ import {
 	TextInputBuilder,
 	TextInputStyle
 } from "discord.js";
-import { EMOJIS, GIVEAWAY } from "../constants.js";
-import { modalId } from "../helpers/ModalCollector.js";
 
 const modalGiveawayTitle = () =>
 	new TextInputBuilder({

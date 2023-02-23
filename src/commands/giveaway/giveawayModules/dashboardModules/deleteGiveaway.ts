@@ -1,10 +1,10 @@
+import { EMOJIS } from "#constants";
+import type GiveawayManager from "#database/giveaway.js";
+import commandMention from "#helpers/commandMention.js";
+import yesNo from "#helpers/yesNo.js";
+import Logger from "#logger";
 import { stripIndents } from "common-tags";
 import { ButtonStyle, type ButtonInteraction } from "discord.js";
-import { EMOJIS } from "../../../../constants.js";
-import type GiveawayManager from "../../../../database/giveaway.js";
-import commandMention from "../../../../helpers/commandMention.js";
-import yesNo from "../../../../helpers/yesNo.js";
-import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
 
 // TODO: delete published messages

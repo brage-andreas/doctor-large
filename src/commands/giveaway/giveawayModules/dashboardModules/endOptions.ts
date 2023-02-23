@@ -1,3 +1,7 @@
+import components from "#components";
+import { COLORS, EMOJIS, GIVEAWAY } from "#constants";
+import type GiveawayManager from "#database/giveaway.js";
+import { longstamp } from "#helpers/timestamps.js";
 import { type EndAutomation } from "@prisma/client";
 import { oneLine, source, stripIndents } from "common-tags";
 import {
@@ -9,10 +13,6 @@ import {
 	type ButtonInteraction
 } from "discord.js";
 import ms from "ms";
-import components from "../../../../components/index.js";
-import { COLORS, EMOJIS, GIVEAWAY } from "../../../../constants.js";
-import type GiveawayManager from "../../../../database/giveaway.js";
-import { longstamp } from "../../../../helpers/timestamps.js";
 import toDashboard from "../dashboard.js";
 import toEndGiveaway from "./endGiveaway.js";
 

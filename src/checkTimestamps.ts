@@ -1,3 +1,9 @@
+import { EMOJIS, GIVEAWAY } from "#constants";
+import prisma from "#database/prisma.js";
+import { longstamp } from "#helpers/timestamps.js";
+import GiveawayModule from "#modules/Giveaway.js";
+import { type GiveawayWithIncludes } from "#typings/database.js";
+import { type WinnerId } from "#typings/index.js";
 import { oneLine, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
@@ -7,12 +13,6 @@ import {
 	type Message
 } from "discord.js";
 import { rollAndSign } from "./commands/giveaway/giveawayModules/endModules/rollWinners/rollAndSign.js";
-import { EMOJIS, GIVEAWAY } from "./constants.js";
-import prisma from "./database/prisma.js";
-import { longstamp } from "./helpers/timestamps.js";
-import GiveawayModule from "./modules/Giveaway.js";
-import { type GiveawayWithIncludes } from "./typings/database.js";
-import { type WinnerId } from "./typings/index.js";
 
 const DM_BUFFER = GIVEAWAY.END_HOST_DM_BEFORE_END;
 

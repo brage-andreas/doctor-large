@@ -1,4 +1,15 @@
 /* eslint-disable no-irregular-whitespace */
+import components from "#components";
+import { COLORS, EMOJIS, MY_GIVEAWAYS_MAX_PRIZES } from "#constants";
+import GiveawayManager from "#database/giveaway.js";
+import hideOption from "#helpers/hideOption.js";
+import Logger from "#logger";
+import {
+	type Command,
+	type CommandModuleInteractions,
+	type GiveawayId,
+	type PrizesOfMapObj
+} from "#typings/index.js";
 import { source, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
@@ -10,17 +21,6 @@ import {
 	type EmbedField,
 	type RESTPostAPIApplicationCommandsJSONBody
 } from "discord.js";
-import components from "../../components/index.js";
-import { COLORS, EMOJIS, MY_GIVEAWAYS_MAX_PRIZES } from "../../constants.js";
-import GiveawayManager from "../../database/giveaway.js";
-import hideOption from "../../helpers/hideOption.js";
-import Logger from "../../logger/logger.js";
-import {
-	type Command,
-	type CommandModuleInteractions,
-	type GiveawayId,
-	type PrizesOfMapObj
-} from "../../typings/index.js";
 
 const data: RESTPostAPIApplicationCommandsJSONBody = {
 	name: "my-giveaways",

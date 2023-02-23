@@ -1,3 +1,7 @@
+import components from "#components";
+import type GiveawayManager from "#database/giveaway.js";
+import { listify } from "#helpers/listify.js";
+import Logger from "#logger";
 import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
@@ -5,10 +9,6 @@ import {
 	type ButtonInteraction,
 	type RoleSelectMenuBuilder
 } from "discord.js";
-import components from "../../../../components/index.js";
-import type GiveawayManager from "../../../../database/giveaway.js";
-import { listify } from "../../../../helpers/listify.js";
-import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
 
 export default async function toSetRequiredRoles(

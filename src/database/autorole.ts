@@ -1,6 +1,6 @@
+import AutoroleModule from "#modules/Autorole.js";
 import type { Prisma } from "@prisma/client";
 import { type Guild } from "discord.js";
-import AutoroleModule from "../modules/Autorole.js";
 import prisma from "./prisma.js";
 
 export default class AutoroleManager {

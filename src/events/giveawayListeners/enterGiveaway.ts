@@ -1,10 +1,10 @@
+import { EMOJIS, REGEXP } from "#constants";
+import GiveawayManager from "#database/giveaway.js";
+import { listify } from "#helpers/listify.js";
+import { timestamp } from "#helpers/timestamps.js";
+import Logger from "#logger";
 import { oneLine, stripIndents } from "common-tags";
 import { type ButtonInteraction } from "discord.js";
-import { EMOJIS, REGEXP } from "../../constants.js";
-import GiveawayManager from "../../database/giveaway.js";
-import { listify } from "../../helpers/listify.js";
-import { timestamp } from "../../helpers/timestamps.js";
-import Logger from "../../logger/logger.js";
 
 export default async function enterGiveaway(
 	interaction: ButtonInteraction<"cached">

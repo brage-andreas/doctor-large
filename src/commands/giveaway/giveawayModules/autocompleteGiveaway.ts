@@ -1,7 +1,7 @@
+import { EMOJIS } from "#constants";
+import GiveawayManager from "#database/giveaway.js";
 import { type Giveaway } from "@prisma/client";
 import { type AutocompleteInteraction } from "discord.js";
-import { EMOJIS } from "../../../constants.js";
-import GiveawayManager from "../../../database/giveaway.js";
 
 export default async function (interaction: AutocompleteInteraction<"cached">) {
 	const guild = interaction.guild;

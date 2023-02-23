@@ -1,3 +1,5 @@
+import { COLORS, EMOJIS } from "#constants";
+import type AutoroleManager from "#database/autorole.js";
 import { type Autorole } from "@prisma/client";
 import { stripIndents } from "common-tags";
 import {
@@ -8,8 +10,6 @@ import {
 	type GuildMember,
 	type Role
 } from "discord.js";
-import { COLORS, EMOJIS } from "../constants.js";
-import type AutoroleManager from "../database/autorole.js";
 
 export default class AutoroleModule {
 	public readonly manager: AutoroleManager;

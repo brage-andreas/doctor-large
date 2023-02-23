@@ -1,16 +1,16 @@
+import { EMOJIS } from "#constants";
+import hideOption from "#helpers/hideOption.js";
+import Logger from "#logger";
+import {
+	type Command,
+	type CommandModuleInteractions
+} from "#typings/index.js";
 import { oneLine } from "common-tags";
 import {
 	ApplicationCommandOptionType,
 	PermissionFlagsBits,
 	type RESTPostAPIApplicationCommandsJSONBody
 } from "discord.js";
-import { EMOJIS } from "../../constants.js";
-import hideOption from "../../helpers/hideOption.js";
-import Logger from "../../logger/logger.js";
-import {
-	type Command,
-	type CommandModuleInteractions
-} from "../../typings/index.js";
 import sendToAutocompleteGiveaway from "./giveawayModules/autocompleteGiveaway.js";
 import sendToCreate from "./giveawayModules/create.js";
 import sendToDashboard from "./giveawayModules/dashboard.js";

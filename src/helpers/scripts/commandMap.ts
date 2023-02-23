@@ -1,6 +1,6 @@
+import { COMMAND_DIR } from "#constants";
+import { type Command, type CommandImport } from "#typings/index.js";
 import { existsSync, lstatSync, readdirSync } from "fs";
-import { COMMAND_DIR } from "../../constants.js";
-import { type Command, type CommandImport } from "../../typings/index.js";
 
 const commandMap: Map<string, Command> = new Map();
 

@@ -1,3 +1,6 @@
+import components from "#components";
+import { EMOJIS } from "#constants";
+import GiveawayManager from "#database/giveaway.js";
 import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
@@ -6,9 +9,6 @@ import {
 	type ButtonBuilder,
 	type Interaction
 } from "discord.js";
-import components from "../../../components/index.js";
-import { EMOJIS } from "../../../constants.js";
-import GiveawayManager from "../../../database/giveaway.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import toEditGiveaway from "./dashboardModules/editGiveaway.js";
 import toEndOptions from "./dashboardModules/endOptions.js";

@@ -1,3 +1,5 @@
+import components from "#components";
+import { EMOJIS } from "#constants";
 import {
 	ActionRowBuilder,
 	ButtonStyle,
@@ -9,8 +11,6 @@ import {
 	type Interaction,
 	type MessageEditOptions
 } from "discord.js";
-import components from "../components/index.js";
-import { EMOJIS } from "../constants.js";
 
 export default async function yesNo(options: {
 	respondToIgnore?: boolean;

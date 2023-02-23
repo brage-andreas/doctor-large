@@ -1,10 +1,10 @@
+import { type Color } from "#typings/index.js";
 import { oneLine } from "common-tags";
 import {
 	ActivityType,
 	GatewayIntentBits,
 	type ActivitiesOptions
 } from "discord.js";
-import { type Color } from "./typings/index.js";
 
 export const ACTIVITIES: Array<ActivitiesOptions> = [
 	{ type: ActivityType.Watching, name: "grapes ferment" },

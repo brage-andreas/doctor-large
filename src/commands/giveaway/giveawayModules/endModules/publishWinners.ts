@@ -1,3 +1,7 @@
+import { EMOJIS } from "#constants";
+import GiveawayManager from "#database/giveaway.js";
+import Logger from "#logger";
+import type GiveawayModule from "#modules/Giveaway.js";
 import { oneLine, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
@@ -8,10 +12,6 @@ import {
 	type MessageCreateOptions,
 	type RepliableInteraction
 } from "discord.js";
-import { EMOJIS } from "../../../../constants.js";
-import GiveawayManager from "../../../../database/giveaway.js";
-import Logger from "../../../../logger/logger.js";
-import type GiveawayModule from "../../../../modules/Giveaway.js";
 import toEndedDashboard from "../endedGiveawayDashboard.js";
 
 export async function toPublishWinners(

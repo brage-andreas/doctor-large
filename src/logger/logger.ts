@@ -1,7 +1,7 @@
+import { DEFAULT_LOGGER_COLOR, DEFAULT_LOGGER_PREFIX } from "#constants";
+import { type Color } from "#typings/index.js";
 import { oneLine } from "common-tags";
 import { type Guild, type Interaction } from "discord.js";
-import { DEFAULT_LOGGER_COLOR, DEFAULT_LOGGER_PREFIX } from "../constants.js";
-import { type Color } from "../typings/index.js";
 import { getColorFn, grey } from "./color.js";
 
 function formatType(type: string): string {

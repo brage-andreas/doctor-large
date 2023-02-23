@@ -1,3 +1,7 @@
+import { EMOJIS, PRIZE } from "#constants";
+import type GiveawayManager from "#database/giveaway.js";
+import { ModalCollector, modalId } from "#helpers/ModalCollector.js";
+import Logger from "#logger";
 import { oneLine } from "common-tags";
 import {
 	ActionRowBuilder,
@@ -6,13 +10,6 @@ import {
 	TextInputStyle,
 	type ButtonInteraction
 } from "discord.js";
-import { EMOJIS, PRIZE } from "../../../../../constants.js";
-import type GiveawayManager from "../../../../../database/giveaway.js";
-import {
-	ModalCollector,
-	modalId
-} from "../../../../../helpers/ModalCollector.js";
-import Logger from "../../../../../logger/logger.js";
 import toPrizeDashboard from "./prizeDashboard.js";
 
 export default async function toCreatePrize(
