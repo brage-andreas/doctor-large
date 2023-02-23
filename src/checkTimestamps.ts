@@ -2,8 +2,7 @@ import { EMOJIS, GIVEAWAY } from "#constants";
 import prisma from "#database/prisma.js";
 import { longstamp } from "#helpers/timestamps.js";
 import GiveawayModule from "#modules/Giveaway.js";
-import { type GiveawayWithIncludes } from "#typings/database.js";
-import { type WinnerId } from "#typings/index.js";
+import { type GiveawayWithIncludes, type WinnerId } from "#typings";
 import { oneLine, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,

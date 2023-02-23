@@ -1,5 +1,5 @@
 import { DEFAULT_LOGGER_COLOR, DEFAULT_LOGGER_PREFIX } from "#constants";
-import { type Color } from "#typings/index.js";
+import { type Color } from "#typings";
 import { oneLine } from "common-tags";
 import { type Guild, type Interaction } from "discord.js";
 import { getColorFn, grey } from "./color.js";

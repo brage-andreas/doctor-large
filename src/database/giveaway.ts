@@ -1,6 +1,6 @@
 import GiveawayModule from "#modules/Giveaway.js";
 import PrizeModule from "#modules/Prize.js";
-import { type GiveawayWithIncludes } from "#typings/database.js";
+import { type GiveawayWithIncludes } from "#typings";
 import {
 	type Giveaway,
 	type Prisma,

@@ -1,6 +1,6 @@
 import { ACTIVITIES, EVENT_DIR, INTENTS } from "#constants";
 import Logger from "#logger";
-import { type EventFn, type EventImport } from "#typings/index.js";
+import { type EventFn, type EventImport } from "#typings";
 import { Client } from "discord.js";
 import { existsSync, lstatSync, readdirSync } from "fs";
 import process from "node:process";

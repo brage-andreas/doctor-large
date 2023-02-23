@@ -1,10 +1,7 @@
 import { EMOJIS } from "#constants";
 import hideOption from "#helpers/hideOption.js";
 import Logger from "#logger";
-import {
-	type Command,
-	type CommandModuleInteractions
-} from "#typings/index.js";
+import { type Command, type CommandModuleInteractions } from "#typings";
 import { oneLine } from "common-tags";
 import {
 	ApplicationCommandOptionType,

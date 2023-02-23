@@ -4,14 +4,14 @@ import commandMention from "#helpers/commandMention.js";
 import { listify } from "#helpers/listify.js";
 import s from "#helpers/s.js";
 import { longstamp } from "#helpers/timestamps.js";
-import { type GiveawayWithIncludes } from "#typings/database.js";
 import {
 	type GiveawayId,
+	type GiveawayWithIncludes,
 	type PrizeId,
 	type PrizesOfMapObj,
 	type Snowflake,
 	type WinnerId
-} from "#typings/index.js";
+} from "#typings";
 import {
 	type Giveaway,
 	type HostNotified,

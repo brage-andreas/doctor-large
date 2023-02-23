@@ -9,7 +9,7 @@ import {
 	type CommandModuleInteractions,
 	type GiveawayId,
 	type PrizesOfMapObj
-} from "#typings/index.js";
+} from "#typings";
 import { source, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,

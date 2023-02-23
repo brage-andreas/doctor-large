@@ -1,8 +1,7 @@
 import { COLORS } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
 import { longstamp } from "#helpers/timestamps.js";
-import { type PrizeWithIncludes } from "#typings/database.js";
-import { type PrizeId } from "#typings/index.js";
+import { type PrizeId, type PrizeWithIncludes } from "#typings";
 import { type Prize, type Winner } from "@prisma/client";
 import { oneLine, stripIndents } from "common-tags";
 import { EmbedBuilder, type Client, type Guild } from "discord.js";

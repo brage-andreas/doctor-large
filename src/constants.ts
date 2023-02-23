@@ -1,4 +1,4 @@
-import { type Color } from "#typings/index.js";
+import { type Color } from "#typings";
 import { oneLine } from "common-tags";
 import {
 	ActivityType,
@@ -7,20 +7,21 @@ import {
 } from "discord.js";
 
 export const ACTIVITIES: Array<ActivitiesOptions> = [
-	{ type: ActivityType.Watching, name: "grapes ferment" },
-	{ type: ActivityType.Watching, name: "grapes ferment" },
-	{ type: ActivityType.Watching, name: "grapes ferment" },
-	{ type: ActivityType.Playing, name: "in the Wine Cellar" },
-	{ type: ActivityType.Playing, name: "in the Wine Cellar" },
-	{ type: ActivityType.Playing, name: "in the Wine Cellar" },
-	{ type: ActivityType.Playing, name: "in the Bean Cave" },
-	{ type: ActivityType.Playing, name: "in the Bean Cave" },
-	{ type: ActivityType.Playing, name: "in the Bean Cave" },
-	{ type: ActivityType.Playing, name: "as melee sniper" },
+	{ type: ActivityType.Listening, name: "Justin Bieber" },
+	{ type: ActivityType.Watching, name: "27 Sep 2022" },
 	{ type: ActivityType.Watching, name: "Boss Baby 2" },
 	{ type: ActivityType.Watching, name: "Fatmagic lose again" },
-	{ type: ActivityType.Watching, name: "QUANTUM GAMEPLAY" },
-	{ type: ActivityType.Watching, name: "27 Sep 2022" }
+	{ type: ActivityType.Watching, name: "grapes ferment" },
+	{ type: ActivityType.Watching, name: "QUANTUM GAMING" },
+	{ type: ActivityType.Playing, name: "as melee sniper" },
+	{ type: ActivityType.Playing, name: "bowling!" },
+	{ type: ActivityType.Playing, name: "Enlargening®️ 2023™️" },
+	{ type: ActivityType.Playing, name: "in the Bean Cave" },
+	{ type: ActivityType.Playing, name: "in the Bean Cave" },
+	{ type: ActivityType.Playing, name: "in the Bean Cave" },
+	{ type: ActivityType.Playing, name: "in the Wine Cellar" },
+	{ type: ActivityType.Playing, name: "in the Wine Cellar" },
+	{ type: ActivityType.Playing, name: "in the Wine Cellar" }
 ];
 
 export const COMMAND_DIR = new URL("./commands", import.meta.url);

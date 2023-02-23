@@ -1,10 +1,7 @@
 import components from "#components";
 import AutoroleManager from "#database/autorole.js";
 import Logger from "#logger";
-import {
-	type Command,
-	type CommandModuleInteractions
-} from "#typings/index.js";
+import { type Command, type CommandModuleInteractions } from "#typings";
 import { oneLine } from "common-tags";
 import {
 	ActionRowBuilder,
