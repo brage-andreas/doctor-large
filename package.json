@@ -41,7 +41,7 @@
 	},
 	"imports": {
 		"#constants": "./dist/constants.js",
-		"#typings/*": "./dist/typings/*",
+		"#typings": "./dist/typings/index.d.js",
 		"#modules/*": "./dist/modules/*",
 		"#logger": "./dist/logger/logger.js",
 		"#components": "./dist/components/index.js",

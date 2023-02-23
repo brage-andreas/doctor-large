@@ -21,7 +21,7 @@
 			"#helpers/*": ["./src/helpers/*"],
 			"#logger": ["./src/logger/logger.ts"],
 			"#modules/*": ["./src/modules/*"],
-			"#typings/*": ["./src/typings/*"]
+			"#typings": ["./src/typings/index.d.ts"]
 		}
 	},
 	"include": ["./src/**/*"]
