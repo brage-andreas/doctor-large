@@ -37,6 +37,7 @@ export const REGEXP = {
 // using discord's colours if possible
 // <https://discord.com/branding>
 export const COLORS = {
+	EMBED_INVISIBLE: "#2F3136",
 	GREEN: "#57F287",
 	RED: "#ED4245",
 	YELLOW: "#FEE75C"
