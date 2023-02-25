@@ -4,10 +4,12 @@ import type {
 	AutocompleteInteraction,
 	ChatInputCommandInteraction,
 	ContextMenuCommandInteraction,
-	RESTPostAPIApplicationCommandsJSONBody
+	RESTPostAPIChatInputApplicationCommandsJSONBody,
+	RESTPostAPIContextMenuApplicationCommandsJSONBody
 } from "discord.js";
 
 type Prop<T extends object, P extends keyof T> = T[P];
+type UnknownOrPromise = Promise<unknown> | unknown;
 
 export type EventFn = (...args: Array<unknown>) => Promise<unknown> | unknown;
 
@@ -29,10 +31,20 @@ export type CommandModuleInteractions =
 	| ChatInputCommandInteraction<"cached">
 	| ContextMenuCommandInteraction<"cached">;
 
-export interface Command {
-	data: RESTPostAPIApplicationCommandsJSONBody;
-	run(interaction: CommandModuleInteractions): Promise<unknown> | unknown;
+interface Command {
+	data: {
+		commandName: string;
+		chatInput?: RESTPostAPIChatInputApplicationCommandsJSONBody;
+		contextMenu?: RESTPostAPIContextMenuApplicationCommandsJSONBody;
+	};
+	handle: {
+		autocomplete?(interaction: CommandModuleInteractions): UnknownOrPromise;
+		chatInput?(interaction: CommandModuleInteractions): UnknownOrPromise;
+		contextMenu?(interaction: CommandModuleInteractions): UnknownOrPromise;
+	};
 }
+
+export type CommandData = Prop<Command, "data">;
 
 export interface CommandImport {
 	getCommand(): Command;

@@ -8,16 +8,24 @@ import {
 	type AutocompleteInteraction,
 	type ButtonBuilder,
 	type ButtonInteraction,
+	type ContextMenuCommandInteraction,
 	type Interaction,
 	type MessageEditOptions
 } from "discord.js";
 
+/**
+ * `noStyle` = ButtonStyle.Danger
+ * `respondToIgnore` = true
+ * `timeActive` = 60_000
+ * `yesStyle` = ButtonStyle.Success
+ */
 export default async function yesNo(options: {
 	respondToIgnore?: boolean;
 	timeActive?: number;
 	yesStyle?: ButtonStyle;
 	noStyle?: ButtonStyle;
 	medium:
+		| ContextMenuCommandInteraction<"cached">
 		| Exclude<Interaction<"cached">, AutocompleteInteraction>
 		| Message<true>;
 	data: Exclude<MessageEditOptions, "Components">;

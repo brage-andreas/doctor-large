@@ -1,60 +1,58 @@
 import { EMOJIS } from "#constants";
 import hideOption from "#helpers/hideOption.js";
 import Logger from "#logger";
-import { type Command, type CommandModuleInteractions } from "#typings";
+import { type Command, type CommandData } from "#typings";
 import { oneLine } from "common-tags";
 import {
 	ApplicationCommandOptionType,
 	PermissionFlagsBits,
-	type RESTPostAPIApplicationCommandsJSONBody
+	type AutocompleteInteraction,
+	type ChatInputCommandInteraction
 } from "discord.js";
 import sendToAutocompleteGiveaway from "./giveawayModules/autocompleteGiveaway.js";
 import sendToCreate from "./giveawayModules/create.js";
 import sendToDashboard from "./giveawayModules/dashboard.js";
 
-const data: RESTPostAPIApplicationCommandsJSONBody = {
-	default_member_permissions: PermissionFlagsBits.ManageGuild.toString(),
-	description: "Configuration for giveaways.",
-	dm_permission: false,
-	name: "giveaway",
-	options: [
-		{
-			name: "dashboard",
-			type: ApplicationCommandOptionType.Subcommand,
-			description: oneLine`
-			Shows a dashboard where you can view current giveaways,
-			or a specific giveaway to manage it.
-			`,
-			options: [
-				{
-					autocomplete: true,
-					description:
-						"Which giveaway should be managed in the dashboard.",
-					name: "giveaway",
-					required: true,
-					type: ApplicationCommandOptionType.Integer
-				},
-				hideOption
-			]
-		},
-		{
-			description: "Create and customise a new giveaway.",
-			name: "create",
-			type: ApplicationCommandOptionType.Subcommand,
-			options: [hideOption]
-		}
-	]
+const data: CommandData = {
+	commandName: "giveaway",
+	chatInput: {
+		default_member_permissions: PermissionFlagsBits.ManageGuild.toString(),
+		description: "Configuration for giveaways.",
+		dm_permission: false,
+		name: "giveaway",
+		options: [
+			{
+				name: "dashboard",
+				type: ApplicationCommandOptionType.Subcommand,
+				description: oneLine`
+					Shows a dashboard where you can view current giveaways,
+					or a specific giveaway to manage it.
+				`,
+				options: [
+					{
+						autocomplete: true,
+						description:
+							"Which giveaway should be managed in the dashboard.",
+						name: "giveaway",
+						required: true,
+						type: ApplicationCommandOptionType.Integer
+					},
+					hideOption
+				]
+			},
+			{
+				description: "Create and customise a new giveaway.",
+				name: "create",
+				type: ApplicationCommandOptionType.Subcommand,
+				options: [hideOption]
+			}
+		]
+	}
 };
 
-const run = async (interaction: CommandModuleInteractions) => {
-	if (!interaction.isChatInputCommand()) {
-		if (interaction.isAutocomplete()) {
-			await sendToAutocompleteGiveaway(interaction);
-		}
-
-		return;
-	}
-
+const chatInput = async (
+	interaction: ChatInputCommandInteraction<"cached">
+) => {
 	const hide = interaction.options.getBoolean("hide") ?? true;
 
 	switch (interaction.options.getSubcommand()) {
@@ -85,7 +83,14 @@ const run = async (interaction: CommandModuleInteractions) => {
 	}
 };
 
+const autocomplete = async (interaction: AutocompleteInteraction<"cached">) => {
+	await sendToAutocompleteGiveaway(interaction);
+};
+
 export const getCommand: () => Command = () => ({
 	data,
-	run
+	handle: {
+		chatInput,
+		autocomplete
+	}
 });
