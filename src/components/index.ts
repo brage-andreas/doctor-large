@@ -672,6 +672,15 @@ const endLevelPublishButton = {
 			.setStyle(ButtonStyle.Primary)
 } as const;
 
+const cancelButton = {
+	customId: "cancel",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("cancel")
+			.setLabel("Cancel")
+			.setStyle(ButtonStyle.Secondary)
+} as const;
+
 const adjustDate = ({
 	label,
 	customId,
@@ -755,6 +764,7 @@ const buttons = {
 	delete_: deleteButton,
 	disable: disableButton,
 	setDate: setDateButton,
+	cancel: cancelButton,
 	create: createButton,
 	enable: enableButton,
 	clear: clearButton,
