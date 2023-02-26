@@ -34,10 +34,10 @@ export const REGEXP = {
 	ID: /^\d{17,19}$/
 };
 
-// using discord's colours if possible
-// <https://discord.com/branding>
+// Using Discord's colours if possible
+//    https://discord.com/branding
 export const COLORS = {
-	EMBED_INVISIBLE: "#2F3136",
+	EMBED_INVISIBLE: "#36393F",
 	GREEN: "#57F287",
 	RED: "#ED4245",
 	YELLOW: "#FEE75C"
