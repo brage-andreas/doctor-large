@@ -1,4 +1,4 @@
-import { EMOJIS } from "#constants";
+import { Emojis } from "#constants";
 import hideOption from "#helpers/hideOption.js";
 import Logger from "#logger";
 import { type Command, type CommandData } from "#typings";
@@ -62,7 +62,7 @@ const chatInput = async (
 
 			if (id === -1) {
 				interaction.editReply({
-					content: `${EMOJIS.SLEEP} Whoa so empty — there are no giveaways`
+					content: `${Emojis.Sleep} Whoa so empty — there are no giveaways`
 				});
 
 				break;

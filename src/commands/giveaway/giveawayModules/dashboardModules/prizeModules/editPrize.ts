@@ -1,4 +1,4 @@
-import { EMOJIS, PRIZE } from "#constants";
+import { Emojis, Prize } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
 import { ModalCollector, modalId } from "#helpers/ModalCollector.js";
 import Logger from "#logger";
@@ -21,7 +21,7 @@ export default async function toEditPrize(
 ) {
 	const nameField = new TextInputBuilder()
 		.setPlaceholder("Example prize")
-		.setMaxLength(PRIZE.MAX_TITLE_LEN)
+		.setMaxLength(Prize.MaxTitleLength)
 		.setMinLength(1)
 		.setCustomId("prizeName")
 		.setRequired(true)
@@ -31,7 +31,7 @@ export default async function toEditPrize(
 
 	const infoField = new TextInputBuilder()
 		.setPlaceholder("This prize was made with love!")
-		.setMaxLength(PRIZE.MAX_ADDITIONAL_INFO_LEN)
+		.setMaxLength(Prize.MaxAdditionalInfoLength)
 		.setMinLength(1)
 		.setCustomId("prizeInfo")
 		.setRequired(false)
@@ -44,7 +44,7 @@ export default async function toEditPrize(
 
 	const quantityField = new TextInputBuilder()
 		.setPlaceholder("1")
-		.setMaxLength(PRIZE.MAX_QUANTITY_LEN)
+		.setMaxLength(Prize.MaxQuantityLength)
 		.setMinLength(1)
 		.setCustomId("prizeQuantity")
 		.setRequired(true)
@@ -81,8 +81,8 @@ export default async function toEditPrize(
 
 		if (quantity < 1) {
 			quantity = 1;
-		} else if (PRIZE.MAX_QUANTITY < quantity) {
-			quantity = PRIZE.MAX_QUANTITY;
+		} else if (Prize.MaxQuantity < quantity) {
+			quantity = Prize.MaxQuantity;
 		}
 
 		await giveawayManager.editPrize({
@@ -104,7 +104,7 @@ export default async function toEditPrize(
 			await interaction.followUp({
 				ephemeral: true,
 				content: oneLine`
-					${EMOJIS.WARN} The quantity must be between 1 and ${PRIZE.MAX_QUANTITY}.
+					${Emojis.Warn} The quantity must be between 1 and ${Prize.MaxQuantity}.
 					Therefore, the quantity was set to **${quantity}**, instead of ${originalQuantity}.
 				`
 			});

@@ -1,4 +1,4 @@
-import { EMOJIS } from "#constants";
+import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
 import commandMention from "#helpers/commandMention.js";
 import yesNo from "#helpers/yesNo.js";
@@ -22,7 +22,7 @@ export default async function toDeleteGiveaway(
 			content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
+				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			embeds: []
 		});
@@ -33,7 +33,7 @@ export default async function toDeleteGiveaway(
 	const myGiveaways = await commandMention("my-giveaways", interaction);
 
 	const isConcludedString = giveaway.ended
-		? `\n\n${EMOJIS.WARN} It is recommended to keep ended giveaways. They can still be seen in the ${myGiveaways} command.`
+		? `\n\n${Emojis.Warn} It is recommended to keep ended giveaways. They can still be seen in the ${myGiveaways} command.`
 		: "";
 
 	const accept = await yesNo({
@@ -43,7 +43,7 @@ export default async function toDeleteGiveaway(
 		filter: () => true,
 		data: {
 			content: stripIndents`
-				${EMOJIS.WARN} You are about to delete giveaway #${giveaway.guildRelativeId}.
+				${Emojis.Warn} You are about to delete giveaway #${giveaway.guildRelativeId}.
 				This will also include any prizes and winners.${isConcludedString}
 
 				Are you sure? Absolutely sure? This action will be **irreversible**.
@@ -72,7 +72,7 @@ export default async function toDeleteGiveaway(
 			filter: () => true,
 			data: {
 				content: stripIndents`
-					${EMOJIS.ERROR} You are about to delete giveaway #${giveaway.guildRelativeId}.
+					${Emojis.Error} You are about to delete giveaway #${giveaway.guildRelativeId}.
 					This will also include any prizes and winners.${isConcludedString}
 	
 					ARE YOU ABSOLUTELY CERTAIN?
@@ -99,7 +99,7 @@ export default async function toDeleteGiveaway(
 
 	interaction.editReply({
 		components: [],
-		content: `${EMOJIS.V} Successfully deleted giveaway #${giveaway.guildRelativeId}.`,
+		content: `${Emojis.V} Successfully deleted giveaway #${giveaway.guildRelativeId}.`,
 		embeds: []
 	});
 }

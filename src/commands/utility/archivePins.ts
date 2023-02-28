@@ -1,5 +1,5 @@
 import components from "#components";
-import { EMOJIS } from "#constants";
+import { Emojis } from "#constants";
 import messageToEmbed from "#helpers/messageToEmbed.js";
 import yesNo from "#helpers/yesNo.js";
 import { type Command, type CommandData } from "#typings";
@@ -40,7 +40,7 @@ const contextMenu = async (
 
 	if (!allMessages?.size) {
 		return interaction.editReply({
-			content: `${EMOJIS.SWEAT_SMILE} There are no pins to archive.`
+			content: `${Emojis.SweatSmile} There are no pins to archive.`
 		});
 	}
 
@@ -54,7 +54,7 @@ const contextMenu = async (
 
 	const missingPerms = links.length
 		? source`
-			${EMOJIS.WARN} Missing permissions to delete messages:
+			${Emojis.Warn} Missing permissions to delete messages:
 			  ${links.join("\n")}
 		`
 		: "";
@@ -78,7 +78,7 @@ const contextMenu = async (
 	if (!res) {
 		return interaction.editReply({
 			components: [],
-			content: `${EMOJIS.SPARKS} Alright! Cancelled archiving pins.`,
+			content: `${Emojis.Sparks} Alright! Cancelled archiving pins.`,
 			embeds: []
 		});
 	}
@@ -107,7 +107,7 @@ const contextMenu = async (
 	if (!component?.isChannelSelectMenu()) {
 		return interaction.editReply({
 			components: [],
-			content: `${EMOJIS.SPARKS} Alright! Cancelled archiving pins.`,
+			content: `${Emojis.Sparks} Alright! Cancelled archiving pins.`,
 			embeds: []
 		});
 	}

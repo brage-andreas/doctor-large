@@ -1,4 +1,4 @@
-import { EMOJIS, REGEXP } from "#constants";
+import { Emojis, RegExp } from "#constants";
 import GiveawayManager from "#database/giveaway.js";
 import { listify } from "#helpers/listify.js";
 import { timestamp } from "#helpers/timestamps.js";
@@ -9,8 +9,8 @@ import { type ButtonInteraction } from "discord.js";
 export default async function enterGiveaway(
 	interaction: ButtonInteraction<"cached">
 ) {
-	const id = interaction.customId.match(REGEXP.ENTER_GIVEAWAY_CUSTOM_ID)
-		?.groups?.id;
+	const id = interaction.customId.match(RegExp.EnterGiveawayCustomId)?.groups
+		?.id;
 
 	if (!id) {
 		return;
@@ -28,7 +28,7 @@ export default async function enterGiveaway(
 
 	if (giveaway.entriesLocked) {
 		interaction.followUp({
-			content: `${EMOJIS.LOCK} Sorry, but new entries are currently locked. Try again later.`,
+			content: `${Emojis.Lock} Sorry, but new entries are currently locked. Try again later.`,
 			ephemeral: true
 		});
 
@@ -44,7 +44,7 @@ export default async function enterGiveaway(
 
 		interaction.followUp({
 			content: stripIndents`
-				${EMOJIS.LOCK} Sorry, but you don't have all the roles required to enter.
+				${Emojis.Lock} Sorry, but you don't have all the roles required to enter.
 
 				You are missing ${rolesTheyNeed.length || "no"} roles: ${
 				rolesTheyNeed.length
@@ -70,7 +70,7 @@ export default async function enterGiveaway(
 
 		interaction.followUp({
 			content: stripIndents`
-					${EMOJIS.LOCK} Sorry, your account isn't old enough to enter.
+					${Emojis.Lock} Sorry, your account isn't old enough to enter.
 
 					Your account will be old enough ${whenTheyWillBeOldEnough}.
 				`,
@@ -90,7 +90,7 @@ export default async function enterGiveaway(
 				Done! I removed your entry.
 				
 				You are **no longer entered** into giveaway #${giveaway.guildRelativeId}.
-				I already miss you. ${EMOJIS.PENSIVE}
+				I already miss you. ${Emojis.Pensive}
 			`,
 			ephemeral: true
 		});
@@ -109,9 +109,9 @@ export default async function enterGiveaway(
 
 		interaction.followUp({
 			content: stripIndents`
-				Done! Psst... I made sure the bouncer put you first in line. Don't tell anyone, OK? ${EMOJIS.HALO}
+				Done! Psst... I made sure the bouncer put you first in line. Don't tell anyone, OK? ${Emojis.Halo}
 				
-				${EMOJIS.TADA} You are **now entered** into giveaway #${giveaway.guildRelativeId}. Best of luck!
+				${Emojis.Tada} You are **now entered** into giveaway #${giveaway.guildRelativeId}. Best of luck!
 				`,
 			ephemeral: true
 		});

@@ -1,5 +1,5 @@
 import components from "#components";
-import { EMOJIS } from "#constants";
+import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
 import Logger from "#logger";
 import {
@@ -23,7 +23,7 @@ export default async function toPrizeDashboard(
 	if (!prize) {
 		interaction.followUp({
 			ephemeral: true,
-			content: `${EMOJIS.ERROR} This prize does not exist. Try again.`
+			content: `${Emojis.Error} This prize does not exist. Try again.`
 		});
 
 		return toManagePrizes(interaction, giveawayId, giveawayManager);
@@ -53,7 +53,7 @@ export default async function toPrizeDashboard(
 
 	collector.on("ignore", (buttonInteraction) => {
 		buttonInteraction.reply({
-			content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
+			content: `${Emojis.NoEntry} This button is not for you.`,
 			ephemeral: true
 		});
 	});

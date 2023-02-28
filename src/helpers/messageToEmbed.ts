@@ -1,4 +1,4 @@
-import { COLORS } from "#constants";
+import { Colors } from "#constants";
 import { EmbedBuilder, type Message } from "discord.js";
 
 export default function messageToEmbed(message: Message<true>) {
@@ -7,7 +7,7 @@ export default function messageToEmbed(message: Message<true>) {
 			iconURL: message.author.displayAvatarURL(),
 			name: `${message.author.tag} (${message.author.id})`
 		})
-		.setColor(COLORS.EMBED_INVISIBLE)
+		.setColor(Colors.EmbedInvisible)
 		.setFooter({ text: `#${message.channel.name}` })
 		.setTimestamp(message.createdAt);
 

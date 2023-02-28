@@ -1,8 +1,8 @@
-import { REGEXP } from "#constants";
+import { RegExp } from "#constants";
 import { type Client } from "discord.js";
 
 export function parseMessageURL(url: string) {
-	const match = url.match(REGEXP.MESSAGE_URL)?.groups;
+	const match = url.match(RegExp.MessageURL)?.groups;
 
 	if (!match) {
 		return null;

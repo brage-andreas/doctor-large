@@ -1,5 +1,5 @@
 import components from "#components";
-import { EMOJIS } from "#constants";
+import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
@@ -28,7 +28,7 @@ export default async function toPublishGiveaway(
 			content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
+				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			embeds: []
 		});
@@ -41,7 +41,7 @@ export default async function toPublishGiveaway(
 			.followUp({
 				ephemeral: true,
 				content: stripIndents`
-					${EMOJIS.ERROR} This giveaway has no prizes. Add some prizes, and try again.
+					${Emojis.Error} This giveaway has no prizes. Add some prizes, and try again.
 					
 					If the prize(s) are a secret, you can for example name the prize "Secret"
 				`
@@ -112,7 +112,7 @@ export default async function toPublishGiveaway(
 				) as NewsChannel | TextChannel | undefined;
 
 				if (!channel_) {
-					retry(`${EMOJIS.WARN} This channel does not exist.`);
+					retry(`${Emojis.Warn} This channel does not exist.`);
 
 					return;
 				}
@@ -122,7 +122,7 @@ export default async function toPublishGiveaway(
 				const channel_ = giveaway.channel;
 
 				if (!channel_) {
-					retry(`${EMOJIS.WARN} This channel does not exist.`);
+					retry(`${Emojis.Warn} This channel does not exist.`);
 
 					return;
 				}
@@ -135,7 +135,7 @@ export default async function toPublishGiveaway(
 
 			if (!permsInChannel?.has(PermissionFlagsBits.SendMessages)) {
 				retry(
-					`${EMOJIS.WARN} I am missing permissions to send messages in ${channel} (${channel.id})`
+					`${Emojis.Warn} I am missing permissions to send messages in ${channel} (${channel.id})`
 				);
 
 				return;
@@ -170,7 +170,7 @@ export default async function toPublishGiveaway(
 				components: [],
 				ephemeral: true,
 				content: stripIndents`
-					${EMOJIS.SPARKS} Done! Giveaway published in ${channel}.
+					${Emojis.Sparks} Done! Giveaway published in ${channel}.
 
 					Here is a [link to your shiny new giveaway](<${msg.url}>).
 				`,

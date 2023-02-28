@@ -1,4 +1,4 @@
-import { EMOJIS, REGEXP } from "#constants";
+import { Emojis, RegExp } from "#constants";
 import GiveawayManager from "#database/giveaway.js";
 import commandMention from "#helpers/commandMention.js";
 import Logger from "#logger";
@@ -8,7 +8,7 @@ import { type ButtonInteraction } from "discord.js";
 export default async function acceptPrize(
 	interaction: ButtonInteraction<"cached">
 ) {
-	const match = interaction.customId.match(REGEXP.ACCEPT_PRIZE_CUSTOM_ID);
+	const match = interaction.customId.match(RegExp.AcceptPrizeCustomId);
 	const prizeId = match?.groups?.id;
 
 	if (!prizeId) {
@@ -30,7 +30,7 @@ export default async function acceptPrize(
 	if (!giveaway.winnersUserIds().has(userId)) {
 		interaction.followUp({
 			content: stripIndents`
-				${EMOJIS.HEART_BREAK} You don't have any prizes to claim.
+				${Emojis.HeartBreak} You don't have any prizes to claim.
 				
 				Better luck next time.
 			`,
@@ -47,7 +47,7 @@ export default async function acceptPrize(
 	if (!prizes?.unclaimed.size) {
 		interaction.followUp({
 			content: stripIndents`
-				${EMOJIS.V} You have already claimed all your prizes. You're all set! ${EMOJIS.GRIN}
+				${Emojis.V} You have already claimed all your prizes. You're all set! ${Emojis.Grin}
 
 				Use ${myGiveaways} if you need a reminder of what your extraordinary success.
 			`,
@@ -59,7 +59,7 @@ export default async function acceptPrize(
 
 	interaction.followUp({
 		content: stripIndents`
-			${EMOJIS.TADA} You have **now claimed** your prize! Woo!
+			${Emojis.Tada} You have **now claimed** your prize! Woo!
 			
 			Use ${myGiveaways} if you need a reminder of what your extraordinary success.
 		`,

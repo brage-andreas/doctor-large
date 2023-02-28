@@ -1,5 +1,5 @@
 import components from "#components";
-import { EMOJIS } from "#constants";
+import { Emojis } from "#constants";
 import messageToEmbed from "#helpers/messageToEmbed.js";
 import { messageFromURL } from "#helpers/parseMessageURL.js";
 import { type Command, type CommandData } from "#typings";
@@ -68,7 +68,7 @@ const chatInput = async (
 
 	if (!interaction.channel) {
 		return await interaction.editReply({
-			content: `${EMOJIS.ERROR} Something went wrong. Please try again later.`
+			content: `${Emojis.Error} Something went wrong. Please try again later.`
 		});
 	}
 
@@ -78,7 +78,7 @@ const chatInput = async (
 
 	if (!message) {
 		return await interaction.editReply({
-			content: `${EMOJIS.ERROR} I could not find a message with the url: \`${urlInput}\``
+			content: `${Emojis.Error} I could not find a message with the url: \`${urlInput}\``
 		});
 	}
 

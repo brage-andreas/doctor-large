@@ -1,4 +1,4 @@
-import { COLORS, EMOJIS } from "#constants";
+import { Colors, Emojis } from "#constants";
 import { default as GiveawayManager } from "#database/giveaway.js";
 import commandMention from "#helpers/commandMention.js";
 import { listify } from "#helpers/listify.js";
@@ -575,7 +575,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		}
 
 		return source`
-			${EMOJIS.ERROR} The giveaway cannot be ended:
+			${Emojis.Error} The giveaway cannot be ended:
 			  ${missingParts.join("\n")}
 		`;
 	}
@@ -612,7 +612,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 		const pingRolesWarning = badPingRoles.length
 			? oneLine`
-			${EMOJIS.WARN} Missing permissions to ping roles (${badPingRoles.length}):
+			${Emojis.Warn} Missing permissions to ping roles (${badPingRoles.length}):
 			${listify(
 				badPingRoles.map((roleId) => `<@&${roleId}>`),
 				{ length: 10 }
@@ -629,7 +629,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 		const endStr = this.endDate
 			? `→ End date: ${longstamp(this.endDate)}`
-			: `→ End date: ${EMOJIS.WARN} No set end date.`;
+			: `→ End date: ${Emojis.Warn} No set end date.`;
 
 		const prizesName = this.prizes.length
 			? `Prizes (${this.prizesQuantity()})`
@@ -637,10 +637,10 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 		const prizesStr = this.prizes.length
 			? this.prizes.map((prize) => prize.toShortString()).join("\n")
-			: `${EMOJIS.WARN} No set prizes`;
+			: `${Emojis.Warn} No set prizes`;
 
 		const descriptionStr =
-			this.description ?? `${EMOJIS.WARN} There is no set description`;
+			this.description ?? `${Emojis.Warn} There is no set description`;
 
 		const createdStr = `→ Created: ${longstamp(this.createdAt)}`;
 		const entriesStr = `→ Entries: ${this.entriesUserIds.size}`;
@@ -649,11 +649,11 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const numberOfWinnersStr = `→ Number of winners: ${this.winnerQuantity}`;
 
 		const endedStr = `→ Ended: ${
-			this.ended ? `${EMOJIS.ENDED} Yes` : "No"
+			this.ended ? `${Emojis.Ended} Yes` : "No"
 		}`;
 
 		const lockEntriesStr = `→ Entries locked: ${
-			this.entriesLocked ? `${EMOJIS.LOCK} Yes` : "No"
+			this.entriesLocked ? `${Emojis.Lock} Yes` : "No"
 		}`;
 
 		const publishedStr = `→ Published: ${
@@ -670,15 +670,15 @@ export default class GiveawayModule implements ModifiedGiveaway {
 					this.winnerQuantity
 			  }`
 			: `→ ${
-					this.entriesUserIds.size ? `${EMOJIS.WARN} ` : ""
+					this.entriesUserIds.size ? `${Emojis.Warn} ` : ""
 			  }No winners`;
 
 		const publishedOutdated = this.publishedMessageIsOutdated
-			? `${EMOJIS.WARN} The published message is outdated. Republish the giveaway.`
+			? `${Emojis.Warn} The published message is outdated. Republish the giveaway.`
 			: "";
 
 		const winnerOutdated = this.winnerMessageIsOutdated
-			? `${EMOJIS.WARN} The winner announcement is outdated. Republish the winners.`
+			? `${Emojis.Warn} The winner announcement is outdated. Republish the winners.`
 			: "";
 
 		const infoField = stripIndents`
@@ -709,10 +709,10 @@ export default class GiveawayModule implements ModifiedGiveaway {
 				// active = yellow
 				// ended = red
 				this.isPublished()
-					? COLORS.GREEN
+					? Colors.Green
 					: this.ended
-					? COLORS.RED
-					: COLORS.YELLOW
+					? Colors.Red
+					: Colors.Yellow
 			)
 			.setFields(
 				{
@@ -767,12 +767,12 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 		const prizesStr = this.prizes.length
 			? this.prizes.map((prize) => prize.toShortString()).join("\n")
-			: `There are no set prizes. Maybe it is a secret? ${EMOJIS.SHUSH}`;
+			: `There are no set prizes. Maybe it is a secret? ${Emojis.Shush}`;
 
 		return new EmbedBuilder()
 			.setTitle(this.title)
 			.setDescription(this.description)
-			.setColor(COLORS.GREEN)
+			.setColor(Colors.Green)
 			.setFooter({
 				text: `Giveaway #${this.guildRelativeId} • Hosted by ${this.hostUserTag}`
 			})
@@ -803,17 +803,17 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			: "the /my-giveaways command";
 
 		const embed = new EmbedBuilder()
-			.setColor(COLORS.GREEN)
+			.setColor(Colors.Green)
 			.setTitle(
-				`${EMOJIS.TADA} Giveaway #${this.guildRelativeId} has ended!`
+				`${Emojis.Tada} Giveaway #${this.guildRelativeId} has ended!`
 			)
 			.setFooter({
 				text: `Giveaway #${this.guildRelativeId} • Hosted by ${this.hostUserTag}`
 			}).setDescription(stripIndents`
-			${EMOJIS.STAR_EYES} The winners have been notified in DMs.
+			${Emojis.StarEyes} The winners have been notified in DMs.
 			If you have DMs turned off, use ${myGiveawaysMention}.
 
-			Congratulations, everyone! ${EMOJIS.TADA}
+			Congratulations, everyone! ${Emojis.Tada}
 		`);
 
 		return {
@@ -906,13 +906,13 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			ids.push(id);
 
 			const content = stripIndent`
-				${EMOJIS.TADA} You just won a giveaway in ${this.guild.name}!
+				${Emojis.Tada} You just won a giveaway in ${this.guild.name}!
 
 				Make sure to **claim your prize(s)**!
 
 				Here is how:
 				  a) Use ${myGiveaways} in the server and claim your prizes.
-				  b) Click the "${EMOJIS.STAR_EYES} Accept Prize" button in the announcement.
+				  b) Click the "${Emojis.StarEyes} Accept Prize" button in the announcement.
 
 				GG!
 			`;

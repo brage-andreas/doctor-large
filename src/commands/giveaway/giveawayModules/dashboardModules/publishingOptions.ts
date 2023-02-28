@@ -1,5 +1,5 @@
 import components from "#components";
-import { EMOJIS } from "#constants";
+import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
@@ -28,7 +28,7 @@ export default async function toPublishingOptions(
 			content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
+				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			embeds: []
 		});
@@ -100,7 +100,7 @@ export default async function toPublishingOptions(
 
 			if (!channelId) {
 				interaction.editReply({
-					content: `${EMOJIS.WARN} Something went wrong. Try again.`,
+					content: `${Emojis.Warn} Something went wrong. Try again.`,
 					components: [],
 					embeds: []
 				});
@@ -114,7 +114,7 @@ export default async function toPublishingOptions(
 				| undefined;
 
 			if (!channel) {
-				retry(`${EMOJIS.WARN} This channel does not exist.`);
+				retry(`${Emojis.Warn} This channel does not exist.`);
 
 				return;
 			}
@@ -124,7 +124,7 @@ export default async function toPublishingOptions(
 
 			if (!permsInChannel?.has(PermissionFlagsBits.SendMessages)) {
 				retry(
-					`${EMOJIS.ERROR} I am missing permissions to send messages in ${channel} (${channelId})`
+					`${Emojis.Error} I am missing permissions to send messages in ${channel} (${channelId})`
 				);
 
 				return;
@@ -147,7 +147,7 @@ export default async function toPublishingOptions(
 				components: [],
 				ephemeral: true,
 				content: stripIndents`
-					${EMOJIS.SPARKS} Done! Giveaway published in ${channel}.
+					${Emojis.Sparks} Done! Giveaway published in ${channel}.
 					
 					Here is a [link to your now perfected giveaway](<${message.url}>).
 				`,
@@ -175,7 +175,7 @@ export default async function toPublishingOptions(
 
 			if (!giveaway.channelId || !giveaway.publishedMessageId) {
 				componentInteraction.followUp({
-					content: `${EMOJIS.WARN} The giveaway has not been published yet.`,
+					content: `${Emojis.Warn} The giveaway has not been published yet.`,
 					ephemeral: true
 				});
 
@@ -189,7 +189,7 @@ export default async function toPublishingOptions(
 			if (!channel) {
 				retry(
 					stripIndents`
-						${EMOJIS.WARN} I cannot find channel: ${giveaway.channelId} (${giveaway.channelId}).
+						${Emojis.Warn} I cannot find channel: ${giveaway.channelId} (${giveaway.channelId}).
 						Maybe it has it been deleted?
 					`
 				);
@@ -202,7 +202,7 @@ export default async function toPublishingOptions(
 
 				retry(
 					stripIndents`
-						${EMOJIS.WARN} The channel is not a text channel: ${giveaway.channelId} (${giveaway.channelId}).
+						${Emojis.Warn} The channel is not a text channel: ${giveaway.channelId} (${giveaway.channelId}).
 						I don't know how this happened.
 					`
 				);
@@ -246,11 +246,11 @@ export default async function toPublishingOptions(
 					ephemeral: true,
 					content: urlOrNull
 						? stripIndents`
-							${EMOJIS.SPARKS} Done! Giveaway has been edited in ${channel}.
+							${Emojis.Sparks} Done! Giveaway has been edited in ${channel}.
 							
 							Here is a [link to your now perfected giveaway](<${urlOrNull}>).
 						`
-						: `${EMOJIS.WARN} I could not edit the message. Maybe it has been deleted?`,
+						: `${Emojis.Warn} I could not edit the message. Maybe it has been deleted?`,
 					embeds: []
 				});
 
@@ -264,8 +264,8 @@ export default async function toPublishingOptions(
 					components: [],
 					ephemeral: true,
 					content: urlOrNull
-						? `${EMOJIS.SPARKS} Done! Giveaway has been recalled from ${channel}. All data remain intact.`
-						: `${EMOJIS.WARN} I could not recall the Giveaway. The message might have already been deleted.`,
+						? `${Emojis.Sparks} Done! Giveaway has been recalled from ${channel}. All data remain intact.`
+						: `${Emojis.Warn} I could not recall the Giveaway. The message might have already been deleted.`,
 					embeds: []
 				});
 

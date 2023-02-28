@@ -1,4 +1,4 @@
-import { COLORS, EMOJIS } from "#constants";
+import { Colors, Emojis } from "#constants";
 import type AutoroleManager from "#database/autorole.js";
 import { type Autorole } from "@prisma/client";
 import { stripIndents } from "common-tags";
@@ -85,14 +85,14 @@ export default class AutoroleModule {
 
 	public toEmbed() {
 		const description = this.activated
-			? `${EMOJIS.ON} Currently toggled **on**`
-			: `${EMOJIS.OFF} Currently toggled **off**`;
+			? `${Emojis.On} Currently toggled **on**`
+			: `${Emojis.Off} Currently toggled **off**`;
 
 		const roles = this.roleIds.size
 			? this.roles
 					.map((role, i) => {
 						if (typeof role === "string") {
-							return `${EMOJIS.WARN} Could not find role <@${role}> (${role})`;
+							return `${Emojis.Warn} Could not find role <@${role}> (${role})`;
 						}
 
 						return `${i + 1}. ${role} (${role.id})`;
@@ -102,13 +102,13 @@ export default class AutoroleModule {
 
 		const embed = new EmbedBuilder()
 			.setTimestamp(this.lastEditedAt)
-			.setColor(this.activated ? COLORS.GREEN : COLORS.RED)
+			.setColor(this.activated ? Colors.Green : Colors.Red)
 			.setTitle("Autorole")
 			.setDescription(
 				stripIndents`
 					${description}
 
-					${!this.hasPerms ? `${EMOJIS.ERROR} Missing Manage Roles permission` : ""}
+					${!this.hasPerms ? `${Emojis.Error} Missing Manage Roles permission` : ""}
 				`
 			);
 

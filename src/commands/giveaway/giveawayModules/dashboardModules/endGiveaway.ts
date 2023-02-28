@@ -1,5 +1,5 @@
 import components from "#components";
-import { EMOJIS } from "#constants";
+import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
 import s from "#helpers/s.js";
 import { timestamp } from "#helpers/timestamps.js";
@@ -28,7 +28,7 @@ export default async function toEndGiveaway(
 				content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
+				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 				embeds: []
 			})
@@ -45,7 +45,7 @@ export default async function toEndGiveaway(
 			.followUp({
 				ephemeral: true,
 				content: stripIndents`
-				${EMOJIS.ERROR} This giveaway has no prizes. Add some prizes, and try again.
+				${Emojis.Error} This giveaway has no prizes. Add some prizes, and try again.
 				
 				If the prize(s) are a secret, you can for example name the prize "Secret"
 			`
@@ -59,7 +59,7 @@ export default async function toEndGiveaway(
 		await interaction
 			.followUp({
 				ephemeral: true,
-				content: `${EMOJIS.WARN} The giveaway has never been published.`
+				content: `${Emojis.Warn} The giveaway has never been published.`
 			})
 			.catch(() => null);
 
@@ -82,7 +82,7 @@ export default async function toEndGiveaway(
 	if (prizesN < winnersN) {
 		content += "\n\n";
 		content += oneLine`
-			${EMOJIS.WARN} There are not enough prizes for
+			${Emojis.Warn} There are not enough prizes for
 			**${winnersN}** ${s("winner", winnersN)}!
 			There will be **${prizesN}** ${s("winner", prizesN)} instead.
 		`;

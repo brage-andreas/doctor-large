@@ -1,4 +1,4 @@
-import { EMOJIS } from "#constants";
+import { Emojis } from "#constants";
 import GiveawayManager from "#database/giveaway.js";
 import { type Giveaway } from "@prisma/client";
 import { type AutocompleteInteraction } from "discord.js";
@@ -31,20 +31,20 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 	const getName = (data: Giveaway) => {
 		const id = data.guildRelativeId;
 
-		let placement: string = EMOJIS.LOWER;
+		let placement: string = Emojis.Lower;
 
 		if (focused === id) {
-			placement = EMOJIS.SPARKS;
+			placement = Emojis.Sparks;
 		} else if (focused < id) {
-			placement = EMOJIS.HIGHER;
+			placement = Emojis.Higher;
 		}
 
 		let status = "";
 
 		if (data.ended) {
-			status = `${EMOJIS.ENDED} `;
+			status = `${Emojis.Ended} `;
 		} else if (data.entriesLocked) {
-			status = `${EMOJIS.LOCK} `;
+			status = `${Emojis.Lock} `;
 		}
 
 		return `${placement} #${data.guildRelativeId} ${status}${data.title}`;
@@ -70,7 +70,7 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 		}));
 
 	const emptyResponse = {
-		name: `${EMOJIS.SLEEP} Whoa so empty — there are no giveaways`,
+		name: `${Emojis.Sleep} Whoa so empty — there are no giveaways`,
 		value: -1
 	};
 

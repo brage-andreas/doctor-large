@@ -1,4 +1,4 @@
-import { EMOJIS, GIVEAWAY } from "#constants";
+import { Emojis, Giveaway } from "#constants";
 import prisma from "#database/prisma.js";
 import { longstamp } from "#helpers/timestamps.js";
 import GiveawayModule from "#modules/Giveaway.js";
@@ -13,7 +13,7 @@ import {
 } from "discord.js";
 import { rollAndSign } from "./commands/giveaway/giveawayModules/endModules/rollWinners/rollAndSign.js";
 
-const DM_BUFFER = GIVEAWAY.END_HOST_DM_BEFORE_END;
+const DM_BUFFER = Giveaway.HostDMTimeBeforeEnd;
 
 const checkEndingGiveawaysFn = async (client: Client<true>) => {
 	/* ----------------- */
@@ -166,7 +166,7 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 		const string = stripIndents`
 			**Giveaway has ended.**
 
-			A giveaway you are hosting just ended ${EMOJIS.SPARKS}.
+			A giveaway you are hosting just ended ${Emojis.Sparks}.
 
 			#${guildRelativeId} ${title} (in ${guildName})
 			
@@ -229,7 +229,7 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 			const acceptPrizeButton = new ButtonBuilder()
 				.setCustomId(`accept-prize-${giveaway.id}`)
 				.setLabel("Accept prize")
-				.setEmoji(EMOJIS.STAR_EYES)
+				.setEmoji(Emojis.StarEyes)
 				.setStyle(ButtonStyle.Success);
 
 			const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
@@ -266,7 +266,7 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 				});
 			} else {
 				const msg = oneLine`
-					${EMOJIS.ERROR} Failed to publish winners for
+					${Emojis.Error} Failed to publish winners for
 					#${giveaway.guildRelativeId} in ${guild.name}.
 				`;
 
@@ -283,13 +283,13 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 						message?.url ?? module.publishedMessageURL ?? "";
 
 					const msg = stripIndents`
-						${EMOJIS.TADA} You just **won a giveaway** in ${guild.name}!
+						${Emojis.Tada} You just **won a giveaway** in ${guild.name}!
 
 						Giveaway #${giveaway.guildRelativeId} ${giveaway.title}
 
 						Make sure to **claim your prize(s)**!
 						You can to do by using /my-giveaways in the server,
-						or clicking the "${EMOJIS.STAR_EYES} Accept Prize" button.
+						or clicking the "${Emojis.StarEyes} Accept Prize" button.
 
 						${url ? `Here is a link to the giveaway:\n${url}\n\n` : ""}GG!
 					`;

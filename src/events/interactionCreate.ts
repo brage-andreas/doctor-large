@@ -1,4 +1,4 @@
-import { REGEXP } from "#constants";
+import { RegExp } from "#constants";
 import { getCommandFromCommandMap } from "#helpers/scripts/commandMap.js";
 import { stripIndents } from "common-tags";
 import { type Interaction } from "discord.js";
@@ -32,7 +32,10 @@ export async function run(interaction: Interaction) {
 	}
 
 	if (interaction.isButton()) {
-		const { ACCEPT_PRIZE_CUSTOM_ID, ENTER_GIVEAWAY_CUSTOM_ID } = REGEXP;
+		const {
+			AcceptPrizeCustomId: ACCEPT_PRIZE_CUSTOM_ID,
+			EnterGiveawayCustomId: ENTER_GIVEAWAY_CUSTOM_ID
+		} = RegExp;
 
 		if (ENTER_GIVEAWAY_CUSTOM_ID.test(interaction.customId)) {
 			await enterGiveaway(interaction);

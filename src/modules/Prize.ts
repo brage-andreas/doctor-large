@@ -1,4 +1,4 @@
-import { COLORS } from "#constants";
+import { Colors } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
 import { longstamp } from "#helpers/timestamps.js";
 import { type PrizeId, type PrizeWithIncludes } from "#typings";
@@ -55,7 +55,7 @@ export default class PrizeModule implements Prize {
 		return new EmbedBuilder()
 			.setTitle(this.name)
 			.setDescription(this.additionalInfo || "No additional info.")
-			.setColor(this.winners.length ? COLORS.GREEN : COLORS.YELLOW)
+			.setColor(this.winners.length ? Colors.Green : Colors.Yellow)
 			.setFields({
 				name: "Info",
 				value: stripIndents`

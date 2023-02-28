@@ -1,6 +1,6 @@
 /* eslint-disable no-irregular-whitespace */
 import components from "#components";
-import { COLORS, EMOJIS, MY_GIVEAWAYS_MAX_PRIZES } from "#constants";
+import { Colors, Emojis, MY_GIVEAWAYS_MAX_PRIZES } from "#constants";
 import GiveawayManager from "#database/giveaway.js";
 import hideOption from "#helpers/hideOption.js";
 import Logger from "#logger";
@@ -65,7 +65,7 @@ const run = async (
 		await interaction
 			.editReply({
 				content: oneLine`
-					${EMOJIS.NO_ENTRY}
+					${Emojis.NoEntry}
 					${isAuthor ? "You have" : `${tag} has`}
 					not participated in any giveaways yet!
 				`
@@ -211,7 +211,7 @@ const run = async (
 	}
 
 	const embed = new EmbedBuilder()
-		.setColor(prizeCount.unclaimed ? COLORS.YELLOW : COLORS.GREEN)
+		.setColor(prizeCount.unclaimed ? Colors.Yellow : Colors.Green)
 		.setTitle(isAuthor ? "My Giveaways" : `${tag}'s Giveaways`)
 		.setFields(
 			{
@@ -255,7 +255,7 @@ const run = async (
 
 	collector.on("ignore", (buttonInteraction) => {
 		buttonInteraction.reply({
-			content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
+			content: `${Emojis.NoEntry} This button is not for you.`,
 			ephemeral: true
 		});
 	});
@@ -277,7 +277,7 @@ const run = async (
 
 				await interaction.followUp({
 					ephemeral: true,
-					content: `${EMOJIS.ERROR} You cannot do this action.`
+					content: `${Emojis.Error} You cannot do this action.`
 				});
 
 				await interaction.editReply({
@@ -310,7 +310,7 @@ const run = async (
 
 			await buttonInteraction.followUp({
 				ephemeral: true,
-				content: `${EMOJIS.SPARKS} Accepted all prizes!`
+				content: `${Emojis.Sparks} Accepted all prizes!`
 			});
 
 			collector.stop();

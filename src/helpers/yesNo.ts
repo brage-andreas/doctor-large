@@ -1,5 +1,5 @@
 import components from "#components";
-import { EMOJIS } from "#constants";
+import { Emojis } from "#constants";
 import {
 	ActionRowBuilder,
 	ButtonStyle,
@@ -65,7 +65,7 @@ export default async function yesNo(options: {
 			collector.on("ignore", (interaction) => {
 				interaction
 					.reply({
-						content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
+						content: `${Emojis.NoEntry} This button is not for you.`,
 						ephemeral: true
 					})
 					.catch(() => null);
