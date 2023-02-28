@@ -2,6 +2,7 @@ import { EMOJIS, GIVEAWAY } from "#constants";
 import { modalId } from "#helpers/ModalCollector.js";
 import { oneLine } from "common-tags";
 import {
+	ActionRowBuilder,
 	ButtonBuilder,
 	ButtonStyle,
 	ChannelSelectMenuBuilder,
@@ -10,8 +11,120 @@ import {
 	ModalBuilder,
 	RoleSelectMenuBuilder,
 	TextInputBuilder,
-	TextInputStyle
+	TextInputStyle,
+	type MentionableSelectMenuBuilder,
+	type StringSelectMenuBuilder,
+	type UserSelectMenuBuilder
 } from "discord.js";
+
+type AnyComponentBuilder =
+	| ButtonBuilder
+	| ChannelSelectMenuBuilder
+	| MentionableSelectMenuBuilder
+	| RoleSelectMenuBuilder
+	| StringSelectMenuBuilder
+	| UserSelectMenuBuilder;
+
+type AnyActionRow =
+	| ActionRowBuilder<ButtonBuilder>
+	| ActionRowBuilder<ChannelSelectMenuBuilder>
+	| ActionRowBuilder<MentionableSelectMenuBuilder>
+	| ActionRowBuilder<RoleSelectMenuBuilder>
+	| ActionRowBuilder<StringSelectMenuBuilder>
+	| ActionRowBuilder<UserSelectMenuBuilder>;
+
+const createRows = (
+	...components: Array<AnyComponentBuilder>
+): Array<AnyActionRow> => {
+	const rows: Array<AnyActionRow> = [];
+
+	components.forEach((c) => {
+		switch (c.data.type) {
+			case ComponentType.Button: {
+				let last = rows.at(-1) ?? new ActionRowBuilder<ButtonBuilder>();
+
+				if (
+					last.components.some(
+						(c) => c.data.type !== ComponentType.Button
+					)
+				) {
+					last = new ActionRowBuilder<ButtonBuilder>();
+				} else if (last.components.length) {
+					rows.pop();
+				}
+
+				last = last as ActionRowBuilder<ButtonBuilder>;
+
+				if (last.components.length === 5) {
+					const newRow =
+						new ActionRowBuilder<ButtonBuilder>().setComponents(
+							c as ButtonBuilder
+						);
+
+					rows.push(newRow);
+				} else {
+					last.addComponents(c as ButtonBuilder);
+
+					rows.push(last);
+				}
+
+				break;
+			}
+
+			case ComponentType.ChannelSelect: {
+				rows.push(
+					new ActionRowBuilder<ChannelSelectMenuBuilder>().setComponents(
+						c as ChannelSelectMenuBuilder
+					)
+				);
+
+				break;
+			}
+
+			case ComponentType.MentionableSelect: {
+				rows.push(
+					new ActionRowBuilder<MentionableSelectMenuBuilder>().setComponents(
+						c as MentionableSelectMenuBuilder
+					)
+				);
+
+				break;
+			}
+
+			case ComponentType.RoleSelect: {
+				rows.push(
+					new ActionRowBuilder<RoleSelectMenuBuilder>().setComponents(
+						c as RoleSelectMenuBuilder
+					)
+				);
+
+				break;
+			}
+
+			case ComponentType.StringSelect: {
+				rows.push(
+					new ActionRowBuilder<StringSelectMenuBuilder>().setComponents(
+						c as StringSelectMenuBuilder
+					)
+				);
+
+				break;
+			}
+
+			case ComponentType.UserSelect: {
+				rows.push(
+					new ActionRowBuilder<UserSelectMenuBuilder>().setComponents(
+						c as UserSelectMenuBuilder
+					)
+				);
+
+				break;
+			}
+		}
+	});
+
+	return rows.slice(0, 5);
+};
 
 const modalGiveawayTitle = () =>
 	new TextInputBuilder({
@@ -700,6 +813,14 @@ const adjustDate = ({
 				.setDisabled(disabled)
 	} as const);
 
+const urlButton = ({ label, url }: { label: string; url: string }) => ({
+	component: () =>
+		new ButtonBuilder()
+			.setLabel(label)
+			.setStyle(ButtonStyle.Link)
+			.setURL(url)
+});
+
 // -------------
 
 const selects = {
@@ -770,6 +891,7 @@ const buttons = {
 	clear: clearButton,
 	back: backButton,
 	edit: editButton,
+	url: urlButton,
 	yes: yesButton,
 	no: noButton,
 	adjustDate
@@ -777,6 +899,7 @@ const buttons = {
 
 const components = {
 	buttons,
+	createRows,
 	modals,
 	selects
 } as const;
