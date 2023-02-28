@@ -1,77 +1,171 @@
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
 
 model Autorole {
-  activated    Boolean  @default(false)
-  guildId      String   @id
-  lastEditedAt DateTime @default(now()) @updatedAt
-  roleIds      String[] @default([])
+    activated    Boolean  @default(false)
+    guildId      String   @id
+    lastEditedAt DateTime @default(now()) @updatedAt
+    roleIds      String[] @default([])
+}
+
+model Case {
+    id                    Int       @id @default(autoincrement())
+    guildId               String
+    guildRelativeId       Int
+    createdAt             DateTime  @default(now())
+    type                  CaseType
+    processed             Boolean   @default(false)
+    reason                String?
+    expiration            DateTime? // Present for: Mute, Kick?, Softban?, Ban?, Slowmode, Lockdown
+    daysPruned            Int? //      Present for: Softban, Ban
+    temporary             Boolean? //  Present for: Mute
+    persistant            Boolean? //  Present for: Slowmode (Persists on channel updates)
+    temporarySlowmode     Int? //      Present for: Slowmode
+    originalSlowmode      Int? //      Present for: Slowmode
+    logMessageChannelId   String?
+    logMessageId          String?
+    dmMessageId           String?
+    reportId              Int?
+    report                Report?   @relation(fields: [reportId], references: [id])
+    caseReferenceId       Int?
+    caseReference         Case?     @relation("reference", fields: [caseReferenceId], references: [id], onDelete: NoAction)
+    caseReferenceRelation Case[]    @relation("reference") @ignore
+    moderatorUserId       String
+    moderatorUserTag      String
+    targetId              String //  May be: User, Channel
+    targetUserTag         String? // Present for: Warn, Mute, Kick, Softban, Ban
 }
 
 model Giveaway {
-  channelId               String?
-  createdAt               DateTime      @default(now())
-  description             String
-  endAutomation           EndAutomation @default(End)
-  endDate                 DateTime?
-  ended                   Boolean       @default(false)
-  entriesLocked           Boolean       @default(false)
-  entriesUserIds          String[]      @default([])
-  guildId                 String
-  guildRelativeId         Int
-  hostNotified            HostNotified  @default(None)
-  hostUserId              String
-  hostUserTag             String
-  id                      Int           @id @default(autoincrement())
-  lastEditedAt            DateTime      @default(now()) @updatedAt
-  minimumAccountAge       String?
-  pingRolesIds            String[]      @default([])
-  prizes                  Prize[]
-  publishedMessageId      String?
-  publishedMessageUpdated Boolean       @default(false)
-  requiredRolesIds        String[]      @default([])
-  title                   String
-  winnerMessageId         String?
-  winnerMessageUpdated    Boolean       @default(false)
-  winnerQuantity          Int           @default(1)
+    channelId               String?
+    createdAt               DateTime      @default(now())
+    description             String
+    endAutomation           EndAutomation @default(End)
+    endDate                 DateTime?
+    ended                   Boolean       @default(false)
+    entriesLocked           Boolean       @default(false)
+    entriesUserIds          String[]      @default([])
+    guildId                 String
+    guildRelativeId         Int
+    hostNotified            HostNotified  @default(None)
+    hostUserId              String
+    hostUserTag             String
+    id                      Int           @id @default(autoincrement())
+    lastEditedAt            DateTime      @default(now()) @updatedAt
+    minimumAccountAge       String?
+    pingRolesIds            String[]      @default([])
+    prizes                  Prize[]
+    publishedMessageId      String?
+    publishedMessageUpdated Boolean       @default(false)
+    requiredRolesIds        String[]      @default([])
+    title                   String
+    winnerMessageId         String?
+    winnerMessageUpdated    Boolean       @default(false)
+    winnerQuantity          Int           @default(1)
 }
 
 model Prize {
-  additionalInfo String?
-  createdAt      DateTime @default(now())
-  giveaway       Giveaway @relation(fields: [giveawayId], references: [id], onDelete: NoAction)
-  giveawayId     Int
-  id             Int      @id @default(autoincrement())
-  name           String
-  quantity       Int      @default(1)
-  winners        Winner[]
+    additionalInfo String?
+    createdAt      DateTime @default(now())
+    giveaway       Giveaway @relation(fields: [giveawayId], references: [id], onDelete: NoAction)
+    giveawayId     Int
+    id             Int      @id @default(autoincrement())
+    name           String
+    quantity       Int      @default(1)
+    winners        Winner[]
+}
+
+model Report {
+    id                 Int        @id @default(autoincrement())
+    guildId            String
+    guildRelativeId    Int
+    createdAt          DateTime   @default(now())
+    type               ReportType
+    anonymous          Boolean    @default(false)
+    processed          Boolean    @default(false)
+    processedAt        DateTime?
+    authorUserId       String
+    authorUserTag      String
+    targetId           String // May be: Message, User
+    targetUserTag      String? // Present for: User 
+    processedByUserId  String?
+    processedByUserTag String?
+
+    referencedCases Case[]
+}
+
+model Settings {
+    guildId                String   @id
+    protectedChannelsIds   String[] // These channels will be ignored by logs and limit reposting
+    memberLogChannelId     String?
+    modLogChannelId        String?
+    pinArchiveChannelId    String?
+    reportChannelId        String?
+    memberLogEnabled       Boolean  @default(true)
+    modLogEnabled          Boolean  @default(true)
+    reportsEnabled         Boolean  @default(true)
+    restrictCountingRoleId String?
+    restrictEmbedsRoleId   String?
+    restrictEmojisRoleId   String?
+    restrictMemesRoleId    String?
+    restrictVoiceRoleId    String?
 }
 
 model Winner {
-  claimed   Boolean  @default(false)
-  createdAt DateTime @default(now())
-  id        Int      @id @default(autoincrement())
-  notified  Boolean  @default(false)
-  prize     Prize    @relation(fields: [prizeId], references: [id], onDelete: NoAction)
-  prizeId   Int
-  userId    String
+    claimed   Boolean  @default(false)
+    createdAt DateTime @default(now())
+    id        Int      @id @default(autoincrement())
+    notified  Boolean  @default(false)
+    prize     Prize    @relation(fields: [prizeId], references: [id], onDelete: NoAction)
+    prizeId   Int
+    userId    String
+}
+
+enum CaseType {
+    Warn
+    Restrict
+    Unrestrict
+    Mute
+    TemporaryMute
+    Unmute
+    Kick
+    Softban
+    Ban
+    MultiBan
+    Unban
+
+    Slowmode
+    Lockdown
+}
+
+enum RestrictType {
+    Counting
+    Embeds
+    Nitro
+    Memes
+    Voice
 }
 
 enum EndAutomation {
-  None
-  End
-  Roll
-  Publish
+    None
+    End
+    Roll
+    Publish
 }
 
 enum HostNotified {
-  None
-  BufferBefore
-  OnEnd
+    None
+    BufferBefore
+    OnEnd
+}
+
+enum ReportType {
+    User
+    Message
 }
