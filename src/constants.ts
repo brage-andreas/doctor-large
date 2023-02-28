@@ -2,8 +2,10 @@ import { type Color } from "#typings";
 import { oneLine } from "common-tags";
 import {
 	ActivityType,
+	ApplicationCommandOptionType,
 	GatewayIntentBits,
-	type ActivitiesOptions
+	type ActivitiesOptions,
+	type APIApplicationCommandBasicOption
 } from "discord.js";
 
 export const ACTIVITIES: Array<ActivitiesOptions> = [
@@ -31,13 +33,15 @@ export const REGEXP = {
 	ACCEPT_PRIZE_CUSTOM_ID: /^accept-prize-(?<id>\d+)$/,
 	DASHBOARD_PRIZE_CUSTOM_ID: /^dashboard-prize-(?<id>\d+)/,
 	ENTER_GIVEAWAY_CUSTOM_ID: /^enter-giveaway-(?<id>\d+)$/,
-	ID: /^\d{17,19}$/
+	ID: /^\d{17,19}$/,
+	MESSAGE_URL:
+		/(?:https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/(?<guildId>\d{17,19})\/(?<channelId>\d{17,19})\/(?<messageId>\d{17,19}))/
 };
 
 // Using Discord's colours if possible
 //    https://discord.com/branding
 export const COLORS = {
-	EMBED_INVISIBLE: "#36393F",
+	EMBED_INVISIBLE: "#2B2D31",
 	GREEN: "#57F287",
 	RED: "#ED4245",
 	YELLOW: "#FEE75C"
@@ -105,3 +109,9 @@ export const DEFAULT_LOGGER_COLOR = "yellow" as Color;
 export const WIP_WARNING = oneLine`
 	> ${EMOJIS.WIP} This command is work-in-progress and might experience issues.
 `;
+
+export const HIDE_OPTION: APIApplicationCommandBasicOption = {
+	description: "Hide this command (True)",
+	name: "hide",
+	type: ApplicationCommandOptionType.Boolean
+};
