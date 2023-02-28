@@ -1,7 +1,47 @@
-import { Colors } from "#constants";
-import { EmbedBuilder, type Message } from "discord.js";
+import { Colors, RegExp } from "#constants";
+import { EmbedBuilder, type Client, type Message } from "discord.js";
 
-export default function messageToEmbed(message: Message<true>) {
+export function parseMessageURL(url: string) {
+	const match = url.match(RegExp.MessageURL)?.groups;
+
+	if (!match) {
+		return null;
+	}
+
+	return match as { guildId: string; channelId: string; messageId: string };
+}
+
+export async function messageFromURL(
+	client: Client<true>,
+	data: string | { guildId: string; channelId: string; messageId: string },
+	options?: { rejectProtectedChannels?: boolean }
+) {
+	const obj = typeof data === "string" ? parseMessageURL(data) : data;
+
+	if (!obj) {
+		return false;
+	}
+
+	const guild = client.guilds.cache.get(obj.guildId);
+
+	if (!guild) {
+		return null;
+	}
+
+	if (options?.rejectProtectedChannels) {
+		//
+	}
+
+	const channel = guild.channels.cache.get(obj.channelId);
+
+	if (!channel?.isTextBased()) {
+		return null;
+	}
+
+	return channel.messages.fetch(obj.messageId).catch(() => null);
+}
+
+export const messageToEmbed = (message: Message<true>) => {
 	const embed = new EmbedBuilder()
 		.setAuthor({
 			iconURL: message.author.displayAvatarURL(),
@@ -55,4 +95,4 @@ export default function messageToEmbed(message: Message<true>) {
 	embed.setDescription(content.join("\n\n"));
 
 	return embed;
-}
+};

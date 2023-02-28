@@ -1,7 +1,6 @@
 import components from "#components";
 import { Emojis } from "#constants";
-import messageToEmbed from "#helpers/messageToEmbed.js";
-import { messageFromURL } from "#helpers/parseMessageURL.js";
+import { messageFromURL, messageToEmbed } from "#helpers/messageHelpers.js";
 import { type Command, type CommandData } from "#typings";
 import {
 	ApplicationCommandOptionType,

@@ -1,6 +1,6 @@
 import components from "#components";
 import { Emojis } from "#constants";
-import messageToEmbed from "#helpers/messageToEmbed.js";
+import { messageToEmbed } from "#helpers/messageHelpers.js";
 import yesNo from "#helpers/yesNo.js";
 import { type Command, type CommandData } from "#typings";
 import { source } from "common-tags";
