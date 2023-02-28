@@ -1,5 +1,4 @@
-import { Emojis } from "#constants";
-import hideOption from "#helpers/hideOption.js";
+import { Emojis, HIDE_OPTION } from "#constants";
 import Logger from "#logger";
 import { type Command, type CommandData } from "#typings";
 import { oneLine } from "common-tags";
@@ -37,14 +36,14 @@ const data: CommandData = {
 						required: true,
 						type: ApplicationCommandOptionType.Integer
 					},
-					hideOption
+					HIDE_OPTION
 				]
 			},
 			{
 				description: "Create and customise a new giveaway.",
 				name: "create",
 				type: ApplicationCommandOptionType.Subcommand,
-				options: [hideOption]
+				options: [HIDE_OPTION]
 			}
 		]
 	}

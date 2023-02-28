@@ -1,8 +1,12 @@
 /* eslint-disable no-irregular-whitespace */
 import components from "#components";
-import { Colors, Emojis, MY_GIVEAWAYS_MAX_PRIZES } from "#constants";
+import {
+	Colors,
+	Emojis,
+	HIDE_OPTION,
+	MY_GIVEAWAYS_MAX_PRIZES
+} from "#constants";
 import GiveawayManager from "#database/giveaway.js";
-import hideOption from "#helpers/hideOption.js";
 import Logger from "#logger";
 import {
 	type Command,
@@ -32,7 +36,7 @@ const data: CommandData = {
 		description: "View all the giveaways you have participated in.",
 		dm_permission: false,
 		name: "my-giveaways",
-		options: [hideOption]
+		options: [HIDE_OPTION]
 	},
 	contextMenu: {
 		default_member_permissions: PermissionFlagsBits.ManageGuild.toString(),
