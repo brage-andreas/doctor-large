@@ -3,23 +3,26 @@ import { Emojis } from "#constants";
 import { messageToEmbed } from "#helpers/messageHelpers.js";
 import yesNo from "#helpers/yesNo.js";
 import { type Command, type CommandData } from "#typings";
-import { source } from "common-tags";
+import { oneLine, source, stripIndent } from "common-tags";
 import {
-	ActionRowBuilder,
 	ApplicationCommandType,
 	PermissionFlagsBits,
-	type ButtonBuilder,
-	type ChannelSelectMenuBuilder,
 	type ChatInputCommandInteraction,
-	type ContextMenuCommandInteraction,
-	type NewsChannel,
+	type MessageContextMenuCommandInteraction,
 	type TextChannel
 } from "discord.js";
 
 const data: CommandData = {
-	commandName: "archive_pins",
+	commandName: "archive_oldest_pin",
+	chatInput: {
+		name: "archive_oldest_pin",
+		description: "Archive the oldest pin from this channel.",
+		dm_permission: false,
+		default_member_permissions:
+			PermissionFlagsBits.ManageMessages.toString()
+	},
 	contextMenu: {
-		name: "Archive 5 oldest pins",
+		name: "Archive oldest pin",
 		dm_permission: false,
 		default_member_permissions:
 			PermissionFlagsBits.ManageMessages.toString(),
@@ -27,15 +30,38 @@ const data: CommandData = {
 	}
 };
 
-const contextMenu = async (
+const handle = async (
 	interaction:
 		| ChatInputCommandInteraction<"cached">
-		| ContextMenuCommandInteraction<"cached">
+		| MessageContextMenuCommandInteraction<"cached">
 ) => {
 	await interaction.deferReply({ ephemeral: true });
 
+	if (!interaction.channel) {
+		await interaction.editReply({
+			content: `${Emojis.Error} Something went wrong. Try again.`
+		});
+
+		return;
+	}
+
+	if (
+		!interaction.guild.members.me
+			?.permissionsIn(interaction.channel.id)
+			.has(PermissionFlagsBits.ManageMessages)
+	) {
+		await interaction.editReply({
+			content: oneLine`
+				${Emojis.Error} I am missing permissions to unpin messages in
+				this channel. Permissions needed: \`Manage Message\`.
+			`
+		});
+
+		return;
+	}
+
 	const allMessages = await interaction.channel?.messages
-		.fetchPinned()
+		.fetchPinned(false)
 		.catch(() => null);
 
 	if (!allMessages?.size) {
@@ -44,22 +70,21 @@ const contextMenu = async (
 		});
 	}
 
-	const messages = [...allMessages.values()]
-		.sort((a, b) => a.createdTimestamp - b.createdTimestamp)
-		.slice(0, 5);
+	const message = [...allMessages.values()].sort(
+		(a, b) => a.createdTimestamp - b.createdTimestamp
+	)[0];
 
-	const links = messages
-		.filter((m) => !m.deletable)
-		.map((m) => `→ [Message](<${m.url}>) by ${m.author.tag}`);
+	const link = !message.deletable
+		? `[this message](<${message.url}>) by ${message.author.tag}`
+		: null;
 
-	const missingPerms = links.length
+	const missingPerms = link
 		? source`
-			${Emojis.Warn} Missing permissions to delete messages:
-			  ${links.join("\n")}
+			${Emojis.Error} Missing permissions to delete ${link}
 		`
 		: "";
 
-	const embeds = messages.map((message) => messageToEmbed(message));
+	const embed = messageToEmbed(message);
 
 	const res = await yesNo({
 		data: {
@@ -69,7 +94,7 @@ const contextMenu = async (
 			]
 				.join("\n\n")
 				.trim(),
-			embeds
+			embeds: [embed]
 		},
 		medium: interaction,
 		filter: (i) => i.user.id === interaction.user.id
@@ -83,16 +108,13 @@ const contextMenu = async (
 		});
 	}
 
-	const row1 = new ActionRowBuilder<ChannelSelectMenuBuilder>().setComponents(
-		components.selects.channelSelect.component()
-	);
-
-	const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
+	const rows = components.createRows(
+		components.selects.channelSelect.component(),
 		components.buttons.back.component()
 	);
 
 	const msg = await interaction.editReply({
-		components: [row1, row2],
+		components: rows,
 		content: "Select the channel to archive in.",
 		embeds: []
 	});
@@ -104,30 +126,112 @@ const contextMenu = async (
 		})
 		.catch(() => null);
 
-	if (!component?.isChannelSelectMenu()) {
-		return interaction.editReply({
+	if (!component) {
+		await interaction.editReply({
 			components: [],
 			content: `${Emojis.Sparks} Alright! Cancelled archiving pins.`,
 			embeds: []
 		});
+
+		return;
 	}
 
+	if (!component.isChannelSelectMenu()) {
+		await component.update({
+			components: [],
+			content: `${Emojis.Sparks} Alright! Cancelled archiving pins.`,
+			embeds: []
+		});
+
+		return;
+	}
+
+	await component.deferUpdate();
+
 	const channelId = component.values[0];
-	const channel = interaction.guild.channels.cache.get(channelId) as
-		| NewsChannel
+	const channel = component.guild.channels.cache.get(channelId) as
 		| TextChannel
 		| undefined;
 
-	await interaction.channel?.bulkDelete(messages);
+	if (!channel) {
+		await component.editReply({
+			components: [],
+			content: `${Emojis.Error} I could not find channel \`${channelId}\`. Please try again later.`,
+			embeds: []
+		});
 
-	for (const embed of embeds) {
-		await channel?.send({ embeds: [embed] });
+		return;
 	}
+
+	if (
+		!component.guild.members.me
+			?.permissionsIn(channel)
+			.has(PermissionFlagsBits.SendMessages)
+	) {
+		await component.editReply({
+			components: [],
+			content: oneLine`
+				${Emojis.Error} I am missing permissions to send messages in
+				this channel. Permissions needed: \`Send Messages\`.
+			`,
+			embeds: []
+		});
+
+		return;
+	}
+
+	const unpinned = await component.channel?.messages
+		.unpin(message)
+		.then(() => true)
+		.catch(() => false);
+
+	if (unpinned) {
+		const rows = components.createRows(
+			components.buttons
+				.url({ label: "Original message", url: message.url })
+				.component()
+		);
+
+		const { url } = await channel.send({
+			embeds: [embed],
+			components: rows
+		});
+
+		await component.editReply({
+			components: [],
+			content: stripIndent`
+				${Emojis.V} Done! Here is [a link](<${url}>).
+			`,
+			embeds: []
+		});
+	} else {
+		await component.editReply({
+			components: [],
+			content: stripIndent`
+				${Emojis.Error} Failed to unpin ${link}. Archive was cancelled.
+				Check my permissions and try again later.
+			`,
+			embeds: []
+		});
+	}
+};
+
+const chatInput = async (
+	interaction: ChatInputCommandInteraction<"cached">
+) => {
+	await handle(interaction);
+};
+
+const contextMenu = async (
+	interaction: MessageContextMenuCommandInteraction<"cached">
+) => {
+	await handle(interaction);
 };
 
 export const getCommand: () => Command = () => ({
 	data,
 	handle: {
+		chatInput,
 		contextMenu
 	}
 });
