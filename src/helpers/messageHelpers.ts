@@ -70,12 +70,13 @@ export const messageToEmbed = (message: Message<true>) => {
 		const type = attachment?.contentType ?? "";
 		const name = attachment?.name ?? "";
 
-		content.push(
-			[...message.attachments.values()]
-				.map(({ url }, i) => `[Attachment ${i + 1}](<${url}>)`)
-				.join(" • "),
-			"---"
-		);
+		if (1 < message.attachments.size) {
+			content.push(
+				[...message.attachments.values()]
+					.map(({ url }, i) => `[Attachment ${i + 1}](<${url}>)`)
+					.join(" • ")
+			);
+		}
 
 		const validType = ["image/jpeg", "image/png", "image/gif"].includes(
 			type
@@ -90,9 +91,13 @@ export const messageToEmbed = (message: Message<true>) => {
 		}
 	}
 
-	content.push(message.content || "*No content.*");
+	if (message.content) {
+		content.push(message.content);
+	} else if (!message.embeds.length && !message.attachments.size) {
+		content.push("*No content.*");
+	}
 
-	embed.setDescription(content.join("\n\n"));
+	embed.setDescription(content.join("\n\n") || null);
 
 	return embed;
 };
