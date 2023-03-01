@@ -1,3 +1,7 @@
+import components from "#components";
+import { Emojis } from "#constants";
+import type GiveawayManager from "#database/giveaway.js";
+import Logger from "#logger";
 import {
 	ActionRowBuilder,
 	ComponentType,
@@ -5,10 +9,6 @@ import {
 	type ButtonInteraction,
 	type ModalSubmitInteraction
 } from "discord.js";
-import components from "../../../../../components/index.js";
-import { EMOJIS } from "../../../../../constants.js";
-import type GiveawayManager from "../../../../../database/giveaway.js";
-import Logger from "../../../../../logger/logger.js";
 import toManagePrizes from "../managePrizes.js";
 import toEditPrize from "./editPrize.js";
 
@@ -23,7 +23,7 @@ export default async function toPrizeDashboard(
 	if (!prize) {
 		interaction.followUp({
 			ephemeral: true,
-			content: `${EMOJIS.ERROR} This prize does not exist. Try again.`
+			content: `${Emojis.Error} This prize does not exist. Try again.`
 		});
 
 		return toManagePrizes(interaction, giveawayId, giveawayManager);
@@ -53,7 +53,7 @@ export default async function toPrizeDashboard(
 
 	collector.on("ignore", (buttonInteraction) => {
 		buttonInteraction.reply({
-			content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
+			content: `${Emojis.NoEntry} This button is not for you.`,
 			ephemeral: true
 		});
 	});

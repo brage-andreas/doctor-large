@@ -1,4 +1,3 @@
-import "dotenv/config";
 import setCommandsScript from "../dist/helpers/scripts/setCommandsScript.js";
 
 const { GUILD_ID, CLIENT_ID } = process.env;

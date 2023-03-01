@@ -1,3 +1,7 @@
+import { Emojis } from "#constants";
+import GiveawayManager from "#database/giveaway.js";
+import Logger from "#logger";
+import type GiveawayModule from "#modules/Giveaway.js";
 import { oneLine, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
@@ -8,10 +12,6 @@ import {
 	type MessageCreateOptions,
 	type RepliableInteraction
 } from "discord.js";
-import { EMOJIS } from "../../../../constants.js";
-import GiveawayManager from "../../../../database/giveaway.js";
-import Logger from "../../../../logger/logger.js";
-import type GiveawayModule from "../../../../modules/Giveaway.js";
 import toEndedDashboard from "../endedGiveawayDashboard.js";
 
 export async function toPublishWinners(
@@ -27,7 +27,7 @@ export async function toPublishWinners(
 			content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
+				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			components: [],
 			embeds: []
@@ -39,7 +39,7 @@ export async function toPublishWinners(
 	if (!giveaway.prizesQuantity()) {
 		await interaction.editReply({
 			content: stripIndents`
-				${EMOJIS.ERROR} This giveaway has no prizes, and therefore no winners. Add some prizes, and try again.
+				${Emojis.Error} This giveaway has no prizes, and therefore no winners. Add some prizes, and try again.
 				
 				If the prize(s) are a secret, you can for example name the prize "Secret".
 			`,
@@ -55,7 +55,7 @@ export async function toPublishWinners(
 	if (!channel?.isTextBased()) {
 		await interaction.editReply({
 			content: stripIndents`
-				${EMOJIS.WARN} The channel the giveaway was published in does not exist, or is not a valid channel.
+				${Emojis.Warn} The channel the giveaway was published in does not exist, or is not a valid channel.
 				Try again or republish the giveaway in a new channel.
 			`,
 			components: [],
@@ -72,7 +72,7 @@ export async function toPublishWinners(
 	const acceptPrizeButton = new ButtonBuilder()
 		.setCustomId(`accept-prize-${id}`)
 		.setLabel("Accept prize")
-		.setEmoji(EMOJIS.STAR_EYES)
+		.setEmoji(Emojis.StarEyes)
 		.setStyle(ButtonStyle.Success);
 
 	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
@@ -104,11 +104,11 @@ export async function toPublishWinners(
 
 		if (!permsInChannel?.has(PermissionFlagsBits.SendMessages)) {
 			content = stripIndents`
-				${EMOJIS.WARN} I am missing permissions to send messages in ${channel} (${channel.id}).
+				${Emojis.Warn} I am missing permissions to send messages in ${channel} (${channel.id}).
 			`;
 		} else {
 			content = stripIndents`
-				${EMOJIS.WARN} I could not publish the winners in ${channel} (${channel.id}). Please try again.
+				${Emojis.Warn} I could not publish the winners in ${channel} (${channel.id}). Please try again.
 			`;
 		}
 
@@ -135,7 +135,7 @@ export async function toPublishWinners(
 	await interaction.followUp({
 		ephemeral: true,
 		content: stripIndents`
-			${EMOJIS.SPARKS} Done! Published the winners of giveaway #${giveaway.guildRelativeId} in ${channel}!
+			${Emojis.Sparks} Done! Published the winners of giveaway #${giveaway.guildRelativeId} in ${channel}!
 
 			Fine. If you don't believe me, [here is a link to it](<${message.url}>).
 		`
@@ -165,7 +165,7 @@ export async function republishWinners(
 			content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
+				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			components: [],
 			embeds: []
@@ -177,7 +177,7 @@ export async function republishWinners(
 	if (!giveaway.prizesQuantity()) {
 		await interaction.editReply({
 			content: stripIndents`
-				${EMOJIS.ERROR} This giveaway has no prizes, and therefore no winners. Add some prizes, and try again.
+				${Emojis.Error} This giveaway has no prizes, and therefore no winners. Add some prizes, and try again.
 				
 				If the prize(s) are a secret, you can for example name the prize "Secret".
 			`,
@@ -193,7 +193,7 @@ export async function republishWinners(
 	if (!channel?.isTextBased()) {
 		await interaction.editReply({
 			content: oneLine`
-				${EMOJIS.WARN} The channel the giveaway was published in does not exist, or is not a valid channel.
+				${Emojis.Warn} The channel the giveaway was published in does not exist, or is not a valid channel.
 				Try again or republish the giveaway in a new channel.
 			`,
 			components: [],
@@ -214,7 +214,7 @@ export async function republishWinners(
 	const acceptPrizeButton = new ButtonBuilder()
 		.setCustomId(`accept-prize-${id}`)
 		.setLabel("Accept prize")
-		.setEmoji(EMOJIS.STAR_EYES)
+		.setEmoji(Emojis.StarEyes)
 		.setStyle(ButtonStyle.Success);
 
 	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
@@ -241,7 +241,7 @@ export async function republishWinners(
 	await interaction.followUp({
 		ephemeral: true,
 		content: stripIndents`
-			${EMOJIS.SPARKS} Done! Republished the winners of giveaway #${giveaway.guildRelativeId} in ${channel}!
+			${Emojis.Sparks} Done! Republished the winners of giveaway #${giveaway.guildRelativeId} in ${channel}!
 
 			Oh, I almost forgot! [Here is a link to it](<${currentMessage.url}>).
 		`
@@ -265,7 +265,7 @@ export async function publishOrRepublishWinners(
 	const acceptPrizeButton = new ButtonBuilder()
 		.setCustomId(`accept-prize-${giveaway.id}`)
 		.setLabel("Accept prize")
-		.setEmoji(EMOJIS.STAR_EYES)
+		.setEmoji(Emojis.StarEyes)
 		.setStyle(ButtonStyle.Success);
 
 	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(

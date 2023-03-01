@@ -1,30 +1,33 @@
+import components from "#components";
+import AutoroleManager from "#database/autorole.js";
+import Logger from "#logger";
+import {
+	type Command,
+	type CommandData,
+	type CommandModuleInteractions
+} from "#typings";
 import { oneLine } from "common-tags";
 import {
 	ActionRowBuilder,
 	PermissionFlagsBits,
 	type ButtonBuilder,
-	type RESTPostAPIApplicationCommandsJSONBody,
 	type RoleSelectMenuBuilder
 } from "discord.js";
-import components from "../../components/index.js";
-import AutoroleManager from "../../database/autorole.js";
-import Logger from "../../logger/logger.js";
-import {
-	type Command,
-	type CommandModuleInteractions
-} from "../../typings/index.js";
 
-const data: RESTPostAPIApplicationCommandsJSONBody = {
-	name: "autorole",
-	dm_permission: false,
-	description:
-		"Configuration for giving joining members specific roles automatically.",
-	default_member_permissions: (
-		PermissionFlagsBits.ManageRoles | PermissionFlagsBits.ManageGuild
-	).toString()
+const data: CommandData = {
+	commandName: "autorole",
+	chatInput: {
+		name: "autorole",
+		dm_permission: false,
+		description:
+			"Configuration for giving joining members specific roles automatically.",
+		default_member_permissions: (
+			PermissionFlagsBits.ManageRoles | PermissionFlagsBits.ManageGuild
+		).toString()
+	}
 };
 
-const run = async (interaction: CommandModuleInteractions) => {
+const chatInput = async (interaction: CommandModuleInteractions) => {
 	if (!interaction.isChatInputCommand()) {
 		return;
 	}
@@ -134,5 +137,7 @@ const run = async (interaction: CommandModuleInteractions) => {
 
 export const getCommand: () => Command = () => ({
 	data,
-	run
+	handle: {
+		chatInput
+	}
 });

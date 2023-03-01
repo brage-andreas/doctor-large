@@ -6,16 +6,16 @@
 	"type": "module",
 	"scripts": {
 		"format": "prettier --write \"**/*.+(js|ts|json)\"",
-		"lint": "eslint src --ext .ts",
-		"lint:fix": "eslint src --ext .ts --fix",
+		"lint": "eslint dist --ext .ts",
+		"lint:fix": "eslint dist --ext .ts --fix",
 		"prebuild": "npx rimraf dist",
 		"build": "tsc",
 		"prestart": "npm run build",
-		"start": "node .",
+		"start": "node -r dotenv/config .",
 		"prepublishCommands": "npm run build",
-		"publishCommands": "node scripts/publishCommands",
+		"publishCommands": "node -r dotenv/config scripts/publishCommands",
 		"preremoveCommands": "npm run build",
-		"removeCommands": "node scripts/removeCommands"
+		"removeCommands": "node -r dotenv/config scripts/removeCommands"
 	},
 	"author": "Drango",
 	"license": "MIT",
@@ -38,5 +38,14 @@
 		"prettier": "^2.8.4",
 		"prisma": "^4.10.1",
 		"typescript": "^4.9.5"
+	},
+	"imports": {
+		"#constants": "./dist/constants.js",
+		"#typings": "./dist/typings/index.d.js",
+		"#modules/*": "./dist/modules/*",
+		"#logger": "./dist/logger/logger.js",
+		"#components": "./dist/components/index.js",
+		"#database/*": "./dist/database/*",
+		"#helpers/*": "./dist/helpers/*"
 	}
 }

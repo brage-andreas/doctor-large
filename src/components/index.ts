@@ -1,5 +1,8 @@
+import { Emojis, Giveaway } from "#constants";
+import { modalId } from "#helpers/ModalCollector.js";
 import { oneLine } from "common-tags";
 import {
+	ActionRowBuilder,
 	ButtonBuilder,
 	ButtonStyle,
 	ChannelSelectMenuBuilder,
@@ -8,16 +11,126 @@ import {
 	ModalBuilder,
 	RoleSelectMenuBuilder,
 	TextInputBuilder,
-	TextInputStyle
+	TextInputStyle,
+	type MentionableSelectMenuBuilder,
+	type StringSelectMenuBuilder,
+	type UserSelectMenuBuilder
 } from "discord.js";
-import { EMOJIS, GIVEAWAY } from "../constants.js";
-import { modalId } from "../helpers/ModalCollector.js";
+
+type AnyComponentBuilder =
+	| ButtonBuilder
+	| ChannelSelectMenuBuilder
+	| MentionableSelectMenuBuilder
+	| RoleSelectMenuBuilder
+	| StringSelectMenuBuilder
+	| UserSelectMenuBuilder;
+
+type AnyActionRow =
+	| ActionRowBuilder<ButtonBuilder>
+	| ActionRowBuilder<ChannelSelectMenuBuilder>
+	| ActionRowBuilder<MentionableSelectMenuBuilder>
+	| ActionRowBuilder<RoleSelectMenuBuilder>
+	| ActionRowBuilder<StringSelectMenuBuilder>
+	| ActionRowBuilder<UserSelectMenuBuilder>;
+
+const createRows = (
+	...components: Array<AnyComponentBuilder>
+): Array<AnyActionRow> => {
+	const rows: Array<AnyActionRow> = [];
+
+	components.forEach((c) => {
+		switch (c.data.type) {
+			case ComponentType.Button: {
+				let last = rows.at(-1) ?? new ActionRowBuilder<ButtonBuilder>();
+
+				if (
+					last.components.some(
+						(c) => c.data.type !== ComponentType.Button
+					)
+				) {
+					last = new ActionRowBuilder<ButtonBuilder>();
+				} else if (last.components.length) {
+					rows.pop();
+				}
+
+				last = last as ActionRowBuilder<ButtonBuilder>;
+
+				if (last.components.length === 5) {
+					const newRow =
+						new ActionRowBuilder<ButtonBuilder>().setComponents(
+							c as ButtonBuilder
+						);
+
+					rows.push(newRow);
+				} else {
+					last.addComponents(c as ButtonBuilder);
+
+					rows.push(last);
+				}
+
+				break;
+			}
+
+			case ComponentType.ChannelSelect: {
+				rows.push(
+					new ActionRowBuilder<ChannelSelectMenuBuilder>().setComponents(
+						c as ChannelSelectMenuBuilder
+					)
+				);
+
+				break;
+			}
+
+			case ComponentType.MentionableSelect: {
+				rows.push(
+					new ActionRowBuilder<MentionableSelectMenuBuilder>().setComponents(
+						c as MentionableSelectMenuBuilder
+					)
+				);
+
+				break;
+			}
+
+			case ComponentType.RoleSelect: {
+				rows.push(
+					new ActionRowBuilder<RoleSelectMenuBuilder>().setComponents(
+						c as RoleSelectMenuBuilder
+					)
+				);
+
+				break;
+			}
+
+			case ComponentType.StringSelect: {
+				rows.push(
+					new ActionRowBuilder<StringSelectMenuBuilder>().setComponents(
+						c as StringSelectMenuBuilder
+					)
+				);
+
+				break;
+			}
+
+			case ComponentType.UserSelect: {
+				rows.push(
+					new ActionRowBuilder<UserSelectMenuBuilder>().setComponents(
+						c as UserSelectMenuBuilder
+					)
+				);
+
+				break;
+			}
+		}
+	});
+
+	return rows.slice(0, 5);
+};
 
 const modalGiveawayTitle = () =>
 	new TextInputBuilder({
 		customId: "title",
 		label: "Title",
-		maxLength: GIVEAWAY.MAX_TITLE_LEN,
+		maxLength: Giveaway.MaxTitleLength,
 		placeholder: "Summer Giveaway 2044",
 		required: true,
 		style: TextInputStyle.Short
@@ -26,8 +139,8 @@ const modalGiveawayTitle = () =>
 const modalGiveawayDescription = () =>
 	new TextInputBuilder({
 		customId: "description",
-		label: `Description (max ${GIVEAWAY.MAX_DESCRIPTION_LINES} lines)`,
-		maxLength: GIVEAWAY.MAX_DESCRIPTION_LEN,
+		label: `Description (max ${Giveaway.MaxDescriptionLines} lines)`,
+		maxLength: Giveaway.MaxDescriptionLength,
 		style: TextInputStyle.Paragraph,
 		placeholder: oneLine`
 			It's this time of year again!
@@ -39,7 +152,7 @@ const modalGiveawaywinnerQuantity = () =>
 	new TextInputBuilder({
 		customId: "winnerQuantity",
 		label: "Number of winners",
-		maxLength: GIVEAWAY.MAX_WINNER_QUANTITY_LEN,
+		maxLength: Giveaway.ManWinnerQuantityLength,
 		style: TextInputStyle.Short,
 		placeholder: "1"
 	});
@@ -73,20 +186,20 @@ const modalGiveawayNewTitle = (oldTitle: string) =>
 	new TextInputBuilder({
 		customId: "newTitle",
 		label: "New Title",
-		maxLength: GIVEAWAY.MAX_TITLE_LEN,
+		maxLength: Giveaway.MaxTitleLength,
 		style: TextInputStyle.Short,
 		required: true,
 		value: oldTitle,
 		placeholder: oldTitle
 	});
 
-const emptyString = `${EMOJIS.SLEEP} Whoa so empty — there is no description`;
+const emptyString = `${Emojis.Sleep} Whoa so empty — there is no description`;
 
 const modalGiveawayNewDescription = (oldDescription: string | null) => {
 	const builder = new TextInputBuilder({
 		customId: "newDescription",
-		label: `New description (max ${GIVEAWAY.MAX_DESCRIPTION_LINES} lines)`,
-		maxLength: GIVEAWAY.MAX_DESCRIPTION_LEN,
+		label: `New description (max ${Giveaway.MaxDescriptionLines} lines)`,
+		maxLength: Giveaway.MaxDescriptionLength,
 		style: TextInputStyle.Paragraph,
 		required: true
 	});
@@ -103,7 +216,7 @@ const modalGiveawayNewWinnerQuantity = (oldNumberOfWinners: number) =>
 	new TextInputBuilder({
 		customId: "newWinnerQuantity",
 		label: "New number of winners",
-		maxLength: GIVEAWAY.MAX_WINNER_QUANTITY_LEN,
+		maxLength: Giveaway.ManWinnerQuantityLength,
 		style: TextInputStyle.Short,
 		required: true,
 		value: oldNumberOfWinners.toString(),
@@ -168,7 +281,7 @@ const lockGiveawayEntriesButton = {
 		new ButtonBuilder({
 			customId: "lockEntries",
 			style: ButtonStyle.Secondary,
-			emoji: EMOJIS.LOCK,
+			emoji: Emojis.Lock,
 			label: "Lock entries"
 		})
 } as const;
@@ -178,7 +291,7 @@ const unlockGiveawayEntriesButton = {
 	component: () =>
 		new ButtonBuilder({
 			customId: "unlockEntries",
-			emoji: EMOJIS.UNLOCK,
+			emoji: Emojis.Unlock,
 			label: "Unlock entries",
 			style: ButtonStyle.Secondary
 		})
@@ -220,7 +333,7 @@ const editButton = {
 		new ButtonBuilder({
 			customId: "edit",
 			style: ButtonStyle.Primary,
-			emoji: EMOJIS.EDIT,
+			emoji: Emojis.Edit,
 			label: "Edit"
 		})
 } as const;
@@ -302,7 +415,7 @@ const enterGiveawayButton = {
 			customId: `enter-giveaway-${id}`,
 			label: "Enter",
 			style: ButtonStyle.Success,
-			emoji: EMOJIS.ENTER_GIVEAWAY_EMOJI
+			emoji: Emojis.EnterGiveaway
 		})
 } as const;
 
@@ -489,7 +602,7 @@ const acceptAllPrizesButton = {
 	component: () =>
 		new ButtonBuilder({
 			customId: "acceptAllPrizes",
-			emoji: EMOJIS.TADA,
+			emoji: Emojis.Tada,
 			label: "Accept all prizes",
 			style: ButtonStyle.Success
 		})
@@ -530,7 +643,7 @@ const yesButton = {
 	component: (style: ButtonStyle) =>
 		new ButtonBuilder()
 			.setCustomId("yes")
-			.setEmoji(EMOJIS.V)
+			.setEmoji(Emojis.V)
 			.setStyle(style)
 			.setLabel("Yes")
 } as const;
@@ -540,7 +653,7 @@ const noButton = {
 	component: (style: ButtonStyle) =>
 		new ButtonBuilder()
 			.setCustomId("no")
-			.setEmoji(EMOJIS.X)
+			.setEmoji(Emojis.X)
 			.setStyle(style)
 			.setLabel("No")
 } as const;
@@ -672,6 +785,15 @@ const endLevelPublishButton = {
 			.setStyle(ButtonStyle.Primary)
 } as const;
 
+const cancelButton = {
+	customId: "cancel",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("cancel")
+			.setLabel("Cancel")
+			.setStyle(ButtonStyle.Secondary)
+} as const;
+
 const adjustDate = ({
 	label,
 	customId,
@@ -690,6 +812,14 @@ const adjustDate = ({
 				.setStyle(ButtonStyle.Secondary)
 				.setDisabled(disabled)
 	} as const);
+
+const urlButton = ({ label, url }: { label: string; url: string }) => ({
+	component: () =>
+		new ButtonBuilder()
+			.setLabel(label)
+			.setStyle(ButtonStyle.Link)
+			.setURL(url)
+});
 
 // -------------
 
@@ -755,11 +885,13 @@ const buttons = {
 	delete_: deleteButton,
 	disable: disableButton,
 	setDate: setDateButton,
+	cancel: cancelButton,
 	create: createButton,
 	enable: enableButton,
 	clear: clearButton,
 	back: backButton,
 	edit: editButton,
+	url: urlButton,
 	yes: yesButton,
 	no: noButton,
 	adjustDate
@@ -767,6 +899,7 @@ const buttons = {
 
 const components = {
 	buttons,
+	createRows,
 	modals,
 	selects
 } as const;

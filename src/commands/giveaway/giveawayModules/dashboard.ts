@@ -1,3 +1,6 @@
+import components from "#components";
+import { Emojis } from "#constants";
+import GiveawayManager from "#database/giveaway.js";
 import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
@@ -6,9 +9,6 @@ import {
 	type ButtonBuilder,
 	type Interaction
 } from "discord.js";
-import components from "../../../components/index.js";
-import { EMOJIS } from "../../../constants.js";
-import GiveawayManager from "../../../database/giveaway.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import toEditGiveaway from "./dashboardModules/editGiveaway.js";
 import toEndOptions from "./dashboardModules/endOptions.js";
@@ -32,7 +32,7 @@ export default async function toDashboard(
 			content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
+				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			components: [],
 			embeds: []
@@ -99,7 +99,7 @@ export default async function toDashboard(
 
 	collector.on("ignore", (buttonInteraction) => {
 		buttonInteraction.reply({
-			content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
+			content: `${Emojis.NoEntry} This button is not for you.`,
 			ephemeral: true
 		});
 	});

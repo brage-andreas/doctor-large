@@ -1,3 +1,8 @@
+import components from "#components";
+import { Emojis } from "#constants";
+import type GiveawayManager from "#database/giveaway.js";
+import yesNo from "#helpers/yesNo.js";
+import Logger from "#logger";
 import { stripIndent, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
@@ -6,11 +11,6 @@ import {
 	type ButtonBuilder,
 	type ButtonInteraction
 } from "discord.js";
-import components from "../../../../components/index.js";
-import { EMOJIS } from "../../../../constants.js";
-import type GiveawayManager from "../../../../database/giveaway.js";
-import yesNo from "../../../../helpers/yesNo.js";
-import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
 
 export default async function toResetData(
@@ -26,7 +26,7 @@ export default async function toResetData(
 			content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
+				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			embeds: []
 		});
@@ -53,15 +53,15 @@ export default async function toResetData(
 			Level 4 - **Wipe everything**
 			→ Resets most of the options you can edit in the dashboard.
 			    (Excluding title, description, and winner quantity)
-			→ Resets entries, winners, and prizes. ${EMOJIS.WARN} No one will not be notified.
+			→ Resets entries, winners, and prizes. ${Emojis.Warn} No one will not be notified.
 			→ Unpublishes the giveaway and the winners.
 				 
 			Level 3 - **Reset entries, winners, and prizes**
-			→ Resets entries, winners, and prizes. ${EMOJIS.WARN} No one will not be notified.
+			→ Resets entries, winners, and prizes. ${Emojis.Warn} No one will not be notified.
 			→ Unpublishes the giveaway and the winners.
 				 
 			Level 2 - **Reset entries and winners**
-			→ Resets entries and winners. ${EMOJIS.WARN} No one will not be notified.
+			→ Resets entries and winners. ${Emojis.Warn} No one will not be notified.
 			→ Unpublishes the winners, but *not* the giveaway.
 				 
 			Level 1 - **Reset most options**
@@ -83,7 +83,7 @@ export default async function toResetData(
 
 	collector.on("ignore", (buttonInteraction) => {
 		buttonInteraction.reply({
-			content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
+			content: `${Emojis.NoEntry} This button is not for you.`,
 			ephemeral: true
 		});
 	});
@@ -104,7 +104,7 @@ export default async function toResetData(
 					filter: (i) => i.user.id === interaction.user.id,
 					data: {
 						content: stripIndents`
-							${EMOJIS.WARN} You are about to wipe everything in giveaway #${giveaway.guildRelativeId}.
+							${Emojis.Warn} You are about to wipe everything in giveaway #${giveaway.guildRelativeId}.
 							
 							Are you sure? Absolutely sure? This action will be **irreversible**.
 						`
@@ -130,7 +130,7 @@ export default async function toResetData(
 
 				await interaction.followUp({
 					ephemeral: true,
-					content: `${EMOJIS.SPARKS} Done! Successfully wiped giveaway #${giveaway.guildRelativeId}.`
+					content: `${Emojis.Sparks} Done! Successfully wiped giveaway #${giveaway.guildRelativeId}.`
 				});
 
 				return collector.stop();
@@ -144,7 +144,7 @@ export default async function toResetData(
 					filter: (i) => i.user.id === interaction.user.id,
 					data: {
 						content: stripIndents`
-							${EMOJIS.WARN} You are about to reset entries, winners, and prizes in giveaway #${giveaway.guildRelativeId}.
+							${Emojis.Warn} You are about to reset entries, winners, and prizes in giveaway #${giveaway.guildRelativeId}.
 							
 							Are you sure? Absolutely sure? This action will be **irreversible**.
 						`
@@ -171,7 +171,7 @@ export default async function toResetData(
 
 				await interaction.followUp({
 					ephemeral: true,
-					content: `${EMOJIS.SPARKS} Done! Successfully reset entries, winners, and prizes in giveaway #${giveaway.guildRelativeId}.`
+					content: `${Emojis.Sparks} Done! Successfully reset entries, winners, and prizes in giveaway #${giveaway.guildRelativeId}.`
 				});
 
 				return collector.stop();
@@ -185,7 +185,7 @@ export default async function toResetData(
 					filter: (i) => i.user.id === interaction.user.id,
 					data: {
 						content: stripIndents`
-							${EMOJIS.WARN} You are about to reset entries and winners in giveaway #${giveaway.guildRelativeId}.
+							${Emojis.Warn} You are about to reset entries and winners in giveaway #${giveaway.guildRelativeId}.
 							
 							Are you sure? Absolutely sure? This action will be **irreversible**.
 						`
@@ -209,7 +209,7 @@ export default async function toResetData(
 
 				await interaction.followUp({
 					ephemeral: true,
-					content: `${EMOJIS.SPARKS} Done! Successfully reset entries and winners in giveaway #${giveaway.guildRelativeId}.`
+					content: `${Emojis.Sparks} Done! Successfully reset entries and winners in giveaway #${giveaway.guildRelativeId}.`
 				});
 
 				return collector.stop();
@@ -223,7 +223,7 @@ export default async function toResetData(
 					filter: (i) => i.user.id === interaction.user.id,
 					data: {
 						content: stripIndents`
-							${EMOJIS.WARN} You are about to reset most options in giveaway #${giveaway.guildRelativeId}.
+							${Emojis.Warn} You are about to reset most options in giveaway #${giveaway.guildRelativeId}.
 							
 							Are you sure? Absolutely sure? This action will be **irreversible**.
 						`
@@ -247,7 +247,7 @@ export default async function toResetData(
 
 				await interaction.followUp({
 					ephemeral: true,
-					content: `${EMOJIS.SPARKS} Done! Successfully reset most options in giveaway #${giveaway.guildRelativeId}.`
+					content: `${Emojis.Sparks} Done! Successfully reset most options in giveaway #${giveaway.guildRelativeId}.`
 				});
 
 				return collector.stop();

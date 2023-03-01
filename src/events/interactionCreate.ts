@@ -1,31 +1,15 @@
-import { oneLine } from "common-tags";
+import { RegExp } from "#constants";
+import { getCommandFromCommandMap } from "#helpers/scripts/commandMap.js";
+import { stripIndents } from "common-tags";
 import { type Interaction } from "discord.js";
-import { EMOJIS, REGEXP } from "../constants.js";
-import commandMap from "../helpers/scripts/commandMap.js";
 import acceptPrize from "./giveawayListeners/acceptPrize.js";
 import enterGiveaway from "./giveawayListeners/enterGiveaway.js";
 
 export async function run(interaction: Interaction) {
 	if (!interaction.inGuild()) {
-		// All interactions are repliable except autocomplete
 		if (interaction.isRepliable()) {
-			// Give it some personality
-			const randomGreetLine = () => {
-				const greetings = [
-					"Oh, hi!",
-					"Heeey!",
-					"Hellooo!",
-					"God, you scared me!"
-				];
-
-				return greetings.at(
-					Math.floor(Math.random() * greetings.length)
-				);
-			};
-
 			interaction.reply({
-				content: oneLine`
-					${randomGreetLine()}
+				content: stripIndents`
 					I see you found my hiding spot...
 					Anyways, try finding me inside a server.
 				`,
@@ -37,15 +21,26 @@ export async function run(interaction: Interaction) {
 	}
 
 	if (!interaction.inCachedGuild()) {
-		// All interactions are repliable except autocomplete
 		if (interaction.isRepliable()) {
 			interaction.reply({
-				content: oneLine`
-					Something went wrong...
-					Maybe I'm out of wine ${EMOJIS.THINK} 
-				`,
+				content: "Something went wrong...",
 				ephemeral: true
 			});
+		}
+
+		return;
+	}
+
+	if (interaction.isButton()) {
+		const {
+			AcceptPrizeCustomId: ACCEPT_PRIZE_CUSTOM_ID,
+			EnterGiveawayCustomId: ENTER_GIVEAWAY_CUSTOM_ID
+		} = RegExp;
+
+		if (ENTER_GIVEAWAY_CUSTOM_ID.test(interaction.customId)) {
+			await enterGiveaway(interaction);
+		} else if (ACCEPT_PRIZE_CUSTOM_ID.test(interaction.customId)) {
+			await acceptPrize(interaction);
 		}
 
 		return;
@@ -56,20 +51,10 @@ export async function run(interaction: Interaction) {
 		!interaction.isContextMenuCommand() &&
 		!interaction.isAutocomplete()
 	) {
-		if (interaction.isButton()) {
-			const { ACCEPT_PRIZE_CUSTOM_ID, ENTER_GIVEAWAY_CUSTOM_ID } = REGEXP;
-
-			if (ENTER_GIVEAWAY_CUSTOM_ID.test(interaction.customId)) {
-				await enterGiveaway(interaction);
-			} else if (ACCEPT_PRIZE_CUSTOM_ID.test(interaction.customId)) {
-				await acceptPrize(interaction);
-			}
-		}
-
 		return;
 	}
 
-	const command = commandMap.get(interaction.commandName);
+	const command = getCommandFromCommandMap(interaction.commandName);
 
 	if (!command) {
 		// this should never happen
@@ -78,5 +63,33 @@ export async function run(interaction: Interaction) {
 		);
 	}
 
-	void (await command.run(interaction));
+	if (interaction.isChatInputCommand()) {
+		if (!command.handle.chatInput) {
+			throw new Error(
+				`Commands mismatch: ${interaction.commandName} called as 'chatInput' but has no 'chatInput' handle`
+			);
+		}
+
+		return void (await command.handle.chatInput(interaction));
+	}
+
+	if (interaction.isAutocomplete()) {
+		if (!command.handle.autocomplete) {
+			throw new Error(
+				`Commands mismatch: ${interaction.commandName} called as 'autocomplete' but has no 'autocomplete' handle`
+			);
+		}
+
+		return void (await command.handle.autocomplete(interaction));
+	}
+
+	if (interaction.isContextMenuCommand()) {
+		if (!command.handle.contextMenu) {
+			throw new Error(
+				`Commands mismatch: ${interaction.commandName} called as 'contextMenu' but has no 'contextMenu' handle`
+			);
+		}
+
+		return void (await command.handle.contextMenu(interaction));
+	}
 }

@@ -1,3 +1,8 @@
+import components from "#components";
+import { Emojis } from "#constants";
+import type GiveawayManager from "#database/giveaway.js";
+import s from "#helpers/s.js";
+import type GiveawayModule from "#modules/Giveaway.js";
 import { source, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
@@ -7,11 +12,6 @@ import {
 	type ButtonBuilder,
 	type Interaction
 } from "discord.js";
-import components from "../../../components/index.js";
-import { EMOJIS } from "../../../constants.js";
-import type GiveawayManager from "../../../database/giveaway.js";
-import s from "../../../helpers/s.js";
-import type GiveawayModule from "../../../modules/Giveaway.js";
 import toDashboard from "./dashboard.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import { toPublishWinners } from "./endModules/publishWinners.js";
@@ -32,7 +32,7 @@ export default async function toEndedDashboard(
 			content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
+				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			components: [],
 			embeds: []
@@ -121,7 +121,7 @@ export default async function toEndedDashboard(
 
 	collector.on("ignore", (buttonInteraction) => {
 		buttonInteraction.reply({
-			content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
+			content: `${Emojis.NoEntry} This button is not for you.`,
 			ephemeral: true
 		});
 	});
@@ -155,7 +155,7 @@ export default async function toEndedDashboard(
 				if (!channel) {
 					await interaction.editReply({
 						content: stripIndents`
-							${EMOJIS.WARN} The channel the giveaway was published in does not exist, or is not a valid channel.
+							${Emojis.Warn} The channel the giveaway was published in does not exist, or is not a valid channel.
 							Try again or republish the giveaway in a new channel.
 
 							Current channel: <#${giveaway.channelId}> (${giveaway.channelId}).
@@ -178,7 +178,7 @@ export default async function toEndedDashboard(
 
 				await interaction.editReply({
 					content: stripIndents`
-							${EMOJIS.V} The winners are now unpublished. 
+							${Emojis.V} The winners are now unpublished. 
 						`,
 					components: [],
 					embeds: []

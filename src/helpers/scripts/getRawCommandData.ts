@@ -1,8 +1,11 @@
+import { type RESTPostAPIApplicationCommandsJSONBody } from "discord.js";
 import commandMap from "./commandMap.js";
 
-export default function () {
-	// Transforms from Map<a, b> to Set<b>
-	const commandsValuesArray = new Set(commandMap.values());
+export default function getRawCommandData(): Array<RESTPostAPIApplicationCommandsJSONBody> {
+	const commandsValuesSet = new Set(commandMap.values());
+	const commandsValuesArray = [...commandsValuesSet];
 
-	return [...commandsValuesArray].map((command) => command.data);
+	return commandsValuesArray.flatMap(({ data }) =>
+		[data.chatInput, data.contextMenu].filter(Boolean)
+	) as Array<RESTPostAPIApplicationCommandsJSONBody>;
 }

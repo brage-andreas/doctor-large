@@ -12,9 +12,9 @@ export const modalId = () => `modal-${Date.now().toString().slice(-5)}`;
 export const ModalCollector = (
 	interaction: Interaction<"cached">,
 	modal: ModalBuilder,
-	collectorOptions?: Exclude<
+	collectorOptions?: Omit<
 		ModalSubmitInteractionCollectorOptions<ModalSubmitInteraction>,
-		"filter" | "interactionType" | "max"
+		"channel" | "filter" | "guild" | "interactionType" | "max"
 	>
 ) =>
 	new InteractionCollector<ModalSubmitInteraction<"cached">>(

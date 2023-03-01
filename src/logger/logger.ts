@@ -1,7 +1,11 @@
+import { DEFAULT_LOGGER_COLOR, DEFAULT_LOGGER_PREFIX } from "#constants";
+import { type Color } from "#typings";
 import { oneLine } from "common-tags";
-import { type Guild, type Interaction } from "discord.js";
-import { DEFAULT_LOGGER_COLOR, DEFAULT_LOGGER_PREFIX } from "../constants.js";
-import { type Color } from "../typings/index.js";
+import {
+	type ContextMenuCommandInteraction,
+	type Guild,
+	type Interaction
+} from "discord.js";
 import { getColorFn, grey } from "./color.js";
 
 function formatType(type: string): string {
@@ -9,13 +13,18 @@ function formatType(type: string): string {
 }
 
 export default class Logger {
-	public interaction?: Interaction<"cached">;
+	public interaction?:
+		| ContextMenuCommandInteraction<"cached">
+		| Interaction<"cached">;
 	public guild?: Guild;
 	public prefix: string;
 	public color: Color;
 
 	public constructor(options?: {
-		interaction?: Interaction<"cached"> | undefined;
+		interaction?:
+			| ContextMenuCommandInteraction<"cached">
+			| Interaction<"cached">
+			| undefined;
 		guild?: Guild | undefined;
 		prefix?: string | undefined;
 		color?: Color | undefined;

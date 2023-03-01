@@ -1,3 +1,7 @@
+import { Emojis, Prize } from "#constants";
+import type GiveawayManager from "#database/giveaway.js";
+import { ModalCollector, modalId } from "#helpers/ModalCollector.js";
+import Logger from "#logger";
 import { oneLine } from "common-tags";
 import {
 	ActionRowBuilder,
@@ -6,13 +10,6 @@ import {
 	TextInputStyle,
 	type ButtonInteraction
 } from "discord.js";
-import { EMOJIS, PRIZE } from "../../../../../constants.js";
-import type GiveawayManager from "../../../../../database/giveaway.js";
-import {
-	ModalCollector,
-	modalId
-} from "../../../../../helpers/ModalCollector.js";
-import Logger from "../../../../../logger/logger.js";
 import toPrizeDashboard from "./prizeDashboard.js";
 
 export default async function toCreatePrize(
@@ -22,7 +19,7 @@ export default async function toCreatePrize(
 ) {
 	const nameField = new TextInputBuilder()
 		.setPlaceholder("Example prize")
-		.setMaxLength(PRIZE.MAX_TITLE_LEN)
+		.setMaxLength(Prize.MaxTitleLength)
 		.setMinLength(1)
 		.setCustomId("prizeName")
 		.setRequired(true)
@@ -31,7 +28,7 @@ export default async function toCreatePrize(
 
 	const infoField = new TextInputBuilder()
 		.setPlaceholder("This prize was made with love!")
-		.setMaxLength(PRIZE.MAX_ADDITIONAL_INFO_LEN)
+		.setMaxLength(Prize.MaxAdditionalInfoLength)
 		.setMinLength(1)
 		.setCustomId("prizeInfo")
 		.setRequired(false)
@@ -40,7 +37,7 @@ export default async function toCreatePrize(
 
 	const quantityField = new TextInputBuilder()
 		.setPlaceholder("1")
-		.setMaxLength(PRIZE.MAX_QUANTITY_LEN)
+		.setMaxLength(Prize.MaxQuantityLength)
 		.setMinLength(1)
 		.setCustomId("prizeQuantity")
 		.setRequired(true)
@@ -75,8 +72,8 @@ export default async function toCreatePrize(
 
 		if (quantity < 1) {
 			quantity = 1;
-		} else if (PRIZE.MAX_QUANTITY < quantity) {
-			quantity = PRIZE.MAX_QUANTITY;
+		} else if (Prize.MaxQuantity < quantity) {
+			quantity = Prize.MaxQuantity;
 		}
 
 		const { id } = await giveawayManager.createPrize({
@@ -94,7 +91,7 @@ export default async function toCreatePrize(
 			await interaction.followUp({
 				ephemeral: true,
 				content: oneLine`
-					${EMOJIS.WARN} The quantity must be between 1 and ${PRIZE.MAX_QUANTITY}.
+					${Emojis.Warn} The quantity must be between 1 and ${Prize.MaxQuantity}.
 					Therefore, the quantity was set to **${quantity}**, instead of ${originalQuantity}.
 				`
 			});

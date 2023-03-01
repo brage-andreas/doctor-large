@@ -1,7 +1,7 @@
+import { ACTIVITIES } from "#constants";
+import Logger from "#logger";
 import { type Client } from "discord.js";
 import checkTimestamps from "../checkTimestamps.js";
-import { ACTIVITIES } from "../constants.js";
-import Logger from "../logger/logger.js";
 
 export function run(client: Client<true>) {
 	new Logger({ prefix: "READY", color: "green" }).log(

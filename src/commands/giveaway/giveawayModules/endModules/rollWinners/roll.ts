@@ -1,4 +1,4 @@
-import type PrizeModule from "../../../../../modules/Prize.js";
+import type PrizeModule from "#modules/Prize.js";
 
 export default function roll(options: {
 	entries: Array<string>;

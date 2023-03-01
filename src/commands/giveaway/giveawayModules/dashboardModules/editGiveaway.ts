@@ -1,10 +1,10 @@
+import components from "#components";
+import { Emojis } from "#constants";
+import type GiveawayManager from "#database/giveaway.js";
+import { ModalCollector } from "#helpers/ModalCollector.js";
+import Logger from "#logger";
 import { stripIndents } from "common-tags";
 import { type ButtonInteraction } from "discord.js";
-import components from "../../../../components/index.js";
-import { EMOJIS } from "../../../../constants.js";
-import type GiveawayManager from "../../../../database/giveaway.js";
-import { ModalCollector } from "../../../../helpers/ModalCollector.js";
-import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
 
 export default async function toEditGiveaway(
@@ -21,7 +21,7 @@ export default async function toEditGiveaway(
 			content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
+				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			embeds: []
 		});
@@ -43,7 +43,7 @@ export default async function toEditGiveaway(
 
 	if (!success) {
 		await interaction.editReply({
-			content: `${EMOJIS.ERROR} Something went wrong trying to edit the giveaway. Try again.`
+			content: `${Emojis.Error} Something went wrong trying to edit the giveaway. Try again.`
 		});
 	}
 

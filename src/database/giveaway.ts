@@ -1,3 +1,6 @@
+import GiveawayModule from "#modules/Giveaway.js";
+import PrizeModule from "#modules/Prize.js";
+import { type GiveawayWithIncludes } from "#typings";
 import {
 	type Giveaway,
 	type Prisma,
@@ -5,9 +8,6 @@ import {
 	type Winner
 } from "@prisma/client";
 import { type Client, type Guild } from "discord.js";
-import GiveawayModule from "../modules/Giveaway.js";
-import PrizeModule from "../modules/Prize.js";
-import { type GiveawayWithIncludes } from "../typings/database.js";
 import prisma from "./prisma.js";
 
 export default class GiveawayManager {

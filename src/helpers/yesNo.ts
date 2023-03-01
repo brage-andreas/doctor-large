@@ -1,3 +1,5 @@
+import components from "#components";
+import { Emojis } from "#constants";
 import {
 	ActionRowBuilder,
 	ButtonStyle,
@@ -6,18 +8,24 @@ import {
 	type AutocompleteInteraction,
 	type ButtonBuilder,
 	type ButtonInteraction,
+	type ContextMenuCommandInteraction,
 	type Interaction,
 	type MessageEditOptions
 } from "discord.js";
-import components from "../components/index.js";
-import { EMOJIS } from "../constants.js";
 
+/**
+ * `noStyle` = ButtonStyle.Danger
+ * `respondToIgnore` = true
+ * `timeActive` = 60_000
+ * `yesStyle` = ButtonStyle.Success
+ */
 export default async function yesNo(options: {
 	respondToIgnore?: boolean;
 	timeActive?: number;
 	yesStyle?: ButtonStyle;
 	noStyle?: ButtonStyle;
 	medium:
+		| ContextMenuCommandInteraction<"cached">
 		| Exclude<Interaction<"cached">, AutocompleteInteraction>
 		| Message<true>;
 	data: Exclude<MessageEditOptions, "Components">;
@@ -57,7 +65,7 @@ export default async function yesNo(options: {
 			collector.on("ignore", (interaction) => {
 				interaction
 					.reply({
-						content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
+						content: `${Emojis.NoEntry} This button is not for you.`,
 						ephemeral: true
 					})
 					.catch(() => null);

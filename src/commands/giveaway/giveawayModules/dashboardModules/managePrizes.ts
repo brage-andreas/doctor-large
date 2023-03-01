@@ -1,3 +1,9 @@
+import components from "#components";
+import { Colors, Emojis, RegExp } from "#constants";
+import type GiveawayManager from "#database/giveaway.js";
+import s from "#helpers/s.js";
+import yesNo from "#helpers/yesNo.js";
+import Logger from "#logger";
 import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
@@ -8,12 +14,6 @@ import {
 	type ButtonInteraction,
 	type ModalSubmitInteraction
 } from "discord.js";
-import components from "../../../../components/index.js";
-import { COLORS, EMOJIS, REGEXP } from "../../../../constants.js";
-import type GiveawayManager from "../../../../database/giveaway.js";
-import s from "../../../../helpers/s.js";
-import yesNo from "../../../../helpers/yesNo.js";
-import Logger from "../../../../logger/logger.js";
 import toDashboard from "../dashboard.js";
 import toCreatePrize from "./prizeModules/createPrize.js";
 import toPrizeDashboard from "./prizeModules/prizeDashboard.js";
@@ -31,7 +31,7 @@ export default async function toManagePrizes(
 			content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
+				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			embeds: []
 		});
@@ -80,7 +80,7 @@ export default async function toManagePrizes(
 	const embed = new EmbedBuilder().setTitle("Prizes");
 
 	if (sortedPrizeButtons.length === 2) {
-		embed.setColor(COLORS.GREEN).setFields(
+		embed.setColor(Colors.Green).setFields(
 			{
 				inline: true,
 				value: getPrizesKey(0, 5),
@@ -93,9 +93,9 @@ export default async function toManagePrizes(
 			}
 		);
 	} else if (sortedPrizeButtons.length === 1) {
-		embed.setColor(COLORS.GREEN).setDescription(getPrizesKey(0, 5));
+		embed.setColor(Colors.Green).setDescription(getPrizesKey(0, 5));
 	} else {
-		embed.setColor(COLORS.RED).setDescription("There are no prizes yet.");
+		embed.setColor(Colors.Red).setDescription("There are no prizes yet.");
 	}
 
 	new Logger({ prefix: "GIVEAWAY", interaction }).log(
@@ -118,7 +118,7 @@ export default async function toManagePrizes(
 
 	collector.on("ignore", (buttonInteraction) => {
 		buttonInteraction.reply({
-			content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
+			content: `${Emojis.NoEntry} This button is not for you.`,
 			ephemeral: true
 		});
 	});
@@ -148,7 +148,7 @@ export default async function toManagePrizes(
 						medium: buttonInteraction,
 						data: {
 							content: stripIndents`
-								${EMOJIS.WARN} Are you sure you want to clear the prizes?
+								${Emojis.Warn} Are you sure you want to clear the prizes?
 								This will wipe the prizes of ${n} ${s("winner", n)}, and the winners themselves!
 							`,
 							embeds: []
@@ -173,7 +173,7 @@ export default async function toManagePrizes(
 		await buttonInteraction.deferUpdate();
 
 		const match = buttonInteraction.customId.match(
-			REGEXP.DASHBOARD_PRIZE_CUSTOM_ID
+			RegExp.DashboardPrizeCustomId
 		);
 
 		const prizeIdString = match?.groups?.id;

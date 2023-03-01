@@ -1,59 +1,78 @@
 /* eslint-disable no-irregular-whitespace */
-import { source, stripIndents } from "common-tags";
+import components from "#components";
+import {
+	Colors,
+	Emojis,
+	HIDE_OPTION,
+	MY_GIVEAWAYS_MAX_PRIZES
+} from "#constants";
+import GiveawayManager from "#database/giveaway.js";
+import Logger from "#logger";
+import {
+	type Command,
+	type CommandData,
+	type GiveawayId,
+	type PrizesOfMapObj
+} from "#typings";
+import { oneLine, source, stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
+	ApplicationCommandType,
 	AttachmentBuilder,
 	ComponentType,
 	EmbedBuilder,
+	PermissionFlagsBits,
 	type ButtonBuilder,
 	type ButtonInteraction,
+	type ChatInputCommandInteraction,
 	type EmbedField,
-	type RESTPostAPIApplicationCommandsJSONBody
+	type User,
+	type UserContextMenuCommandInteraction
 } from "discord.js";
-import components from "../../components/index.js";
-import { COLORS, EMOJIS, MY_GIVEAWAYS_MAX_PRIZES } from "../../constants.js";
-import GiveawayManager from "../../database/giveaway.js";
-import hideOption from "../../helpers/hideOption.js";
-import Logger from "../../logger/logger.js";
-import {
-	type Command,
-	type CommandModuleInteractions,
-	type GiveawayId,
-	type PrizesOfMapObj
-} from "../../typings/index.js";
 
-const data: RESTPostAPIApplicationCommandsJSONBody = {
-	name: "my-giveaways",
-	dm_permission: false,
-	description: "View all the giveaways you have participated in.",
-	options: [hideOption]
+const data: CommandData = {
+	commandName: "my-giveaways",
+	chatInput: {
+		description: "View all the giveaways you have participated in.",
+		dm_permission: false,
+		name: "my-giveaways",
+		options: [HIDE_OPTION]
+	},
+	contextMenu: {
+		default_member_permissions: PermissionFlagsBits.ManageGuild.toString(),
+		dm_permission: false,
+		name: "Show giveaways",
+		type: ApplicationCommandType.User
+	}
 };
 
 const run = async (
-	interaction: ButtonInteraction<"cached"> | CommandModuleInteractions
+	interaction:
+		| ButtonInteraction<"cached">
+		| ChatInputCommandInteraction<"cached">
+		| UserContextMenuCommandInteraction<"cached">,
+	target: User
 ) => {
-	if (interaction.isChatInputCommand()) {
-		const hide = interaction.options.getBoolean("hide") ?? true;
-
-		await interaction.deferReply({ ephemeral: hide });
-	} else if (!interaction.isButton()) {
-		return;
-	}
+	const isAuthor = target.id === interaction.user.id;
+	const tag = target.tag;
 
 	const logger = new Logger({ prefix: "MY GIVEAWAYS", interaction });
 
 	const giveawayManager = new GiveawayManager(interaction.guild);
 
-	const { id } = interaction.user;
+	const { id } = target;
 
 	const entered = await giveawayManager.getAll({ entryUserId: id });
 	const hosted = await giveawayManager.getAll({ hostUserId: id });
 
 	if (!entered.length && !hosted.length) {
 		await interaction
-			.reply({
-				ephemeral: true,
-				content: `${EMOJIS.NO_ENTRY} You have not participated in any giveaways yet!`
+			.editReply({
+				content: oneLine`
+					${Emojis.NoEntry}
+					${isAuthor ? "You have" : `${tag} has`}
+					not participated in any giveaways yet!
+				`
 			})
 			.catch(() => null);
 
@@ -116,9 +135,8 @@ const run = async (
 	const { acceptAllPrizes, viewAllEntered, viewAllPrizes, viewAllHosted } =
 		components.buttons;
 
-	const acceptAllPrizesButton = prizeCount.unclaimed
-		? acceptAllPrizes.component()
-		: null;
+	const acceptAllPrizesButton =
+		prizeCount.unclaimed && isAuthor ? acceptAllPrizes.component() : null;
 
 	const viewAllEnteredButton = entered.length
 		? viewAllEntered.component()
@@ -197,8 +215,8 @@ const run = async (
 	}
 
 	const embed = new EmbedBuilder()
-		.setColor(prizeCount.unclaimed ? COLORS.YELLOW : COLORS.GREEN)
-		.setTitle("My Giveaways")
+		.setColor(prizeCount.unclaimed ? Colors.Yellow : Colors.Green)
+		.setTitle(isAuthor ? "My Giveaways" : `${tag}'s Giveaways`)
 		.setFields(
 			{
 				name: "Stats",
@@ -222,7 +240,7 @@ const run = async (
 		embeds: [embed]
 	});
 
-	logger.log("Sent overview");
+	logger.log(`Sent overview${isAuthor ? `of ${tag} (${target.id})` : ""}`);
 
 	if (!rows.length) {
 		return;
@@ -241,7 +259,7 @@ const run = async (
 
 	collector.on("ignore", (buttonInteraction) => {
 		buttonInteraction.reply({
-			content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
+			content: `${Emojis.NoEntry} This button is not for you.`,
 			ephemeral: true
 		});
 	});
@@ -258,6 +276,19 @@ const run = async (
 		await buttonInteraction.deferUpdate();
 
 		if (buttonInteraction.customId === acceptAllPrizes.customId) {
+			if (!isAuthor) {
+				acceptAllPrizesButton?.setDisabled(true);
+
+				await interaction.followUp({
+					ephemeral: true,
+					content: `${Emojis.Error} You cannot do this action.`
+				});
+
+				await interaction.editReply({
+					components: getRows()
+				});
+			}
+
 			const unclaimed = [...prizes.values()].flatMap((p) => p.unclaimed);
 
 			let n = 0;
@@ -283,28 +314,28 @@ const run = async (
 
 			await buttonInteraction.followUp({
 				ephemeral: true,
-				content: `${EMOJIS.SPARKS} Accepted all prizes!`
+				content: `${Emojis.Sparks} Accepted all prizes!`
 			});
 
 			collector.stop();
 
-			return run(buttonInteraction);
+			return run(buttonInteraction, target);
 		}
 
 		const getAttachment = (string: string) => {
-			const { createdAt, user, guild } = buttonInteraction;
+			const { createdAt, guild } = buttonInteraction;
 
 			// +8 is for the "User: .." prefix
 			const text = source`
 				> ${createdAt.toUTCString()}
 				> Server: ${guild.name} (${guild.id})
-				> User: ${user.tag} (${user.id})
+				> User: ${target.tag} (${target.id})
 				  
 				${string}
 			`;
 
 			return new AttachmentBuilder(Buffer.from(text), {
-				name: `giveaways_${guild.id}_${user.id}.txt`
+				name: `giveaways_${guild.id}_${target.id}.txt`
 			});
 		};
 
@@ -396,7 +427,28 @@ const run = async (
 	});
 };
 
+const chatInput = async (
+	interaction: ChatInputCommandInteraction<"cached">
+) => {
+	const hide = interaction.options.getBoolean("hide") ?? true;
+
+	await interaction.deferReply({ ephemeral: hide });
+
+	await run(interaction, interaction.user);
+};
+
+const contextMenu = async (
+	interaction: UserContextMenuCommandInteraction<"cached">
+) => {
+	await interaction.deferReply({ ephemeral: true });
+
+	await run(interaction, interaction.targetUser);
+};
+
 export const getCommand: () => Command = () => ({
 	data,
-	run
+	handle: {
+		chatInput,
+		contextMenu
+	}
 });

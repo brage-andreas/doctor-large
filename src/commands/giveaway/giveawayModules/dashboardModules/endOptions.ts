@@ -1,3 +1,7 @@
+import components from "#components";
+import { Colors, Emojis, Giveaway } from "#constants";
+import type GiveawayManager from "#database/giveaway.js";
+import { longstamp } from "#helpers/timestamps.js";
 import { type EndAutomation } from "@prisma/client";
 import { oneLine, source, stripIndents } from "common-tags";
 import {
@@ -9,10 +13,6 @@ import {
 	type ButtonInteraction
 } from "discord.js";
 import ms from "ms";
-import components from "../../../../components/index.js";
-import { COLORS, EMOJIS, GIVEAWAY } from "../../../../constants.js";
-import type GiveawayManager from "../../../../database/giveaway.js";
-import { longstamp } from "../../../../helpers/timestamps.js";
 import toDashboard from "../dashboard.js";
 import toEndGiveaway from "./endGiveaway.js";
 
@@ -29,7 +29,7 @@ export default async function toEndOptions(
 			content: stripIndents`
 				How did we get here?
 			
-				${EMOJIS.ERROR} This giveaway does not exist. Try creating one or double-check the ID.
+				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
 			embeds: []
 		});
@@ -39,7 +39,7 @@ export default async function toEndOptions(
 
 	const { endDate, endAutomation: endAutomationLevel } = giveaway;
 
-	const minTime = () => Date.now() + GIVEAWAY.MIN_END_DATE_BUFFER;
+	const minTime = () => Date.now() + Giveaway.MinimumEndDateBuffer;
 
 	const {
 		adjustDate,
@@ -133,12 +133,12 @@ export default async function toEndOptions(
 		}
 	}
 
-	const bufferStr = ms(GIVEAWAY.MIN_END_DATE_BUFFER, { long: true });
-	const hostDMStr = ms(GIVEAWAY.END_HOST_DM_BEFORE_END, { long: true });
+	const bufferStr = ms(Giveaway.MinimumEndDateBuffer, { long: true });
+	const hostDMStr = ms(Giveaway.HostDMTimeBeforeEnd, { long: true });
 
 	const endOptionsEmbed = new EmbedBuilder()
 		.setTitle("End options")
-		.setColor(giveaway.endDate ? COLORS.GREEN : COLORS.RED)
+		.setColor(giveaway.endDate ? Colors.Green : Colors.Red)
 		.addFields({
 			name: "End automation level",
 			value: stripIndents`
@@ -183,7 +183,7 @@ export default async function toEndOptions(
 	const cannotEnd =
 		!giveaway.prizesQuantity() || !giveaway.channelId
 			? source`
-				${EMOJIS.ERROR} The giveaway cannot be ended:
+				${Emojis.Error} The giveaway cannot be ended:
 				  ${missingParts.join("\n")}
 			`
 			: undefined;
@@ -223,7 +223,7 @@ export default async function toEndOptions(
 
 	collector.on("ignore", (buttonInteraction) => {
 		buttonInteraction.reply({
-			content: `${EMOJIS.NO_ENTRY} This button is not for you.`,
+			content: `${Emojis.NoEntry} This button is not for you.`,
 			ephemeral: true
 		});
 	});

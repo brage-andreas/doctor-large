@@ -1,6 +1,6 @@
+import AutoroleManager from "#database/autorole.js";
+import Logger from "#logger";
 import { type GuildMember } from "discord.js";
-import AutoroleManager from "../database/autorole.js";
-import Logger from "../logger/logger.js";
 
 export async function run(member: GuildMember) {
 	if (member.user.bot) {

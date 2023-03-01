@@ -1,6 +1,6 @@
+import { RegExp } from "#constants";
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord.js";
-import { REGEXP } from "../../constants.js";
 import getRawCommandData from "./getRawCommandData.js";
 
 export default async function ({
@@ -16,11 +16,11 @@ export default async function ({
 		throw new Error("BOT_TOKEN not defined in .env");
 	}
 
-	if (!REGEXP.ID.test(CLIENT_ID)) {
+	if (!RegExp.Id.test(CLIENT_ID)) {
 		throw new Error(`Client ID is faulty: ${CLIENT_ID}`);
 	}
 
-	if (GUILD_ID && !REGEXP.ID.test(GUILD_ID)) {
+	if (GUILD_ID && !RegExp.Id.test(GUILD_ID)) {
 		throw new Error(`Guild ID is faulty: ${GUILD_ID}`);
 	}
 

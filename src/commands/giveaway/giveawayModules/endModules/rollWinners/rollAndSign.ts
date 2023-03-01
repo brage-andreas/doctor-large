@@ -1,6 +1,6 @@
-import type Giveaway from "../../../../../modules/Giveaway.js";
-import type PrizeModule from "../../../../../modules/Prize.js";
-import { type Snowflake, type WinnerId } from "../../../../../typings/index.js";
+import type Giveaway from "#modules/Giveaway.js";
+import type PrizeModule from "#modules/Prize.js";
+import { type Snowflake, type WinnerId } from "#typings";
 import roll from "./roll.js";
 
 export async function rollAndSign(options: {
