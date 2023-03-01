@@ -66,9 +66,15 @@ export const messageToEmbed = (message: Message<true>) => {
 	}
 
 	if (message.attachments.size) {
-		const attachment = message.attachments.first();
-		const type = attachment?.contentType ?? "";
-		const name = attachment?.name ?? "";
+		const attachment = message.attachments.find(
+			(a) =>
+				["image/jpeg", "image/png", "image/gif"].includes(
+					a.contentType ?? ""
+				) &&
+				[".jpg", ".png", ".gif"].some((e) =>
+					(a.name ?? "").toLowerCase().endsWith(e)
+				)
+		);
 
 		if (1 < message.attachments.size) {
 			content.push(
@@ -78,15 +84,7 @@ export const messageToEmbed = (message: Message<true>) => {
 			);
 		}
 
-		const validType = ["image/jpeg", "image/png", "image/gif"].includes(
-			type
-		);
-
-		const validName = [".jpg", ".png", ".gif"].some((e) =>
-			name.toLowerCase().endsWith(e)
-		);
-
-		if (attachment && validType && validName) {
+		if (attachment) {
 			embed.setImage(attachment.url);
 		}
 	}
