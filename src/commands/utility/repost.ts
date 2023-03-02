@@ -1,6 +1,7 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import { messageFromURL, messageToEmbed } from "#helpers/messageHelpers.js";
+import Logger from "#logger";
 import { type Command, type CommandData } from "#typings";
 import {
 	ApplicationCommandOptionType,
@@ -53,6 +54,10 @@ const handle = async (
 		.component();
 
 	const row = components.createRows(urlButton);
+
+	new Logger({ interaction, prefix: "REPOST" }).log(
+		`Reposted message (${message.id}) by ${message.author.tag}`
+	);
 
 	await interaction.editReply({
 		embeds: [embeds],

@@ -2,6 +2,7 @@ import components from "#components";
 import { Emojis } from "#constants";
 import { messageToEmbed } from "#helpers/messageHelpers.js";
 import yesNo from "#helpers/yesNo.js";
+import Logger from "#logger";
 import { type Command, type CommandData } from "#typings";
 import { oneLine, source, stripIndent } from "common-tags";
 import {
@@ -186,6 +187,11 @@ const handle = async (
 		.catch(() => false);
 
 	if (unpinned) {
+		new Logger({ interaction, prefix: "ARCHIVE PINS" }).log(
+			`Archived pin ${message.id} by ${message.author.tag} (${message.author.id})`,
+			`in archive channel #${channel.name} (${channel.id})`
+		);
+
 		const rows = components.createRows(
 			components.buttons
 				.url({ label: "Original message", url: message.url })
