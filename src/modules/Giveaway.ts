@@ -891,8 +891,6 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 			ids.push(id);
 
-			console.log(alreadyNotified);
-
 			if (alreadyNotified.has(userId)) {
 				continue;
 			}
@@ -906,7 +904,8 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			ids.push(id);
 
 			const content = stripIndent`
-				${Emojis.Tada} You just won a giveaway in ${this.guild.name}!
+				**You just won a giveaway!** ${Emojis.Tada}
+				  → ${this.title} • #${this.guildRelativeId} • ${this.guild.name}.
 
 				Make sure to **claim your prize(s)**!
 
@@ -921,7 +920,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 			const button = url
 				? new ButtonBuilder({
-						label: "Announcement Post",
+						label: "Go to announcement",
 						style: ButtonStyle.Link,
 						url
 				  })
