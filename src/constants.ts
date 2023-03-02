@@ -72,9 +72,9 @@ export const Emojis = {
 	Think: "🤔",
 	Unlock: "🔓",
 	WIP: "🚧",
-	V: "<:Checkmark:1054081028962136104>",
-	Warn: "<:Warning:1061984815781531729>",
-	X: "<:Xmark:1054081030107185252>"
+	V: "<:V:1054081028962136104>",
+	Warn: "<:Warning:1080833238823608520>",
+	X: "<:X:1054081030107185252>"
 } as const;
 
 export const INTENTS = [
