@@ -1,5 +1,10 @@
 import { Colors, RegExp } from "#constants";
-import { EmbedBuilder, type Client, type Message } from "discord.js";
+import {
+	EmbedBuilder,
+	type Attachment,
+	type Client,
+	type Message
+} from "discord.js";
 
 export function parseMessageURL(url: string) {
 	const match = url.match(RegExp.MessageURL)?.groups;
@@ -41,6 +46,48 @@ export async function messageFromURL(
 	return channel.messages.fetch(obj.messageId).catch(() => null);
 }
 
+const attachmentsToURL = (...attachments: Array<Attachment>) => {
+	const { image, video, audio, other } = attachments.reduce(
+		(obj, attachment) => {
+			if (attachment.contentType?.startsWith("image")) {
+				obj.image.push(
+					`[Image ${obj.image.length + 1}](<${attachment.url}>)`
+				);
+			} else if (attachment.contentType?.startsWith("video")) {
+				obj.video.push(
+					`[Video ${obj.video.length + 1}](<${attachment.url}>)`
+				);
+			} else if (attachment.contentType?.startsWith("audio")) {
+				obj.audio.push(
+					`[Audio ${obj.audio.length + 1}](<${attachment.url}>)`
+				);
+			} else {
+				obj.other.push(
+					`[Attachment ${obj.other.length + 1}](<${attachment.url}>)`
+				);
+			}
+
+			return obj;
+		},
+		{
+			image: [] as Array<string>,
+			video: [] as Array<string>,
+			audio: [] as Array<string>,
+			other: [] as Array<string>
+		}
+	);
+
+	return [...image, ...video, ...audio, ...other].join(" • ");
+};
+
+const isValidAttachment = (attachment: Attachment) =>
+	["image/jpeg", "image/png", "image/gif"].includes(
+		attachment.contentType ?? ""
+	) &&
+	[".jpg", ".png", ".gif"].some((e) =>
+		(attachment.name ?? "").toLowerCase().endsWith(e)
+	);
+
 export const messageToEmbed = (message: Message<true>) => {
 	const embed = new EmbedBuilder()
 		.setAuthor({
@@ -66,22 +113,21 @@ export const messageToEmbed = (message: Message<true>) => {
 	}
 
 	if (message.attachments.size) {
-		const attachment = message.attachments.find(
-			(a) =>
-				["image/jpeg", "image/png", "image/gif"].includes(
-					a.contentType ?? ""
-				) &&
-				[".jpg", ".png", ".gif"].some((e) =>
-					(a.name ?? "").toLowerCase().endsWith(e)
-				)
+		const attachment = message.attachments.find((a) =>
+			isValidAttachment(a)
 		);
 
 		if (1 < message.attachments.size) {
 			content.push(
-				[...message.attachments.values()]
-					.map(({ url }, i) => `[Attachment ${i + 1}](<${url}>)`)
-					.join(" • ")
+				attachmentsToURL(...[...message.attachments.values()])
 			);
+		} else if (!attachment) {
+			const firstAttachment = message.attachments.first();
+
+			// should always be there
+			if (firstAttachment) {
+				content.push(attachmentsToURL(firstAttachment));
+			}
 		}
 
 		if (attachment) {
