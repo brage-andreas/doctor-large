@@ -193,7 +193,18 @@ const modalGiveawayNewTitle = (oldTitle: string) =>
 		placeholder: oldTitle
 	});
 
-const emptyString = `${Emojis.Sleep} Whoa so empty — there is no description`;
+const EMPTY_DESCRIPTION = `${Emojis.Sleep} Whoa so empty — there is no description`;
+const parsePlaceholder = (string: string | null) => {
+	if (!string) {
+		return EMPTY_DESCRIPTION;
+	}
+
+	if (100 < string.length) {
+		return `${string.slice(0, 97)}...`;
+	}
+
+	return string;
+};
 
 const modalGiveawayNewDescription = (oldDescription: string | null) => {
 	const builder = new TextInputBuilder({
@@ -206,7 +217,7 @@ const modalGiveawayNewDescription = (oldDescription: string | null) => {
 
 	if (oldDescription) {
 		builder.setValue(oldDescription);
-		builder.setPlaceholder(oldDescription ?? emptyString);
+		builder.setPlaceholder(parsePlaceholder(oldDescription));
 	}
 
 	return builder;
@@ -227,12 +238,17 @@ const modalGiveawayNewWinnerQuantity = (oldNumberOfWinners: number) =>
  * Children: newTitle, newDescription, newWinnerQuantity
  */
 const editOptionsModal = {
-	component: (
-		guildRelativeId: number,
-		oldDescription: string | null,
-		oldTitle: string,
-		oldWinnerQuantity: number
-	) =>
+	component: ({
+		guildRelativeId,
+		oldTitle,
+		oldDescription,
+		oldWinnerQuantity
+	}: {
+		guildRelativeId: number;
+		oldTitle: string;
+		oldDescription: string | null;
+		oldWinnerQuantity: number;
+	}) =>
 		new ModalBuilder({
 			customId: modalId(),
 			title: `Edit giveaway #${guildRelativeId}`,
