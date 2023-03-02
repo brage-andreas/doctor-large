@@ -18,8 +18,7 @@ export function parseMessageURL(url: string) {
 
 export async function messageFromURL(
 	client: Client<true>,
-	data: string | { guildId: string; channelId: string; messageId: string },
-	options?: { rejectProtectedChannels?: boolean }
+	data: string | { guildId: string; channelId: string; messageId: string }
 ) {
 	const obj = typeof data === "string" ? parseMessageURL(data) : data;
 
@@ -31,10 +30,6 @@ export async function messageFromURL(
 
 	if (!guild) {
 		return null;
-	}
-
-	if (options?.rejectProtectedChannels) {
-		//
 	}
 
 	const channel = guild.channels.cache.get(obj.channelId);
