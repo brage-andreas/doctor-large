@@ -192,7 +192,7 @@ export default async function toEndOptions(
 		content: cannotEnd,
 		components: [
 			new ActionRowBuilder<ButtonBuilder>().setComponents(
-				setDate.component(),
+				setDate.component().setDisabled(true),
 				clearDate.component().setDisabled(!endDate),
 				roundDateToNearestHour
 					.component()
