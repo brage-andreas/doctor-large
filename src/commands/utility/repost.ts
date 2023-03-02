@@ -1,8 +1,13 @@
 import components from "#components";
 import { Emojis } from "#constants";
-import { messageFromURL, messageToEmbed } from "#helpers/messageHelpers.js";
+import {
+	messageFromURL,
+	messageToEmbed,
+	parseMessageURL
+} from "#helpers/messageHelpers.js";
 import Logger from "#logger";
 import { type Command, type CommandData } from "#typings";
+import { oneLine } from "common-tags";
 import {
 	ApplicationCommandOptionType,
 	ApplicationCommandType,
@@ -78,7 +83,30 @@ const chatInput = async (
 
 	const urlInput = interaction.options.getString("message_link", true);
 
-	const message = await messageFromURL(interaction.client, urlInput);
+	const data = parseMessageURL(urlInput);
+
+	if (!data) {
+		await interaction.editReply({
+			content: oneLine`
+				${Emojis.Error} Could not parse \`${urlInput}\` as a message URL.
+				Double-check it and try again.
+			`
+		});
+
+		return;
+	}
+
+	if (data.guildId !== interaction.guildId) {
+		await interaction.editReply({
+			content: `${Emojis.Error} The message is not from this server.`
+		});
+
+		return;
+	}
+
+	// TODO: protected channel check
+
+	const message = await messageFromURL(interaction.client, data);
 
 	if (!message) {
 		return await interaction.editReply({
