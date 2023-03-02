@@ -63,7 +63,7 @@ export default async function toEndedDashboard(
 	).length;
 
 	const noWinners = !giveaway.winners.length;
-	const noUnclaimed = noWinners && !unclaimedN;
+	const noUnclaimed = !unclaimedN;
 
 	if (giveaway.winnersArePublished()) {
 		publishWinnersButtons.push(
