@@ -1,4 +1,5 @@
 import components from "#components";
+import { HIDE_OPTION } from "#constants";
 import AutoroleManager from "#database/autorole.js";
 import Logger from "#logger";
 import {
@@ -23,7 +24,8 @@ const data: CommandData = {
 			"Configuration for giving joining members specific roles automatically.",
 		default_member_permissions: (
 			PermissionFlagsBits.ManageRoles | PermissionFlagsBits.ManageGuild
-		).toString()
+		).toString(),
+		options: [HIDE_OPTION]
 	}
 };
 
@@ -32,7 +34,9 @@ const chatInput = async (interaction: CommandModuleInteractions) => {
 		return;
 	}
 
-	await interaction.deferReply({ ephemeral: true });
+	const hide = interaction.options.getBoolean("hide") ?? true;
+
+	await interaction.deferReply({ ephemeral: hide });
 
 	const autoroleManager = new AutoroleManager(interaction.guild);
 	await autoroleManager.initialize();

@@ -1,9 +1,10 @@
+import components from "#components";
 import { Emojis, Giveaway } from "#constants";
 import prisma from "#database/prisma.js";
 import { longstamp } from "#helpers/timestamps.js";
 import GiveawayModule from "#modules/Giveaway.js";
 import { type GiveawayWithIncludes, type WinnerId } from "#typings";
-import { oneLine, stripIndents } from "common-tags";
+import { oneLine, source } from "common-tags";
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
@@ -105,22 +106,28 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 				? `https://discord.com/channels/${guildId}/${channelId}/${publishedMessageId}`
 				: null;
 
-		const timeLeft = longstamp(endDate, { extraLong: true, reverse: true });
+		const timeLeft = longstamp(endDate);
 
-		const string = stripIndents`
-			**Giveaway is about to end.**
+		const string = source`
+			**A giveaway you are hosting is about to end!** ${Emojis.Sparks}
+			  → ${title} • #${guildRelativeId} • ${guildName}
 
-			A giveaway you are hosting ends ${timeLeft}
-				
-			#${guildRelativeId} ${title} (in ${guildName})
-			
-			End automation is set to: ${endAutomation}
-			
-			Here is a link to the giveaway:
-			${url}
+			It will end ${timeLeft}.
+
+			End automation is set to: **${endAutomation}**
 		`;
 
-		client.users.send(hostUserId, string).catch(() => null);
+		const rows = url
+			? components.createRows(
+					components.buttons
+						.url({ label: "Go to giveaway", url })
+						.component()
+			  )
+			: undefined;
+
+		client.users
+			.send(hostUserId, { content: string, components: rows })
+			.catch(() => null);
 
 		if (giveaway.endAutomation === "None") {
 			return;
@@ -163,20 +170,38 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 				? `https://discord.com/channels/${guildId}/${channelId}/${publishedMessageId}`
 				: null;
 
-		const string = stripIndents`
-			**Giveaway has ended.**
+		const string = source`
+			**A giveaway you are hosting just ended!** ${Emojis.Sparks}.
+			  → ${title} • #${guildRelativeId} • ${guildName}.
 
-			A giveaway you are hosting just ended ${Emojis.Sparks}.
+			End automation was set to: **${endAutomation}**.
 
-			#${guildRelativeId} ${title} (in ${guildName})
-			
-			End automation was set to: ${endAutomation}
-			
-			Here is a link to the giveaway:
-			${url}
+			How to see winners:
+			  1. Go to ${guildName}.
+			  2. Open the dashboard of giveaway #${guildRelativeId}.
+			  3. Click the "Show all winners" button.
+
+			The winners have to manually claim their prizes.
+			If a winner does not respond, you can re-roll unclaimed prizes.
+
+			The winners can claim their prizes using:
+			  a) The /my-giveaways command.
+			  b) The "${Emojis.StarEyes} Accept Prize" button in the announcement.
+
+			GG!
 		`;
 
-		client.users.send(hostUserId, string).catch(() => null);
+		const rows = url
+			? components.createRows(
+					components.buttons
+						.url({ label: "Go to giveaway", url })
+						.component()
+			  )
+			: undefined;
+
+		client.users
+			.send(hostUserId, { content: string, components: rows })
+			.catch(() => null);
 
 		if (giveaway.endAutomation === "None") {
 			await prisma.giveaway.update({
@@ -276,25 +301,9 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 			const ids: Array<WinnerId> = [];
 
 			if (winnerBucket) {
-				winnerBucket.forEach(({ userId, id }) => {
-					ids.push(id);
-
-					const url =
-						message?.url ?? module.publishedMessageURL ?? "";
-
-					const msg = stripIndents`
-						${Emojis.Tada} You just **won a giveaway** in ${guild.name}!
-
-						Giveaway #${giveaway.guildRelativeId} ${giveaway.title}
-
-						Make sure to **claim your prize(s)**!
-						You can to do by using /my-giveaways in the server,
-						or clicking the "${Emojis.StarEyes} Accept Prize" button.
-
-						${url ? `Here is a link to the giveaway:\n${url}\n\n` : ""}GG!
-					`;
-
-					client.users.send(userId, msg).catch(() => null);
+				await module.dmWinners({
+					includeNotified: false,
+					winners: winnerBucket
 				});
 
 				await module.manager.prisma.winner.updateMany({

@@ -5,9 +5,8 @@ import { stripIndents } from "common-tags";
 import {
 	ActionRowBuilder,
 	ComponentType,
-	type AutocompleteInteraction,
 	type ButtonBuilder,
-	type Interaction
+	type RepliableInteraction
 } from "discord.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import toEditGiveaway from "./dashboardModules/editGiveaway.js";
@@ -21,7 +20,7 @@ import toSetRequiredRoles from "./dashboardModules/setRequiredRoles.js";
 import toEndedDashboard from "./endedGiveawayDashboard.js";
 
 export default async function toDashboard(
-	interaction: Exclude<Interaction<"cached">, AutocompleteInteraction>,
+	interaction: RepliableInteraction<"cached">,
 	giveawayId: number
 ) {
 	const giveawayManager = new GiveawayManager(interaction.guild);
@@ -105,10 +104,23 @@ export default async function toDashboard(
 	});
 
 	collector.on("collect", async (buttonInteraction) => {
-		switch (buttonInteraction.customId) {
-			case publishGiveaway.customId: {
-				await buttonInteraction.deferUpdate();
+		if (buttonInteraction.customId !== edit.customId) {
+			await buttonInteraction.deferUpdate();
+		}
 
+		switch (buttonInteraction.customId) {
+			case edit.customId: {
+				toEditGiveaway(
+					buttonInteraction,
+					interaction,
+					giveawayId,
+					giveawayManager
+				);
+
+				break;
+			}
+
+			case publishGiveaway.customId: {
 				toPublishGiveaway(
 					buttonInteraction,
 					giveawayId,
@@ -119,8 +131,6 @@ export default async function toDashboard(
 			}
 
 			case publishingOptions.customId: {
-				await buttonInteraction.deferUpdate();
-
 				toPublishingOptions(
 					buttonInteraction,
 					giveawayId,
@@ -131,8 +141,6 @@ export default async function toDashboard(
 			}
 
 			case lockEntries.customId: {
-				await buttonInteraction.deferUpdate();
-
 				await giveaway.edit({
 					entriesLocked: true,
 					nowOutdated: {
@@ -146,8 +154,6 @@ export default async function toDashboard(
 			}
 
 			case unlockEntries.customId: {
-				await buttonInteraction.deferUpdate();
-
 				await giveaway.edit({
 					entriesLocked: false,
 					nowOutdated: {
@@ -161,16 +167,12 @@ export default async function toDashboard(
 			}
 
 			case endOptions.customId: {
-				await buttonInteraction.deferUpdate();
-
 				toEndOptions(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
 			case setRequiredRoles.customId: {
-				await buttonInteraction.deferUpdate();
-
 				toSetRequiredRoles(
 					buttonInteraction,
 					giveawayId,
@@ -181,41 +183,24 @@ export default async function toDashboard(
 			}
 
 			case setPingRoles.customId: {
-				await buttonInteraction.deferUpdate();
-
 				toSetPingRoles(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
-			case edit.customId: {
-				// await buttonInteraction.deferUpdate();
-				// Showing modal
-
-				toEditGiveaway(buttonInteraction, giveawayId, giveawayManager);
-
-				break;
-			}
-
 			case managePrizes.customId: {
-				await buttonInteraction.deferUpdate();
-
 				toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
 			case resetData.customId: {
-				await buttonInteraction.deferUpdate();
-
 				toResetData(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
 			case deleteGiveaway.customId: {
-				await buttonInteraction.deferUpdate();
-
 				toDeleteGiveaway(
 					buttonInteraction,
 					giveawayId,

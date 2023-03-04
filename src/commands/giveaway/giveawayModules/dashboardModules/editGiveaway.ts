@@ -2,13 +2,15 @@ import components from "#components";
 import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
 import { ModalCollector } from "#helpers/ModalCollector.js";
+import { timestamp } from "#helpers/timestamps.js";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
-import { type ButtonInteraction } from "discord.js";
+import { type ButtonInteraction, type RepliableInteraction } from "discord.js";
 import toDashboard from "../dashboard.js";
 
 export default async function toEditGiveaway(
 	interaction: ButtonInteraction<"cached">,
+	originalInteraction: RepliableInteraction<"cached">,
 	id: number,
 	giveawayManager: GiveawayManager
 ) {
@@ -29,26 +31,60 @@ export default async function toEditGiveaway(
 		return;
 	}
 
-	const editGiveawayModal = components.modals.editGiveaway.component(
-		giveaway.guildRelativeId,
-		giveaway.title,
-		giveaway.description,
-		giveaway.winnerQuantity
-	);
+	const editGiveawayModal = components.modals.editGiveaway.component({
+		guildRelativeId: giveaway.guildRelativeId,
+		oldTitle: giveaway.title,
+		oldDescription: giveaway.description,
+		oldWinnerQuantity: giveaway.winnerQuantity
+	});
 
 	const success = await interaction
 		.showModal(editGiveawayModal)
 		.then(() => true)
-		.catch(() => false);
+		.catch((error) => {
+			new Logger({ interaction, prefix: "EDIT GIVEAWAY" }).log(
+				"Failed to show edit modal:",
+				error
+			);
+
+			return false;
+		});
 
 	if (!success) {
-		await interaction.editReply({
-			content: `${Emojis.Error} Something went wrong trying to edit the giveaway. Try again.`
+		await interaction.reply({
+			content: `${Emojis.Error} Something went wrong trying to edit the giveaway. Try again.`,
+			ephemeral: true
 		});
+
+		return;
 	}
 
+	const cancel = components.createRows(components.buttons.cancel.component());
+
+	const msg = await originalInteraction.editReply({
+		components: cancel,
+		content: `Editing the giveaway... (time limit ${timestamp(
+			Date.now() + 300_000,
+			"R"
+		)})`,
+		embeds: []
+	});
+
 	const collector = ModalCollector(interaction, editGiveawayModal, {
-		time: 180_000
+		time: 300_000
+	});
+
+	const cancelCollector = msg.createMessageComponentCollector({
+		filter: (i) => i.user.id === interaction.user.id,
+		max: 1,
+		time: 290_000
+	});
+
+	cancelCollector.on("collect", async (i) => {
+		await i.deferUpdate();
+		collector.stop("manual");
+
+		await toDashboard(i, id);
 	});
 
 	collector.on("collect", async (modalInteraction) => {

@@ -20,25 +20,29 @@ export async function messageFromURL(
 	client: Client<true>,
 	data: string | { guildId: string; channelId: string; messageId: string }
 ) {
-	const obj = typeof data === "string" ? parseMessageURL(data) : data;
+	const data_ = typeof data === "string" ? parseMessageURL(data) : data;
 
-	if (!obj) {
+	if (!data_) {
 		return false;
 	}
 
-	const guild = client.guilds.cache.get(obj.guildId);
+	const { guildId, channelId, messageId } = data_;
+
+	const guild = client.guilds.cache.get(guildId);
 
 	if (!guild) {
 		return null;
 	}
 
-	const channel = guild.channels.cache.get(obj.channelId);
+	const channel = guild.channels.cache.get(channelId);
 
 	if (!channel?.isTextBased()) {
 		return null;
 	}
 
-	return channel.messages.fetch(obj.messageId).catch(() => null);
+	return channel.messages
+		.fetch({ message: messageId, force: true })
+		.catch(() => null);
 }
 
 const attachmentsToURL = (...attachments: Array<Attachment>) => {

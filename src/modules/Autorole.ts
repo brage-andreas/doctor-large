@@ -114,7 +114,7 @@ export default class AutoroleModule {
 
 		if (this.activated) {
 			embed.addFields({
-				name: `Current roles (${roles.length})`,
+				name: `Current roles (${this.roleIds.size})`,
 				value: roles,
 				inline: true
 			});
