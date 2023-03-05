@@ -1,8 +1,8 @@
 import { RegExp } from "#constants";
+import commands from "#scripts/loadCommands.js";
 import { type EventExport } from "#typings";
 import { stripIndents } from "common-tags";
 import { Events, type Interaction } from "discord.js";
-import commands from "../scripts/loadCommands.js";
 import acceptPrize from "./giveawayListeners/acceptPrize.js";
 import enterGiveaway from "./giveawayListeners/enterGiveaway.js";
 
