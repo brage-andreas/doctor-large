@@ -3,8 +3,8 @@ import type { Giveaway, Prize, Winner } from "@prisma/client";
 import type {
 	AutocompleteInteraction,
 	ChatInputCommandInteraction,
+	ClientEvents,
 	ContextMenuCommandInteraction,
-	Events,
 	RESTPostAPIChatInputApplicationCommandsJSONBody,
 	RESTPostAPIContextMenuApplicationCommandsJSONBody
 } from "discord.js";
@@ -22,7 +22,7 @@ export type Color =
 	| "yellow";
 
 export interface EventExport {
-	event: Events;
+	event: keyof ClientEvents;
 	execute(...args: Array<unknown>): Promise<unknown> | unknown;
 }
 
@@ -37,7 +37,6 @@ export type CommandModuleInteractions =
 
 interface CommandExport {
 	data: {
-		commandName: string;
 		chatInput?: RESTPostAPIChatInputApplicationCommandsJSONBody;
 		contextMenu?: RESTPostAPIContextMenuApplicationCommandsJSONBody;
 	};
