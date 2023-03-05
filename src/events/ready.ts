@@ -1,7 +1,7 @@
 import { ACTIVITIES } from "#constants";
 import Logger from "#logger";
 import { type Client } from "discord.js";
-import checkTimestamps from "../checkTimestamps.js";
+import checkTimestamps from "../jobs/index.js";
 
 export function run(client: Client<true>) {
 	new Logger({ prefix: "READY", color: "green" }).log(
@@ -9,8 +9,8 @@ export function run(client: Client<true>) {
 	);
 
 	setInterval(() => {
-		checkTimestamps({ client, checkEndingGiveaways: true });
-	}, 60_000 /* 1 minutes */);
+		checkTimestamps({ client, jobs: { all: true } });
+	}, 60_000 /* 1 minute */);
 
 	const getActivity = () => [
 		ACTIVITIES[Math.floor(Math.random() * ACTIVITIES.length)]
