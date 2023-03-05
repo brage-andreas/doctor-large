@@ -14,9 +14,8 @@ import {
 } from "discord.js";
 
 const data: CommandData = {
-	commandName: "archive_oldest_pin",
 	chatInput: {
-		name: "archive_oldest_pin",
+		name: "archive-oldest-pin",
 		description: "Archive the oldest pin from this channel.",
 		dm_permission: false,
 		default_member_permissions:
