@@ -9,8 +9,8 @@ import {
 import GiveawayManager from "#database/giveaway.js";
 import Logger from "#logger";
 import {
-	type Command,
 	type CommandData,
+	type CommandExport,
 	type GiveawayId,
 	type PrizesOfMapObj
 } from "#typings";
@@ -445,7 +445,7 @@ const contextMenu = async (
 	await run(interaction, interaction.targetUser);
 };
 
-export const getCommand: () => Command = () => ({
+export const getCommand: () => CommandExport = () => ({
 	data,
 	handle: {
 		chatInput,

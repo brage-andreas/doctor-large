@@ -1,6 +1,6 @@
 import { Emojis, HIDE_OPTION } from "#constants";
 import Logger from "#logger";
-import { type Command, type CommandData } from "#typings";
+import { type CommandData, type CommandExport } from "#typings";
 import { oneLine } from "common-tags";
 import {
 	ApplicationCommandOptionType,
@@ -86,7 +86,7 @@ const autocomplete = async (interaction: AutocompleteInteraction<"cached">) => {
 	await sendToAutocompleteGiveaway(interaction);
 };
 
-export const getCommand: () => Command = () => ({
+export const getCommand: () => CommandExport = () => ({
 	data,
 	handle: {
 		chatInput,

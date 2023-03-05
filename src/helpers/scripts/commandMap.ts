@@ -1,8 +1,8 @@
 import { COMMAND_DIR } from "#constants";
-import { type Command, type CommandImport } from "#typings";
+import { type CommandExport, type CommandImport } from "#typings";
 import { existsSync, lstatSync, readdirSync } from "fs";
 
-const commandMap: Map<string, Command> = new Map();
+const commandMap: Map<string, CommandExport> = new Map();
 
 const importAndSetCommandIntoMap = async (relativePath: string) => {
 	const commandImport = (await import(

@@ -3,8 +3,8 @@ import { HIDE_OPTION } from "#constants";
 import AutoroleManager from "#database/autorole.js";
 import Logger from "#logger";
 import {
-	type Command,
 	type CommandData,
+	type CommandExport,
 	type CommandModuleInteractions
 } from "#typings";
 import { oneLine } from "common-tags";
@@ -139,7 +139,7 @@ const chatInput = async (interaction: CommandModuleInteractions) => {
 	await dashboard();
 };
 
-export const getCommand: () => Command = () => ({
+export const getCommand: () => CommandExport = () => ({
 	data,
 	handle: {
 		chatInput

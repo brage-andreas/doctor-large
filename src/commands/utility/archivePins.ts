@@ -3,7 +3,7 @@ import { Emojis } from "#constants";
 import { messageToEmbed } from "#helpers/messageHelpers.js";
 import yesNo from "#helpers/yesNo.js";
 import Logger from "#logger";
-import { type Command, type CommandData } from "#typings";
+import { type CommandData, type CommandExport } from "#typings";
 import { oneLine, source, stripIndent } from "common-tags";
 import {
 	ApplicationCommandType,
@@ -234,7 +234,7 @@ const contextMenu = async (
 	await handle(interaction);
 };
 
-export const getCommand: () => Command = () => ({
+export const getCommand: () => CommandExport = () => ({
 	data,
 	handle: {
 		chatInput,
