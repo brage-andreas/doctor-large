@@ -44,7 +44,7 @@
 		"#typings": "./dist/typings/index.d.js",
 		"#modules/*": "./dist/modules/*",
 		"#logger": "./dist/logger/logger.js",
-		"#components": "./dist/components/index.js",
+		"#components": "./dist/components.js",
 		"#database/*": "./dist/database/*",
 		"#helpers/*": "./dist/helpers/*"
 	}
