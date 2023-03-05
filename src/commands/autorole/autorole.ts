@@ -16,7 +16,6 @@ import {
 } from "discord.js";
 
 const data: CommandData = {
-	commandName: "autorole",
 	chatInput: {
 		name: "autorole",
 		dm_permission: false,

@@ -13,7 +13,6 @@ import sendToCreate from "./giveawayModules/create.js";
 import sendToDashboard from "./giveawayModules/dashboard.js";
 
 const data: CommandData = {
-	commandName: "giveaway",
 	chatInput: {
 		default_member_permissions: PermissionFlagsBits.ManageGuild.toString(),
 		description: "Configuration for giveaways.",

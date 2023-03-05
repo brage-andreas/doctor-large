@@ -31,7 +31,6 @@ import {
 } from "discord.js";
 
 const data: CommandData = {
-	commandName: "my-giveaways",
 	chatInput: {
 		description: "View all the giveaways you have participated in.",
 		dm_permission: false,

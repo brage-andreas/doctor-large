@@ -1,12 +1,13 @@
 import components from "#components";
 import { Emojis } from "#constants";
+import ConfigManager from "#database/config.js";
 import {
 	messageFromURL,
 	messageToEmbed,
 	parseMessageURL
 } from "#helpers/messageHelpers.js";
 import Logger from "#logger";
-import { type Command, type CommandData } from "#typings";
+import { type CommandData, type CommandExport } from "#typings";
 import { oneLine } from "common-tags";
 import {
 	ApplicationCommandOptionType,
@@ -18,7 +19,6 @@ import {
 } from "discord.js";
 
 const data: CommandData = {
-	commandName: "repost",
 	chatInput: {
 		name: "repost",
 		description: "Repost a message to this channel.",
@@ -104,13 +104,38 @@ const chatInput = async (
 		return;
 	}
 
-	// TODO: protected channel check
+	const channel = interaction.guild.channels.cache.get(data.channelId);
+
+	if (!channel?.isTextBased()) {
+		await interaction.editReply({
+			content: `${Emojis.Error} The channel from the url is invalid: \`${urlInput}\``
+		});
+
+		return;
+	}
+
+	const isProtectedChannel =
+		channel.id !== interaction.channelId &&
+		(await ConfigManager.isProtectedChannel(
+			interaction.guildId,
+			channel.id,
+			channel.parentId,
+			channel.parent?.parentId
+		));
+
+	if (isProtectedChannel) {
+		await interaction.editReply({
+			content: `${Emojis.Error} You cannot repost this message, as it originates from a protected channel.`
+		});
+
+		return;
+	}
 
 	const message = await messageFromURL(interaction.client, data);
 
 	if (!message) {
 		return await interaction.editReply({
-			content: `${Emojis.Error} I could not find a message with the url: \`${urlInput}\``
+			content: `${Emojis.Error} I could not find a message with the URL: \`${urlInput}\``
 		});
 	}
 
@@ -125,7 +150,7 @@ const contextMenu = async (
 	handle(interaction, interaction.targetMessage);
 };
 
-export const getCommand: () => Command = () => ({
+export const getCommand: () => CommandExport = () => ({
 	data,
 	handle: {
 		chatInput,
