@@ -1,9 +1,10 @@
 import { ACTIVITIES } from "#constants";
 import Logger from "#logger";
-import { type Client } from "discord.js";
+import { type EventExport } from "#typings";
+import { Events, type Client } from "discord.js";
 import checkTimestamps from "../jobs/index.js";
 
-export function run(client: Client<true>) {
+const execute = (client: Client<true>) => {
 	new Logger({ prefix: "READY", color: "green" }).log(
 		`Online as ${client.user.tag} (${client.user.id})`
 	);
@@ -21,4 +22,9 @@ export function run(client: Client<true>) {
 			activities: getActivity()
 		});
 	}, 43_200_000 /* 12 hours */);
-}
+};
+
+export const getEvent: () => EventExport = () => ({
+	event: Events.ClientReady,
+	execute
+});

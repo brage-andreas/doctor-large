@@ -1,11 +1,12 @@
 import { RegExp } from "#constants";
 import { getCommandFromCommandMap } from "#helpers/scripts/commandMap.js";
+import { type EventExport } from "#typings";
 import { stripIndents } from "common-tags";
-import { type Interaction } from "discord.js";
+import { Events, type Interaction } from "discord.js";
 import acceptPrize from "./giveawayListeners/acceptPrize.js";
 import enterGiveaway from "./giveawayListeners/enterGiveaway.js";
 
-export async function run(interaction: Interaction) {
+const execute = async (interaction: Interaction) => {
 	if (!interaction.inGuild()) {
 		if (interaction.isRepliable()) {
 			interaction.reply({
@@ -92,4 +93,9 @@ export async function run(interaction: Interaction) {
 
 		return void (await command.handle.contextMenu(interaction));
 	}
-}
+};
+
+export const getEvent: () => EventExport = () => ({
+	event: Events.InteractionCreate,
+	execute
+});

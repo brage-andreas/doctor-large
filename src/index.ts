@@ -1,6 +1,6 @@
 import { ACTIVITIES, EVENT_DIR, INTENTS } from "#constants";
 import Logger from "#logger";
-import { type EventFn, type EventImport } from "#typings";
+import { type EventExport } from "#typings";
 import { Client } from "discord.js";
 import { existsSync, lstatSync, readdirSync } from "fs";
 import process from "node:process";
@@ -16,27 +16,81 @@ const client = new Client({
 	}
 });
 
-const events: Map<string, EventFn> = new Map();
+const isFolder = (url: URL) => existsSync(url) && lstatSync(url).isDirectory();
+const events: Set<EventExport> = new Set();
 
 for (const fileName of readdirSync(EVENT_DIR)) {
 	const url = new URL(`./events/${fileName}`, import.meta.url);
 
-	if (existsSync(url) && lstatSync(url).isDirectory()) {
+	if (isFolder(url)) {
 		continue;
 	}
 
-	const event = (await import(`./events/${fileName}`)) as EventImport;
-	const name = fileName.split(".")[0];
+	const rawEventImport = await import(url.toString());
 
-	events.set(name, event.run);
+	if (typeof rawEventImport !== "object") {
+		throw new Error(
+			`File "./events/${fileName}" does not export an object`
+		);
+	}
+
+	if (!("getEvent" in rawEventImport)) {
+		throw new Error(
+			`File "./events/${fileName}" does not contain property 'getEvent'`
+		);
+	}
+
+	if (typeof rawEventImport.getEvent !== "function") {
+		throw new Error(
+			`File "./events/${fileName}" exported property 'getEvent' is not of type function`
+		);
+	}
+
+	const rawEvent = rawEventImport.getEvent();
+
+	if (typeof rawEvent !== "object") {
+		throw new Error(
+			`File "./events/${fileName} exported property 'getEvent' does not export an object`
+		);
+	}
+
+	if (!("event" in rawEvent)) {
+		throw new Error(
+			`File "./events/${fileName} exported property 'getEvent' does not contain property 'event'`
+		);
+	}
+
+	if (typeof rawEvent.event !== "string") {
+		throw new Error(
+			`File "./events/${fileName} exported property 'getEvent' property 'event' is not of type string `
+		);
+	}
+
+	if (!("execute" in rawEvent)) {
+		throw new Error(
+			`File "./events/${fileName} exported property 'getEvent' does not contain property 'execute'`
+		);
+	}
+
+	if (typeof rawEvent.execute !== "function") {
+		throw new Error(
+			`File "./events/${fileName} exported property 'getEvent' property 'execute' is not of type function`
+		);
+	}
+
+	events.add(rawEvent as EventExport);
 }
 
-events.forEach((event, name) => {
-	client.on(name, (...args: Array<unknown>) => {
-		if (name === "ready") {
-			event(client, ...args);
+new Logger({ color: "grey", prefix: "EVENTS" }).log(
+	`Loading ${events.size} events...`
+);
+
+events.forEach(({ event, execute }) => {
+	client.on(event.toString(), (...args: Array<unknown>) => {
+		if (event === "ready") {
+			execute(client, ...args);
 		} else {
-			event(...args);
+			execute(...args);
 		}
 	});
 });

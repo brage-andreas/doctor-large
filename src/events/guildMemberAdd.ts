@@ -1,8 +1,9 @@
 import AutoroleManager from "#database/autorole.js";
 import Logger from "#logger";
-import { type GuildMember } from "discord.js";
+import { type EventExport } from "#typings";
+import { Events, type GuildMember } from "discord.js";
 
-export async function run(member: GuildMember) {
+const execute = async (member: GuildMember) => {
 	if (member.user.bot) {
 		return;
 	}
@@ -32,4 +33,9 @@ export async function run(member: GuildMember) {
 			.setColor("red")
 			.log(`Failed to give roles to ${member.user.tag} (${member.id})`);
 	}
-}
+};
+
+export const getEvent: () => EventExport = () => ({
+	event: Events.GuildMemberAdd,
+	execute
+});
