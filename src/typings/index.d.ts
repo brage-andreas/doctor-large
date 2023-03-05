@@ -4,14 +4,13 @@ import type {
 	AutocompleteInteraction,
 	ChatInputCommandInteraction,
 	ContextMenuCommandInteraction,
+	Events,
 	RESTPostAPIChatInputApplicationCommandsJSONBody,
 	RESTPostAPIContextMenuApplicationCommandsJSONBody
 } from "discord.js";
 
 type Prop<T extends object, P extends keyof T> = T[P];
 type UnknownOrPromise = Promise<unknown> | unknown;
-
-export type EventFn = (...args: Array<unknown>) => Promise<unknown> | unknown;
 
 export type Color =
 	| "black"
@@ -22,8 +21,13 @@ export type Color =
 	| "white"
 	| "yellow";
 
+export interface EventExport {
+	event: Events;
+	execute(...args: Array<unknown>): Promise<unknown> | unknown;
+}
+
 export interface EventImport {
-	run: EventFn;
+	getEvent(): EventExport;
 }
 
 export type CommandModuleInteractions =
@@ -31,7 +35,7 @@ export type CommandModuleInteractions =
 	| ChatInputCommandInteraction<"cached">
 	| ContextMenuCommandInteraction<"cached">;
 
-interface Command {
+interface CommandExport {
 	data: {
 		commandName: string;
 		chatInput?: RESTPostAPIChatInputApplicationCommandsJSONBody;
@@ -44,10 +48,10 @@ interface Command {
 	};
 }
 
-export type CommandData = Prop<Command, "data">;
+export type CommandData = Prop<CommandExport, "data">;
 
 export interface CommandImport {
-	getCommand(): Command;
+	getCommand(): CommandExport;
 }
 
 interface PrizesOfMapObj {
