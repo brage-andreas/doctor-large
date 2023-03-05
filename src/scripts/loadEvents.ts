@@ -2,7 +2,7 @@ import { EVENT_DIR } from "#constants";
 import { type EventExport } from "#typings";
 import { type Client } from "discord.js";
 import { readdirSync, statSync } from "node:fs";
-import { grey } from "../../logger/color.js";
+import { grey } from "../logger/color.js";
 
 const isFolder = (url: URL) =>
 	statSync(url, { throwIfNoEntry: false })?.isDirectory();
@@ -11,14 +11,14 @@ export default async function loadEvents(client: Client) {
 	const events: Set<EventExport> = new Set();
 
 	for (const fileName of readdirSync(EVENT_DIR)) {
-		const url = new URL(`./../../events/${fileName}`, import.meta.url);
+		const url = new URL(`../events/${fileName}`, import.meta.url);
 
 		if (isFolder(url) || !fileName.endsWith(".js")) {
 			continue;
 		}
 
 		const err = (string: string) => {
-			throw new Error(`File './events/${fileName}' ${string}`);
+			throw new Error(`File '/events/${fileName}' ${string}`);
 		};
 
 		const rawEventImport = await import(url.toString());

@@ -1,8 +1,8 @@
 import { ACTIVITIES, INTENTS } from "#constants";
-import loadEvents from "#helpers/scripts/loadEvents.js";
 import Logger from "#logger";
 import { Client } from "discord.js";
 import process from "node:process";
+import loadEvents from "./scripts/loadEvents.js";
 
 const client = new Client({
 	intents: INTENTS,

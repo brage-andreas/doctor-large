@@ -1,16 +1,16 @@
 import { COMMAND_DIR } from "#constants";
 import { type CommandExport, type CommandImport } from "#typings";
 import { existsSync, lstatSync, readdirSync } from "fs";
-import { grey } from "../../logger/color.js";
+import { grey } from "../logger/color.js";
 
 const commands: Map<string, CommandExport> = new Map();
 
 const importAndSetCommandIntoMap = async (relativePath: string) => {
 	const err = (string: string) => {
-		throw new Error(`File './commands/${relativePath}' ${string}`);
+		throw new Error(`File '/commands/${relativePath}' ${string}`);
 	};
 
-	const rawCommandImport = await import(`../../commands/${relativePath}`);
+	const rawCommandImport = await import(`../commands/${relativePath}`);
 
 	if (typeof rawCommandImport !== "object") {
 		err("does not export an object");
@@ -96,7 +96,7 @@ const importAndSetCommandIntoMap = async (relativePath: string) => {
 const isFolder = (url: URL) => existsSync(url) && lstatSync(url).isDirectory();
 
 for (const fileOrFolderName of readdirSync(COMMAND_DIR)) {
-	const path = new URL(`../../commands/${fileOrFolderName}`, import.meta.url);
+	const path = new URL(`../commands/${fileOrFolderName}`, import.meta.url);
 
 	// if path exists and is a folder
 	if (isFolder(path)) {
@@ -106,7 +106,7 @@ for (const fileOrFolderName of readdirSync(COMMAND_DIR)) {
 			}
 
 			const nestedPath = new URL(
-				`../../commands/${fileOrFolderName}/${nestedFileOrFolderName}`,
+				`../commands/${fileOrFolderName}/${nestedFileOrFolderName}`,
 				import.meta.url
 			);
 

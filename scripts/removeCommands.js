@@ -1,3 +1,3 @@
-import setCommandsScript from "../dist/helpers/scripts/setCommandsScript.js";
+import setCommandsScript from "../dist/scripts/setCommandsScript.js";
 
 setCommandsScript({ clear: true });
