@@ -56,7 +56,7 @@ export default async function toDashboard(
 		setPingRoles,
 		managePrizes,
 		edit,
-		resetData,
+		reset,
 		deleteGiveaway
 	} = components.buttons;
 
@@ -79,7 +79,7 @@ export default async function toDashboard(
 	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
 		managePrizes.component(),
 		edit.component(),
-		resetData.component(),
+		reset.component("data"),
 		deleteGiveaway.component()
 	);
 
@@ -194,7 +194,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case resetData.customId: {
+			case reset.customId: {
 				toResetData(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
