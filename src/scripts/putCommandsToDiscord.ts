@@ -14,7 +14,9 @@ function getCommandData() {
 	) as Array<RESTPostAPIApplicationCommandsJSONBody>;
 }
 
-export default async function setCommands({ clear }: { clear?: boolean }) {
+export default async function putCommandsToDiscord(
+	{ clear }: { clear: boolean } = { clear: false }
+) {
 	if (!process.env.BOT_TOKEN) {
 		throw new Error("'BOT_TOKEN' option is not defined in .env");
 	}
