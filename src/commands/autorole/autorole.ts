@@ -40,7 +40,7 @@ const chatInput = async (interaction: CommandModuleInteractions) => {
 	const autoroleManager = new AutoroleManager(interaction.guild);
 	await autoroleManager.initialize();
 
-	const logger = new Logger({ prefix: "AUTOROLE" });
+	const logger = new Logger({ prefix: "AUTOROLE", interaction });
 
 	const dashboard = async () => {
 		const autorole = await autoroleManager.get();
@@ -73,8 +73,6 @@ const chatInput = async (interaction: CommandModuleInteractions) => {
 
 		collector.on("collect", async (i) => {
 			await i.deferUpdate();
-
-			logger.setInteraction(i);
 
 			let active = autorole.activated ?? false;
 			let roles = [...autorole.roleIds];
