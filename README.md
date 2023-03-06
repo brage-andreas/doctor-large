@@ -22,7 +22,7 @@
 - Commands go in `./src/commands/*`.
 - Commands can be nested one layer (`./src/commands/**/*`).
 - Files can be prefixed with `mod.` to be ignored.
-- Files can be nested at least three layers deep to be ignored.
+- Files can be nested at least two layers deep to be ignored.
 - Commands must export a function `getCommand` that when called returns a function returning an object implementing the `CommandExport` type.
 
 ### File structure example:
