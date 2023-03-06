@@ -100,7 +100,7 @@ export const getCommand: () => Command = () => ({
 ```
 
 ## Creating events
-- Events go in `./src/events`.
+- Events go in `./src/events/*`.
 - Events cannot be nested. Any nested files will be ignored.
 - Events must export a function `getEvent` that when called returns a function returning an object implementing the `EventExport` type.
 - The function `execute` has the parameters as defined in discord.js' documentation.
