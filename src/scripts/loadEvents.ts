@@ -69,7 +69,7 @@ export default async function loadEvents(client: Client) {
 	}
 
 	events.forEach(({ event, execute }) => {
-		console.log(grey(`Loaded event '${event}'`));
+		console.log(grey`Loaded event '${event}'`);
 
 		if (event === "ready") {
 			client.on(event, (...args: Array<unknown>) => {

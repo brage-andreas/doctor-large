@@ -85,11 +85,9 @@ const importAndSetCommandIntoMap = async (relativePath: string) => {
 	}
 
 	console.log(
-		grey(
-			`Loaded command '${
-				cmd.data.chatInput?.name ?? cmd.data.contextMenu?.name
-			}'`
-		)
+		grey`Loaded command '${
+			cmd.data.chatInput?.name ?? cmd.data.contextMenu?.name
+		}'`
 	);
 };
 
