@@ -30,7 +30,7 @@ const execute = async (member: GuildMember) => {
 		);
 	} else {
 		logger
-			.setColor("red")
+			.setOptions({ color: "red" })
 			.log(`Failed to give roles to ${member.user.tag} (${member.id})`);
 	}
 };
