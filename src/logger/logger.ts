@@ -114,8 +114,9 @@ export default class Logger {
 	private _log(...itemsToLog: Array<unknown>) {
 		const date = new Date().toLocaleString("en-GB", {
 			dateStyle: "long",
+			hourCycle: "h23",
 			timeStyle: "long",
-			hourCycle: "h23"
+			timeZone: "UTC"
 		});
 
 		const prefix = grey("::".padStart(this.prefix.length, " "));
