@@ -1,26 +1,28 @@
-{
-	"env": {
-		"browser": true,
-		"es6": true,
-		"node": true
+const { builtinModules } = require("node:module");
+
+module.exports = {
+	env: {
+		browser: true,
+		es6: true,
+		node: true
 	},
 
-	"parser": "@typescript-eslint/parser",
-	"parserOptions": {
-		"ecmaVersion": "latest",
-		"project": "tsconfig.json",
-		"sourceType": "module"
+	parser: "@typescript-eslint/parser",
+	parserOptions: {
+		ecmaVersion: "latest",
+		project: "tsconfig.json",
+		sourceType: "module"
 	},
 
-	"plugins": ["@typescript-eslint"],
-	"extends": [
+	plugins: ["@typescript-eslint"],
+	extends: [
 		"eslint:recommended",
 		"plugin:@typescript-eslint/recommended",
 		"prettier"
 	],
 
-	"rules": {
-		"@typescript-eslint/array-type": ["error", { "default": "generic" }],
+	rules: {
+		"@typescript-eslint/array-type": ["error", { default: "generic" }],
 		"@typescript-eslint/await-thenable": "error",
 		"@typescript-eslint/consistent-type-definitions": "error",
 		"@typescript-eslint/consistent-type-imports": "error",
@@ -55,19 +57,26 @@
 		"no-useless-rename": "error",
 		"no-useless-return": "error",
 		"no-var": "error",
+		"no-restricted-globals": [
+			"error",
+			...builtinModules.map((moduleName) => ({
+				name: moduleName,
+				message: `Import \`node:${moduleName}\` instead.`
+			}))
+		],
 
 		"object-curly-newline": [
 			"error",
 			{
-				"ExportDeclaration": {
-					"consistent": true,
-					"minProperties": 4,
-					"multiline": true
+				ExportDeclaration: {
+					consistent: true,
+					minProperties: 4,
+					multiline: true
 				},
-				"ObjectExpression": {
-					"consistent": true,
-					"minProperties": 4,
-					"multiline": true
+				ObjectExpression: {
+					consistent: true,
+					minProperties: 4,
+					multiline: true
 				}
 			}
 		],
@@ -76,14 +85,14 @@
 		"padding-line-between-statements": [
 			"error",
 			{
-				"blankLine": "always",
-				"next": ["return", "if", "for", "while", "switch", "throw"],
-				"prev": "*"
+				blankLine: "always",
+				next: ["return", "if", "for", "while", "switch", "throw"],
+				prev: "*"
 			},
 			{
-				"blankLine": "always",
-				"next": "*",
-				"prev": [
+				blankLine: "always",
+				next: "*",
+				prev: [
 					"multiline-expression",
 					"multiline-block-like",
 					"multiline-const",
@@ -95,6 +104,6 @@
 		"prefer-const": "error",
 		"prefer-template": "error",
 
-		"quotes": ["error", "double", { "avoidEscape": true }]
+		"quotes": ["error", "double", { avoidEscape: true }]
 	}
-}
+};
