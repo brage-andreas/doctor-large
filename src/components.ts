@@ -39,11 +39,17 @@ type CompatibleActionRow =
 	| ActionRowBuilder<UserSelectMenuBuilder>;
 
 const createRows = (
-	...components: Array<CompatibleComponentBuilder | ComponentObject>
+	...components: Array<
+		CompatibleComponentBuilder | ComponentObject | null | undefined
+	>
 ): Array<CompatibleActionRow> => {
 	const rows: Array<CompatibleActionRow> = [];
 
 	components.forEach((compOrObj) => {
+		if (!compOrObj) {
+			return;
+		}
+
 		const comp =
 			"component" in compOrObj ? compOrObj.component() : compOrObj;
 
@@ -853,6 +859,15 @@ const memberLogOptionsButton = {
 			.setStyle(ButtonStyle.Primary)
 } as const;
 
+const messageLogOptionsButton = {
+	customId: "messageLogOptions",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("messageLogOptions")
+			.setLabel("Message log options")
+			.setStyle(ButtonStyle.Primary)
+} as const;
+
 const pinArchiveOptionsButton = {
 	customId: "pinArchiveOptions",
 	component: () =>
@@ -927,6 +942,7 @@ const buttons = {
 	restrictRolesOptions: restrictRolesOptionsButton,
 	editCurrentMessage: editCurrentMessageButton,
 	reactivateGiveaway: reactivateGiveawayButton,
+	messageLogOptions: messageLogOptionsButton,
 	pinArchiveOptions: pinArchiveOptionsButton,
 	publishingOptions: publishingOptionsButton,
 	deleteAllWinners: deleteAllWinnersButton,
