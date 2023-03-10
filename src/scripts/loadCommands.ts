@@ -1,6 +1,7 @@
 import { COMMAND_DIR } from "#constants";
 import { type CommandExport, type CommandImport } from "#typings";
 import { existsSync, lstatSync, readdirSync } from "fs";
+import console from "node:console";
 import { grey } from "../logger/color.js";
 
 const commands: Map<string, CommandExport> = new Map();

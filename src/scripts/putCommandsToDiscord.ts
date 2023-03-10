@@ -4,6 +4,8 @@ import {
 	Routes,
 	type RESTPostAPIApplicationCommandsJSONBody
 } from "discord.js";
+import console from "node:console";
+import process from "node:process";
 import commands from "./loadCommands.js";
 
 function getCommandData() {

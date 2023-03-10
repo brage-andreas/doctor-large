@@ -2,6 +2,7 @@ import { ACTIVITIES } from "#constants";
 import Logger from "#logger";
 import { type EventExport } from "#typings";
 import { Events, type Client } from "discord.js";
+import console from "node:console";
 import checkTimestamps from "../jobs/index.js";
 
 const execute = (client: Client<true>) => {

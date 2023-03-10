@@ -5,6 +5,7 @@ import {
 	type Guild,
 	type Interaction
 } from "discord.js";
+import console from "node:console";
 import { getColorFn, grey } from "./color.js";
 
 const formatType = (type: string) => type.toUpperCase().padStart(3, " ");

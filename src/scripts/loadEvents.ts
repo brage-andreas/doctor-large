@@ -1,6 +1,7 @@
 import { EVENT_DIR } from "#constants";
 import { type EventExport } from "#typings";
 import { type Client } from "discord.js";
+import console from "node:console";
 import { readdirSync, statSync } from "node:fs";
 import { grey } from "../logger/color.js";
 
