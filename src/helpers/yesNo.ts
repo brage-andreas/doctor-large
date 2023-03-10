@@ -34,8 +34,8 @@ export default async function yesNo(options: {
 	const { medium, data, filter } = options;
 
 	const respondToIgnore = options.respondToIgnore ?? true;
-	const yesStyle = options.yesStyle ?? ButtonStyle.Success;
-	const noStyle = options.noStyle ?? ButtonStyle.Danger;
+	const yesStyle = options.yesStyle ?? ButtonStyle.Primary;
+	const noStyle = options.noStyle ?? ButtonStyle.Primary;
 	const time = options.timeActive ?? 60_000;
 
 	const { yes, no } = components.buttons;
