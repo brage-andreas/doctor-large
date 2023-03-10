@@ -1,15 +1,15 @@
 import components from "#components";
 import { Emojis } from "#constants";
+import { listify } from "#helpers/listify.js";
 import { messageToEmbed } from "#helpers/messageHelpers.js";
 import yesNo from "#helpers/yesNo.js";
 import Logger from "#logger";
 import { type CommandData, type CommandExport } from "#typings";
 import { oneLine, source, stripIndent } from "common-tags";
 import {
-	ApplicationCommandType,
+	ChannelType,
 	PermissionFlagsBits,
 	type ChatInputCommandInteraction,
-	type MessageContextMenuCommandInteraction,
 	type TextChannel
 } from "discord.js";
 
@@ -20,20 +20,11 @@ const data: CommandData = {
 		dm_permission: false,
 		default_member_permissions:
 			PermissionFlagsBits.ManageMessages.toString()
-	},
-	contextMenu: {
-		name: "Archive oldest pin",
-		dm_permission: false,
-		default_member_permissions:
-			PermissionFlagsBits.ManageMessages.toString(),
-		type: ApplicationCommandType.Message
 	}
 };
 
-const handle = async (
-	interaction:
-		| ChatInputCommandInteraction<"cached">
-		| MessageContextMenuCommandInteraction<"cached">
+const chatInput = async (
+	interaction: ChatInputCommandInteraction<"cached">
 ) => {
 	await interaction.deferReply({ ephemeral: true });
 
@@ -109,7 +100,14 @@ const handle = async (
 	}
 
 	const rows = components.createRows(
-		components.selects.channelSelect.component(),
+		components.selects.channelSelect.component({
+			channelTypes: [
+				ChannelType.GuildText,
+				ChannelType.GuildAnnouncement,
+				ChannelType.PrivateThread,
+				ChannelType.PublicThread
+			]
+		}),
 		components.buttons.back.component()
 	);
 
@@ -163,16 +161,33 @@ const handle = async (
 		return;
 	}
 
+	const hasPermissionInChannel = (permission: bigint) =>
+		component.guild.members.me?.permissionsIn(channel).has(permission);
+
+	const missingPermissions: Array<string> = [];
+
+	if (!hasPermissionInChannel(PermissionFlagsBits.SendMessages)) {
+		missingPermissions.push("`Send Messages`");
+	}
+
+	if (!hasPermissionInChannel(PermissionFlagsBits.EmbedLinks)) {
+		missingPermissions.push("`Embed Links`");
+	}
+
 	if (
-		!component.guild.members.me
-			?.permissionsIn(channel)
-			.has(PermissionFlagsBits.SendMessages)
+		channel.isThread() &&
+		!hasPermissionInChannel(PermissionFlagsBits.SendMessagesInThreads)
 	) {
+		missingPermissions.push("`Send Messages In Threads`");
+	}
+
+	if (missingPermissions.length) {
+		const list = listify(missingPermissions, { length: 3 });
 		await component.editReply({
 			components: [],
 			content: oneLine`
-				${Emojis.Error} I am missing permissions to send messages in
-				this channel. Permissions needed: \`Send Messages\`.
+				${Emojis.Error} I am missing permissions to in
+				this channel. Permissions needed: ${list}.
 			`,
 			embeds: []
 		});
@@ -221,22 +236,9 @@ const handle = async (
 	}
 };
 
-const chatInput = async (
-	interaction: ChatInputCommandInteraction<"cached">
-) => {
-	await handle(interaction);
-};
-
-const contextMenu = async (
-	interaction: MessageContextMenuCommandInteraction<"cached">
-) => {
-	await handle(interaction);
-};
-
 export const getCommand: () => CommandExport = () => ({
 	data,
 	handle: {
-		chatInput,
-		contextMenu
+		chatInput
 	}
 });
