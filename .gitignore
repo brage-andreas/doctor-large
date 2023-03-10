@@ -1,11 +1,11 @@
 # Logs
 npm-debug.log*
-logs
+logs/
 *.log
 
 # Node
 node_modules/
-dist
+dist/
 .npm
 
 # Windows
