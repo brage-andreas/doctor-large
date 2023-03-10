@@ -12,8 +12,8 @@
 		"precommands:put": "npm run build",
 		"commands:put": "node -r dotenv/config scripts/putCommands.js",
 		"format": "prettier --write \"**/*.+(js|ts|json)\"",
-		"lint:fix": "eslint dist --ext .ts --fix",
-		"lint": "eslint dist --ext .ts",
+		"lint:fix": "eslint src/** --ext .ts --fix",
+		"lint": "eslint src/** --ext .ts",
 		"prestart": "npm run build",
 		"start": "node -r dotenv/config ."
 	},
