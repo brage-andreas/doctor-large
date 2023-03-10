@@ -61,7 +61,7 @@ module.exports = {
 			"error",
 			...builtinModules.map((moduleName) => ({
 				name: moduleName,
-				message: `Import \`node:${moduleName}\` instead.`
+				message: `Import from \`node:${moduleName}\` instead.`
 			}))
 		],
 
