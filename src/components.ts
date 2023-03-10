@@ -45,15 +45,17 @@ const createRows = (
 ): Array<CompatibleActionRow> => {
 	const rows: Array<CompatibleActionRow> = [];
 
-	components.forEach((compOrObj) => {
-		if (!compOrObj) {
-			return;
+	for (const componentOrObject of components) {
+		if (!componentOrObject) {
+			continue;
 		}
 
-		const comp =
-			"component" in compOrObj ? compOrObj.component() : compOrObj;
+		const component =
+			"component" in componentOrObject
+				? componentOrObject.component()
+				: componentOrObject;
 
-		switch (comp.data.type) {
+		switch (component.data.type) {
 			case ComponentType.Button: {
 				let last = rows.at(-1) ?? new ActionRowBuilder<ButtonBuilder>();
 
@@ -72,12 +74,12 @@ const createRows = (
 				if (last.components.length === 5) {
 					const newRow =
 						new ActionRowBuilder<ButtonBuilder>().setComponents(
-							comp as ButtonBuilder
+							component as ButtonBuilder
 						);
 
 					rows.push(newRow);
 				} else {
-					last.addComponents(comp as ButtonBuilder);
+					last.addComponents(component as ButtonBuilder);
 
 					rows.push(last);
 				}
@@ -88,7 +90,7 @@ const createRows = (
 			case ComponentType.ChannelSelect: {
 				rows.push(
 					new ActionRowBuilder<ChannelSelectMenuBuilder>().setComponents(
-						comp as ChannelSelectMenuBuilder
+						component as ChannelSelectMenuBuilder
 					)
 				);
 
@@ -98,7 +100,7 @@ const createRows = (
 			case ComponentType.MentionableSelect: {
 				rows.push(
 					new ActionRowBuilder<MentionableSelectMenuBuilder>().setComponents(
-						comp as MentionableSelectMenuBuilder
+						component as MentionableSelectMenuBuilder
 					)
 				);
 
@@ -108,7 +110,7 @@ const createRows = (
 			case ComponentType.RoleSelect: {
 				rows.push(
 					new ActionRowBuilder<RoleSelectMenuBuilder>().setComponents(
-						comp as RoleSelectMenuBuilder
+						component as RoleSelectMenuBuilder
 					)
 				);
 
@@ -118,7 +120,7 @@ const createRows = (
 			case ComponentType.StringSelect: {
 				rows.push(
 					new ActionRowBuilder<StringSelectMenuBuilder>().setComponents(
-						comp as StringSelectMenuBuilder
+						component as StringSelectMenuBuilder
 					)
 				);
 
@@ -128,14 +130,14 @@ const createRows = (
 			case ComponentType.UserSelect: {
 				rows.push(
 					new ActionRowBuilder<UserSelectMenuBuilder>().setComponents(
-						comp as UserSelectMenuBuilder
+						component as UserSelectMenuBuilder
 					)
 				);
 
 				break;
 			}
 		}
-	});
+	}
 
 	return rows.slice(0, 5);
 };
