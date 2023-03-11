@@ -8,7 +8,7 @@ import {
 } from "#helpers/messageHelpers.js";
 import Logger from "#logger";
 import { type CommandData, type CommandExport } from "#typings";
-import { oneLine } from "common-tags";
+import { stripIndents } from "common-tags";
 import {
 	ApplicationCommandOptionType,
 	ApplicationCommandType,
@@ -73,10 +73,9 @@ const handle = async (
 const chatInput = async (
 	interaction: ChatInputCommandInteraction<"cached">
 ) => {
-	await interaction.deferReply({ ephemeral: false });
-
 	if (!interaction.channel) {
-		return await interaction.editReply({
+		return await interaction.reply({
+			ephemeral: true,
 			content: `${Emojis.Error} Something went wrong. Please try again later.`
 		});
 	}
@@ -86,10 +85,11 @@ const chatInput = async (
 	const data = parseMessageURL(urlInput);
 
 	if (!data) {
-		await interaction.editReply({
-			content: oneLine`
-				${Emojis.Error} Could not parse \`${urlInput}\` as a message URL.
-				Double-check it and try again.
+		await interaction.reply({
+			ephemeral: true,
+			content: stripIndents`
+				${Emojis.Error} Could not parse message URL. Double-check it and try again.
+				\`${urlInput}\`
 			`
 		});
 
@@ -97,7 +97,8 @@ const chatInput = async (
 	}
 
 	if (data.guildId !== interaction.guildId) {
-		await interaction.editReply({
+		await interaction.reply({
+			ephemeral: true,
 			content: `${Emojis.Error} The message is not from this server.`
 		});
 
@@ -107,8 +108,9 @@ const chatInput = async (
 	const channel = interaction.guild.channels.cache.get(data.channelId);
 
 	if (!channel?.isTextBased()) {
-		await interaction.editReply({
-			content: `${Emojis.Error} The channel from the url is invalid: \`${urlInput}\``
+		await interaction.reply({
+			ephemeral: true,
+			content: `${Emojis.Error} The channel from the URL is invalid: \`${urlInput}\``
 		});
 
 		return;
@@ -116,15 +118,13 @@ const chatInput = async (
 
 	const isProtectedChannel =
 		channel.id !== interaction.channelId &&
-		(await ConfigManager.isProtectedChannel(
-			interaction.guildId,
-			channel.id,
-			channel.parentId,
-			channel.parent?.parentId
-		));
+		(await ConfigManager.isProtectedChannel(interaction.guildId, {
+			channel
+		}));
 
 	if (isProtectedChannel) {
-		await interaction.editReply({
+		await interaction.reply({
+			ephemeral: true,
 			content: `${Emojis.Error} You cannot repost this message, as it originates from a protected channel.`
 		});
 
@@ -134,10 +134,13 @@ const chatInput = async (
 	const message = await messageFromURL(interaction.client, data);
 
 	if (!message) {
-		return await interaction.editReply({
+		return await interaction.reply({
+			ephemeral: true,
 			content: `${Emojis.Error} I could not find a message with the URL: \`${urlInput}\``
 		});
 	}
+
+	await interaction.deferReply({ ephemeral: false });
 
 	handle(interaction, message);
 };
