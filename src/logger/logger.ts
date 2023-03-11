@@ -1,4 +1,8 @@
-import { DEFAULT_LOGGER_COLOR, DEFAULT_LOGGER_PREFIX } from "#constants";
+import {
+	DEFAULT_LOGGER_COLOR,
+	DEFAULT_LOGGER_PREFIX,
+	MAX_LOGGER_PREFIX_PAD as MAX_LOGGER_PREFIX_PAD_LENGTH
+} from "#constants";
 import { type Color } from "#typings";
 import {
 	type ContextMenuCommandInteraction,
@@ -10,7 +14,7 @@ import { getColorFn, grey } from "./color.js";
 
 const formatType = (type: string) => type.toUpperCase().padStart(3, " ");
 
-const bigintReplacer = (_: unknown, value: unknown) =>
+const replacer = (_: unknown, value: unknown) =>
 	typeof value === "bigint" ? value.toString() : value;
 
 type AnyInteraction =
@@ -120,7 +124,13 @@ export default class Logger {
 			timeZone: "UTC"
 		});
 
-		const prefix = grey("::".padStart(this.prefix.length, " "));
+		const maxLength = Math.max(
+			this.prefix.length,
+			MAX_LOGGER_PREFIX_PAD_LENGTH
+		);
+
+		const prefix = grey("::").padStart(maxLength, " ");
+
 		const color = getColorFn(this.color);
 
 		console.log(`${color(this.prefix)} ${grey(date)}`);
@@ -135,7 +145,7 @@ export default class Logger {
 			if (isError) {
 				string = item.stack ?? `${item.name}: ${item.message}`;
 			} else if (isObject || isFunction) {
-				string = JSON.stringify(item, bigintReplacer);
+				string = JSON.stringify(item, replacer, 2);
 			} else {
 				string = String(item);
 			}
