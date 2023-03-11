@@ -91,7 +91,7 @@ export default async function toConfigDashboard(
 						channelTypes
 					})
 						.then(async (res) => {
-							logger.log("Edited case log", res);
+							logger.log("Edited case log");
 
 							config = await config.edit({
 								caseLogChannelId: res.channelId,
@@ -113,7 +113,7 @@ export default async function toConfigDashboard(
 						channelTypes
 					})
 						.then(async (res) => {
-							logger.log("Edited member log", res);
+							logger.log("Edited member log");
 
 							config = await config.edit({
 								memberLogChannelId: res.channelId,
@@ -135,7 +135,7 @@ export default async function toConfigDashboard(
 						channelTypes
 					})
 						.then(async (res) => {
-							logger.log("Edited message log", res);
+							logger.log("Edited message log");
 
 							config = await config.edit({
 								messageLogChannelId: res.channelId,
@@ -157,7 +157,7 @@ export default async function toConfigDashboard(
 						channelTypes: [...channelTypes, ChannelType.GuildForum]
 					})
 						.then(async (res) => {
-							logger.log("Edited report option", res);
+							logger.log("Edited report option");
 
 							config = await config.edit({
 								reportChannelId: res.channelId,
@@ -183,7 +183,7 @@ export default async function toConfigDashboard(
 							name: "Pin archive"
 						})
 						.then(async (res) => {
-							logger.log("Edited pin archive option", res);
+							logger.log("Edited pin archive option");
 
 							config = await config.edit({
 								pinArchiveChannelId:
@@ -216,7 +216,7 @@ export default async function toConfigDashboard(
 							max: 25
 						})
 						.then(async (res) => {
-							logger.log("Edited protected channels option", res);
+							logger.log("Edited protected channels option");
 
 							config = await config.edit({
 								protectedChannelsIds: res.channelIds
@@ -292,7 +292,7 @@ export default async function toConfigDashboard(
 							type: "restrictRoles"
 						})
 						.then(async (res) => {
-							logger.log("Edited restrict roles option", res);
+							logger.log("Edited restrict roles option");
 
 							config = await config.edit({
 								restrictRolesIds: res.roleIds
