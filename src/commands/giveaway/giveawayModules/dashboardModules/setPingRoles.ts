@@ -3,12 +3,7 @@ import type GiveawayManager from "#database/giveaway.js";
 import { listify } from "#helpers/listify.js";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
-import {
-	ActionRowBuilder,
-	type ButtonBuilder,
-	type ButtonInteraction,
-	type RoleSelectMenuBuilder
-} from "discord.js";
+import { type ButtonInteraction } from "discord.js";
 import toDashboard from "../dashboard.js";
 
 export default async function toSetPingRoles(
@@ -35,19 +30,16 @@ export default async function toSetPingRoles(
 	const { back, clear, setPingRolesToAtEveryone } = components.buttons;
 	const { roleSelect } = components.selects;
 
-	const row1 = new ActionRowBuilder<RoleSelectMenuBuilder>().setComponents(
-		roleSelect.component(1, 10)
-	);
-
-	const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		back.component(),
-		clear.component(),
-		setPingRolesToAtEveryone.component()
+	const rows = components.createRows(
+		roleSelect,
+		back,
+		clear,
+		setPingRolesToAtEveryone
 	);
 
 	const updateMsg = await interaction.editReply({
 		content: choosePingRoleStr,
-		components: [row1, row2]
+		components: rows
 	});
 
 	const component = await updateMsg.awaitMessageComponent({

@@ -3,12 +3,7 @@ import type GiveawayManager from "#database/giveaway.js";
 import { listify } from "#helpers/listify.js";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
-import {
-	ActionRowBuilder,
-	type ButtonBuilder,
-	type ButtonInteraction,
-	type RoleSelectMenuBuilder
-} from "discord.js";
+import { type ButtonInteraction } from "discord.js";
 import toDashboard from "../dashboard.js";
 
 export default async function toSetRequiredRoles(
@@ -35,18 +30,11 @@ export default async function toSetRequiredRoles(
 	const { back, clear } = components.buttons;
 	const { roleSelect } = components.selects;
 
-	const row1 = new ActionRowBuilder<RoleSelectMenuBuilder>().setComponents(
-		roleSelect.component(1, 10)
-	);
-
-	const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		back.component(),
-		clear.component()
-	);
+	const rows = components.createRows(roleSelect, back, clear);
 
 	const updateMsg = await interaction.editReply({
 		content: chooseRequiredRoleStr,
-		components: [row1, row2]
+		components: rows
 	});
 
 	const component = await updateMsg.awaitMessageComponent({
