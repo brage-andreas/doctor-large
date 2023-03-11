@@ -104,6 +104,7 @@ export const Prize = {
 
 export const DEFAULT_LOGGER_PREFIX = "LOG" as const;
 export const DEFAULT_LOGGER_COLOR = "yellow" as Color;
+export const MAX_LOGGER_PREFIX_PAD = 5 as const;
 
 export const WIP_WARNING = oneLine`
 	> ${Emojis.WIP} This command is work-in-progress and might experience issues.
