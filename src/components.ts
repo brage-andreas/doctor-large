@@ -563,7 +563,9 @@ const disableButton = {
 
 const roleSelectMenu = {
 	customId: "roleSelect",
-	component: (min = 1, max = 10) =>
+	component: (
+		{ min, max }: { min: number; max: number } = { min: 1, max: 10 }
+	) =>
 		new RoleSelectMenuBuilder({
 			customId: "roleSelect",
 			minValues: min,
@@ -591,10 +593,10 @@ const channelSelectMenu = {
 
 const clearButton = {
 	customId: "clear",
-	component: () =>
+	component: (suffix?: string) =>
 		new ButtonBuilder({
 			customId: "clear",
-			label: "Clear",
+			label: suffix ? `Clear ${suffix}` : "Clear",
 			style: ButtonStyle.Danger
 		})
 } as const;
