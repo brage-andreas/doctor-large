@@ -1,5 +1,6 @@
 import components from "#components";
 import { Emojis } from "#constants";
+import ConfigManager from "#database/config.js";
 import { listify } from "#helpers/listify.js";
 import { messageToEmbed } from "#helpers/messageHelpers.js";
 import yesNo from "#helpers/yesNo.js";
@@ -64,6 +65,21 @@ const chatInput = async (
 	const message = [...allMessages.values()].sort(
 		(a, b) => a.createdTimestamp - b.createdTimestamp
 	)[0];
+
+	const isProtectedChannel = await ConfigManager.isProtectedChannel(
+		interaction.guildId,
+		{
+			channel: interaction.channel
+		}
+	);
+
+	if (isProtectedChannel) {
+		await interaction.editReply({
+			content: `${Emojis.Error} You cannot archive this pin, as it originates from a protected channel.`
+		});
+
+		return;
+	}
 
 	const link = !message.deletable
 		? `[this message](<${message.url}>) by ${message.author.tag}`
