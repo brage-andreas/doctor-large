@@ -21,23 +21,23 @@
 	"license": "MIT",
 	"dependencies": {
 		"@drango/tag-functions": "^1.0.9",
-		"@prisma/client": "^4.10.1",
+		"@prisma/client": "^4.11.0",
 		"common-tags": "^1.8.2",
-		"discord.js": "^14.7.1",
+		"discord.js": "^14.8.0",
 		"dotenv": "^16.0.3",
 		"ms": "^2.1.3"
 	},
 	"devDependencies": {
 		"@types/common-tags": "^1.8.1",
 		"@types/ms": "^0.7.31",
-		"@typescript-eslint/eslint-plugin": "^5.53.0",
-		"@typescript-eslint/parser": "^5.53.0",
-		"discord-api-types": "0.37.20",
-		"eslint": "^8.34.0",
-		"eslint-config-prettier": "^8.6.0",
+		"@typescript-eslint/eslint-plugin": "^5.54.1",
+		"@typescript-eslint/parser": "^5.54.1",
+		"discord-api-types": "^0.37.35",
+		"eslint": "^8.36.0",
+		"eslint-config-prettier": "^8.7.0",
 		"eslint-plugin-prettier": "^4.2.1",
 		"prettier": "^2.8.4",
-		"prisma": "^4.10.1",
+		"prisma": "^4.11.0",
 		"typescript": "^4.9.5"
 	},
 	"imports": {
