@@ -24,7 +24,7 @@ export async function rollAndSign(options: {
 	let { entries } = options;
 
 	if (!ignoreRequirements) {
-		const members = await giveaway.guild.members.fetch({ force: true });
+		const members = await giveaway.guild.members.fetch();
 
 		entries = entries.filter((userId) => {
 			const member = members.get(userId);

@@ -274,7 +274,7 @@ export async function publishOrRepublishWinners(
 		acceptPrizeButton
 	);
 
-	const data: MessageCreateOptions = {
+	const data: Omit<MessageCreateOptions, "flags"> = {
 		allowedMentions: { users: [...giveaway.winnersUserIds()] },
 		content: [...giveaway.winnersUserIds()]
 			.map((id) => `<@${id}>`)
