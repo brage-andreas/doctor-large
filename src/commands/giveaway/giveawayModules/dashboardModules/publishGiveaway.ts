@@ -48,7 +48,9 @@ export default async function toPublishGiveaway(
 			})
 			.catch(() => null);
 
-		return toDashboard(interaction, id);
+		toDashboard(interaction, id);
+
+		return;
 	}
 
 	const chooseChannelStr = stripIndents`

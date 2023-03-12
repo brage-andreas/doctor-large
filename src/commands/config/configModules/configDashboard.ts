@@ -100,7 +100,7 @@ export default async function toConfigDashboard(
 
 							retry();
 						})
-						.catch(() =>
+						.catch(async () =>
 							toConfigDashboard(buttonInteraction, configManager)
 						);
 
@@ -122,7 +122,7 @@ export default async function toConfigDashboard(
 
 							retry();
 						})
-						.catch(() =>
+						.catch(async () =>
 							toConfigDashboard(buttonInteraction, configManager)
 						);
 
@@ -144,7 +144,7 @@ export default async function toConfigDashboard(
 
 							retry();
 						})
-						.catch(() =>
+						.catch(async () =>
 							toConfigDashboard(buttonInteraction, configManager)
 						);
 
@@ -166,7 +166,7 @@ export default async function toConfigDashboard(
 
 							retry();
 						})
-						.catch(() =>
+						.catch(async () =>
 							toConfigDashboard(buttonInteraction, configManager)
 						);
 
@@ -192,7 +192,7 @@ export default async function toConfigDashboard(
 
 							retry();
 						})
-						.catch(() =>
+						.catch(async () =>
 							toConfigDashboard(buttonInteraction, configManager)
 						);
 
@@ -224,7 +224,7 @@ export default async function toConfigDashboard(
 
 							retry();
 						})
-						.catch(() =>
+						.catch(async () =>
 							toConfigDashboard(buttonInteraction, configManager)
 						);
 
@@ -248,10 +248,9 @@ export default async function toConfigDashboard(
 							content: `${Emojis.V} Cancelled resetting the config.`
 						});
 
-						return toConfigDashboard(
-							buttonInteraction,
-							configManager
-						);
+						toConfigDashboard(buttonInteraction, configManager);
+
+						return;
 					}
 
 					await prisma.$transaction([
@@ -276,10 +275,10 @@ export default async function toConfigDashboard(
 
 					await newConfigManager
 						.validate()
-						.then(() =>
+						.then(async () =>
 							toConfigDashboard(interaction, newConfigManager)
 						)
-						.catch(() =>
+						.catch(async () =>
 							toNoConfigDashboard(interaction, newConfigManager)
 						);
 
@@ -300,7 +299,7 @@ export default async function toConfigDashboard(
 
 							retry();
 						})
-						.catch(() =>
+						.catch(async () =>
 							toConfigDashboard(buttonInteraction, configManager)
 						);
 

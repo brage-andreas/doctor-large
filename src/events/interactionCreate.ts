@@ -36,11 +36,15 @@ const execute = async (interaction: Interaction) => {
 		const { AcceptPrizeCustomId, EnterGiveawayCustomId } = RegExp;
 
 		if (EnterGiveawayCustomId.test(interaction.customId)) {
-			return await enterGiveaway(interaction);
+			await enterGiveaway(interaction);
+
+			return;
 		}
 
 		if (AcceptPrizeCustomId.test(interaction.customId)) {
-			return await acceptPrize(interaction);
+			await acceptPrize(interaction);
+
+			return;
 		}
 
 		return;
@@ -70,27 +74,23 @@ const execute = async (interaction: Interaction) => {
 			);
 		}
 
-		return void (await command.handle.chatInput(interaction));
-	}
-
-	if (interaction.isAutocomplete()) {
+		await command.handle.chatInput(interaction);
+	} else if (interaction.isAutocomplete()) {
 		if (!command.handle.autocomplete) {
 			throw new Error(
 				`Command '${interaction.commandName}' called as type 'autocomplete' is missing handle of same type`
 			);
 		}
 
-		return void (await command.handle.autocomplete(interaction));
-	}
-
-	if (interaction.isContextMenuCommand()) {
+		await command.handle.autocomplete(interaction);
+	} else if (interaction.isContextMenuCommand()) {
 		if (!command.handle.contextMenu) {
 			throw new Error(
 				`Command '${interaction.commandName}' called as type 'contextMenu' is missing handle of same type`
 			);
 		}
 
-		return void (await command.handle.contextMenu(interaction));
+		await command.handle.contextMenu(interaction);
 	}
 };
 

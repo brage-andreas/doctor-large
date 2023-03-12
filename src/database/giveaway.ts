@@ -199,37 +199,21 @@ export default class GiveawayManager {
 				id: "desc"
 			},
 			include: {
-				giveaway: true,
+				giveaway: {
+					include: {
+						prizes: {
+							include: {
+								winners: true
+							}
+						}
+					}
+				},
 				winners: true
 			}
 		});
 
-		const giveawayIds = [...new Set(data.map((data) => data.giveawayId))];
-
-		const giveaways = await this.prisma.giveaway
-			.findMany({
-				where: {
-					guildId: this.guild.id,
-					id: {
-						in: giveawayIds
-					}
-				},
-				include: {
-					prizes: {
-						include: {
-							winners: true
-						}
-					}
-				}
-			})
-			.then((data) =>
-				data.map((giveaway) => new GiveawayModule(giveaway, this.guild))
-			);
-
 		return data.map((data) => {
-			const giveaway = giveaways.find(
-				({ id }) => id === data.giveawayId
-			)!;
+			const giveaway = new GiveawayModule(data.giveaway, this.guild);
 
 			return new PrizeModule({ ...data, giveaway }, this.guild);
 		});
@@ -252,17 +236,22 @@ export default class GiveawayManager {
 		const data = await this.prisma.prize.update({
 			...args,
 			include: {
-				winners: true
+				winners: true,
+				giveaway: {
+					include: {
+						prizes: {
+							include: {
+								winners: true
+							}
+						}
+					}
+				}
 			}
 		});
 
-		const giveaway = await this.get(data.giveawayId);
+		const giveaway = new GiveawayModule(data.giveaway, this.guild);
 
-		if (!giveaway) {
-			return data;
-		}
-
-		return new PrizeModule({ ...data, giveaway, winners: [] }, this.guild);
+		return new PrizeModule({ ...data, giveaway }, this.guild);
 	}
 
 	public async deletePrize(prizeOrPrizeId: Prize | number) {
@@ -283,7 +272,7 @@ export default class GiveawayManager {
 	) {
 		let ids: Array<number>;
 
-		if ("length" in prizeIds) {
+		if (Array.isArray(prizeIds)) {
 			ids = prizeIds;
 		} else {
 			ids = prizeIds.prizes.map((prize) => prize.id);
@@ -316,25 +305,15 @@ export default class GiveawayManager {
 	) {
 		let ids: Array<number>;
 
-		if ("length" in prizeIds) {
+		if (Array.isArray(prizeIds)) {
 			ids = prizeIds;
 		} else {
 			ids = prizeIds.prizes.map((prize) => prize.id);
 		}
 
-		if (options?.onlyDeleteUnclaimed) {
-			return await this.prisma.winner.deleteMany({
-				where: {
-					prizeId: {
-						in: ids
-					},
-					claimed: false
-				}
-			});
-		}
-
 		return await this.prisma.winner.deleteMany({
 			where: {
+				claimed: options?.onlyDeleteUnclaimed ? true : undefined,
 				prizeId: {
 					in: ids
 				}

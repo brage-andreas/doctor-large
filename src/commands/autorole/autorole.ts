@@ -64,31 +64,31 @@ const chatInput = async (interaction: CommandModuleInteractions) => {
 		collector.on("collect", async (i) => {
 			await i.deferUpdate();
 
-			let active = autorole.activated ?? false;
-			let roles = [...autorole.roleIds];
+			let active = autorole.activated;
+			let rolesIdsArray = [...autorole.roleIds];
 
 			if (i.customId === components.selects.roleSelect.customId) {
 				if (!i.isRoleSelectMenu()) {
 					return;
 				}
 
-				roles = i.values;
+				rolesIdsArray = i.values;
 
 				logger.log(
 					oneLine`
 						Roles changed from
 						[${[...autorole.roleIds].join(", ")}]
-						to [${roles.join(", ")}]
+						to [${rolesIdsArray.join(", ")}]
 					`
 				);
 			} else if (i.customId === components.buttons.clear.customId) {
-				roles = [];
+				rolesIdsArray = [];
 
 				logger.log(
 					oneLine`
 						Roles changed from
 						[${[...autorole.roleIds].join(", ")}]
-						to [${roles.join(", ")}]
+						to [${rolesIdsArray.join(", ")}]
 					`
 				);
 			} else if (i.customId === components.buttons.enable.customId) {
@@ -102,7 +102,7 @@ const chatInput = async (interaction: CommandModuleInteractions) => {
 
 			await autoroleManager.update({
 				activated: active,
-				roleIds: roles
+				roleIds: rolesIdsArray
 			});
 
 			collector.stop("stop");

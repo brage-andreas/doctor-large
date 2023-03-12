@@ -6,11 +6,12 @@ import { messageToEmbed } from "#helpers/messageHelpers.js";
 import yesNo from "#helpers/yesNo.js";
 import Logger from "#logger";
 import { type CommandData, type CommandExport } from "#typings";
-import { oneLine, source, stripIndent } from "common-tags";
+import { oneLine, source, stripIndent, stripIndents } from "common-tags";
 import {
 	ChannelType,
 	PermissionFlagsBits,
 	type ChatInputCommandInteraction,
+	type GuildTextBasedChannel,
 	type TextChannel
 } from "discord.js";
 
@@ -52,28 +53,29 @@ const chatInput = async (
 		return;
 	}
 
-	const allMessages = await interaction.channel?.messages
+	const allMessages = await interaction.channel.messages
 		.fetchPinned(false)
 		.catch(() => null);
 
 	if (!allMessages?.size) {
-		return interaction.editReply({
+		interaction.editReply({
 			content: `${Emojis.SweatSmile} There are no pins to archive.`
 		});
+
+		return;
 	}
 
 	const message = [...allMessages.values()].sort(
 		(a, b) => a.createdTimestamp - b.createdTimestamp
 	)[0];
 
-	const isProtectedChannel = await ConfigManager.isProtectedChannel(
-		interaction.guildId,
-		{
-			channel: interaction.channel
-		}
-	);
+	const manager = new ConfigManager(interaction.guild);
+	const config = await manager
+		.validate()
+		.then(async () => manager.get())
+		.catch(() => null);
 
-	if (isProtectedChannel) {
+	if (config?.isProtectedChannel(interaction.channelId)) {
 		await interaction.editReply({
 			content: `${Emojis.Error} You cannot archive this pin, as it originates from a protected channel.`
 		});
@@ -108,40 +110,7 @@ const chatInput = async (
 	});
 
 	if (!res) {
-		return interaction.editReply({
-			components: [],
-			content: `${Emojis.Sparks} Alright! Cancelled archiving pins.`,
-			embeds: []
-		});
-	}
-
-	const rows = components.createRows(
-		components.selects.channelSelect.component({
-			channelTypes: [
-				ChannelType.GuildText,
-				ChannelType.GuildAnnouncement,
-				ChannelType.PrivateThread,
-				ChannelType.PublicThread
-			]
-		}),
-		components.buttons.back.component()
-	);
-
-	const msg = await interaction.editReply({
-		components: rows,
-		content: "Select the channel to archive in.",
-		embeds: []
-	});
-
-	const component = await msg
-		.awaitMessageComponent({
-			filter: (i) => i.user.id === interaction.user.id,
-			time: 60_000
-		})
-		.catch(() => null);
-
-	if (!component) {
-		await interaction.editReply({
+		interaction.editReply({
 			components: [],
 			content: `${Emojis.Sparks} Alright! Cancelled archiving pins.`,
 			embeds: []
@@ -150,35 +119,96 @@ const chatInput = async (
 		return;
 	}
 
-	if (!component.isChannelSelectMenu()) {
-		await component.update({
-			components: [],
-			content: `${Emojis.Sparks} Alright! Cancelled archiving pins.`,
+	let uncertainChannel: GuildTextBasedChannel | undefined;
+
+	if (config?.pinArchiveChannel) {
+		const res = await yesNo({
+			medium: interaction,
+			data: {
+				content: stripIndents`
+					Do you want to archive the pin in ${config.pinArchiveChannel}?
+
+					This channel is defined as your pin archive channel in the config.
+				`
+			}
+		});
+
+		if (res) {
+			uncertainChannel = config.pinArchiveChannel;
+		}
+	}
+
+	if (!uncertainChannel) {
+		const rows = components.createRows(
+			components.selects.channelSelect.component({
+				channelTypes: [
+					ChannelType.GuildText,
+					ChannelType.GuildAnnouncement,
+					ChannelType.PrivateThread,
+					ChannelType.PublicThread
+				]
+			}),
+			components.buttons.back.component()
+		);
+
+		const msg = await interaction.editReply({
+			components: rows,
+			content: "Select the channel to archive in.",
 			embeds: []
 		});
 
-		return;
+		const component = await msg
+			.awaitMessageComponent({
+				filter: (i) => i.user.id === interaction.user.id,
+				time: 60_000
+			})
+			.catch(() => null);
+
+		if (!component) {
+			await interaction.editReply({
+				components: [],
+				content: `${Emojis.Sparks} Alright! Cancelled archiving pins.`,
+				embeds: []
+			});
+
+			return;
+		}
+
+		if (!component.isChannelSelectMenu()) {
+			await component.update({
+				components: [],
+				content: `${Emojis.Sparks} Alright! Cancelled archiving pins.`,
+				embeds: []
+			});
+
+			return;
+		}
+
+		await component.deferUpdate();
+
+		const channelId = component.values[0];
+		const selectedChannel = component.guild.channels.cache.get(
+			channelId
+		) as TextChannel | undefined;
+
+		if (!selectedChannel) {
+			await component.editReply({
+				components: [],
+				content: `${Emojis.Error} I could not find channel \`${channelId}\`. Please try again later.`,
+				embeds: []
+			});
+
+			return;
+		}
+
+		uncertainChannel = selectedChannel;
 	}
 
-	await component.deferUpdate();
-
-	const channelId = component.values[0];
-	const channel = component.guild.channels.cache.get(channelId) as
-		| TextChannel
-		| undefined;
-
-	if (!channel) {
-		await component.editReply({
-			components: [],
-			content: `${Emojis.Error} I could not find channel \`${channelId}\`. Please try again later.`,
-			embeds: []
-		});
-
-		return;
-	}
+	// type inferring is being weird
+	const channel = uncertainChannel;
 
 	const hasPermissionInChannel = (permission: bigint) =>
-		component.guild.members.me?.permissionsIn(channel).has(permission);
+		interaction.guild.members.me?.permissionsIn(channel).has(permission);
 
 	const missingPermissions: Array<string> = [];
 
@@ -199,7 +229,7 @@ const chatInput = async (
 
 	if (missingPermissions.length) {
 		const list = listify(missingPermissions, { length: 3 });
-		await component.editReply({
+		await interaction.editReply({
 			components: [],
 			content: oneLine`
 				${Emojis.Error} I am missing permissions to in
@@ -211,7 +241,7 @@ const chatInput = async (
 		return;
 	}
 
-	const unpinned = await component.channel?.messages
+	const unpinned = await interaction.channel.messages
 		.unpin(message)
 		.then(() => true)
 		.catch(() => false);
@@ -233,7 +263,7 @@ const chatInput = async (
 			components: rows
 		});
 
-		await component.editReply({
+		await interaction.editReply({
 			components: [],
 			content: stripIndent`
 				${Emojis.V} Done! Here is [a link](<${url}>).
@@ -241,7 +271,7 @@ const chatInput = async (
 			embeds: []
 		});
 	} else {
-		await component.editReply({
+		await interaction.editReply({
 			components: [],
 			content: stripIndent`
 				${Emojis.Error} Failed to unpin ${link}. Archive was cancelled.

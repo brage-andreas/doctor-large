@@ -55,6 +55,10 @@ const createRows = (
 				? componentOrObject.component()
 				: componentOrObject;
 
+		if (!component.data.type) {
+			continue;
+		}
+
 		switch (component.data.type) {
 			case ComponentType.Button: {
 				let last = rows.at(-1) ?? new ActionRowBuilder<ButtonBuilder>();
@@ -215,7 +219,7 @@ const parsePlaceholder = (string: string | null) => {
 		return EMPTY_DESCRIPTION;
 	}
 
-	if (100 < string.length) {
+	if (string.length > 100) {
 		return `${string.slice(0, 97)}...`;
 	}
 

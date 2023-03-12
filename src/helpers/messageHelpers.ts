@@ -116,7 +116,7 @@ export const messageToEmbed = (message: Message<true>) => {
 			isValidAttachment(a)
 		);
 
-		if (1 < message.attachments.size) {
+		if (message.attachments.size > 1) {
 			content.push(
 				attachmentsToURL(...[...message.attachments.values()])
 			);

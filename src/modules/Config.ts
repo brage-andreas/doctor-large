@@ -222,7 +222,7 @@ export default class ConfigModule
 							: `→ ${Emojis.Warn} Unknown channel \`${id}\``;
 					})
 					.slice(0, 5)}
-				${5 < protectedChs.length ? `and **${protectedChs.length - 5}** more...` : ""}
+				${protectedChs.length > 5 ? `and **${protectedChs.length - 5}** more...` : ""}
 			  `
 			: "None";
 
@@ -238,7 +238,7 @@ export default class ConfigModule
 							: `→ ${Emojis.Warn} Unknown role ${id}`;
 					})
 					.slice(0, 5)}
-				${5 < restrictRoles_.length ? `and ${restrictRoles_.length - 5} more...` : ""}
+				${restrictRoles_.length > 5 ? `and ${restrictRoles_.length - 5} more...` : ""}
 			  `
 			: "None";
 

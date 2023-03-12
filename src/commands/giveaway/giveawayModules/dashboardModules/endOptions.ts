@@ -120,7 +120,7 @@ export default async function toEndOptions(
 
 	//  hour in milliseconds = 3_600_000
 	const isRounded = endDate && endDate.getTime() % 3_600_000 === 0;
-	const roundedDate = !isRounded ? new Date(endDate!) : null;
+	const roundedDate = endDate && !isRounded ? new Date(endDate) : null;
 
 	if (roundedDate) {
 		if (

@@ -1,7 +1,7 @@
 import { type Color } from "#typings";
 import createTag from "@drango/tag-functions";
 
-const ansiColors: Record<string, string> = {
+const ansiColors = {
 	black: "\x1b[30m",
 	blue: "\x1b[94m",
 	grey: "\x1b[90m",
@@ -10,9 +10,9 @@ const ansiColors: Record<string, string> = {
 	red: "\x1b[91m",
 	white: "\x1b[97m",
 	yellow: "\x1b[93m"
-};
+} as const;
 
-const wrap = (text: string, color: string) =>
+const wrap = (text: string, color: Color) =>
 	`${ansiColors[color]}${text}${ansiColors.none}`;
 
 export const black = createTag((text: string) => wrap(text, "black"));
@@ -25,25 +25,36 @@ export const yellow = createTag((text: string) => wrap(text, "yellow"));
 
 export const getColorFn = (color: Color) => {
 	switch (color) {
-		case "black":
+		case "black": {
 			return black;
+		}
 
-		case "blue":
+		case "blue": {
 			return blue;
+		}
 
-		case "green":
+		case "green": {
 			return green;
+		}
 
-		case "grey":
+		case "grey": {
 			return grey;
+		}
 
-		case "red":
+		case "red": {
 			return red;
+		}
 
-		case "white":
+		case "white": {
 			return white;
+		}
 
-		case "yellow":
+		case "yellow": {
 			return yellow;
+		}
+
+		default: {
+			return yellow;
+		}
 	}
 };

@@ -66,9 +66,11 @@ export default class Logger {
 		return this;
 	}
 
-	public log(...messages: Array<unknown>) {
+	public log(...messages: Array<unknown>): void {
 		if (this.interaction) {
-			return this._logInteraction(...messages);
+			this._logInteraction(...messages);
+
+			return;
 		}
 
 		const toLog: Array<unknown> = [];

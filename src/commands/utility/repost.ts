@@ -74,10 +74,12 @@ const chatInput = async (
 	interaction: ChatInputCommandInteraction<"cached">
 ) => {
 	if (!interaction.channel) {
-		return await interaction.reply({
+		await interaction.reply({
 			ephemeral: true,
 			content: `${Emojis.Error} Something went wrong. Please try again later.`
 		});
+
+		return;
 	}
 
 	const urlInput = interaction.options.getString("message_link", true);
@@ -134,10 +136,12 @@ const chatInput = async (
 	const message = await messageFromURL(interaction.client, data);
 
 	if (!message) {
-		return await interaction.reply({
+		await interaction.reply({
 			ephemeral: true,
 			content: `${Emojis.Error} I could not find a message with the URL: \`${urlInput}\``
 		});
+
+		return;
 	}
 
 	await interaction.deferReply({ ephemeral: false });

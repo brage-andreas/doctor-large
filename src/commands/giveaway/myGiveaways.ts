@@ -318,7 +318,9 @@ const run = async (
 
 			collector.stop();
 
-			return run(buttonInteraction, target);
+			run(buttonInteraction, target);
+
+			return;
 		}
 
 		const getAttachment = (string: string) => {

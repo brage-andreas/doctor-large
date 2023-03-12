@@ -21,8 +21,8 @@ export default async function toSetPingRoles(
 			Select the roles you want to ping when publishing the giveaway.
 			
 			Currently set to: ${
-				giveaway.pingRolesIds.size
-					? listify(giveaway.pingRolesMentions!, { length: 5 })
+				giveaway.pingRolesMentions?.length
+					? listify(giveaway.pingRolesMentions, { length: 5 })
 					: "No roles"
 			}
 		`;

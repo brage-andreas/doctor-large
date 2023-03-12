@@ -581,12 +581,13 @@ export default class GiveawayModule implements ModifiedGiveaway {
 	}
 
 	public toDashboardOverview() {
-		const requiredRolesStr = this.requiredRolesIds.size
-			? `→ Required roles (${this.requiredRolesIds.size}): ${listify(
-					this.requiredRolesMentions!,
-					{ length: 5 }
-			  )}`
-			: "→ Required roles: None";
+		const requiredRolesStr =
+			this.requiredRolesIds.size && this.requiredRolesMentions?.length
+				? `→ Required roles (${this.requiredRolesIds.size}): ${listify(
+						this.requiredRolesMentions,
+						{ length: 5 }
+				  )}`
+				: "→ Required roles: None";
 
 		const minimumAccountAgeStr = `→ Minimum account age: ${
 			this.minimumAccountAge
@@ -594,12 +595,13 @@ export default class GiveawayModule implements ModifiedGiveaway {
 				: "None"
 		}`;
 
-		const pingRolesStr = this.hasPingRoles
-			? `→ Ping roles (${this.pingRolesIds.size}): ${listify(
-					this.pingRolesMentions!,
-					{ length: 10 }
-			  )}`
-			: "→ Ping roles: None";
+		const pingRolesStr =
+			this.hasPingRoles && this.pingRolesMentions?.length
+				? `→ Ping roles (${this.pingRolesIds.size}): ${listify(
+						this.pingRolesMentions,
+						{ length: 10 }
+				  )}`
+				: "→ Ping roles: None";
 
 		const badPingRoles = [...this.pingRolesIds].filter((roleId) => {
 			const mentionable = this.guild.roles.cache.get(roleId)?.mentionable;
@@ -638,9 +640,6 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const prizesStr = this.prizes.length
 			? this.prizes.map((prize) => prize.toShortString()).join("\n")
 			: `${Emojis.Warn} No set prizes`;
-
-		const descriptionStr =
-			this.description ?? `${Emojis.Warn} There is no set description`;
 
 		const createdStr = `→ Created: ${longstamp(this.createdAt)}`;
 		const entriesStr = `→ Entries: ${this.entriesUserIds.size}`;
@@ -699,15 +698,12 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 		const embed = new EmbedBuilder()
 			.setTitle(this.title)
-			.setDescription(descriptionStr)
+			.setDescription(this.description)
 			.setFooter({
 				text: `Giveaway ${idStr} • Last edited`
 			})
 			.setTimestamp(this.lastEditedAt)
 			.setColor(
-				// published = green
-				// active = yellow
-				// ended = red
 				this.isPublished()
 					? Colors.Green
 					: this.ended
@@ -750,8 +746,8 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const winnerQuantityStr = `→ Number of winners: ${this.winnerQuantity}`;
 
 		const requiredRolesStr = `→ Roles required to enter: ${
-			this.requiredRolesIds.size
-				? listify(this.requiredRolesMentions!, { length: 10 })
+			this.requiredRolesIds.size && this.requiredRolesMentions?.length
+				? listify(this.requiredRolesMentions, { length: 10 })
 				: "None"
 		}`;
 
@@ -837,9 +833,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 		if (
 			nowOutdated.none ||
-			(!nowOutdated.none &&
-				!nowOutdated.publishedMessage &&
-				!nowOutdated.winnerMessage)
+			(!nowOutdated.publishedMessage && !nowOutdated.winnerMessage)
 		) {
 			return await this.manager.edit({
 				where: { id: this.id },
