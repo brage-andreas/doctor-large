@@ -3,6 +3,7 @@ import type { Giveaway, Prize, Winner } from "@prisma/client";
 import type {
 	AutocompleteInteraction,
 	ChatInputCommandInteraction,
+	ClientEvents,
 	ContextMenuCommandInteraction,
 	RESTPostAPIChatInputApplicationCommandsJSONBody,
 	RESTPostAPIContextMenuApplicationCommandsJSONBody
@@ -10,8 +11,6 @@ import type {
 
 type Prop<T extends object, P extends keyof T> = T[P];
 type UnknownOrPromise = Promise<unknown> | unknown;
-
-export type EventFn = (...args: Array<unknown>) => Promise<unknown> | unknown;
 
 export type Color =
 	| "black"
@@ -22,8 +21,13 @@ export type Color =
 	| "white"
 	| "yellow";
 
+export interface EventExport {
+	event: keyof ClientEvents;
+	execute(...args: Array<unknown>): Promise<unknown> | unknown;
+}
+
 export interface EventImport {
-	run: EventFn;
+	getEvent(): EventExport;
 }
 
 export type CommandModuleInteractions =
@@ -31,9 +35,8 @@ export type CommandModuleInteractions =
 	| ChatInputCommandInteraction<"cached">
 	| ContextMenuCommandInteraction<"cached">;
 
-interface Command {
+interface CommandExport {
 	data: {
-		commandName: string;
 		chatInput?: RESTPostAPIChatInputApplicationCommandsJSONBody;
 		contextMenu?: RESTPostAPIContextMenuApplicationCommandsJSONBody;
 	};
@@ -44,10 +47,10 @@ interface Command {
 	};
 }
 
-export type CommandData = Prop<Command, "data">;
+export type CommandData = Prop<CommandExport, "data">;
 
 export interface CommandImport {
-	getCommand(): Command;
+	getCommand(): CommandExport;
 }
 
 interface PrizesOfMapObj {

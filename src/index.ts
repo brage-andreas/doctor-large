@@ -1,8 +1,7 @@
-import { ACTIVITIES, EVENT_DIR, INTENTS } from "#constants";
+import { ACTIVITIES, INTENTS } from "#constants";
 import Logger from "#logger";
-import { type EventFn, type EventImport } from "#typings";
+import loadEvents from "#scripts/loadEvents.js";
 import { Client } from "discord.js";
-import { existsSync, lstatSync, readdirSync } from "fs";
 import process from "node:process";
 
 const client = new Client({
@@ -16,33 +15,10 @@ const client = new Client({
 	}
 });
 
-const events: Map<string, EventFn> = new Map();
-
-for (const fileName of readdirSync(EVENT_DIR)) {
-	const url = new URL(`./events/${fileName}`, import.meta.url);
-
-	if (existsSync(url) && lstatSync(url).isDirectory()) {
-		continue;
-	}
-
-	const event = (await import(`./events/${fileName}`)) as EventImport;
-	const name = fileName.split(".")[0];
-
-	events.set(name, event.run);
-}
-
-events.forEach((event, name) => {
-	client.on(name, (...args: Array<unknown>) => {
-		if (name === "ready") {
-			event(client, ...args);
-		} else {
-			event(...args);
-		}
-	});
-});
-
 process.on("unhandledRejection", (error) => {
 	new Logger({ prefix: "ERROR", color: "red" }).log(error);
 });
+
+await loadEvents(client);
 
 client.login(process.env.BOT_TOKEN);

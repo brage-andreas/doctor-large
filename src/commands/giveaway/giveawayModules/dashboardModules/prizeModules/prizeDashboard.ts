@@ -26,7 +26,9 @@ export default async function toPrizeDashboard(
 			content: `${Emojis.Error} This prize does not exist. Try again.`
 		});
 
-		return toManagePrizes(interaction, giveawayId, giveawayManager);
+		toManagePrizes(interaction, giveawayId, giveawayManager);
+
+		return;
 	}
 
 	const { back, edit, delete_ } = components.buttons;
@@ -63,20 +65,20 @@ export default async function toPrizeDashboard(
 			case back.customId: {
 				await buttonInteraction.deferUpdate();
 
-				return toManagePrizes(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
+				toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
+
+				break;
 			}
 
 			case edit.customId: {
-				return toEditPrize(
+				toEditPrize(
 					buttonInteraction,
 					prize,
 					giveawayManager,
 					giveawayId
 				);
+
+				break;
 			}
 
 			case delete_.customId: {
@@ -88,11 +90,9 @@ export default async function toPrizeDashboard(
 					`Deleted prize ${prize.id} in giveaway #${giveawayId}`
 				);
 
-				return toManagePrizes(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
+				toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
+
+				break;
 			}
 		}
 	});

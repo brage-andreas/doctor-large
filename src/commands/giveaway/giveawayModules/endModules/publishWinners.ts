@@ -112,11 +112,13 @@ export async function toPublishWinners(
 			`;
 		}
 
-		return await interaction.editReply({
+		await interaction.editReply({
 			components: [],
 			content,
 			embeds: []
 		});
+
+		return;
 	}
 
 	new Logger({
@@ -285,7 +287,7 @@ export async function publishOrRepublishWinners(
 
 	if (preferEditing && giveaway.winnerMessage) {
 		sent = await giveaway.winnerMessage
-			?.edit(data)
+			.edit(data)
 			.then(() => true)
 			.catch(() => false);
 	}

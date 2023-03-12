@@ -1,16 +1,20 @@
 import { ACTIVITIES } from "#constants";
 import Logger from "#logger";
-import { type Client } from "discord.js";
-import checkTimestamps from "../checkTimestamps.js";
+import { type EventExport } from "#typings";
+import { Events, type Client } from "discord.js";
+import console from "node:console";
+import checkTimestamps from "../jobs/index.js";
 
-export function run(client: Client<true>) {
+const execute = (client: Client<true>) => {
+	console.log();
+
 	new Logger({ prefix: "READY", color: "green" }).log(
 		`Online as ${client.user.tag} (${client.user.id})`
 	);
 
 	setInterval(() => {
-		checkTimestamps({ client, checkEndingGiveaways: true });
-	}, 60_000 /* 1 minutes */);
+		checkTimestamps({ client, jobs: { all: true } });
+	}, 60_000 /* 1 minute */);
 
 	const getActivity = () => [
 		ACTIVITIES[Math.floor(Math.random() * ACTIVITIES.length)]
@@ -21,4 +25,9 @@ export function run(client: Client<true>) {
 			activities: getActivity()
 		});
 	}, 43_200_000 /* 12 hours */);
-}
+};
+
+export const getEvent: () => EventExport = () => ({
+	event: Events.ClientReady,
+	execute
+});

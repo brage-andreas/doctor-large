@@ -19,7 +19,7 @@ export default async function (
 	collector.on("collect", async (modalInteraction) => {
 		await modalInteraction.deferReply({ ephemeral: true });
 
-		if (!modalInteraction?.fields.fields.size) {
+		if (!modalInteraction.fields.fields.size) {
 			return;
 		}
 

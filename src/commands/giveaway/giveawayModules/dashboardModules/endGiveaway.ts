@@ -52,7 +52,9 @@ export default async function toEndGiveaway(
 			})
 			.catch(() => null);
 
-		return toDashboard(interaction, id);
+		toDashboard(interaction, id);
+
+		return;
 	}
 
 	if (!giveaway.channelId) {
@@ -63,7 +65,9 @@ export default async function toEndGiveaway(
 			})
 			.catch(() => null);
 
-		return toDashboard(interaction, id);
+		toDashboard(interaction, id);
+
+		return;
 	}
 
 	let content = stripIndent`
@@ -109,7 +113,9 @@ export default async function toEndGiveaway(
 			})
 			.catch(() => null);
 
-		return toDashboard(interaction, id);
+		toDashboard(interaction, id);
+
+		return;
 	}
 
 	await giveaway.edit({

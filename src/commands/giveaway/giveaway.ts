@@ -1,6 +1,6 @@
 import { Emojis, HIDE_OPTION } from "#constants";
 import Logger from "#logger";
-import { type Command, type CommandData } from "#typings";
+import { type CommandData, type CommandExport } from "#typings";
 import { oneLine } from "common-tags";
 import {
 	ApplicationCommandOptionType,
@@ -13,7 +13,6 @@ import sendToCreate from "./giveawayModules/create.js";
 import sendToDashboard from "./giveawayModules/dashboard.js";
 
 const data: CommandData = {
-	commandName: "giveaway",
 	chatInput: {
 		default_member_permissions: PermissionFlagsBits.ManageGuild.toString(),
 		description: "Configuration for giveaways.",
@@ -86,7 +85,7 @@ const autocomplete = async (interaction: AutocompleteInteraction<"cached">) => {
 	await sendToAutocompleteGiveaway(interaction);
 };
 
-export const getCommand: () => Command = () => ({
+export const getCommand: () => CommandExport = () => ({
 	data,
 	handle: {
 		chatInput,

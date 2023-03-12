@@ -72,9 +72,9 @@ export const Emojis = {
 	Think: "🤔",
 	Unlock: "🔓",
 	WIP: "🚧",
-	V: "<:V:1054081028962136104>",
+	V: "<:Yes:1054081028962136104>",
 	Warn: "<:Warning:1080833238823608520>",
-	X: "<:X:1054081030107185252>"
+	X: "<:No:1054081030107185252>"
 } as const;
 
 export const INTENTS = [
@@ -104,6 +104,7 @@ export const Prize = {
 
 export const DEFAULT_LOGGER_PREFIX = "LOG" as const;
 export const DEFAULT_LOGGER_COLOR = "yellow" as Color;
+export const MAX_LOGGER_PREFIX_PAD = 5 as const;
 
 export const WIP_WARNING = oneLine`
 	> ${Emojis.WIP} This command is work-in-progress and might experience issues.

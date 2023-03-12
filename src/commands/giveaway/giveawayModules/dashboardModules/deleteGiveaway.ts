@@ -58,7 +58,9 @@ export default async function toDeleteGiveaway(
 			content: `Alright! Cancelled deleting giveaway #${giveaway.guildRelativeId}`
 		});
 
-		return toDashboard(interaction, id);
+		toDashboard(interaction, id);
+
+		return;
 	}
 
 	const createdWithinFifteenMinutes =
@@ -87,7 +89,9 @@ export default async function toDeleteGiveaway(
 				content: `Alright! Cancelled deleting giveaway #${giveaway.guildRelativeId}`
 			});
 
-			return toDashboard(interaction, id);
+			toDashboard(interaction, id);
+
+			return;
 		}
 	}
 

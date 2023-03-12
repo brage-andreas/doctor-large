@@ -17,7 +17,12 @@ import {
 	type UserSelectMenuBuilder
 } from "discord.js";
 
-type AnyComponentBuilder =
+interface ComponentObject {
+	readonly customId: string;
+	component(): CompatibleComponentBuilder;
+}
+
+type CompatibleComponentBuilder =
 	| ButtonBuilder
 	| ChannelSelectMenuBuilder
 	| MentionableSelectMenuBuilder
@@ -25,7 +30,7 @@ type AnyComponentBuilder =
 	| StringSelectMenuBuilder
 	| UserSelectMenuBuilder;
 
-type AnyActionRow =
+type CompatibleActionRow =
 	| ActionRowBuilder<ButtonBuilder>
 	| ActionRowBuilder<ChannelSelectMenuBuilder>
 	| ActionRowBuilder<MentionableSelectMenuBuilder>
@@ -34,12 +39,27 @@ type AnyActionRow =
 	| ActionRowBuilder<UserSelectMenuBuilder>;
 
 const createRows = (
-	...components: Array<AnyComponentBuilder>
-): Array<AnyActionRow> => {
-	const rows: Array<AnyActionRow> = [];
+	...components: Array<
+		CompatibleComponentBuilder | ComponentObject | null | undefined
+	>
+): Array<CompatibleActionRow> => {
+	const rows: Array<CompatibleActionRow> = [];
 
-	components.forEach((c) => {
-		switch (c.data.type) {
+	for (const componentOrObject of components) {
+		if (!componentOrObject) {
+			continue;
+		}
+
+		const component =
+			"component" in componentOrObject
+				? componentOrObject.component()
+				: componentOrObject;
+
+		if (!component.data.type) {
+			continue;
+		}
+
+		switch (component.data.type) {
 			case ComponentType.Button: {
 				let last = rows.at(-1) ?? new ActionRowBuilder<ButtonBuilder>();
 
@@ -58,12 +78,12 @@ const createRows = (
 				if (last.components.length === 5) {
 					const newRow =
 						new ActionRowBuilder<ButtonBuilder>().setComponents(
-							c as ButtonBuilder
+							component as ButtonBuilder
 						);
 
 					rows.push(newRow);
 				} else {
-					last.addComponents(c as ButtonBuilder);
+					last.addComponents(component as ButtonBuilder);
 
 					rows.push(last);
 				}
@@ -74,7 +94,7 @@ const createRows = (
 			case ComponentType.ChannelSelect: {
 				rows.push(
 					new ActionRowBuilder<ChannelSelectMenuBuilder>().setComponents(
-						c as ChannelSelectMenuBuilder
+						component as ChannelSelectMenuBuilder
 					)
 				);
 
@@ -84,7 +104,7 @@ const createRows = (
 			case ComponentType.MentionableSelect: {
 				rows.push(
 					new ActionRowBuilder<MentionableSelectMenuBuilder>().setComponents(
-						c as MentionableSelectMenuBuilder
+						component as MentionableSelectMenuBuilder
 					)
 				);
 
@@ -94,7 +114,7 @@ const createRows = (
 			case ComponentType.RoleSelect: {
 				rows.push(
 					new ActionRowBuilder<RoleSelectMenuBuilder>().setComponents(
-						c as RoleSelectMenuBuilder
+						component as RoleSelectMenuBuilder
 					)
 				);
 
@@ -104,7 +124,7 @@ const createRows = (
 			case ComponentType.StringSelect: {
 				rows.push(
 					new ActionRowBuilder<StringSelectMenuBuilder>().setComponents(
-						c as StringSelectMenuBuilder
+						component as StringSelectMenuBuilder
 					)
 				);
 
@@ -114,14 +134,14 @@ const createRows = (
 			case ComponentType.UserSelect: {
 				rows.push(
 					new ActionRowBuilder<UserSelectMenuBuilder>().setComponents(
-						c as UserSelectMenuBuilder
+						component as UserSelectMenuBuilder
 					)
 				);
 
 				break;
 			}
 		}
-	});
+	}
 
 	return rows.slice(0, 5);
 };
@@ -199,7 +219,7 @@ const parsePlaceholder = (string: string | null) => {
 		return EMPTY_DESCRIPTION;
 	}
 
-	if (100 < string.length) {
+	if (string.length > 100) {
 		return `${string.slice(0, 97)}...`;
 	}
 
@@ -291,7 +311,7 @@ const publishingOptionsButton = {
 		})
 } as const;
 
-const lockGiveawayEntriesButton = {
+const lockEntriesButton = {
 	customId: "lockEntries",
 	component: () =>
 		new ButtonBuilder({
@@ -302,7 +322,7 @@ const lockGiveawayEntriesButton = {
 		})
 } as const;
 
-const unlockGiveawayEntriesButton = {
+const unlockEntriesButton = {
 	customId: "unlockEntries",
 	component: () =>
 		new ButtonBuilder({
@@ -354,7 +374,7 @@ const editButton = {
 		})
 } as const;
 
-const manageGiveawayPrizesButton = {
+const managePrizesButton = {
 	customId: "managePrizes",
 	component: () =>
 		new ButtonBuilder({
@@ -371,16 +391,6 @@ const endOptionsButton = {
 			customId: "endOptions",
 			style: ButtonStyle.Primary,
 			label: "End options"
-		})
-} as const;
-
-const resetDataButton = {
-	customId: "resetData",
-	component: () =>
-		new ButtonBuilder({
-			customId: "resetData",
-			style: ButtonStyle.Primary,
-			label: "Reset data"
 		})
 } as const;
 
@@ -557,7 +567,9 @@ const disableButton = {
 
 const roleSelectMenu = {
 	customId: "roleSelect",
-	component: (min = 1, max = 10) =>
+	component: (
+		{ min, max }: { min: number; max: number } = { min: 1, max: 10 }
+	) =>
 		new RoleSelectMenuBuilder({
 			customId: "roleSelect",
 			minValues: min,
@@ -585,10 +597,10 @@ const channelSelectMenu = {
 
 const clearButton = {
 	customId: "clear",
-	component: () =>
+	component: (suffix?: string) =>
 		new ButtonBuilder({
 			customId: "clear",
-			label: "Clear",
+			label: suffix ? `Clear ${suffix}` : "Clear",
 			style: ButtonStyle.Danger
 		})
 } as const;
@@ -810,7 +822,7 @@ const cancelButton = {
 			.setStyle(ButtonStyle.Secondary)
 } as const;
 
-const adjustDate = ({
+const adjustDateButton = ({
 	label,
 	customId,
 	disabled = false
@@ -837,6 +849,78 @@ const urlButton = ({ label, url }: { label: string; url: string }) => ({
 			.setURL(url)
 });
 
+const caseLogOptionsButton = {
+	customId: "caseLogOptions",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("caseLogOptions")
+			.setLabel("Case log options")
+			.setStyle(ButtonStyle.Primary)
+} as const;
+
+const memberLogOptionsButton = {
+	customId: "memberLogOptions",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("memberLogOptions")
+			.setLabel("Member log options")
+			.setStyle(ButtonStyle.Primary)
+} as const;
+
+const messageLogOptionsButton = {
+	customId: "messageLogOptions",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("messageLogOptions")
+			.setLabel("Message log options")
+			.setStyle(ButtonStyle.Primary)
+} as const;
+
+const pinArchiveOptionsButton = {
+	customId: "pinArchiveOptions",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("pinArchiveOptions")
+			.setLabel("Pin archive options")
+			.setStyle(ButtonStyle.Primary)
+} as const;
+
+const protectedChannelsOptionsButton = {
+	customId: "protectedChannelsOptions",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("protectedChannelsOptions")
+			.setLabel("Protected channels options")
+			.setStyle(ButtonStyle.Primary)
+} as const;
+
+const reportChannelOptionsButton = {
+	customId: "reportChannelOptions",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("reportChannelOptions")
+			.setLabel("Report channel options")
+			.setStyle(ButtonStyle.Primary)
+} as const;
+
+const restrictRolesOptionsButton = {
+	customId: "restrictRolesOptions",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("restrictRolesOptions")
+			.setLabel("Restrict roles options")
+			.setStyle(ButtonStyle.Primary)
+} as const;
+
+const resetButton = {
+	customId: "reset",
+	component: (suffix?: string) =>
+		new ButtonBuilder()
+			.setCustomId("reset")
+			.setLabel(suffix ? `Reset ${suffix}` : "Reset")
+			.setStyle(ButtonStyle.Danger)
+} as const;
+
 // -------------
 
 const selects = {
@@ -857,14 +941,20 @@ const modals = {
 } as const;
 
 const buttons = {
+	protectedChannelsOptions: protectedChannelsOptionsButton,
 	setPingRolesToAtEveryone: setPingRolesToAtEveryoneButton,
 	deleteUnclaimedWinners: deleteUnclaimedWinnersButton,
 	roundDateToNearestHour: roundDateToNearestHourButton,
 	recallCurrentMessage: recallCurrentMessageButton,
+	reportChannelOptions: reportChannelOptionsButton,
+	restrictRolesOptions: restrictRolesOptionsButton,
 	editCurrentMessage: editCurrentMessageButton,
 	reactivateGiveaway: reactivateGiveawayButton,
+	messageLogOptions: messageLogOptionsButton,
+	pinArchiveOptions: pinArchiveOptionsButton,
 	publishingOptions: publishingOptionsButton,
 	deleteAllWinners: deleteAllWinnersButton,
+	memberLogOptions: memberLogOptionsButton,
 	republishWinners: republishWinnersButton,
 	rerollAllWinners: rerollAllWinnersButton,
 	setRequiredRoles: setRequiredRolesButton,
@@ -872,6 +962,7 @@ const buttons = {
 	acceptAllPrizes: acceptAllPrizesButton,
 	endLevelPublish: endLevelPublishButton,
 	publishGiveaway: publishGiveawayButton,
+	caseLogOptions: caseLogOptionsButton,
 	deleteGiveaway: deleteGiveawayButton,
 	publishWinners: publishWinnersButton,
 	showAllWinners: showAllWinnersButton,
@@ -879,25 +970,25 @@ const buttons = {
 	endedGiveaway: endedGiveawayButton,
 	enterGiveaway: enterGiveawayButton,
 	rerollWinners: rerollWinnersButton,
-	unlockEntries: unlockGiveawayEntriesButton,
+	unlockEntries: unlockEntriesButton,
 	viewAllHosted: viewAllHostedButton,
 	viewAllPrizes: viewAllPrizesButton,
 	endLevelNone: endLevelNoneButton,
 	endLevelRoll: endLevelRollButton,
-	managePrizes: manageGiveawayPrizesButton,
+	managePrizes: managePrizesButton,
 	setPingRoles: setPingRolesButton,
 	endGiveaway: endGiveawayButton,
 	endLevelEnd: endLevelEndButton,
 	lastChannel: lastChannelButton,
-	lockEntries: lockGiveawayEntriesButton,
+	lockEntries: lockEntriesButton,
 	resetLevel1: resetLevel1Button,
 	resetLevel2: resetLevel2Button,
 	resetLevel3: resetLevel3Button,
 	resetLevel4: resetLevel4Button,
 	rollWinners: rollWinnersButton,
+	adjustDate: adjustDateButton,
 	endOptions: endOptionsButton,
 	clearDate: clearDateButton,
-	resetData: resetDataButton,
 	delete_: deleteButton,
 	disable: disableButton,
 	setDate: setDateButton,
@@ -905,12 +996,12 @@ const buttons = {
 	create: createButton,
 	enable: enableButton,
 	clear: clearButton,
+	reset: resetButton,
 	back: backButton,
 	edit: editButton,
 	url: urlButton,
 	yes: yesButton,
-	no: noButton,
-	adjustDate
+	no: noButton
 } as const;
 
 const components = {

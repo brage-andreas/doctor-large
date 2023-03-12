@@ -9,8 +9,8 @@ import {
 import GiveawayManager from "#database/giveaway.js";
 import Logger from "#logger";
 import {
-	type Command,
 	type CommandData,
+	type CommandExport,
 	type GiveawayId,
 	type PrizesOfMapObj
 } from "#typings";
@@ -31,7 +31,6 @@ import {
 } from "discord.js";
 
 const data: CommandData = {
-	commandName: "my-giveaways",
 	chatInput: {
 		description: "View all the giveaways you have participated in.",
 		dm_permission: false,
@@ -319,7 +318,9 @@ const run = async (
 
 			collector.stop();
 
-			return run(buttonInteraction, target);
+			run(buttonInteraction, target);
+
+			return;
 		}
 
 		const getAttachment = (string: string) => {
@@ -445,7 +446,7 @@ const contextMenu = async (
 	await run(interaction, interaction.targetUser);
 };
 
-export const getCommand: () => Command = () => ({
+export const getCommand: () => CommandExport = () => ({
 	data,
 	handle: {
 		chatInput,

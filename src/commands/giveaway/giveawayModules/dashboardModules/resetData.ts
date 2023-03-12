@@ -93,7 +93,9 @@ export default async function toResetData(
 
 		switch (buttonInteraction.customId) {
 			case back.customId: {
-				return collector.stop();
+				collector.stop();
+
+				break;
 			}
 
 			case resetLevel4.customId: {
@@ -117,7 +119,9 @@ export default async function toResetData(
 						content: `Alright! Cancelled resetting giveaway #${giveaway.guildRelativeId}`
 					});
 
-					return toDashboard(interaction, id);
+					toDashboard(interaction, id);
+
+					break;
 				}
 
 				await giveaway.reset({
@@ -133,7 +137,9 @@ export default async function toResetData(
 					content: `${Emojis.Sparks} Done! Successfully wiped giveaway #${giveaway.guildRelativeId}.`
 				});
 
-				return collector.stop();
+				collector.stop();
+
+				break;
 			}
 
 			case resetLevel3.customId: {
@@ -157,7 +163,9 @@ export default async function toResetData(
 						content: `Alright! Cancelled resetting giveaway #${giveaway.guildRelativeId}`
 					});
 
-					return toDashboard(interaction, id);
+					toDashboard(interaction, id);
+
+					break;
 				}
 
 				await giveaway.reset({
@@ -174,7 +182,9 @@ export default async function toResetData(
 					content: `${Emojis.Sparks} Done! Successfully reset entries, winners, and prizes in giveaway #${giveaway.guildRelativeId}.`
 				});
 
-				return collector.stop();
+				collector.stop();
+
+				break;
 			}
 
 			case resetLevel2.customId: {
@@ -198,7 +208,9 @@ export default async function toResetData(
 						content: `Alright! Cancelled resetting giveaway #${giveaway.guildRelativeId}`
 					});
 
-					return toDashboard(interaction, id);
+					toDashboard(interaction, id);
+
+					break;
 				}
 
 				await giveaway.reset({ entriesAndWinners: true });
@@ -212,7 +224,9 @@ export default async function toResetData(
 					content: `${Emojis.Sparks} Done! Successfully reset entries and winners in giveaway #${giveaway.guildRelativeId}.`
 				});
 
-				return collector.stop();
+				collector.stop();
+
+				break;
 			}
 
 			case resetLevel1.customId: {
@@ -236,7 +250,9 @@ export default async function toResetData(
 						content: `Alright! Cancelled resetting giveaway #${giveaway.guildRelativeId}`
 					});
 
-					return toDashboard(interaction, id);
+					toDashboard(interaction, id);
+
+					break;
 				}
 
 				await giveaway.reset({ options: true });
@@ -250,10 +266,12 @@ export default async function toResetData(
 					content: `${Emojis.Sparks} Done! Successfully reset most options in giveaway #${giveaway.guildRelativeId}.`
 				});
 
-				return collector.stop();
+				collector.stop();
+
+				break;
 			}
 		}
 	});
 
-	collector.on("end", () => toDashboard(interaction, id));
+	collector.on("end", async () => toDashboard(interaction, id));
 }

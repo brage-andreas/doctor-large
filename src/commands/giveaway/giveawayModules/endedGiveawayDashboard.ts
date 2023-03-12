@@ -138,15 +138,21 @@ export default async function toEndedDashboard(
 					}
 				});
 
-				return toDashboard(buttonInteraction, giveaway.id);
+				toDashboard(buttonInteraction, giveaway.id);
+
+				break;
 			}
 
 			case publishWinners.customId: {
-				return void toPublishWinners(buttonInteraction, giveaway.id);
+				toPublishWinners(buttonInteraction, giveaway.id);
+
+				break;
 			}
 
 			case republishWinners.customId: {
-				return void toPublishWinners(buttonInteraction, giveaway.id);
+				toPublishWinners(buttonInteraction, giveaway.id);
+
+				break;
 			}
 
 			case unpublishWinners.customId: {
@@ -184,15 +190,19 @@ export default async function toEndedDashboard(
 					embeds: []
 				});
 
-				return toEndedDashboard(interaction, giveawayManager, giveaway);
+				toEndedDashboard(interaction, giveawayManager, giveaway);
+
+				break;
 			}
 
 			case deleteGiveaway.customId: {
-				return toDeleteGiveaway(
+				toDeleteGiveaway(
 					buttonInteraction,
 					giveaway.id,
 					giveawayManager
 				);
+
+				break;
 			}
 
 			case showAllWinners.customId: {
@@ -250,7 +260,9 @@ export default async function toEndedDashboard(
 					files: [attachment]
 				});
 
-				return toEndedDashboard(interaction, giveawayManager, giveaway);
+				toEndedDashboard(interaction, giveawayManager, giveaway);
+
+				break;
 			}
 
 			case rollWinners.customId:
@@ -277,7 +289,9 @@ export default async function toEndedDashboard(
 					winnerQuantity
 				});
 
-				return toEndedDashboard(interaction, giveawayManager, giveaway);
+				toEndedDashboard(interaction, giveawayManager, giveaway);
+
+				break;
 			}
 
 			case rerollAllWinners.customId: {
@@ -295,7 +309,9 @@ export default async function toEndedDashboard(
 					winnerQuantity
 				});
 
-				return toEndedDashboard(interaction, giveawayManager, giveaway);
+				toEndedDashboard(interaction, giveawayManager, giveaway);
+
+				break;
 			}
 
 			case deleteUnclaimedWinners.customId: {
@@ -303,13 +319,17 @@ export default async function toEndedDashboard(
 					onlyDeleteUnclaimed: true
 				});
 
-				return toEndedDashboard(interaction, giveawayManager, giveaway);
+				toEndedDashboard(interaction, giveawayManager, giveaway);
+
+				break;
 			}
 
 			case deleteAllWinners.customId: {
 				await giveawayManager.deleteWinners(giveaway.data);
 
-				return toEndedDashboard(interaction, giveawayManager, giveaway);
+				toEndedDashboard(interaction, giveawayManager, giveaway);
+
+				break;
 			}
 		}
 	});

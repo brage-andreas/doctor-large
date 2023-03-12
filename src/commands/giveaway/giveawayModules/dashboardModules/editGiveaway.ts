@@ -103,7 +103,7 @@ export default async function toEditGiveaway(
 		const winnerQuantity =
 			Number(
 				modalInteraction.fields.getTextInputValue("newWinnerQuantity")
-			) ?? 1;
+			) || 1;
 
 		if (
 			title !== giveaway.title ||

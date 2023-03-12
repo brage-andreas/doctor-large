@@ -1,82 +1,83 @@
-import { DEFAULT_LOGGER_COLOR, DEFAULT_LOGGER_PREFIX } from "#constants";
+import {
+	DEFAULT_LOGGER_COLOR,
+	DEFAULT_LOGGER_PREFIX,
+	MAX_LOGGER_PREFIX_PAD as MAX_LOGGER_PREFIX_PAD_LENGTH
+} from "#constants";
 import { type Color } from "#typings";
-import { oneLine } from "common-tags";
 import {
 	type ContextMenuCommandInteraction,
 	type Guild,
 	type Interaction
 } from "discord.js";
+import console from "node:console";
 import { getColorFn, grey } from "./color.js";
 
-function formatType(type: string): string {
-	return type.toUpperCase().padStart(3, " ");
-}
+const formatType = (type: string) => type.toUpperCase().padStart(3, " ");
+
+const replacer = (_: unknown, value: unknown) =>
+	typeof value === "bigint" ? value.toString() : value;
+
+type AnyInteraction =
+	| ContextMenuCommandInteraction<"cached">
+	| Interaction<"cached">;
 
 export default class Logger {
-	public interaction?:
-		| ContextMenuCommandInteraction<"cached">
-		| Interaction<"cached">;
+	public color: Color = DEFAULT_LOGGER_COLOR;
 	public guild?: Guild;
-	public prefix: string;
-	public color: Color;
+	public interaction?: AnyInteraction;
+	public prefix: string = DEFAULT_LOGGER_PREFIX;
 
 	public constructor(options?: {
+		color?: Color;
+		guild?: Guild;
+		interaction?: AnyInteraction;
+		prefix?: string;
+	}) {
+		if (options) {
+			this.setOptions(options);
+		}
+	}
+
+	public setOptions(options: {
+		color?: Color | undefined;
+		guild?: Guild | undefined;
 		interaction?:
 			| ContextMenuCommandInteraction<"cached">
 			| Interaction<"cached">
 			| undefined;
-		guild?: Guild | undefined;
 		prefix?: string | undefined;
-		color?: Color | undefined;
 	}) {
-		this.prefix = options?.prefix
-			? formatType(options.prefix)
-			: DEFAULT_LOGGER_PREFIX;
+		if (options.color) {
+			this.color = options.color;
+		}
 
-		this.color = options?.color ?? DEFAULT_LOGGER_COLOR;
+		if (options.guild || options.interaction?.guild) {
+			this.guild = options.guild ?? options.interaction?.guild;
+		}
 
-		this.interaction = options?.interaction;
-		this.guild = options?.guild ?? options?.interaction?.guild;
-	}
+		if (options.interaction) {
+			this.interaction = options.interaction;
+		}
 
-	public setInteraction(interaction: Interaction<"cached">) {
-		this.interaction = interaction;
-
-		if (!this.guild) {
-			this.guild = interaction.guild;
+		if (options.prefix) {
+			this.prefix = formatType(options.prefix);
 		}
 
 		return this;
 	}
 
-	public setGuild(guild: Guild) {
-		this.guild = guild;
-
-		return this;
-	}
-
-	public setPrefix(prefix: string) {
-		this.prefix = formatType(prefix);
-
-		return this;
-	}
-
-	public setColor(color: Color) {
-		this.color = color;
-
-		return this;
-	}
-
-	public log(...messages: Array<unknown>) {
+	public log(...messages: Array<unknown>): void {
 		if (this.interaction) {
-			return this._logInteraction(...messages);
+			this._logInteraction(...messages);
+
+			return;
 		}
 
 		const toLog: Array<unknown> = [];
 
 		if (this.guild) {
 			const { name, id } = this.guild;
-			const guildString = `${grey("Guild:")} ${name} ${grey(`(${id})`)}`;
+			const guildString = `${grey`Guild:`} ${name} ${grey`(${id})`}`;
 
 			toLog.push(guildString);
 		}
@@ -94,77 +95,69 @@ export default class Logger {
 		const { channel, guild: interactionGuild, user } = this.interaction;
 		const guild = this.guild ?? interactionGuild;
 
-		const greyLine = (
-			obj: { name: string; id: string } | { tag: string; id: string },
-			key: string,
-			includePipe: boolean
-		) => {
-			const pipe = includePipe ? grey("| ") : "";
-			const key_ = grey(`${key}:`);
-			const name = "name" in obj ? obj.name : obj.tag;
-			const id = grey(`(${obj.id})`);
+		const prefixArr = [`${grey`User:`} ${user.tag} ${grey(user.id)}`];
 
-			return `${pipe}${key_} ${name} ${id}`;
-		};
-
-		const channelString = channel
-			? ` ${greyLine(channel, "Channel", true)}`
-			: "";
-
-		const cmdSource = oneLine`
-			${greyLine(user, "User", false)}${channelString}
-			${greyLine(guild, "Guild", true)}
-		`;
-
-		const cmdString =
-			this.interaction.isChatInputCommand() &&
-			grey(`>> ${this.interaction.toString()}`);
-
-		const cmdArray = [cmdSource];
-
-		if (cmdString) {
-			cmdArray.push(cmdString);
+		if (channel) {
+			prefixArr.push(
+				`${grey`Channel:`} #${channel.name} ${grey`(${channel.id})`}`
+			);
 		}
 
-		this._log(...cmdArray, ...messages);
+		prefixArr.push(`${grey`Guild:`} ${guild.name} ${grey`(${guild.id})`}`);
+
+		const toLog = [prefixArr.join(grey` | `)];
+
+		const commandString =
+			this.interaction.isChatInputCommand() &&
+			grey`>> ${this.interaction}`;
+
+		if (commandString) {
+			toLog.push(commandString);
+		}
+
+		this._log(...toLog, ...messages);
 	}
 
-	private _log(...items: Array<unknown>) {
+	private _log(...itemsToLog: Array<unknown>) {
 		const date = new Date().toLocaleString("en-GB", {
-			dateStyle: "medium",
-			timeStyle: "long"
+			dateStyle: "long",
+			hourCycle: "h23",
+			timeStyle: "long",
+			timeZone: "UTC"
 		});
 
-		const prefix = "::".padStart(this.prefix.length, " ");
-		const colorFn = getColorFn(this.color);
+		const maxLength = Math.max(
+			this.prefix.length,
+			MAX_LOGGER_PREFIX_PAD_LENGTH
+		);
 
-		console.log(`${colorFn(this.prefix)} ${grey(date)}`);
+		const prefix = grey("::").padStart(maxLength, " ");
 
-		const string = items
-			.map((item) => {
-				let logMsg: string;
+		const color = getColorFn(this.color);
 
-				const notNull = item !== null;
-				const isObj = typeof item === "object";
-				const isFn = typeof item === "function";
+		console.log(`${color(this.prefix)} ${grey(date)}`);
 
-				if (isObj && notNull && "stack" in item) {
-					logMsg = String(item.stack);
-				} else if (!isObj && !isFn) {
-					logMsg = String(item);
-				} else {
-					logMsg = JSON.stringify(item, (_, value) =>
-						typeof value === "bigint" ? value.toString() : value
-					);
-				}
+		for (const item of itemsToLog) {
+			const isFunction = typeof item === "function";
+			const isObject = typeof item === "object";
+			const isError = item instanceof Error;
 
-				return logMsg
-					.split("\n")
-					.map((line) => `${grey(prefix)} ${line}`)
-					.join("\n");
-			})
-			.join("\n");
+			let string: string;
 
-		console.log(string, "\n");
+			if (isError) {
+				string = item.stack ?? `${item.name}: ${item.message}`;
+			} else if (isObject || isFunction) {
+				string = JSON.stringify(item, replacer, 2);
+			} else {
+				string = String(item);
+			}
+
+			for (const line of string.split("\n")) {
+				console.log(`${prefix} ${line}`);
+			}
+		}
+
+		// For newline
+		console.log();
 	}
 }

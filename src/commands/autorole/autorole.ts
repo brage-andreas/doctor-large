@@ -3,20 +3,14 @@ import { HIDE_OPTION } from "#constants";
 import AutoroleManager from "#database/autorole.js";
 import Logger from "#logger";
 import {
-	type Command,
 	type CommandData,
+	type CommandExport,
 	type CommandModuleInteractions
 } from "#typings";
 import { oneLine } from "common-tags";
-import {
-	ActionRowBuilder,
-	PermissionFlagsBits,
-	type ButtonBuilder,
-	type RoleSelectMenuBuilder
-} from "discord.js";
+import { PermissionFlagsBits } from "discord.js";
 
 const data: CommandData = {
-	commandName: "autorole",
 	chatInput: {
 		name: "autorole",
 		dm_permission: false,
@@ -41,26 +35,21 @@ const chatInput = async (interaction: CommandModuleInteractions) => {
 	const autoroleManager = new AutoroleManager(interaction.guild);
 	await autoroleManager.initialize();
 
-	const logger = new Logger({ prefix: "AUTOROLE" });
+	const logger = new Logger({ prefix: "AUTOROLE", interaction });
 
 	const dashboard = async () => {
 		const autorole = await autoroleManager.get();
 
-		const { clear: clearRoles, disable, enable } = components.buttons;
-		const { roleSelect } = components.selects;
-
-		const row1 =
-			new ActionRowBuilder<RoleSelectMenuBuilder>().setComponents(
-				roleSelect.component(1, 10)
-			);
-
-		const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
-			clearRoles.component(),
-			autorole.activated ? disable.component() : enable.component()
+		const rows = components.createRows(
+			components.selects.roleSelect,
+			components.buttons.clear.component("roles"),
+			autorole.activated
+				? components.buttons.disable
+				: components.buttons.enable
 		);
 
 		const msg = await interaction.editReply({
-			components: [row1, row2],
+			components: rows,
 			embeds: [autorole.toEmbed()]
 		});
 
@@ -75,47 +64,45 @@ const chatInput = async (interaction: CommandModuleInteractions) => {
 		collector.on("collect", async (i) => {
 			await i.deferUpdate();
 
-			logger.setInteraction(i);
+			let active = autorole.activated;
+			let rolesIdsArray = [...autorole.roleIds];
 
-			let active = autorole.activated ?? false;
-			let roles = [...autorole.roleIds];
-
-			if (i.customId === roleSelect.customId) {
+			if (i.customId === components.selects.roleSelect.customId) {
 				if (!i.isRoleSelectMenu()) {
 					return;
 				}
 
-				roles = i.values;
+				rolesIdsArray = i.values;
 
 				logger.log(
 					oneLine`
 						Roles changed from
 						[${[...autorole.roleIds].join(", ")}]
-						to [${roles.join(", ")}]
+						to [${rolesIdsArray.join(", ")}]
 					`
 				);
-			} else if (i.customId === clearRoles.customId) {
-				roles = [];
+			} else if (i.customId === components.buttons.clear.customId) {
+				rolesIdsArray = [];
 
 				logger.log(
 					oneLine`
 						Roles changed from
 						[${[...autorole.roleIds].join(", ")}]
-						to [${roles.join(", ")}]
+						to [${rolesIdsArray.join(", ")}]
 					`
 				);
-			} else if (i.customId === enable.customId) {
+			} else if (i.customId === components.buttons.enable.customId) {
 				active = true;
 
 				logger.log("Activated autorole");
-			} else if (i.customId === disable.customId) {
+			} else if (i.customId === components.buttons.disable.customId) {
 				active = false;
 				logger.log("Deactivated autorole");
 			}
 
 			await autoroleManager.update({
 				activated: active,
-				roleIds: roles
+				roleIds: rolesIdsArray
 			});
 
 			collector.stop("stop");
@@ -139,7 +126,7 @@ const chatInput = async (interaction: CommandModuleInteractions) => {
 	await dashboard();
 };
 
-export const getCommand: () => Command = () => ({
+export const getCommand: () => CommandExport = () => ({
 	data,
 	handle: {
 		chatInput

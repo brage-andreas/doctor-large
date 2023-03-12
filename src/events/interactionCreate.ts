@@ -1,11 +1,12 @@
 import { RegExp } from "#constants";
-import { getCommandFromCommandMap } from "#helpers/scripts/commandMap.js";
+import commands from "#scripts/loadCommands.js";
+import { type EventExport } from "#typings";
 import { stripIndents } from "common-tags";
-import { type Interaction } from "discord.js";
+import { Events, type Interaction } from "discord.js";
 import acceptPrize from "./giveawayListeners/acceptPrize.js";
 import enterGiveaway from "./giveawayListeners/enterGiveaway.js";
 
-export async function run(interaction: Interaction) {
+const execute = async (interaction: Interaction) => {
 	if (!interaction.inGuild()) {
 		if (interaction.isRepliable()) {
 			interaction.reply({
@@ -32,15 +33,18 @@ export async function run(interaction: Interaction) {
 	}
 
 	if (interaction.isButton()) {
-		const {
-			AcceptPrizeCustomId: ACCEPT_PRIZE_CUSTOM_ID,
-			EnterGiveawayCustomId: ENTER_GIVEAWAY_CUSTOM_ID
-		} = RegExp;
+		const { AcceptPrizeCustomId, EnterGiveawayCustomId } = RegExp;
 
-		if (ENTER_GIVEAWAY_CUSTOM_ID.test(interaction.customId)) {
+		if (EnterGiveawayCustomId.test(interaction.customId)) {
 			await enterGiveaway(interaction);
-		} else if (ACCEPT_PRIZE_CUSTOM_ID.test(interaction.customId)) {
+
+			return;
+		}
+
+		if (AcceptPrizeCustomId.test(interaction.customId)) {
 			await acceptPrize(interaction);
+
+			return;
 		}
 
 		return;
@@ -54,42 +58,43 @@ export async function run(interaction: Interaction) {
 		return;
 	}
 
-	const command = getCommandFromCommandMap(interaction.commandName);
+	const command = commands.get(interaction.commandName);
 
 	if (!command) {
 		// this should never happen
 		throw new Error(
-			`Commands mismatch: ${interaction.commandName} not in command map`
+			`Command '${interaction.commandName}' not found in command map`
 		);
 	}
 
 	if (interaction.isChatInputCommand()) {
 		if (!command.handle.chatInput) {
 			throw new Error(
-				`Commands mismatch: ${interaction.commandName} called as 'chatInput' but has no 'chatInput' handle`
+				`Command '${interaction.commandName}' called as type 'chatInput' is missing handle of same type`
 			);
 		}
 
-		return void (await command.handle.chatInput(interaction));
-	}
-
-	if (interaction.isAutocomplete()) {
+		await command.handle.chatInput(interaction);
+	} else if (interaction.isAutocomplete()) {
 		if (!command.handle.autocomplete) {
 			throw new Error(
-				`Commands mismatch: ${interaction.commandName} called as 'autocomplete' but has no 'autocomplete' handle`
+				`Command '${interaction.commandName}' called as type 'autocomplete' is missing handle of same type`
 			);
 		}
 
-		return void (await command.handle.autocomplete(interaction));
-	}
-
-	if (interaction.isContextMenuCommand()) {
+		await command.handle.autocomplete(interaction);
+	} else if (interaction.isContextMenuCommand()) {
 		if (!command.handle.contextMenu) {
 			throw new Error(
-				`Commands mismatch: ${interaction.commandName} called as 'contextMenu' but has no 'contextMenu' handle`
+				`Command '${interaction.commandName}' called as type 'contextMenu' is missing handle of same type`
 			);
 		}
 
-		return void (await command.handle.contextMenu(interaction));
+		await command.handle.contextMenu(interaction);
 	}
-}
+};
+
+export const getEvent: () => EventExport = () => ({
+	event: Events.InteractionCreate,
+	execute
+});

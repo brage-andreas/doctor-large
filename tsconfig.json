@@ -15,12 +15,13 @@
 		"target": "ESNext",
 
 		"paths": {
-			"#components": ["./src/components/index.ts"],
+			"#components": ["./src/components.ts"],
 			"#constants": ["./src/constants.ts"],
 			"#database/*": ["./src/database/*"],
 			"#helpers/*": ["./src/helpers/*"],
 			"#logger": ["./src/logger/logger.ts"],
 			"#modules/*": ["./src/modules/*"],
+			"#scripts/*": ["./src/scripts/*"],
 			"#typings": ["./src/typings/index.d.ts"]
 		}
 	},

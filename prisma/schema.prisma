@@ -1,77 +1,196 @@
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
 
 model Autorole {
-  activated    Boolean  @default(false)
-  guildId      String   @id
-  lastEditedAt DateTime @default(now()) @updatedAt
-  roleIds      String[] @default([])
+    guildId String @id
+
+    activated    Boolean  @default(false)
+    lastEditedAt DateTime @default(now()) @updatedAt
+    roleIds      String[] @default([])
+}
+
+model Case {
+    id              Int      @id @default(autoincrement())
+    guildId         String
+    guildRelativeId Int
+    createdAt       DateTime @default(now())
+    type            CaseType
+
+    // Present for: Softban, Ban
+    daysPruned          Int?
+    dmMessageId         String?
+    // Present for: Mute, Kick?, Softban?, Ban?, Slowmode, Lockdown
+    expiration          DateTime?
+    logMessageChannelId String?
+    logMessageId        String?
+    moderatorUserId     String
+    moderatorUserTag    String
+    note                Note?     @relation("noteReference", fields: [noteId], references: [id])
+    noteId              Int?
+    // Present for: Slowmode
+    originalSlowmode    Int?
+    // Present for: Slowmode (Persists on channel updates)
+    persistant          Boolean?
+    processed           Boolean   @default(false)
+    reason              String?
+    reference           Case?     @relation("caseReference", fields: [referenceId], references: [id], onDelete: NoAction)
+    referencedBy        Case[]    @relation("caseReference")
+    referenceId         Int?
+    report              Report?   @relation("reportReference", fields: [reportId], references: [id])
+    reportId            Int?
+    // If type is Restrict; roles added. If type is Unrestrict; roles removed.
+    roles               String[]
+    // First element may be: User, Channel. Only multiple elements if type is MultiBan.
+    targetIds           String[]
+    // Present for: Warn, Mute, Unmute, Kick, Softban, Ban, Unban
+    targetUserTag       String?
+    // Present for: Mute
+    temporary           Boolean?
+    // Present for: Slowmode
+    newSlowmode         Int?
 }
 
 model Giveaway {
-  channelId               String?
-  createdAt               DateTime      @default(now())
-  description             String
-  endAutomation           EndAutomation @default(End)
-  endDate                 DateTime?
-  ended                   Boolean       @default(false)
-  entriesLocked           Boolean       @default(false)
-  entriesUserIds          String[]      @default([])
-  guildId                 String
-  guildRelativeId         Int
-  hostNotified            HostNotified  @default(None)
-  hostUserId              String
-  hostUserTag             String
-  id                      Int           @id @default(autoincrement())
-  lastEditedAt            DateTime      @default(now()) @updatedAt
-  minimumAccountAge       String?
-  pingRolesIds            String[]      @default([])
-  prizes                  Prize[]
-  publishedMessageId      String?
-  publishedMessageUpdated Boolean       @default(false)
-  requiredRolesIds        String[]      @default([])
-  title                   String
-  winnerMessageId         String?
-  winnerMessageUpdated    Boolean       @default(false)
-  winnerQuantity          Int           @default(1)
+    id              Int      @id @default(autoincrement())
+    guildId         String
+    guildRelativeId Int
+    createdAt       DateTime @default(now())
+
+    channelId               String?
+    description             String
+    endAutomation           EndAutomation @default(End)
+    endDate                 DateTime?
+    ended                   Boolean       @default(false)
+    entriesLocked           Boolean       @default(false)
+    entriesUserIds          String[]      @default([])
+    hostNotified            HostNotified  @default(None)
+    hostUserId              String
+    hostUserTag             String
+    lastEditedAt            DateTime      @default(now()) @updatedAt
+    minimumAccountAge       String?
+    pingRolesIds            String[]      @default([])
+    prizes                  Prize[]
+    publishedMessageId      String?
+    publishedMessageUpdated Boolean       @default(false)
+    requiredRolesIds        String[]      @default([])
+    title                   String
+    winnerMessageId         String?
+    winnerMessageUpdated    Boolean       @default(false)
+    winnerQuantity          Int           @default(1)
+}
+
+model Note {
+    id                  Int      @id @default(autoincrement())
+    guildId             String
+    createdAt           DateTime @default(now())
+    guildUserRelativeId Int
+
+    authorId     String
+    authorTag    String
+    content      String
+    referencedBy Case[] @relation("noteReference")
+    userId       String
+    userTag      String
 }
 
 model Prize {
-  additionalInfo String?
-  createdAt      DateTime @default(now())
-  giveaway       Giveaway @relation(fields: [giveawayId], references: [id], onDelete: NoAction)
-  giveawayId     Int
-  id             Int      @id @default(autoincrement())
-  name           String
-  quantity       Int      @default(1)
-  winners        Winner[]
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+
+    additionalInfo String?
+    giveaway       Giveaway @relation(fields: [giveawayId], references: [id], onDelete: NoAction)
+    giveawayId     Int
+    name           String
+    quantity       Int      @default(1)
+    winners        Winner[]
+}
+
+model Report {
+    id              Int        @id @default(autoincrement())
+    guildId         String
+    guildRelativeId Int
+    createdAt       DateTime   @default(now())
+    type            ReportType
+
+    anonymous          Boolean   @default(false)
+    authorUserId       String
+    authorUserTag      String
+    comment            String
+    processed          Boolean   @default(false)
+    processedAt        DateTime?
+    processedByUserId  String?
+    processedByUserTag String?
+    referencedBy       Case[]    @relation("reportReference")
+    targetMessageId    String?
+    targetUserId       String
+    targetUserTag      String
+}
+
+model Config {
+    guildId String @id
+
+    caseLogChannelId     String?
+    caseLogEnabled       Boolean  @default(false)
+    lastEditedAt         DateTime @default(now()) @updatedAt
+    memberLogChannelId   String?
+    memberLogEnabled     Boolean  @default(false)
+    messageLogChannelId  String?
+    messageLogEnabled    Boolean  @default(false)
+    pinArchiveChannelId  String?
+    // These channels will be ignored by logs and limit reposting
+    protectedChannelsIds String[]
+    reportChannelId      String?
+    reportEnabled        Boolean  @default(false)
+    restrictRolesIds     String[]
 }
 
 model Winner {
-  claimed   Boolean  @default(false)
-  createdAt DateTime @default(now())
-  id        Int      @id @default(autoincrement())
-  notified  Boolean  @default(false)
-  prize     Prize    @relation(fields: [prizeId], references: [id], onDelete: NoAction)
-  prizeId   Int
-  userId    String
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+
+    claimed  Boolean @default(false)
+    notified Boolean @default(false)
+    prize    Prize   @relation(fields: [prizeId], references: [id], onDelete: NoAction)
+    prizeId  Int
+    userId   String
+}
+
+enum CaseType {
+    Warn
+    Restrict
+    Unrestrict
+    Mute
+    Unmute
+    Kick
+    Softban
+    Ban
+    MultiBan
+    Unban
+
+    Slowmode
+    Lockdown
 }
 
 enum EndAutomation {
-  None
-  End
-  Roll
-  Publish
+    None
+    End
+    Roll
+    Publish
 }
 
 enum HostNotified {
-  None
-  BufferBefore
-  OnEnd
+    None
+    BufferBefore
+    OnEnd
+}
+
+enum ReportType {
+    User
+    Message
 }

@@ -14,10 +14,15 @@ import {
 } from "discord.js";
 
 /**
- * `noStyle` = ButtonStyle.Danger
+ * `noStyle` = ButtonStyle.Primary
+ *
  * `respondToIgnore` = true
+ *
  * `timeActive` = 60_000
- * `yesStyle` = ButtonStyle.Success
+ *
+ * `yesStyle` = ButtonStyle.Primary
+ *
+ * `filter` = (i) => i.user.id === medium.user.id
  */
 export default async function yesNo(options: {
 	respondToIgnore?: boolean;
@@ -31,11 +36,15 @@ export default async function yesNo(options: {
 	data: Exclude<MessageEditOptions, "Components">;
 	filter?(interaction: ButtonInteraction): boolean;
 }): Promise<boolean> {
-	const { medium, data, filter } = options;
+	const { medium, data } = options;
+
+	const defaultFilter = (i: ButtonInteraction<"cached">) =>
+		i.user.id === ("user" in medium ? medium.user.id : medium.author.id);
 
 	const respondToIgnore = options.respondToIgnore ?? true;
-	const yesStyle = options.yesStyle ?? ButtonStyle.Success;
-	const noStyle = options.noStyle ?? ButtonStyle.Danger;
+	const yesStyle = options.yesStyle ?? ButtonStyle.Primary;
+	const noStyle = options.noStyle ?? ButtonStyle.Primary;
+	const filter = options.filter ?? defaultFilter;
 	const time = options.timeActive ?? 60_000;
 
 	const { yes, no } = components.buttons;

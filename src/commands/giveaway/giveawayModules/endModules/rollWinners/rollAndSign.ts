@@ -54,7 +54,7 @@ export async function rollAndSign(options: {
 	});
 
 	if (!data?.length) {
-		return;
+		return null;
 	}
 
 	const values = data.map((e) => `(${e.prizeId}, '${e.userId}')`).join(",\n");

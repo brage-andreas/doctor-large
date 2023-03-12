@@ -2,7 +2,7 @@ export const listify = (
 	elements: Array<string>,
 	options: { length: number; give?: number }
 ): string => {
-	const { length, give } = options ?? {};
+	const { length, give } = options;
 	const elements_ = structuredClone(elements);
 
 	if (elements_.length === 0 || elements_.length === 1) {
@@ -20,7 +20,7 @@ export const listify = (
 		return `${elements_[0]} and ${elements_[1]}`;
 	}
 
-	const lastElement = elements_.splice(-1);
+	const lastElement = elements_.splice(-1, 1)[0];
 
-	return `${elements_.join(", ")}, and ${lastElement[0]}`;
+	return `${elements_.join(", ")}, and ${lastElement}`;
 };

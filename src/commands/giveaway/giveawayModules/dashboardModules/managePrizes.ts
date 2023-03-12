@@ -55,7 +55,7 @@ export default async function toManagePrizes(
 
 	const createButton = create
 		.component()
-		.setDisabled(10 <= giveaway.prizes.length);
+		.setDisabled(giveaway.prizes.length >= 10);
 
 	const rows = [
 		...sortedPrizeButtons,
@@ -128,11 +128,15 @@ export default async function toManagePrizes(
 			case back.customId: {
 				await buttonInteraction.deferUpdate();
 
-				return toDashboard(buttonInteraction, id);
+				toDashboard(buttonInteraction, id);
+
+				return;
 			}
 
 			case create.customId: {
-				return toCreatePrize(buttonInteraction, id, giveawayManager);
+				toCreatePrize(buttonInteraction, id, giveawayManager);
+
+				return;
 			}
 
 			case clear.customId: {
@@ -156,17 +160,17 @@ export default async function toManagePrizes(
 					});
 
 					if (!proceed) {
-						return toManagePrizes(
-							buttonInteraction,
-							id,
-							giveawayManager
-						);
+						toManagePrizes(buttonInteraction, id, giveawayManager);
+
+						return;
 					}
 				}
 
 				await giveaway.reset({ prizesAndWinners: true });
 
-				return toManagePrizes(buttonInteraction, id, giveawayManager);
+				toManagePrizes(buttonInteraction, id, giveawayManager);
+
+				return;
 			}
 		}
 

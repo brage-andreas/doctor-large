@@ -12,11 +12,11 @@ import {
 	type Client,
 	type Message
 } from "discord.js";
-import { rollAndSign } from "./commands/giveaway/giveawayModules/endModules/rollWinners/rollAndSign.js";
+import { rollAndSign } from "../commands/giveaway/giveawayModules/endModules/rollWinners/rollAndSign.js";
 
 const DM_BUFFER = Giveaway.HostDMTimeBeforeEnd;
 
-const checkEndingGiveawaysFn = async (client: Client<true>) => {
+export default async function checkEndingGiveawaysFn(client: Client<true>) {
 	/* ----------------- */
 	/* --- Giveaways --- */
 	/* ----------------- */
@@ -316,17 +316,5 @@ const checkEndingGiveawaysFn = async (client: Client<true>) => {
 				});
 			}
 		}
-	}
-};
-
-export default function ({
-	client,
-	checkEndingGiveaways
-}: {
-	client: Client<true>;
-	checkEndingGiveaways?: boolean;
-}) {
-	if (checkEndingGiveaways) {
-		checkEndingGiveawaysFn(client);
 	}
 }
