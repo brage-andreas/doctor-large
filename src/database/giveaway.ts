@@ -34,7 +34,11 @@ export default class GiveawayManager {
 			}
 		});
 
-		return data && new GiveawayModule(data, this.guild);
+		if (!data) {
+			return null;
+		}
+
+		return new GiveawayModule(data, this.guild);
 	}
 
 	public async getAll(filter?: {
@@ -160,8 +164,16 @@ export default class GiveawayManager {
 				id: prizeId
 			},
 			include: {
-				giveaway: true,
-				winners: true
+				winners: true,
+				giveaway: {
+					include: {
+						prizes: {
+							include: {
+								winners: true
+							}
+						}
+					}
+				}
 			}
 		});
 
@@ -169,11 +181,7 @@ export default class GiveawayManager {
 			return null;
 		}
 
-		const giveaway = await this.get(data.giveawayId);
-
-		if (!giveaway) {
-			return null;
-		}
+		const giveaway = new GiveawayModule(data.giveaway, this.guild);
 
 		return new PrizeModule({ ...data, giveaway }, this.guild);
 	}
@@ -221,13 +229,22 @@ export default class GiveawayManager {
 
 	// Prisma.PrizeCreateInput is weird and i dont know why
 	public async createPrize(data: Prisma.PrizeCreateArgs["data"]) {
-		const data_ = await this.prisma.prize.create({ data });
+		const data_ = await this.prisma.prize.create({
+			data,
+			include: {
+				giveaway: {
+					include: {
+						prizes: {
+							include: {
+								winners: true
+							}
+						}
+					}
+				}
+			}
+		});
 
-		const giveaway = await this.get(data_.giveawayId);
-
-		if (!giveaway) {
-			return data_;
-		}
+		const giveaway = new GiveawayModule(data_.giveaway, this.guild);
 
 		return new PrizeModule({ ...data_, giveaway, winners: [] }, this.guild);
 	}
@@ -260,11 +277,11 @@ export default class GiveawayManager {
 				? prizeOrPrizeId
 				: prizeOrPrizeId.id;
 
-		return void (await this.prisma.prize.delete({
+		await this.prisma.prize.delete({
 			where: {
 				id
 			}
-		}));
+		});
 	}
 
 	public async deletePrizes(
@@ -278,7 +295,7 @@ export default class GiveawayManager {
 			ids = prizeIds.prizes.map((prize) => prize.id);
 		}
 
-		return await this.prisma.prize.deleteMany({
+		await this.prisma.prize.deleteMany({
 			where: {
 				id: {
 					in: ids
