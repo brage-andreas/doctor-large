@@ -2,12 +2,7 @@ import components from "#components";
 import { Emojis } from "#constants";
 import GiveawayManager from "#database/giveaway.js";
 import { stripIndents } from "common-tags";
-import {
-	ActionRowBuilder,
-	ComponentType,
-	type ButtonBuilder,
-	type RepliableInteraction
-} from "discord.js";
+import { ComponentType, type RepliableInteraction } from "discord.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import toEditGiveaway from "./dashboardModules/editGiveaway.js";
 import toEndOptions from "./dashboardModules/endOptions.js";
@@ -46,45 +41,28 @@ export default async function toDashboard(
 		return;
 	}
 
-	const {
-		publishingOptions,
-		publishGiveaway,
-		unlockEntries,
-		lockEntries,
-		endOptions,
-		setRequiredRoles,
-		setPingRoles,
-		managePrizes,
-		edit,
-		reset,
-		deleteGiveaway
-	} = components.buttons;
-
 	const publishButton = giveaway.publishedMessageId
-		? publishingOptions.component()
-		: publishGiveaway.component();
+		? components.buttons.publishingOptions
+		: components.buttons.publishGiveaway;
 
 	const lockEntriesButton = giveaway.entriesLocked
-		? unlockEntries.component()
-		: lockEntries.component();
+		? components.buttons.unlockEntries
+		: components.buttons.lockEntries;
 
-	const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+	const rows = components.createRows(
 		publishButton,
-		endOptions.component(),
+		components.buttons.endOptions,
 		lockEntriesButton,
-		setRequiredRoles.component(),
-		setPingRoles.component()
-	);
-
-	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		managePrizes.component(),
-		edit.component(),
-		reset.component("data"),
-		deleteGiveaway.component()
+		components.buttons.setRequiredRoles,
+		components.buttons.setPingRoles,
+		components.buttons.managePrizes,
+		components.buttons.edit,
+		components.buttons.reset.component("data"),
+		components.buttons.deleteGiveaway
 	);
 
 	const msg = await interaction.editReply({
-		components: [row1, row2],
+		components: rows,
 		...giveaway.toDashboardOverview()
 	});
 
@@ -104,12 +82,12 @@ export default async function toDashboard(
 	});
 
 	collector.on("collect", async (buttonInteraction) => {
-		if (buttonInteraction.customId !== edit.customId) {
+		if (buttonInteraction.customId !== components.buttons.edit.customId) {
 			await buttonInteraction.deferUpdate();
 		}
 
 		switch (buttonInteraction.customId) {
-			case edit.customId: {
+			case components.buttons.edit.customId: {
 				toEditGiveaway(
 					buttonInteraction,
 					interaction,
@@ -120,7 +98,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case publishGiveaway.customId: {
+			case components.buttons.publishGiveaway.customId: {
 				toPublishGiveaway(
 					buttonInteraction,
 					giveawayId,
@@ -130,7 +108,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case publishingOptions.customId: {
+			case components.buttons.publishingOptions.customId: {
 				toPublishingOptions(
 					buttonInteraction,
 					giveawayId,
@@ -140,7 +118,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case lockEntries.customId: {
+			case components.buttons.lockEntries.customId: {
 				await giveaway.edit({
 					entriesLocked: true,
 					nowOutdated: {
@@ -153,7 +131,7 @@ export default async function toDashboard(
 				break;
 			}
 
-			case unlockEntries.customId: {
+			case components.buttons.unlockEntries.customId: {
 				await giveaway.edit({
 					entriesLocked: false,
 					nowOutdated: {
@@ -166,13 +144,13 @@ export default async function toDashboard(
 				break;
 			}
 
-			case endOptions.customId: {
+			case components.buttons.endOptions.customId: {
 				toEndOptions(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
-			case setRequiredRoles.customId: {
+			case components.buttons.setRequiredRoles.customId: {
 				toSetRequiredRoles(
 					buttonInteraction,
 					giveawayId,
@@ -182,25 +160,25 @@ export default async function toDashboard(
 				break;
 			}
 
-			case setPingRoles.customId: {
+			case components.buttons.setPingRoles.customId: {
 				toSetPingRoles(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
-			case managePrizes.customId: {
+			case components.buttons.managePrizes.customId: {
 				toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
-			case reset.customId: {
+			case components.buttons.reset.customId: {
 				toResetData(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
-			case deleteGiveaway.customId: {
+			case components.buttons.deleteGiveaway.customId: {
 				toDeleteGiveaway(
 					buttonInteraction,
 					giveawayId,

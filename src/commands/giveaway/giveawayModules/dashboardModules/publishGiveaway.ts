@@ -4,11 +4,10 @@ import type GiveawayManager from "#database/giveaway.js";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
 import {
-	ActionRowBuilder,
+	hideLinkEmbed,
+	hyperlink,
 	PermissionFlagsBits,
-	type ButtonBuilder,
 	type ButtonInteraction,
-	type ChannelSelectMenuBuilder,
 	type GuildTextBasedChannel,
 	type NewsChannel,
 	type TextChannel
@@ -63,20 +62,11 @@ export default async function toPublishGiveaway(
 		}
 	`;
 
-	const { enterGiveaway, lastChannel, back } = components.buttons;
-	const { channelSelect } = components.selects;
-
-	const row1 = new ActionRowBuilder<ChannelSelectMenuBuilder>().setComponents(
-		channelSelect.component()
+	const rows = components.createRows(
+		components.selects.channelSelect,
+		components.buttons.back,
+		giveaway.channelId ? components.buttons.lastChannel : null
 	);
-
-	const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		back.component()
-	);
-
-	if (giveaway.channelId) {
-		row2.addComponents(lastChannel.component());
-	}
 
 	const retry = async (message?: string) => {
 		if (message) {
@@ -85,7 +75,7 @@ export default async function toPublishGiveaway(
 
 		const updateMsg = await interaction.editReply({
 			content: chooseChannelStr,
-			components: [row1, row2],
+			components: rows,
 			embeds: [giveaway.toEmbed()]
 		});
 
@@ -95,15 +85,19 @@ export default async function toPublishGiveaway(
 
 		await componentInteraction.deferUpdate();
 
-		if (componentInteraction.customId === back.customId) {
+		if (
+			componentInteraction.customId === components.buttons.back.customId
+		) {
 			toDashboard(interaction, id);
 
 			return;
 		}
 
 		if (
-			componentInteraction.customId === channelSelect.customId ||
-			componentInteraction.customId === lastChannel.customId
+			componentInteraction.customId ===
+				components.selects.channelSelect.customId ||
+			componentInteraction.customId ===
+				components.buttons.lastChannel.customId
 		) {
 			let channel: GuildTextBasedChannel;
 
@@ -147,11 +141,9 @@ export default async function toPublishGiveaway(
 				allowedMentions: {
 					parse: ["roles", "everyone"]
 				},
-				components: [
-					new ActionRowBuilder<ButtonBuilder>().setComponents(
-						enterGiveaway.component(id)
-					)
-				],
+				components: components.createRows(
+					components.buttons.enterGiveaway.component(id)
+				),
 				content: giveaway.pingRolesMentions?.join(" "),
 				embeds: [giveaway.toEmbed()]
 			});
@@ -174,7 +166,10 @@ export default async function toPublishGiveaway(
 				content: stripIndents`
 					${Emojis.Sparks} Done! Giveaway published in ${channel}.
 
-					Here is a [link to your shiny new giveaway](<${msg.url}>).
+					Here is a ${hyperlink(
+						"link to your shiny new giveaway",
+						hideLinkEmbed(msg.url)
+					)}.
 				`,
 				embeds: []
 			});

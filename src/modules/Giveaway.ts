@@ -1,3 +1,4 @@
+import components from "#components";
 import { Colors, Emojis } from "#constants";
 import { default as GiveawayManager } from "#database/giveaway.js";
 import commandMention from "#helpers/commandMention.js";
@@ -20,10 +21,10 @@ import {
 } from "@prisma/client";
 import { oneLine, source, stripIndent, stripIndents } from "common-tags";
 import {
-	ActionRowBuilder,
-	ButtonBuilder,
-	ButtonStyle,
+	bold,
 	EmbedBuilder,
+	hideLinkEmbed,
+	hyperlink,
 	PermissionFlagsBits,
 	type Client,
 	type Guild,
@@ -532,7 +533,9 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const winners = s("winner", this.winnerQuantity);
 
 		return oneLine`
-			#${this.guildRelativeId} **${this.title}** - ${this.winnerQuantity} ${winners},
+			#${this.guildRelativeId} ${bold(this.title)} - ${
+			this.winnerQuantity
+		} ${winners},
 			${this.prizesQuantity()} ${s("prize", this.prizesQuantity())}
 		`;
 	}
@@ -661,13 +664,13 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 		const rawMessageUrl = this.publishedMessageURL;
 		const messageUrl = rawMessageUrl
-			? `→ [Link to giveaway](<${rawMessageUrl}>)`
+			? `→ ${hyperlink("Link to giveaway", hideLinkEmbed(rawMessageUrl))}`
 			: null;
 
 		const winnersStr = this.winnersUserIds().size
-			? `→ Unique winners: **${this.winnersUserIds().size}**/${
-					this.winnerQuantity
-			  }`
+			? `→ Unique winners: ${bold(
+					this.winnersUserIds().size.toString()
+			  )}/${this.winnerQuantity}`
 			: `→ ${
 					this.entriesUserIds.size ? `${Emojis.Warn} ` : ""
 			  }No winners`;
@@ -898,10 +901,10 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			ids.push(id);
 
 			const content = stripIndent`
-				**You just won a giveaway!** ${Emojis.Tada}
+				${bold("You just won a giveaway!")} ${Emojis.Tada}
 				  → ${this.title} • #${this.guildRelativeId} • ${this.guild.name}.
 
-				Make sure to **claim your prize(s)**!
+				Make sure to ${bold("claim your prize(s)")}!
 
 				Here is how:
 				  a) Use ${myGiveaways} in the server and claim your prizes.
@@ -910,22 +913,17 @@ export default class GiveawayModule implements ModifiedGiveaway {
 				GG!
 			`;
 
-			const url = this.winnerMessageURL;
-
-			const button = url
-				? new ButtonBuilder({
-						label: "Go to announcement",
-						style: ButtonStyle.Link,
-						url
-				  })
-				: undefined;
-
-			const components = button && [
-				new ActionRowBuilder<ButtonBuilder>().setComponents(button)
-			];
+			const rows = components.createRows(
+				this.winnerMessageURL
+					? components.buttons.url({
+							label: "Go to announcement",
+							url: this.winnerMessageURL
+					  })
+					: null
+			);
 
 			this.client.users
-				.send(userId, { content, components })
+				.send(userId, { content, components: rows })
 				.catch(() => null)
 				.then(() => null);
 		}

@@ -4,7 +4,7 @@ import commandMention from "#helpers/commandMention.js";
 import yesNo from "#helpers/yesNo.js";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
-import { ButtonStyle, type ButtonInteraction } from "discord.js";
+import { bold, ButtonStyle, type ButtonInteraction } from "discord.js";
 import toDashboard from "../dashboard.js";
 
 // TODO: delete published messages
@@ -46,7 +46,7 @@ export default async function toDeleteGiveaway(
 				${Emojis.Warn} You are about to delete giveaway #${giveaway.guildRelativeId}.
 				This will also include any prizes and winners.${isConcludedString}
 
-				Are you sure? Absolutely sure? This action will be **irreversible**.
+				Are you sure? Absolutely sure? This action will be ${bold("irreversible")}.
 			`,
 			embeds: []
 		}

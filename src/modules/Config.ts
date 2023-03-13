@@ -3,6 +3,7 @@ import type ConfigManager from "#database/config.js";
 import { type Config } from "@prisma/client";
 import { source } from "common-tags";
 import {
+	bold,
 	ChannelType,
 	EmbedBuilder,
 	type Channel,
@@ -223,7 +224,13 @@ export default class ConfigModule
 							: `→ ${Emojis.Warn} Unknown channel \`${id}\``;
 					})
 					.slice(0, 5)}
-				${protectedChs.length > 5 ? `and **${protectedChs.length - 5}** more...` : ""}
+				${
+					protectedChs.length > 5
+						? `and ${bold(
+								(protectedChs.length - 5).toString()
+						  )} more...`
+						: ""
+				}
 			  `
 			: "None";
 

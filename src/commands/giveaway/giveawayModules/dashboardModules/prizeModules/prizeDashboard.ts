@@ -3,9 +3,7 @@ import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
 import Logger from "#logger";
 import {
-	ActionRowBuilder,
 	ComponentType,
-	type ButtonBuilder,
 	type ButtonInteraction,
 	type ModalSubmitInteraction
 } from "discord.js";
@@ -31,16 +29,14 @@ export default async function toPrizeDashboard(
 		return;
 	}
 
-	const { back, edit, delete_ } = components.buttons;
-
-	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		back.component(),
-		edit.component(),
-		delete_.component()
+	const rows = components.createRows(
+		components.buttons.back,
+		components.buttons.edit,
+		components.buttons.delete_
 	);
 
 	const msg = await interaction.editReply({
-		components: [row],
+		components: rows,
 		content: null,
 		embeds: [prize.toEmbed()]
 	});
@@ -62,7 +58,7 @@ export default async function toPrizeDashboard(
 
 	collector.on("collect", async (buttonInteraction) => {
 		switch (buttonInteraction.customId) {
-			case back.customId: {
+			case components.buttons.back.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
@@ -70,7 +66,7 @@ export default async function toPrizeDashboard(
 				break;
 			}
 
-			case edit.customId: {
+			case components.buttons.edit.customId: {
 				toEditPrize(
 					buttonInteraction,
 					prize,
@@ -81,7 +77,7 @@ export default async function toPrizeDashboard(
 				break;
 			}
 
-			case delete_.customId: {
+			case components.buttons.delete_.customId: {
 				await buttonInteraction.deferUpdate();
 
 				await giveawayManager.deletePrize(prize.id);

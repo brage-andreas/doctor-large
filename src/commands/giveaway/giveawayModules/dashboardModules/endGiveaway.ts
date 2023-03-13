@@ -6,12 +6,7 @@ import { timestamp } from "#helpers/timestamps.js";
 import yesNo from "#helpers/yesNo.js";
 import Logger from "#logger";
 import { oneLine, stripIndent, stripIndents } from "common-tags";
-import {
-	ActionRowBuilder,
-	ButtonStyle,
-	type ButtonBuilder,
-	type ButtonInteraction
-} from "discord.js";
+import { bold, ButtonStyle, type ButtonInteraction } from "discord.js";
 import toDashboard from "../dashboard.js";
 
 export default async function toEndGiveaway(
@@ -87,8 +82,8 @@ export default async function toEndGiveaway(
 		content += "\n\n";
 		content += oneLine`
 			${Emojis.Warn} There are not enough prizes for
-			**${winnersN}** ${s("winner", winnersN)}!
-			There will be **${prizesN}** ${s("winner", prizesN)} instead.
+			${bold(winnersN.toString())} ${s("winner", winnersN)}!
+			There will be ${bold(prizesN.toString())} ${s("winner", prizesN)} instead.
 		`;
 	}
 
@@ -126,14 +121,13 @@ export default async function toEndGiveaway(
 		}
 	});
 
-	const endedGiveawayRow =
-		new ActionRowBuilder<ButtonBuilder>().setComponents(
-			components.buttons.endedGiveaway.component()
-		);
+	const endedGiveawayRows = components.createRows(
+		components.buttons.endedGiveaway.component()
+	);
 
 	await giveaway.publishedMessage?.edit({
 		allowedMentions: { parse: ["roles", "everyone"] },
-		components: [endedGiveawayRow],
+		components: endedGiveawayRows,
 		content: giveaway.pingRolesMentions?.join(" "),
 		embeds: [giveaway.toEmbed()]
 	});

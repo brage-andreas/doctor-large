@@ -1,12 +1,10 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import {
-	ActionRowBuilder,
 	ButtonStyle,
 	ComponentType,
 	Message,
 	type AutocompleteInteraction,
-	type ButtonBuilder,
 	type ButtonInteraction,
 	type ContextMenuCommandInteraction,
 	type Interaction,
@@ -49,7 +47,7 @@ export default async function yesNo(options: {
 
 	const { yes, no } = components.buttons;
 
-	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
+	const rows = components.createRows(
 		yes.component(yesStyle),
 		no.component(noStyle)
 	);
@@ -57,9 +55,9 @@ export default async function yesNo(options: {
 	let message: Message<true>;
 
 	if (medium instanceof Message) {
-		message = await medium.edit({ ...data, components: [row] });
+		message = await medium.edit({ ...data, components: rows });
 	} else {
-		message = await medium.editReply({ ...data, components: [row] });
+		message = await medium.editReply({ ...data, components: rows });
 	}
 
 	return new Promise((resolve, reject) => {

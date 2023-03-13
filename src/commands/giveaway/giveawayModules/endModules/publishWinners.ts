@@ -1,12 +1,12 @@
+import components from "#components";
 import { Emojis } from "#constants";
 import GiveawayManager from "#database/giveaway.js";
 import Logger from "#logger";
 import type GiveawayModule from "#modules/Giveaway.js";
 import { oneLine, stripIndents } from "common-tags";
 import {
-	ActionRowBuilder,
-	ButtonBuilder,
-	ButtonStyle,
+	hideLinkEmbed,
+	hyperlink,
 	PermissionFlagsBits,
 	type Message,
 	type MessageCreateOptions,
@@ -69,15 +69,7 @@ export async function toPublishWinners(
 
 	await giveaway.winnerMessage?.delete();
 
-	const acceptPrizeButton = new ButtonBuilder()
-		.setCustomId(`accept-prize-${id}`)
-		.setLabel("Accept prize")
-		.setEmoji(Emojis.StarEyes)
-		.setStyle(ButtonStyle.Success);
-
-	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		acceptPrizeButton
-	);
+	const rows = components.createRows(components.buttons.acceptPrize(id));
 
 	let message: Message<true> | null;
 
@@ -85,14 +77,14 @@ export async function toPublishWinners(
 		message = await giveawayMessage
 			.reply({
 				...giveaway.endedEmbed(),
-				components: [row]
+				components: rows
 			})
 			.catch(() => null);
 	} else {
 		message = await channel
 			.send({
 				...giveaway.endedEmbed(),
-				components: [row]
+				components: rows
 			})
 			.catch(() => null);
 	}
@@ -137,9 +129,14 @@ export async function toPublishWinners(
 	await interaction.followUp({
 		ephemeral: true,
 		content: stripIndents`
-			${Emojis.Sparks} Done! Published the winners of giveaway #${giveaway.guildRelativeId} in ${channel}!
+			${Emojis.Sparks} Done! Published the winners of giveaway #${
+			giveaway.guildRelativeId
+		} in ${channel}!
 
-			Fine. If you don't believe me, [here is a link to it](<${message.url}>).
+			Fine. If you don't believe me, ${hyperlink(
+				"here is a link to it",
+				hideLinkEmbed(message.url)
+			)}.
 		`
 	});
 
@@ -213,15 +210,7 @@ export async function republishWinners(
 		return;
 	}
 
-	const acceptPrizeButton = new ButtonBuilder()
-		.setCustomId(`accept-prize-${id}`)
-		.setLabel("Accept prize")
-		.setEmoji(Emojis.StarEyes)
-		.setStyle(ButtonStyle.Success);
-
-	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		acceptPrizeButton
-	);
+	const rows = components.createRows(components.buttons.acceptPrize(id));
 
 	await currentMessage
 		.edit({
@@ -230,7 +219,7 @@ export async function republishWinners(
 				.map((id) => `<@${id}>`)
 				.join(" "),
 			embeds: [],
-			components: [row]
+			components: rows
 		})
 		.catch(() => null);
 
@@ -243,9 +232,14 @@ export async function republishWinners(
 	await interaction.followUp({
 		ephemeral: true,
 		content: stripIndents`
-			${Emojis.Sparks} Done! Republished the winners of giveaway #${giveaway.guildRelativeId} in ${channel}!
+			${Emojis.Sparks} Done! Republished the winners of giveaway #${
+			giveaway.guildRelativeId
+		} in ${channel}!
 
-			Oh, I almost forgot! [Here is a link to it](<${currentMessage.url}>).
+			Oh, I almost forgot! ${hyperlink(
+				"Here is a link to it",
+				hideLinkEmbed(currentMessage.url)
+			)}.
 		`
 	});
 
@@ -264,14 +258,8 @@ export async function publishOrRepublishWinners(
 	giveaway: GiveawayModule,
 	{ preferEditing }: { preferEditing: boolean } = { preferEditing: false }
 ) {
-	const acceptPrizeButton = new ButtonBuilder()
-		.setCustomId(`accept-prize-${giveaway.id}`)
-		.setLabel("Accept prize")
-		.setEmoji(Emojis.StarEyes)
-		.setStyle(ButtonStyle.Success);
-
-	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		acceptPrizeButton
+	const rows = components.createRows(
+		components.buttons.acceptPrize(giveaway.id)
 	);
 
 	const data: Omit<MessageCreateOptions, "flags"> = {
@@ -280,7 +268,7 @@ export async function publishOrRepublishWinners(
 			.map((id) => `<@${id}>`)
 			.join(" "),
 		embeds: [],
-		components: [row]
+		components: rows
 	};
 
 	let sent = false;

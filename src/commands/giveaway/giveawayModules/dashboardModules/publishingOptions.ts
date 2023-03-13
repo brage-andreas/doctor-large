@@ -4,11 +4,10 @@ import type GiveawayManager from "#database/giveaway.js";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
 import {
-	ActionRowBuilder,
+	hideLinkEmbed,
+	hyperlink,
 	PermissionFlagsBits,
-	type ButtonBuilder,
 	type ButtonInteraction,
-	type ChannelSelectMenuBuilder,
 	type ComponentType,
 	type NewsChannel,
 	type TextChannel
@@ -46,19 +45,12 @@ export default async function toPublishingOptions(
 		}
 	`;
 
-	const { channelSelect } = components.selects;
-	const { back, lastChannel, editCurrentMessage, recallCurrentMessage } =
-		components.buttons;
-
-	const row1 = new ActionRowBuilder<ChannelSelectMenuBuilder>().setComponents(
-		channelSelect.component()
-	);
-
-	const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		back.component(),
-		lastChannel.component(),
-		editCurrentMessage.component(),
-		recallCurrentMessage.component()
+	const rows = components.createRows(
+		components.selects.channelSelect,
+		components.buttons.back,
+		components.buttons.lastChannel,
+		components.buttons.editCurrentMessage,
+		components.buttons.recallCurrentMessage
 	);
 
 	const logger = new Logger({ prefix: "GIVEAWAY", interaction });
@@ -70,7 +62,7 @@ export default async function toPublishingOptions(
 
 		const updateMsg = await interaction.editReply({
 			content: chooseChannelStr,
-			components: [row1, row2],
+			components: rows,
 			embeds: [giveaway.toEmbed()]
 		});
 
@@ -80,7 +72,9 @@ export default async function toPublishingOptions(
 			filter: (i) => i.user.id === interaction.user.id
 		});
 
-		if (componentInteraction.customId === back.customId) {
+		if (
+			componentInteraction.customId === components.buttons.back.customId
+		) {
 			await componentInteraction.deferUpdate();
 
 			toDashboard(interaction, id);
@@ -89,8 +83,10 @@ export default async function toPublishingOptions(
 		}
 
 		if (
-			componentInteraction.customId === channelSelect.customId ||
-			componentInteraction.customId === lastChannel.customId
+			componentInteraction.customId ===
+				components.selects.channelSelect.customId ||
+			componentInteraction.customId ===
+				components.buttons.lastChannel.customId
 		) {
 			await componentInteraction.deferUpdate();
 
@@ -132,11 +128,9 @@ export default async function toPublishingOptions(
 
 			const message = await channel.send({
 				allowedMentions: { parse: ["everyone", "roles"] },
-				components: [
-					new ActionRowBuilder<ButtonBuilder>().setComponents(
-						components.buttons.enterGiveaway.component(id)
-					)
-				],
+				components: components.createRows(
+					components.buttons.enterGiveaway.component(id)
+				),
 				content: giveaway.pingRolesMentions?.join(" "),
 				embeds: [giveaway.toEmbed()]
 			});
@@ -149,7 +143,10 @@ export default async function toPublishingOptions(
 				content: stripIndents`
 					${Emojis.Sparks} Done! Giveaway published in ${channel}.
 					
-					Here is a [link to your now perfected giveaway](<${message.url}>).
+					Here is a ${hyperlink(
+						"link to your now perfected giveaway",
+						hideLinkEmbed(message.url)
+					)}.
 				`,
 				embeds: []
 			});
@@ -168,8 +165,10 @@ export default async function toPublishingOptions(
 		}
 
 		if (
-			componentInteraction.customId === editCurrentMessage.customId ||
-			componentInteraction.customId === recallCurrentMessage.customId
+			componentInteraction.customId ===
+				components.buttons.editCurrentMessage.customId ||
+			componentInteraction.customId ===
+				components.buttons.recallCurrentMessage.customId
 		) {
 			await componentInteraction.deferUpdate();
 
@@ -211,17 +210,12 @@ export default async function toPublishingOptions(
 			}
 
 			const isEdit =
-				componentInteraction.customId === editCurrentMessage.customId;
+				componentInteraction.customId ===
+				components.buttons.editCurrentMessage.customId;
 
 			const content = giveaway.pingRolesMentions?.join(" ");
 
 			const embeds = [giveaway.toEmbed()];
-
-			const rows = [
-				new ActionRowBuilder<ButtonBuilder>().setComponents(
-					components.buttons.enterGiveaway.component(id)
-				)
-			];
 
 			const urlOrNull = isEdit
 				? await channel.messages
@@ -229,28 +223,34 @@ export default async function toPublishingOptions(
 							allowedMentions: {
 								roles: [...giveaway.pingRolesIds]
 							},
-							components: rows,
+							components: components.createRows(
+								components.buttons.enterGiveaway.component(id)
+							),
 							content,
 							embeds
 						})
 						.then((msg) => msg.url)
-						.catch(() => null)
+						.catch(() => false)
 				: await channel.messages
 						.delete(giveaway.publishedMessageId)
 						.then(() => true)
-						.catch(() => null);
+						.catch(() => false);
 
 			if (isEdit) {
 				interaction.followUp({
 					components: [],
 					ephemeral: true,
-					content: urlOrNull
-						? stripIndents`
-							${Emojis.Sparks} Done! Giveaway has been edited in ${channel}.
-							
-							Here is a [link to your now perfected giveaway](<${urlOrNull}>).
-						`
-						: `${Emojis.Warn} I could not edit the message. Maybe it has been deleted?`,
+					content:
+						urlOrNull && typeof urlOrNull === "string"
+							? stripIndents`
+								${Emojis.Sparks} Done! Giveaway has been edited in ${channel}.
+								
+								Here is a ${hyperlink(
+									"link to your now perfected giveaway",
+									hideLinkEmbed(urlOrNull)
+								)}).
+							`
+							: `${Emojis.Warn} I could not edit the message. Maybe it has been deleted?`,
 					embeds: []
 				});
 

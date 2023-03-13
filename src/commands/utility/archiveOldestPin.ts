@@ -6,10 +6,13 @@ import { messageToEmbed } from "#helpers/messageHelpers.js";
 import yesNo from "#helpers/yesNo.js";
 import Logger from "#logger";
 import { type CommandData, type CommandExport } from "#typings";
-import { oneLine, source, stripIndent, stripIndents } from "common-tags";
+import { oneLine, stripIndent, stripIndents } from "common-tags";
 import {
 	ChannelType,
+	hideLinkEmbed,
+	hyperlink,
 	PermissionFlagsBits,
+	underscore,
 	type ChatInputCommandInteraction,
 	type GuildTextBasedChannel,
 	type TextChannel
@@ -46,7 +49,7 @@ const chatInput = async (
 		await interaction.editReply({
 			content: oneLine`
 				${Emojis.Error} I am missing permissions to unpin messages in
-				this channel. Permissions needed: \`Manage Message\`.
+				this channel. Permissions needed: \`Manage Messages\`.
 			`
 		});
 
@@ -83,26 +86,12 @@ const chatInput = async (
 		return;
 	}
 
-	const link = !message.deletable
-		? `[this message](<${message.url}>) by ${message.author.tag}`
-		: null;
-
-	const missingPerms = link
-		? source`
-			${Emojis.Error} Missing permissions to delete ${link}
-		`
-		: "";
-
 	const embed = messageToEmbed(message);
 
 	const res = await yesNo({
 		data: {
-			content: [
+			content:
 				"Here is a preview of what will be archived. Do you want to continue?",
-				missingPerms
-			]
-				.join("\n\n")
-				.trim(),
 			embeds: [embed]
 		},
 		medium: interaction,
@@ -266,16 +255,25 @@ const chatInput = async (
 		await interaction.editReply({
 			components: [],
 			content: stripIndent`
-				${Emojis.V} Done! Here is [a link](<${url}>).
+				${Emojis.V} Done! Here is ${hyperlink("a link", hideLinkEmbed(url))}.
 			`,
 			embeds: []
 		});
 	} else {
+		const link = hyperlink(
+			"the original message",
+			hideLinkEmbed(message.url)
+		);
+
 		await interaction.editReply({
 			components: [],
 			content: stripIndent`
 				${Emojis.Error} Failed to unpin ${link}. Archive was cancelled.
-				Check my permissions and try again later.
+				
+				Causes of failure ${underscore("could")} be:
+				  a) message was unpinned since the command was used
+				  b) message was deleted since the command was used
+				  c) I am missing \`Manage Messages\` permission
 			`,
 			embeds: []
 		});

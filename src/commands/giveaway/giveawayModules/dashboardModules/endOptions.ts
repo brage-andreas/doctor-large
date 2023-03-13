@@ -5,7 +5,7 @@ import { longstamp } from "#helpers/timestamps.js";
 import { type EndAutomation } from "@prisma/client";
 import { oneLine, source, stripIndents } from "common-tags";
 import {
-	ActionRowBuilder,
+	bold,
 	ButtonStyle,
 	ComponentType,
 	EmbedBuilder,
@@ -144,15 +144,15 @@ export default async function toEndOptions(
 			value: stripIndents`
 				Define what should happen when the giveaway ends.
 				You can always end the giveaway manually.
-				The host will be notified: ${hostDMStr} before, and on end.
+				The host will be notified ${hostDMStr} before, and on end.
 
 				Levels:
-				1. **None**: No automation. (The host will be notified as normal.)
-				2. **End**: End the giveaway; no one can enter or leave.
-				3. **Roll**: Roll the winners. This will also End.
-				4. **Publish**: Publish and notify the winners. This will also End and Roll.
+				1. ${bold("None")}: No automation. (The host will be notified as normal.)
+				2. ${bold("End")}: End the giveaway; no one can enter or leave.
+				3. ${bold("Roll")}: Roll the winners. This will also End.
+				4. ${bold("Publish")}: Publish and notify the winners. This will also Roll.
 
-				Currently set to: **${endAutomationLevel}**
+				Currently set to: ${bold(endAutomationLevel)}
 			`
 		})
 		.setFooter({
@@ -188,28 +188,20 @@ export default async function toEndOptions(
 			`
 			: undefined;
 
+	const rows = components.createRows(
+		setDate.component().setDisabled(true),
+		clearDate.component().setDisabled(!endDate),
+		roundDateToNearestHour.component().setDisabled(Boolean(isRounded)),
+		endGiveaway,
+		...plusButtons,
+		...minusButtons,
+		back,
+		...endLevelButtons()
+	);
+
 	const msg = await interaction.editReply({
 		content: cannotEnd,
-		components: [
-			new ActionRowBuilder<ButtonBuilder>().setComponents(
-				setDate.component().setDisabled(true),
-				clearDate.component().setDisabled(!endDate),
-				roundDateToNearestHour
-					.component()
-					.setDisabled(Boolean(isRounded)),
-				endGiveaway.component()
-			),
-			new ActionRowBuilder<ButtonBuilder>().setComponents(
-				...plusButtons.map((button) => button.component())
-			),
-			new ActionRowBuilder<ButtonBuilder>().setComponents(
-				...minusButtons.map((button) => button.component())
-			),
-			new ActionRowBuilder<ButtonBuilder>().setComponents(
-				back.component(),
-				...endLevelButtons()
-			)
-		],
+		components: rows,
 		embeds: [endOptionsEmbed]
 	});
 

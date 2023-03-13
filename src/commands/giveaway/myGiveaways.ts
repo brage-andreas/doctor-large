@@ -16,7 +16,6 @@ import {
 } from "#typings";
 import { oneLine, source, stripIndents } from "common-tags";
 import {
-	ActionRowBuilder,
 	ApplicationCommandType,
 	AttachmentBuilder,
 	ComponentType,
@@ -160,9 +159,7 @@ const run = async (
 	const getRows = () => {
 		const buttons = getButtonArray();
 
-		return buttons.length
-			? [new ActionRowBuilder<ButtonBuilder>().setComponents(buttons)]
-			: [];
+		return buttons.length ? components.createRows(...buttons) : [];
 	};
 
 	const prizesArr = (noLimits?: true): Array<EmbedField> =>

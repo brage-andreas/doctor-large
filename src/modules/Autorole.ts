@@ -3,6 +3,7 @@ import type AutoroleManager from "#database/autorole.js";
 import { type Autorole } from "@prisma/client";
 import { stripIndents } from "common-tags";
 import {
+	bold,
 	EmbedBuilder,
 	PermissionFlagsBits,
 	type Client,
@@ -85,8 +86,8 @@ export default class AutoroleModule {
 
 	public toEmbed() {
 		const description = this.activated
-			? `${Emojis.On} Currently toggled **on**`
-			: `${Emojis.Off} Currently toggled **off**`;
+			? `${Emojis.On} Currently toggled ${bold("on")}`
+			: `${Emojis.Off} Currently toggled ${bold("off")}`;
 
 		const roles = this.roleIds.size
 			? this.roles

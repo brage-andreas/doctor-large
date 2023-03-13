@@ -5,13 +5,7 @@ import { longstamp } from "#helpers/timestamps.js";
 import GiveawayModule from "#modules/Giveaway.js";
 import { type GiveawayWithIncludes, type WinnerId } from "#typings";
 import { oneLine, source } from "common-tags";
-import {
-	ActionRowBuilder,
-	ButtonBuilder,
-	ButtonStyle,
-	type Client,
-	type Message
-} from "discord.js";
+import { bold, type Client, type Message } from "discord.js";
 import { rollAndSign } from "../commands/giveaway/giveawayModules/endModules/rollWinners/rollAndSign.js";
 
 const DM_BUFFER = Giveaway.HostDMTimeBeforeEnd;
@@ -109,12 +103,12 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 		const timeLeft = longstamp(endDate);
 
 		const string = source`
-			**A giveaway you are hosting is about to end!** ${Emojis.Sparks}
+			${bold("A giveaway you are hosting is about to end!")} ${Emojis.Sparks}
 			  → ${title} • #${guildRelativeId} • ${guildName}
 
 			It will end ${timeLeft}.
 
-			End automation is set to: **${endAutomation}**
+			End automation is set to: ${bold(endAutomation)}
 		`;
 
 		const rows = url
@@ -171,10 +165,10 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 				: null;
 
 		const string = source`
-			**A giveaway you are hosting just ended!** ${Emojis.Sparks}.
+			${bold("A giveaway you are hosting just ended!")} ${Emojis.Sparks}.
 			  → ${title} • #${guildRelativeId} • ${guildName}.
 
-			End automation was set to: **${endAutomation}**.
+			End automation was set to: ${bold(endAutomation)}.
 
 			How to see winners:
 			  1. Go to ${guildName}.
@@ -251,14 +245,8 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 		if (giveaway.endAutomation === "Publish") {
 			await module.winnerMessage?.delete();
 
-			const acceptPrizeButton = new ButtonBuilder()
-				.setCustomId(`accept-prize-${giveaway.id}`)
-				.setLabel("Accept prize")
-				.setEmoji(Emojis.StarEyes)
-				.setStyle(ButtonStyle.Success);
-
-			const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
-				acceptPrizeButton
+			const rows = components.createRows(
+				components.buttons.acceptPrize(giveaway.id)
 			);
 
 			let message: Message<true> | null | undefined;
@@ -267,14 +255,14 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 				message = await module.publishedMessage
 					?.reply({
 						...module.endedEmbed(),
-						components: [row]
+						components: rows
 					})
 					.catch(() => null);
 			} else {
 				message = await channel
 					?.send({
 						...module.endedEmbed(),
-						components: [row]
+						components: rows
 					})
 					.catch(() => null);
 			}

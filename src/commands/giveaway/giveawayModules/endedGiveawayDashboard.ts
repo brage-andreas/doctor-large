@@ -5,7 +5,6 @@ import s from "#helpers/s.js";
 import type GiveawayModule from "#modules/Giveaway.js";
 import { source, stripIndents } from "common-tags";
 import {
-	ActionRowBuilder,
 	AttachmentBuilder,
 	ComponentType,
 	type AutocompleteInteraction,
@@ -86,21 +85,19 @@ export default async function toEndedDashboard(
 	}
 
 	const rows = [
-		new ActionRowBuilder<ButtonBuilder>().addComponents(
+		...components.createRows(
 			showAllWinners.component(),
 			...publishWinnersButtons
 		),
 
-		new ActionRowBuilder<ButtonBuilder>().addComponents(
-			...rollWinnersButtons
-		),
+		...components.createRows(...rollWinnersButtons),
 
-		new ActionRowBuilder<ButtonBuilder>().addComponents(
+		...components.createRows(
 			deleteUnclaimedWinners.component().setDisabled(noUnclaimed),
 			deleteAllWinners.component().setDisabled(noWinners)
 		),
 
-		new ActionRowBuilder<ButtonBuilder>().addComponents(
+		...components.createRows(
 			reactivateGiveaway.component(),
 			deleteGiveaway.component()
 		)

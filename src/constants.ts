@@ -3,6 +3,7 @@ import { oneLine } from "common-tags";
 import {
 	ActivityType,
 	ApplicationCommandOptionType,
+	formatEmoji,
 	GatewayIntentBits,
 	type ActivitiesOptions,
 	type APIApplicationCommandBasicOption
@@ -52,7 +53,7 @@ export const Emojis = {
 	Edit: "✍️",
 	Ended: "🔸",
 	EnterGiveaway: "🎁",
-	Error: "<:Error:1061984813650804799>",
+	Error: formatEmoji("1061984813650804799"),
 	Grin: "😁",
 	Halo: "😇",
 	HeartBreak: "💔",
@@ -60,8 +61,8 @@ export const Emojis = {
 	Lock: "🔒",
 	Lower: "🔻",
 	NoEntry: "⛔",
-	Off: "<:Off:1047914155929256026>",
-	On: "<:On:1047914157409828934>",
+	Off: formatEmoji("1047914155929256026"),
+	On: formatEmoji("1047914157409828934"),
 	Pensive: "🥺",
 	Shush: "🤫",
 	Sleep: "😴",
@@ -71,10 +72,10 @@ export const Emojis = {
 	Tada: "🎉",
 	Think: "🤔",
 	Unlock: "🔓",
+	V: formatEmoji("1054081028962136104"),
+	Warn: formatEmoji("1080833238823608520"),
 	WIP: "🚧",
-	V: "<:Yes:1054081028962136104>",
-	Warn: "<:Warning:1080833238823608520>",
-	X: "<:No:1054081030107185252>"
+	X: formatEmoji("1054081030107185252")
 } as const;
 
 export const INTENTS = [
