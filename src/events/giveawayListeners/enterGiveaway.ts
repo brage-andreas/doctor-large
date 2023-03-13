@@ -89,7 +89,7 @@ export default async function enterGiveaway(
 			content: stripIndents`
 				Done! I removed your entry.
 				
-				You are ${bold("no longer entered")} into giveaway #${giveaway.guildRelativeId}.
+				You are ${bold("no longer entered")} into giveaway ${giveaway.asRelId}.
 				I already miss you. ${Emojis.Pensive}
 			`,
 			ephemeral: true

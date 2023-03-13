@@ -103,9 +103,7 @@ export default async function toResetData(
 					filter: (i) => i.user.id === interaction.user.id,
 					data: {
 						content: stripIndents`
-							${Emojis.Warn} You are about to wipe everything in giveaway #${
-							giveaway.guildRelativeId
-						}.
+							${Emojis.Warn} You are about to wipe everything in giveaway ${giveaway.asRelId}.
 							
 							Are you sure? Absolutely sure? This action will be ${bold("irreversible")}.
 						`
@@ -115,7 +113,7 @@ export default async function toResetData(
 				if (!accept) {
 					await interaction.followUp({
 						ephemeral: true,
-						content: `Alright! Cancelled resetting giveaway #${giveaway.guildRelativeId}`
+						content: `Alright! Cancelled resetting giveaway ${giveaway.asRelId}`
 					});
 
 					toDashboard(interaction, id);
@@ -133,7 +131,7 @@ export default async function toResetData(
 
 				await interaction.followUp({
 					ephemeral: true,
-					content: `${Emojis.Sparks} Done! Successfully wiped giveaway #${giveaway.guildRelativeId}.`
+					content: `${Emojis.Sparks} Done! Successfully wiped giveaway ${giveaway.asRelId}.`
 				});
 
 				collector.stop();
@@ -151,8 +149,8 @@ export default async function toResetData(
 						content: stripIndents`
 							${
 								Emojis.Warn
-							} You are about to reset entries, winners, and prizes in giveaway #${
-							giveaway.guildRelativeId
+							} You are about to reset entries, winners, and prizes in giveaway ${
+							giveaway.asRelId
 						}.
 							
 							Are you sure? Absolutely sure? This action will be ${bold("irreversible")}.
@@ -163,7 +161,7 @@ export default async function toResetData(
 				if (!accept) {
 					await interaction.followUp({
 						ephemeral: true,
-						content: `Alright! Cancelled resetting giveaway #${giveaway.guildRelativeId}`
+						content: `Alright! Cancelled resetting giveaway ${giveaway.asRelId}`
 					});
 
 					toDashboard(interaction, id);
@@ -182,7 +180,7 @@ export default async function toResetData(
 
 				await interaction.followUp({
 					ephemeral: true,
-					content: `${Emojis.Sparks} Done! Successfully reset entries, winners, and prizes in giveaway #${giveaway.guildRelativeId}.`
+					content: `${Emojis.Sparks} Done! Successfully reset entries, winners, and prizes in giveaway ${giveaway.asRelId}.`
 				});
 
 				collector.stop();
@@ -198,8 +196,8 @@ export default async function toResetData(
 					filter: (i) => i.user.id === interaction.user.id,
 					data: {
 						content: stripIndents`
-							${Emojis.Warn} You are about to reset entries and winners in giveaway #${
-							giveaway.guildRelativeId
+							${Emojis.Warn} You are about to reset entries and winners in giveaway ${
+							giveaway.asRelId
 						}.
 							
 							Are you sure? Absolutely sure? This action will be ${bold("irreversible")}.
@@ -210,7 +208,7 @@ export default async function toResetData(
 				if (!accept) {
 					await interaction.followUp({
 						ephemeral: true,
-						content: `Alright! Cancelled resetting giveaway #${giveaway.guildRelativeId}`
+						content: `Alright! Cancelled resetting giveaway ${giveaway.asRelId}`
 					});
 
 					toDashboard(interaction, id);
@@ -226,7 +224,7 @@ export default async function toResetData(
 
 				await interaction.followUp({
 					ephemeral: true,
-					content: `${Emojis.Sparks} Done! Successfully reset entries and winners in giveaway #${giveaway.guildRelativeId}.`
+					content: `${Emojis.Sparks} Done! Successfully reset entries and winners in giveaway ${giveaway.asRelId}.`
 				});
 
 				collector.stop();
@@ -242,8 +240,8 @@ export default async function toResetData(
 					filter: (i) => i.user.id === interaction.user.id,
 					data: {
 						content: stripIndents`
-							${Emojis.Warn} You are about to reset most options in giveaway #${
-							giveaway.guildRelativeId
+							${Emojis.Warn} You are about to reset most options in giveaway ${
+							giveaway.asRelId
 						}.
 							
 							Are you sure? Absolutely sure? This action will be ${bold("irreversible")}.
@@ -254,7 +252,7 @@ export default async function toResetData(
 				if (!accept) {
 					await interaction.followUp({
 						ephemeral: true,
-						content: `Alright! Cancelled resetting giveaway #${giveaway.guildRelativeId}`
+						content: `Alright! Cancelled resetting giveaway ${giveaway.asRelId}`
 					});
 
 					toDashboard(interaction, id);
@@ -270,7 +268,7 @@ export default async function toResetData(
 
 				await interaction.followUp({
 					ephemeral: true,
-					content: `${Emojis.Sparks} Done! Successfully reset most options in giveaway #${giveaway.guildRelativeId}.`
+					content: `${Emojis.Sparks} Done! Successfully reset most options in giveaway ${giveaway.asRelId}.`
 				});
 
 				collector.stop();

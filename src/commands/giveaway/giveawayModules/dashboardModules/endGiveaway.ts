@@ -66,7 +66,7 @@ export default async function toEndGiveaway(
 	}
 
 	let content = stripIndent`
-		Are you sure you want to end giveaway #${giveaway.guildRelativeId}?
+		Are you sure you want to end giveaway ${giveaway.asRelId}?
 		
 		This will lock the entries and deactivate the giveaway.
 	`;

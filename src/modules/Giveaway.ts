@@ -80,6 +80,10 @@ export default class GiveawayModule implements ModifiedGiveaway {
 	public winners: Array<Winner & { prize: PrizeModule }>;
 	// ----------------------
 
+	// -- Props --
+	public asRelId: `#${number}`;
+	// -----------
+
 	// -- Cache --
 	public pingRoles: Array<Role>;
 	public requiredRoles: Array<Role>;
@@ -145,6 +149,10 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			[] as Array<Winner & { prize: PrizeModule }>
 		);
 		// ----------------------
+
+		// -- Props --
+		this.asRelId = `#${this.guildRelativeId}`;
+		// -----------
 	}
 
 	public get publishedMessageIsOutdated() {
@@ -533,9 +541,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const winners = s("winner", this.winnerQuantity);
 
 		return oneLine`
-			#${this.guildRelativeId} ${bold(this.title)} - ${
-			this.winnerQuantity
-		} ${winners},
+			${this.asRelId} ${bold(this.title)} - ${this.winnerQuantity} ${winners},
 			${this.prizesQuantity()} ${s("prize", this.prizesQuantity())}
 		`;
 	}
@@ -544,8 +550,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const id = options?.userId;
 		const { ended } = this;
 
-		const idString = `#${this.guildRelativeId}`;
-		const prefix = `${" ".repeat(idString.length)} →`;
+		const prefix = `${" ".repeat(this.asRelId.length)} →`;
 
 		const isEntry = Boolean(id && this.entriesUserIds.has(id));
 		const isWinner = Boolean(id && this.winnersUserIds().has(id));
@@ -555,7 +560,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const winners = this.winnerQuantity || "None";
 
 		return source`
-			#${this.guildRelativeId} ${ended ? "[ENDED] " : ""}${this.title}
+			${this.asRelId} ${ended ? "[ENDED] " : ""}${this.title}
 			${prefix} Entries: ${entries}${isEntry ? " <-- You" : ""}
 			${prefix} Winners: ${winners}${isWinner ? " <-- You" : ""}
 			${prefix} Prizes: ${prizes}
@@ -647,7 +652,6 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const createdStr = `→ Created: ${longstamp(this.createdAt)}`;
 		const entriesStr = `→ Entries: ${this.entriesUserIds.size}`;
 		const hostStr = `→ Host: ${this.hostUserTag} (${this.hostUserId})`;
-		const idStr = `#${this.guildRelativeId}`;
 		const numberOfWinnersStr = `→ Number of winners: ${this.winnerQuantity}`;
 
 		const endedStr = `→ Ended: ${
@@ -703,7 +707,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			.setTitle(this.title)
 			.setDescription(this.description)
 			.setFooter({
-				text: `Giveaway ${idStr} • Last edited`
+				text: `Giveaway ${this.asRelId} • Last edited`
 			})
 			.setTimestamp(this.lastEditedAt)
 			.setColor(
@@ -773,7 +777,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			.setDescription(this.description)
 			.setColor(Colors.Green)
 			.setFooter({
-				text: `Giveaway #${this.guildRelativeId} • Hosted by ${this.hostUserTag}`
+				text: `Giveaway ${this.asRelId} • Hosted by ${this.hostUserTag}`
 			})
 			.setFields(
 				{
@@ -803,11 +807,9 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 		const embed = new EmbedBuilder()
 			.setColor(Colors.Green)
-			.setTitle(
-				`${Emojis.Tada} Giveaway #${this.guildRelativeId} has ended!`
-			)
+			.setTitle(`${Emojis.Tada} Giveaway ${this.asRelId} has ended!`)
 			.setFooter({
-				text: `Giveaway #${this.guildRelativeId} • Hosted by ${this.hostUserTag}`
+				text: `Giveaway ${this.asRelId} • Hosted by ${this.hostUserTag}`
 			}).setDescription(stripIndents`
 			${Emojis.StarEyes} The winners have been notified in DMs.
 			If you have DMs turned off, use ${myGiveawaysMention}.
@@ -902,7 +904,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 			const content = stripIndent`
 				${bold("You just won a giveaway!")} ${Emojis.Tada}
-				  → ${this.title} • #${this.guildRelativeId} • ${this.guild.name}.
+				  → ${this.title} • ${this.asRelId} • ${this.guild.name}.
 
 				Make sure to ${bold("claim your prize(s)")}!
 

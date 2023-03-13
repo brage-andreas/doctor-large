@@ -249,7 +249,7 @@ export default async function toEndedDashboard(
 
 				const data = Buffer.from(string);
 				const attachment = new AttachmentBuilder(data).setName(
-					`giveaway-#${giveaway.guildRelativeId}-winners.txt`
+					`giveaway-${giveaway.asRelId}-winners.txt`
 				);
 
 				await interaction.followUp({

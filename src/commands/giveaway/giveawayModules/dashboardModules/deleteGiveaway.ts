@@ -43,7 +43,7 @@ export default async function toDeleteGiveaway(
 		filter: () => true,
 		data: {
 			content: stripIndents`
-				${Emojis.Warn} You are about to delete giveaway #${giveaway.guildRelativeId}.
+				${Emojis.Warn} You are about to delete giveaway ${giveaway.asRelId}.
 				This will also include any prizes and winners.${isConcludedString}
 
 				Are you sure? Absolutely sure? This action will be ${bold("irreversible")}.
@@ -55,7 +55,7 @@ export default async function toDeleteGiveaway(
 	if (!accept) {
 		interaction.followUp({
 			ephemeral: true,
-			content: `Alright! Cancelled deleting giveaway #${giveaway.guildRelativeId}`
+			content: `Alright! Cancelled deleting giveaway ${giveaway.asRelId}`
 		});
 
 		toDashboard(interaction, id);
@@ -74,7 +74,7 @@ export default async function toDeleteGiveaway(
 			filter: () => true,
 			data: {
 				content: stripIndents`
-					${Emojis.Error} You are about to delete giveaway #${giveaway.guildRelativeId}.
+						${Emojis.Error} You are about to delete giveaway ${giveaway.asRelId}.
 					This will also include any prizes and winners.${isConcludedString}
 	
 					ARE YOU ABSOLUTELY CERTAIN?
@@ -86,7 +86,7 @@ export default async function toDeleteGiveaway(
 		if (!accept2) {
 			interaction.followUp({
 				ephemeral: true,
-				content: `Alright! Cancelled deleting giveaway #${giveaway.guildRelativeId}`
+				content: `Alright! Cancelled deleting giveaway ${giveaway.asRelId}`
 			});
 
 			toDashboard(interaction, id);
@@ -103,7 +103,7 @@ export default async function toDeleteGiveaway(
 
 	interaction.editReply({
 		components: [],
-		content: `${Emojis.V} Successfully deleted giveaway #${giveaway.guildRelativeId}.`,
+		content: `${Emojis.V} Successfully deleted giveaway ${giveaway.asRelId}.`,
 		embeds: []
 	});
 }
