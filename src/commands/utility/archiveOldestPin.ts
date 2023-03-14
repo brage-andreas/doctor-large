@@ -1,6 +1,7 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import ConfigManager from "#database/config.js";
+import getMissingPermissions from "#helpers/getMissingPermissions.js";
 import { listify } from "#helpers/listify.js";
 import { messageToEmbed } from "#helpers/messageHelpers.js";
 import yesNo from "#helpers/yesNo.js";
@@ -196,24 +197,21 @@ const chatInput = async (
 	// type inferring is being weird
 	const channel = uncertainChannel;
 
-	const hasPermissionInChannel = (permission: bigint) =>
-		interaction.guild.members.me?.permissionsIn(channel).has(permission);
+	const missingPermissions = getMissingPermissions(
+		channel,
+		"SendMessages",
+		"EmbedLinks"
+	);
 
-	const missingPermissions: Array<string> = [];
+	if (channel.isThread()) {
+		const missingThreadPermissions = getMissingPermissions(
+			channel,
+			"SendMessagesInThreads"
+		).at(0);
 
-	if (!hasPermissionInChannel(PermissionFlagsBits.SendMessages)) {
-		missingPermissions.push("`Send Messages`");
-	}
-
-	if (!hasPermissionInChannel(PermissionFlagsBits.EmbedLinks)) {
-		missingPermissions.push("`Embed Links`");
-	}
-
-	if (
-		channel.isThread() &&
-		!hasPermissionInChannel(PermissionFlagsBits.SendMessagesInThreads)
-	) {
-		missingPermissions.push("`Send Messages In Threads`");
+		if (missingThreadPermissions) {
+			missingPermissions.push(...missingThreadPermissions);
+		}
 	}
 
 	if (missingPermissions.length) {
@@ -221,8 +219,8 @@ const chatInput = async (
 		await interaction.editReply({
 			components: [],
 			content: oneLine`
-				${Emojis.Error} I am missing permissions to in
-				this channel. Permissions needed: ${list}.
+				${Emojis.Error} I am missing permissions in
+				${channel}. Permissions needed: ${list}.
 			`,
 			embeds: []
 		});

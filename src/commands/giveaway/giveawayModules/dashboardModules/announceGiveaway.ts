@@ -1,7 +1,7 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
-import hasPermissionsIn from "#helpers/hasPermissionsIn.js";
+import getMissingPermissions from "#helpers/getMissingPermissions.js";
 import Logger from "#logger";
 import { oneLine, stripIndents } from "common-tags";
 import {
@@ -124,7 +124,7 @@ export default async function toAnnounceGiveaway(
 				channel = channel_;
 			}
 
-			const missingPerms = hasPermissionsIn(
+			const missingPerms = getMissingPermissions(
 				channel,
 				"SendMessages",
 				"EmbedLinks"
@@ -134,7 +134,7 @@ export default async function toAnnounceGiveaway(
 				retry(
 					oneLine`
 						${Emojis.Error} I am missing permissions
-						in ${channel}: ${missingPerms.join(", ")}
+						in ${channel}. Permissions needed: ${missingPerms.join(", ")}
 					`
 				);
 

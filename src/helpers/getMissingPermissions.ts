@@ -3,7 +3,11 @@ import {
 	type PermissionFlagsBits
 } from "discord.js";
 
-export default function hasPermissionsIn(
+/**
+ * Returns an array of missing permissions formatted like: "SendMessages" -> "`Send Messages`".
+ * If there are no missing permissions the array will be empty.
+ */
+export default function getMissingPermissions(
 	channel: GuildTextBasedChannel,
 	...toCheck: Array<keyof typeof PermissionFlagsBits | null | undefined>
 ) {

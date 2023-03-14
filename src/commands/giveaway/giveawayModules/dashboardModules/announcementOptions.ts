@@ -1,10 +1,10 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
+import getMissingPermissions from "#helpers/getMissingPermissions.js";
 import Logger from "#logger";
 import { oneLine, stripIndents } from "common-tags";
 import {
-	PermissionFlagsBits,
 	type ButtonInteraction,
 	type ComponentType,
 	type NewsChannel,
@@ -113,24 +113,17 @@ export default async function toAnnouncementOptions(
 				return;
 			}
 
-			const permsInChannel =
-				interaction.guild.members.me?.permissionsIn(channel);
-
-			const missingPermissions: Array<string> = [];
-
-			if (!permsInChannel?.has(PermissionFlagsBits.SendMessages)) {
-				missingPermissions.push("`Send Messages`");
-			}
-
-			if (!permsInChannel?.has(PermissionFlagsBits.EmbedLinks)) {
-				missingPermissions.push("`Embed Links`");
-			}
+			const missingPermissions = getMissingPermissions(
+				channel,
+				"SendMessages",
+				"EmbedLinks"
+			);
 
 			if (missingPermissions.length) {
 				retry(
 					oneLine`
 						${Emojis.Error} I am missing permissions in
-						${channel} (${channel.id}): ${missingPermissions.join(", ")}
+						${channel}. Permissions needed: ${missingPermissions.join(", ")}
 					`
 				);
 
