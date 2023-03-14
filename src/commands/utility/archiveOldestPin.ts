@@ -1,15 +1,19 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import ConfigManager from "#database/config.js";
+import getMissingPermissions from "#helpers/getMissingPermissions.js";
 import { listify } from "#helpers/listify.js";
 import { messageToEmbed } from "#helpers/messageHelpers.js";
 import yesNo from "#helpers/yesNo.js";
 import Logger from "#logger";
 import { type CommandData, type CommandExport } from "#typings";
-import { oneLine, source, stripIndent, stripIndents } from "common-tags";
+import { oneLine, stripIndent, stripIndents } from "common-tags";
 import {
 	ChannelType,
+	hideLinkEmbed,
+	hyperlink,
 	PermissionFlagsBits,
+	underscore,
 	type ChatInputCommandInteraction,
 	type GuildTextBasedChannel,
 	type TextChannel
@@ -46,7 +50,7 @@ const chatInput = async (
 		await interaction.editReply({
 			content: oneLine`
 				${Emojis.Error} I am missing permissions to unpin messages in
-				this channel. Permissions needed: \`Manage Message\`.
+				this channel. Permissions needed: \`Manage Messages\`.
 			`
 		});
 
@@ -83,26 +87,12 @@ const chatInput = async (
 		return;
 	}
 
-	const link = !message.deletable
-		? `[this message](<${message.url}>) by ${message.author.tag}`
-		: null;
-
-	const missingPerms = link
-		? source`
-			${Emojis.Error} Missing permissions to delete ${link}
-		`
-		: "";
-
 	const embed = messageToEmbed(message);
 
 	const res = await yesNo({
 		data: {
-			content: [
+			content:
 				"Here is a preview of what will be archived. Do you want to continue?",
-				missingPerms
-			]
-				.join("\n\n")
-				.trim(),
 			embeds: [embed]
 		},
 		medium: interaction,
@@ -207,24 +197,21 @@ const chatInput = async (
 	// type inferring is being weird
 	const channel = uncertainChannel;
 
-	const hasPermissionInChannel = (permission: bigint) =>
-		interaction.guild.members.me?.permissionsIn(channel).has(permission);
+	const missingPermissions = getMissingPermissions(
+		channel,
+		"SendMessages",
+		"EmbedLinks"
+	);
 
-	const missingPermissions: Array<string> = [];
+	if (channel.isThread()) {
+		const missingThreadPermissions = getMissingPermissions(
+			channel,
+			"SendMessagesInThreads"
+		).at(0);
 
-	if (!hasPermissionInChannel(PermissionFlagsBits.SendMessages)) {
-		missingPermissions.push("`Send Messages`");
-	}
-
-	if (!hasPermissionInChannel(PermissionFlagsBits.EmbedLinks)) {
-		missingPermissions.push("`Embed Links`");
-	}
-
-	if (
-		channel.isThread() &&
-		!hasPermissionInChannel(PermissionFlagsBits.SendMessagesInThreads)
-	) {
-		missingPermissions.push("`Send Messages In Threads`");
+		if (missingThreadPermissions) {
+			missingPermissions.push(...missingThreadPermissions);
+		}
 	}
 
 	if (missingPermissions.length) {
@@ -232,8 +219,8 @@ const chatInput = async (
 		await interaction.editReply({
 			components: [],
 			content: oneLine`
-				${Emojis.Error} I am missing permissions to in
-				this channel. Permissions needed: ${list}.
+				${Emojis.Error} I am missing permissions in
+				${channel}. Permissions needed: ${list}.
 			`,
 			embeds: []
 		});
@@ -263,19 +250,35 @@ const chatInput = async (
 			components: rows
 		});
 
+		const urlButtonRows = components.createRows(
+			components.buttons.url({
+				label: "Go to message",
+				url
+			})
+		);
+
 		await interaction.editReply({
-			components: [],
+			components: urlButtonRows,
 			content: stripIndent`
-				${Emojis.V} Done! Here is [a link](<${url}>).
+				${Emojis.V} Done! Successfully archive the pin.
 			`,
 			embeds: []
 		});
 	} else {
+		const link = hyperlink(
+			"the original message",
+			hideLinkEmbed(message.url)
+		);
+
 		await interaction.editReply({
 			components: [],
 			content: stripIndent`
 				${Emojis.Error} Failed to unpin ${link}. Archive was cancelled.
-				Check my permissions and try again later.
+				
+				Causes of failure ${underscore("could")} be:
+				  a) message was unpinned since the command was used
+				  b) message was deleted since the command was used
+				  c) I am missing \`Manage Messages\` permission
 			`,
 			embeds: []
 		});

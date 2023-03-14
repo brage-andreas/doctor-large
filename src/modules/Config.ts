@@ -1,13 +1,15 @@
 import { Colors, Emojis } from "#constants";
 import type ConfigManager from "#database/config.js";
 import { type Config } from "@prisma/client";
-import { source, stripIndents } from "common-tags";
+import { source } from "common-tags";
 import {
+	bold,
 	ChannelType,
 	EmbedBuilder,
 	type Channel,
 	type ChannelResolvable,
 	type Client,
+	type EmbedField,
 	type ForumChannel,
 	type Guild,
 	type GuildTextBasedChannel,
@@ -222,7 +224,13 @@ export default class ConfigModule
 							: `→ ${Emojis.Warn} Unknown channel \`${id}\``;
 					})
 					.slice(0, 5)}
-				${protectedChs.length > 5 ? `and **${protectedChs.length - 5}** more...` : ""}
+				${
+					protectedChs.length > 5
+						? `and ${bold(
+								(protectedChs.length - 5).toString()
+						  )} more...`
+						: ""
+				}
 			  `
 			: "None";
 
@@ -242,50 +250,66 @@ export default class ConfigModule
 			  `
 			: "None";
 
-		const description = stripIndents`
-			**Case log**
-			${channelStr(
-				this.caseLogEnabled,
-				this.caseLogChannel,
-				this.data.caseLogChannelId
-			)}
+		const fields: Array<EmbedField> = [
+			{
+				name: "Case log",
+				value: `${channelStr(
+					this.caseLogEnabled,
+					this.caseLogChannel,
+					this.data.caseLogChannelId
+				)}`,
+				inline: false
+			},
+			{
+				name: "Member log",
+				value: `${channelStr(
+					this.memberLogEnabled,
+					this.memberLogChannel,
+					this.data.memberLogChannelId
+				)}`,
+				inline: false
+			},
+			{
+				name: "Message log",
+				value: channelStr(
+					this.messageLogEnabled,
+					this.messageLogChannel,
+					this.data.messageLogChannelId
+				),
+				inline: false
+			},
+			{
+				name: "Report",
+				value: `${channelStr(
+					this.reportEnabled,
+					this.reportChannel,
+					this.data.reportChannelId
+				)}${threadRecommended}`,
+				inline: false
+			},
 
-			**Member log**
-			${channelStr(
-				this.memberLogEnabled,
-				this.memberLogChannel,
-				this.data.memberLogChannelId
-			)}
-
-			**Message log**
-			${channelStr(
-				this.messageLogEnabled,
-				this.messageLogChannel,
-				this.data.messageLogChannelId
-			)}
-
-			**Report**
-			${channelStr(
-				this.reportEnabled,
-				this.reportChannel,
-				this.data.reportChannelId
-			)}${threadRecommended}
-
-			**Pin archive channel**
-			${pinArchiveStr}
-
-			**Protected channels (${protectedChs.length})**
-			${protectedChannels}
-
-			**Restriction roles (${restrictRoles_.length})**
-			${restrictRoles}
-		`;
+			{
+				name: "Pin archive channel",
+				value: pinArchiveStr,
+				inline: false
+			},
+			{
+				name: `Protected channels (${protectedChs.length})`,
+				value: protectedChannels,
+				inline: false
+			},
+			{
+				name: `Restriction roles (${restrictRoles_.length})`,
+				value: restrictRoles,
+				inline: false
+			}
+		];
 
 		return new EmbedBuilder()
 			.setTitle("Config")
-			.setDescription(description)
+			.setFields(fields)
 			.setColor(Colors.Green)
-			.setFooter({ text: `Config for ${this.guild.name} • Last edited` })
+			.setFooter({ text: `${this.guild.name} • Last edited` })
 			.setTimestamp(this.lastEditedAt);
 	}
 }

@@ -1,16 +1,11 @@
+import components from "#components";
 import { Emojis, Prize } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
-import { ModalCollector, modalId } from "#helpers/ModalCollector.js";
+import { ModalCollector } from "#helpers/ModalCollector.js";
 import Logger from "#logger";
 import type PrizeModule from "#modules/Prize.js";
 import { oneLine } from "common-tags";
-import {
-	ActionRowBuilder,
-	ModalBuilder,
-	TextInputBuilder,
-	TextInputStyle,
-	type ButtonInteraction
-} from "discord.js";
+import { bold, type ButtonInteraction } from "discord.js";
 import toPrizeDashboard from "./prizeDashboard.js";
 
 export default async function toEditPrize(
@@ -19,46 +14,11 @@ export default async function toEditPrize(
 	giveawayManager: GiveawayManager,
 	giveawayId: number
 ) {
-	const nameField = new TextInputBuilder()
-		.setPlaceholder("Example prize")
-		.setMaxLength(Prize.MaxTitleLength)
-		.setMinLength(1)
-		.setCustomId("prizeName")
-		.setRequired(true)
-		.setLabel("Name")
-		.setValue(prize.name)
-		.setStyle(TextInputStyle.Short);
-
-	const infoField = new TextInputBuilder()
-		.setPlaceholder("This prize was made with love!")
-		.setMaxLength(Prize.MaxAdditionalInfoLength)
-		.setMinLength(1)
-		.setCustomId("prizeInfo")
-		.setRequired(false)
-		.setLabel("Additional info")
-		.setStyle(TextInputStyle.Short);
-
-	if (prize.additionalInfo) {
-		infoField.setValue(prize.additionalInfo);
-	}
-
-	const quantityField = new TextInputBuilder()
-		.setPlaceholder("1")
-		.setMaxLength(Prize.MaxQuantityLength)
-		.setMinLength(1)
-		.setCustomId("prizeQuantity")
-		.setRequired(true)
-		.setLabel("Quantity")
-		.setValue(prize.quantity.toString())
-		.setStyle(TextInputStyle.Short);
-
-	const row = (component: TextInputBuilder) =>
-		new ActionRowBuilder<TextInputBuilder>().setComponents(component);
-
-	const modal = new ModalBuilder()
-		.setComponents(row(nameField), row(infoField), row(quantityField))
-		.setCustomId(modalId())
-		.setTitle("Edit prize");
+	const modal = components.modals.editPrize.component({
+		oldName: prize.name,
+		oldAdditionalInfo: prize.additionalInfo,
+		oldQuantity: prize.quantity
+	});
 
 	await interaction.showModal(modal);
 
@@ -67,13 +27,13 @@ export default async function toEditPrize(
 	collector.on("collect", async (modalInteraction) => {
 		await modalInteraction.deferUpdate();
 
-		const name = modalInteraction.fields.getTextInputValue("prizeName");
+		const name = modalInteraction.fields.getTextInputValue("name");
 
 		const additionalInfo =
-			modalInteraction.fields.getTextInputValue("prizeInfo") || null;
+			modalInteraction.fields.getTextInputValue("additionalInfo") || null;
 
 		const quantityString =
-			modalInteraction.fields.getTextInputValue("prizeQuantity");
+			modalInteraction.fields.getTextInputValue("quantity");
 
 		const quantityNumber = parseInt(quantityString);
 		const originalQuantity = isNaN(quantityNumber) ? 1 : quantityNumber;
@@ -105,7 +65,8 @@ export default async function toEditPrize(
 				ephemeral: true,
 				content: oneLine`
 					${Emojis.Warn} The quantity must be between 1 and ${Prize.MaxQuantity}.
-					Therefore, the quantity was set to **${quantity}**, instead of ${originalQuantity}.
+					Therefore, the quantity was set to
+					${bold(quantity.toString())}, instead of ${originalQuantity}.
 				`
 			});
 		}

@@ -5,13 +5,7 @@ import { longstamp } from "#helpers/timestamps.js";
 import GiveawayModule from "#modules/Giveaway.js";
 import { type GiveawayWithIncludes, type WinnerId } from "#typings";
 import { oneLine, source } from "common-tags";
-import {
-	ActionRowBuilder,
-	ButtonBuilder,
-	ButtonStyle,
-	type Client,
-	type Message
-} from "discord.js";
+import { bold, type Client, type Message } from "discord.js";
 import { rollAndSign } from "../commands/giveaway/giveawayModules/endModules/rollWinners/rollAndSign.js";
 
 const DM_BUFFER = Giveaway.HostDMTimeBeforeEnd;
@@ -94,7 +88,7 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 			guildId,
 			guildRelativeId,
 			hostUserId,
-			publishedMessageId,
+			announcementMessageId,
 			title
 		} = giveaway;
 
@@ -102,19 +96,19 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 			client.guilds.cache.get(guildId)?.name ?? "unknown server";
 
 		const url =
-			channelId && publishedMessageId
-				? `https://discord.com/channels/${guildId}/${channelId}/${publishedMessageId}`
+			channelId && announcementMessageId
+				? `https://discord.com/channels/${guildId}/${channelId}/${announcementMessageId}`
 				: null;
 
 		const timeLeft = longstamp(endDate);
 
 		const string = source`
-			**A giveaway you are hosting is about to end!** ${Emojis.Sparks}
+			${bold("A giveaway you are hosting is about to end!")} ${Emojis.Sparks}
 			  → ${title} • #${guildRelativeId} • ${guildName}
 
 			It will end ${timeLeft}.
 
-			End automation is set to: **${endAutomation}**
+			End automation is set to: ${bold(endAutomation)}
 		`;
 
 		const rows = url
@@ -138,7 +132,7 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 				id: giveaway.id
 			},
 			data: {
-				hostNotified: "BufferBefore"
+				hostNotified: "BeforeEnd"
 			}
 		});
 	}
@@ -152,7 +146,7 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 			guildId,
 			guildRelativeId,
 			hostUserId,
-			publishedMessageId,
+			announcementMessageId,
 			title
 		} = giveaway;
 
@@ -166,15 +160,15 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 		const channel = channel_?.isTextBased() ? channel_ : null;
 
 		const url =
-			channelId && publishedMessageId
-				? `https://discord.com/channels/${guildId}/${channelId}/${publishedMessageId}`
+			channelId && announcementMessageId
+				? `https://discord.com/channels/${guildId}/${channelId}/${announcementMessageId}`
 				: null;
 
 		const string = source`
-			**A giveaway you are hosting just ended!** ${Emojis.Sparks}.
+			${bold("A giveaway you are hosting just ended!")} ${Emojis.Sparks}.
 			  → ${title} • #${guildRelativeId} • ${guildName}.
 
-			End automation was set to: **${endAutomation}**.
+			End automation was set to: ${bold(endAutomation)}.
 
 			How to see winners:
 			  1. Go to ${guildName}.
@@ -229,7 +223,7 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 
 		if (
 			(giveaway.endAutomation !== "Roll" &&
-				giveaway.endAutomation !== "Publish") ||
+				giveaway.endAutomation !== "Announce") ||
 			!guild
 		) {
 			continue;
@@ -248,33 +242,27 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 			winnerQuantity: module.winnerQuantity
 		});
 
-		if (giveaway.endAutomation === "Publish") {
+		if (giveaway.endAutomation === "Announce") {
 			await module.winnerMessage?.delete();
 
-			const acceptPrizeButton = new ButtonBuilder()
-				.setCustomId(`accept-prize-${giveaway.id}`)
-				.setLabel("Accept prize")
-				.setEmoji(Emojis.StarEyes)
-				.setStyle(ButtonStyle.Success);
-
-			const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
-				acceptPrizeButton
+			const rows = components.createRows(
+				components.buttons.acceptPrize(giveaway.id)
 			);
 
 			let message: Message<true> | null | undefined;
 
-			if (giveaway.publishedMessageId) {
-				message = await module.publishedMessage
+			if (giveaway.announcementMessageId) {
+				message = await module.announcementMessage
 					?.reply({
 						...module.endedEmbed(),
-						components: [row]
+						components: rows
 					})
 					.catch(() => null);
 			} else {
 				message = await channel
 					?.send({
 						...module.endedEmbed(),
-						components: [row]
+						components: rows
 					})
 					.catch(() => null);
 			}
@@ -291,7 +279,7 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 				});
 			} else {
 				const msg = oneLine`
-					${Emojis.Error} Failed to publish winners for
+					${Emojis.Error} Failed to automatically announce winners for
 					#${giveaway.guildRelativeId} in ${guild.name}.
 				`;
 

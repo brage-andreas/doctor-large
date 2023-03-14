@@ -3,7 +3,7 @@ import GiveawayManager from "#database/giveaway.js";
 import commandMention from "#helpers/commandMention.js";
 import Logger from "#logger";
 import { oneLine, stripIndents } from "common-tags";
-import { type ButtonInteraction } from "discord.js";
+import { bold, type ButtonInteraction } from "discord.js";
 
 export default async function acceptPrize(
 	interaction: ButtonInteraction<"cached">
@@ -59,7 +59,7 @@ export default async function acceptPrize(
 
 	interaction.followUp({
 		content: stripIndents`
-			${Emojis.Tada} You have **now claimed** your prize! Woo!
+			${Emojis.Tada} You have ${bold("now claimed")} your prize! Woo!
 			
 			Use ${myGiveaways} if you need a reminder of what your extraordinary success.
 		`,

@@ -1,4 +1,4 @@
-import { Emojis, Giveaway } from "#constants";
+import { Emojis, Giveaway, Prize } from "#constants";
 import { modalId } from "#helpers/ModalCollector.js";
 import { oneLine } from "common-tags";
 import {
@@ -18,7 +18,7 @@ import {
 } from "discord.js";
 
 interface ComponentObject {
-	readonly customId: string;
+	readonly customId?: string;
 	component(): CompatibleComponentBuilder;
 }
 
@@ -291,23 +291,136 @@ const editOptionsModal = {
 		})
 } as const;
 
-const publishGiveawayButton = {
-	customId: "publishGiveaway",
+const modalCreatePrizeName = () =>
+	new TextInputBuilder()
+		.setPlaceholder("Example prize")
+		.setMaxLength(Prize.MaxTitleLength)
+		.setMinLength(1)
+		.setCustomId("name")
+		.setRequired(true)
+		.setLabel("Name")
+		.setStyle(TextInputStyle.Short);
+
+const modalCreatePrizeAdditionalInfo = () =>
+	new TextInputBuilder()
+		.setPlaceholder("This prize was made with love!")
+		.setMaxLength(Prize.MaxAdditionalInfoLength)
+		.setMinLength(1)
+		.setCustomId("additionalInfo")
+		.setRequired(false)
+		.setLabel("Additional info")
+		.setStyle(TextInputStyle.Short);
+
+const modalCreatePrizeQuantity = () =>
+	new TextInputBuilder()
+		.setPlaceholder("1")
+		.setMaxLength(Prize.MaxQuantityLength)
+		.setMinLength(1)
+		.setCustomId("quantity")
+		.setRequired(true)
+		.setLabel("Quantity (max 10)")
+		.setStyle(TextInputStyle.Short);
+
+/**
+ * Children: title, additionalInfo, quantity
+ */
+const createPrizeModal = {
+	component: () =>
+		new ModalBuilder()
+			.setComponents(
+				new ActionRowBuilder<TextInputBuilder>().setComponents(
+					modalCreatePrizeName()
+				),
+				new ActionRowBuilder<TextInputBuilder>().setComponents(
+					modalCreatePrizeAdditionalInfo()
+				),
+				new ActionRowBuilder<TextInputBuilder>().setComponents(
+					modalCreatePrizeQuantity()
+				)
+			)
+			.setCustomId(modalId())
+			.setTitle("Create prize")
+} as const;
+
+const modalEditPrizeName = (oldName: string) =>
+	new TextInputBuilder()
+		.setPlaceholder("Example prize")
+		.setMaxLength(Prize.MaxTitleLength)
+		.setMinLength(1)
+		.setCustomId("newName")
+		.setRequired(true)
+		.setLabel("Name")
+		.setValue(oldName)
+		.setStyle(TextInputStyle.Short);
+
+const modalEditPrizeAdditionalInfo = (oldAdditionalInfo: string | null) =>
+	new TextInputBuilder()
+		.setPlaceholder("This prize was made with love!")
+		.setMaxLength(Prize.MaxAdditionalInfoLength)
+		.setMinLength(1)
+		.setCustomId("newAdditionalInfo")
+		.setRequired(false)
+		.setLabel("Additional info")
+		.setValue(oldAdditionalInfo ?? "")
+		.setStyle(TextInputStyle.Short);
+
+const modalEditPrizeQuantity = (oldQuantity: number) =>
+	new TextInputBuilder()
+		.setPlaceholder("1")
+		.setMaxLength(Prize.MaxQuantityLength)
+		.setMinLength(1)
+		.setCustomId("newQuantity")
+		.setRequired(true)
+		.setLabel("Quantity")
+		.setValue(oldQuantity.toString())
+		.setStyle(TextInputStyle.Short);
+
+/**
+ * Children: newName, newAdditionalInfo, newQuantity
+ */
+const editPrizeModal = {
+	component: ({
+		oldName,
+		oldAdditionalInfo,
+		oldQuantity
+	}: {
+		oldName: string;
+		oldAdditionalInfo: string | null;
+		oldQuantity: number;
+	}) =>
+		new ModalBuilder()
+			.setComponents(
+				new ActionRowBuilder<TextInputBuilder>().setComponents(
+					modalEditPrizeName(oldName)
+				),
+				new ActionRowBuilder<TextInputBuilder>().setComponents(
+					modalEditPrizeAdditionalInfo(oldAdditionalInfo)
+				),
+				new ActionRowBuilder<TextInputBuilder>().setComponents(
+					modalEditPrizeQuantity(oldQuantity)
+				)
+			)
+			.setCustomId(modalId())
+			.setTitle("Edit prize")
+} as const;
+
+const announceGiveawayButton = {
+	customId: "announcementGiveaway",
 	component: () =>
 		new ButtonBuilder({
-			customId: "publishGiveaway",
+			customId: "announcementGiveaway",
 			style: ButtonStyle.Success,
-			label: "Publish"
+			label: "Announce"
 		})
 } as const;
 
-const publishingOptionsButton = {
-	customId: "publishingOptions",
+const announcementOptionsButton = {
+	customId: "announcementOptions",
 	component: () =>
 		new ButtonBuilder({
-			customId: "publishingOptions",
+			customId: "announcementOptions",
 			style: ButtonStyle.Success,
-			label: "Publishing Options"
+			label: "Announcement options"
 		})
 } as const;
 
@@ -455,32 +568,32 @@ const reactivateGiveawayButton = {
 		})
 } as const;
 
-const publishWinnersButton = {
-	customId: "publishWinners",
+const announceWinnersButton = {
+	customId: "announceWinners",
 	component: () =>
 		new ButtonBuilder({
-			customId: "publishWinners",
-			label: "Publish winners",
+			customId: "announceWinners",
+			label: "Announce winners",
 			style: ButtonStyle.Success
 		})
 } as const;
 
-const republishWinnersButton = {
-	customId: "republishWinners",
+const reannounceWinnersButton = {
+	customId: "reannounceWinners",
 	component: () =>
 		new ButtonBuilder({
-			customId: "republishWinners",
-			label: "Republish winners",
+			customId: "reannounceWinners",
+			label: "Reannounce winners",
 			style: ButtonStyle.Success
 		})
 } as const;
 
-const unpublishWinnersButton = {
-	customId: "unpublishWinners",
+const unannounceWinnersButton = {
+	customId: "unannounceWinners",
 	component: () =>
 		new ButtonBuilder({
-			customId: "unpublishWinners",
-			label: "Unpublish winners",
+			customId: "unannounceWinners",
+			label: "Unannounce winners",
 			style: ButtonStyle.Secondary
 		})
 } as const;
@@ -804,12 +917,12 @@ const endLevelRollButton = {
 			.setStyle(ButtonStyle.Primary)
 } as const;
 
-const endLevelPublishButton = {
-	customId: "endLevelPublish",
+const endLevelAnnounceButton = {
+	customId: "endLevelAnnounce",
 	component: () =>
 		new ButtonBuilder()
-			.setCustomId("endLevelPublish")
-			.setLabel("Publish")
+			.setCustomId("endLevelAnnounce")
+			.setLabel("Announce")
 			.setStyle(ButtonStyle.Primary)
 } as const;
 
@@ -921,6 +1034,16 @@ const resetButton = {
 			.setStyle(ButtonStyle.Danger)
 } as const;
 
+const acceptPrizeButton = (id: number) => ({
+	customId: `accept-prize-${id}`,
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId(`accept-prize-${id}`)
+			.setLabel("Accept prize")
+			.setEmoji(Emojis.StarEyes)
+			.setStyle(ButtonStyle.Success)
+});
+
 // -------------
 
 const selects = {
@@ -937,7 +1060,17 @@ const modals = {
 	/**
 	 * Children: newTitle, newDescription, newWinnerQuantity
 	 */
-	editGiveaway: editOptionsModal
+	editGiveaway: editOptionsModal,
+
+	/**
+	 * Children: name, additionalInfo, quantity
+	 */
+	createPrize: createPrizeModal,
+
+	/**
+	 * Children: newName, newAdditionalInfo, newQuantity
+	 */
+	editPrize: editPrizeModal
 } as const;
 
 const buttons = {
@@ -948,23 +1081,23 @@ const buttons = {
 	recallCurrentMessage: recallCurrentMessageButton,
 	reportChannelOptions: reportChannelOptionsButton,
 	restrictRolesOptions: restrictRolesOptionsButton,
+	announcementOptions: announcementOptionsButton,
 	editCurrentMessage: editCurrentMessageButton,
 	reactivateGiveaway: reactivateGiveawayButton,
 	messageLogOptions: messageLogOptionsButton,
 	pinArchiveOptions: pinArchiveOptionsButton,
-	publishingOptions: publishingOptionsButton,
+	reannounceWinners: reannounceWinnersButton,
+	unannounceWinners: unannounceWinnersButton,
+	announceGiveaway: announceGiveawayButton,
 	deleteAllWinners: deleteAllWinnersButton,
+	endLevelAnnounce: endLevelAnnounceButton,
 	memberLogOptions: memberLogOptionsButton,
-	republishWinners: republishWinnersButton,
 	rerollAllWinners: rerollAllWinnersButton,
 	setRequiredRoles: setRequiredRolesButton,
-	unpublishWinners: unpublishWinnersButton,
 	acceptAllPrizes: acceptAllPrizesButton,
-	endLevelPublish: endLevelPublishButton,
-	publishGiveaway: publishGiveawayButton,
+	announceWinners: announceWinnersButton,
 	caseLogOptions: caseLogOptionsButton,
 	deleteGiveaway: deleteGiveawayButton,
-	publishWinners: publishWinnersButton,
 	showAllWinners: showAllWinnersButton,
 	viewAllEntered: viewAllEnteredButton,
 	endedGiveaway: endedGiveawayButton,
@@ -977,6 +1110,7 @@ const buttons = {
 	endLevelRoll: endLevelRollButton,
 	managePrizes: managePrizesButton,
 	setPingRoles: setPingRolesButton,
+	acceptPrize: acceptPrizeButton,
 	endGiveaway: endGiveawayButton,
 	endLevelEnd: endLevelEndButton,
 	lastChannel: lastChannelButton,

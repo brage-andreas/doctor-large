@@ -1,20 +1,18 @@
+import components from "#components";
 import { Emojis } from "#constants";
 import GiveawayManager from "#database/giveaway.js";
+import getMissingPermissions from "#helpers/getMissingPermissions.js";
 import Logger from "#logger";
 import type GiveawayModule from "#modules/Giveaway.js";
 import { oneLine, stripIndents } from "common-tags";
 import {
-	ActionRowBuilder,
-	ButtonBuilder,
-	ButtonStyle,
-	PermissionFlagsBits,
 	type Message,
 	type MessageCreateOptions,
 	type RepliableInteraction
 } from "discord.js";
 import toEndedDashboard from "../endedGiveawayDashboard.js";
 
-export async function toPublishWinners(
+export async function toAnnounceWinners(
 	interaction: RepliableInteraction<"cached">,
 	id: number
 ) {
@@ -24,12 +22,12 @@ export async function toPublishWinners(
 
 	if (!giveaway) {
 		await interaction.editReply({
+			components: [],
 			content: stripIndents`
 				How did we get here?
 			
 				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
-			components: [],
 			embeds: []
 		});
 
@@ -38,13 +36,13 @@ export async function toPublishWinners(
 
 	if (!giveaway.prizesQuantity()) {
 		await interaction.editReply({
+			embeds: [],
 			content: stripIndents`
-				${Emojis.Error} This giveaway has no prizes, and therefore no winners. Add some prizes, and try again.
+				${Emojis.Error} This giveaway has no prizes, and therefore it can have no winners. Add prizes, and try again.
 				
-				If the prize(s) are a secret, you can for example name the prize "Secret".
+				If the prize is a secret, you can name the prize "Secret" or similar.
 			`,
-			components: [],
-			embeds: []
+			components: []
 		});
 
 		return;
@@ -54,29 +52,42 @@ export async function toPublishWinners(
 
 	if (!channel?.isTextBased()) {
 		await interaction.editReply({
-			content: stripIndents`
-				${Emojis.Warn} The channel the giveaway was published in does not exist, or is not a valid channel.
-				Try again or republish the giveaway in a new channel.
-			`,
 			components: [],
+			content: stripIndents`
+				${Emojis.Error} The channel the giveaway is announced in does not exist, or is not a valid channel.
+				Try again or reannounce the giveaway in a new channel.
+			`,
 			embeds: []
 		});
 
 		return;
 	}
 
-	const giveawayMessage = await giveaway.publishedMessage?.fetch();
+	const missingPerms = getMissingPermissions(
+		channel,
+		"SendMessages",
+		"EmbedLinks"
+	);
+
+	if (missingPerms.length) {
+		await interaction.editReply({
+			components: [],
+			content: oneLine`
+				${Emojis.Error} I am missing permissions in
+				${channel}. Permissions needed: ${missingPerms.join(", ")}
+			`,
+			embeds: []
+		});
+
+		return;
+	}
+
+	const giveawayMessage = await giveaway.announcementMessage?.fetch();
 
 	await giveaway.winnerMessage?.delete();
 
-	const acceptPrizeButton = new ButtonBuilder()
-		.setCustomId(`accept-prize-${id}`)
-		.setLabel("Accept prize")
-		.setEmoji(Emojis.StarEyes)
-		.setStyle(ButtonStyle.Success);
-
-	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		acceptPrizeButton
+	const acceptPrizeRows = components.createRows(
+		components.buttons.acceptPrize(id)
 	);
 
 	let message: Message<true> | null;
@@ -85,36 +96,25 @@ export async function toPublishWinners(
 		message = await giveawayMessage
 			.reply({
 				...giveaway.endedEmbed(),
-				components: [row]
+				components: acceptPrizeRows
 			})
 			.catch(() => null);
 	} else {
 		message = await channel
 			.send({
 				...giveaway.endedEmbed(),
-				components: [row]
+				components: acceptPrizeRows
 			})
 			.catch(() => null);
 	}
 
 	if (!message) {
-		let content: string;
-		const permsInChannel =
-			interaction.guild.members.me?.permissionsIn(channel);
-
-		if (!permsInChannel?.has(PermissionFlagsBits.SendMessages)) {
-			content = stripIndents`
-				${Emojis.Warn} I am missing permissions to send messages in ${channel} (${channel.id}).
-			`;
-		} else {
-			content = stripIndents`
-				${Emojis.Warn} I could not publish the winners in ${channel} (${channel.id}). Please try again.
-			`;
-		}
-
 		await interaction.editReply({
 			components: [],
-			content,
+			content: oneLine`
+				${Emojis.Warn} I could not announce the winners in
+				${channel} (${channel.id}). Please try again.
+			`,
 			embeds: []
 		});
 
@@ -124,7 +124,7 @@ export async function toPublishWinners(
 	new Logger({
 		prefix: "GIVEAWAY"
 	}).log(
-		`Published winners of giveaway #${id} in #${channel.name} (${channel.id})`
+		`Announced winners of giveaway #${id} in #${channel.name} (${channel.id})`
 	);
 
 	await giveaway.edit({
@@ -134,13 +134,17 @@ export async function toPublishWinners(
 		}
 	});
 
-	await interaction.followUp({
-		ephemeral: true,
-		content: stripIndents`
-			${Emojis.Sparks} Done! Published the winners of giveaway #${giveaway.guildRelativeId} in ${channel}!
+	const urlButtonRows = components.createRows(
+		components.buttons.url({
+			label: "Go to announcement",
+			url: message.url
+		})
+	);
 
-			Fine. If you don't believe me, [here is a link to it](<${message.url}>).
-		`
+	await interaction.followUp({
+		components: urlButtonRows,
+		content: `${Emojis.Sparks} Done! Announced the winners of giveaway ${giveaway.asRelId} in ${channel}!`,
+		ephemeral: true
 	});
 
 	interaction.editReply({
@@ -154,7 +158,7 @@ export async function toPublishWinners(
 	toEndedDashboard(interaction, giveawayManager, giveaway);
 }
 
-export async function republishWinners(
+export async function reannounceWinners(
 	interaction: RepliableInteraction<"cached">,
 	id: number
 ) {
@@ -195,8 +199,8 @@ export async function republishWinners(
 	if (!channel?.isTextBased()) {
 		await interaction.editReply({
 			content: oneLine`
-				${Emojis.Warn} The channel the giveaway was published in does not exist, or is not a valid channel.
-				Try again or republish the giveaway in a new channel.
+				${Emojis.Warn} The channel the giveaway is announced in does not exist or is not a valid channel.
+				Try again or reannounce the giveaway in a new channel.
 			`,
 			components: [],
 			embeds: []
@@ -208,20 +212,12 @@ export async function republishWinners(
 	const currentMessage = await giveaway.winnerMessage?.fetch();
 
 	if (!currentMessage) {
-		await toPublishWinners(interaction, id);
+		await toAnnounceWinners(interaction, id);
 
 		return;
 	}
 
-	const acceptPrizeButton = new ButtonBuilder()
-		.setCustomId(`accept-prize-${id}`)
-		.setLabel("Accept prize")
-		.setEmoji(Emojis.StarEyes)
-		.setStyle(ButtonStyle.Success);
-
-	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		acceptPrizeButton
-	);
+	const rows = components.createRows(components.buttons.acceptPrize(id));
 
 	await currentMessage
 		.edit({
@@ -230,7 +226,7 @@ export async function republishWinners(
 				.map((id) => `<@${id}>`)
 				.join(" "),
 			embeds: [],
-			components: [row]
+			components: rows
 		})
 		.catch(() => null);
 
@@ -240,19 +236,23 @@ export async function republishWinners(
 		}
 	});
 
-	await interaction.followUp({
-		ephemeral: true,
-		content: stripIndents`
-			${Emojis.Sparks} Done! Republished the winners of giveaway #${giveaway.guildRelativeId} in ${channel}!
+	const urlButtonRows = components.createRows(
+		components.buttons.url({
+			label: "Go to announcement",
+			url: currentMessage.url
+		})
+	);
 
-			Oh, I almost forgot! [Here is a link to it](<${currentMessage.url}>).
-		`
+	await interaction.followUp({
+		components: urlButtonRows,
+		content: `${Emojis.Sparks} Done! Reannounced the winners of giveaway ${giveaway.asRelId} in ${channel}!`,
+		ephemeral: true
 	});
 
 	new Logger({
 		prefix: "GIVEAWAY"
 	}).log(
-		`Republished winners of giveaway #${giveaway.id} in #${channel.name} (${channel.id})`
+		`Reannounced winners of giveaway #${giveaway.id} in #${channel.name} (${channel.id})`
 	);
 
 	await giveaway.dmWinners({ includeNotified: false });
@@ -260,27 +260,21 @@ export async function republishWinners(
 	toEndedDashboard(interaction, giveawayManager, giveaway);
 }
 
-export async function publishOrRepublishWinners(
+export async function autoAnnounceWinners(
 	giveaway: GiveawayModule,
 	{ preferEditing }: { preferEditing: boolean } = { preferEditing: false }
 ) {
-	const acceptPrizeButton = new ButtonBuilder()
-		.setCustomId(`accept-prize-${giveaway.id}`)
-		.setLabel("Accept prize")
-		.setEmoji(Emojis.StarEyes)
-		.setStyle(ButtonStyle.Success);
-
-	const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
-		acceptPrizeButton
+	const rows = components.createRows(
+		components.buttons.acceptPrize(giveaway.id)
 	);
 
-	const data: MessageCreateOptions = {
+	const data: Omit<MessageCreateOptions, "flags"> = {
 		allowedMentions: { users: [...giveaway.winnersUserIds()] },
 		content: [...giveaway.winnersUserIds()]
 			.map((id) => `<@${id}>`)
 			.join(" "),
 		embeds: [],
-		components: [row]
+		components: rows
 	};
 
 	let sent = false;
@@ -309,9 +303,9 @@ export async function publishOrRepublishWinners(
 
 	new Logger({
 		color: "grey",
-		prefix: "PUB WIN",
+		prefix: "GIVEAWAY",
 		guild: giveaway.guild
 	}).log(
-		`Published winners of giveaway #${giveaway.id}. Sent DMs to winners`
+		`Automatically announced winners of giveaway #${giveaway.id}. Sent DMs to winners`
 	);
 }

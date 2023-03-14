@@ -5,7 +5,6 @@ import s from "#helpers/s.js";
 import type GiveawayModule from "#modules/Giveaway.js";
 import { source, stripIndents } from "common-tags";
 import {
-	ActionRowBuilder,
 	AttachmentBuilder,
 	ComponentType,
 	type AutocompleteInteraction,
@@ -14,7 +13,7 @@ import {
 } from "discord.js";
 import toDashboard from "./dashboard.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
-import { toPublishWinners } from "./endModules/publishWinners.js";
+import { toAnnounceWinners } from "./endModules/announceWinners.js";
 import { rollAndSign } from "./endModules/rollWinners/rollAndSign.js";
 
 export default async function toEndedDashboard(
@@ -42,9 +41,9 @@ export default async function toEndedDashboard(
 	}
 
 	const {
-		republishWinners,
-		unpublishWinners,
-		publishWinners,
+		reannounceWinners,
+		unannounceWinners,
+		announceWinners,
 		showAllWinners,
 		rerollWinners,
 		rerollAllWinners,
@@ -55,7 +54,7 @@ export default async function toEndedDashboard(
 		deleteGiveaway
 	} = components.buttons;
 
-	const publishWinnersButtons: Array<ButtonBuilder> = [];
+	const announceWinnersButtons: Array<ButtonBuilder> = [];
 	const rollWinnersButtons: Array<ButtonBuilder> = [];
 
 	const unclaimedN = giveaway.winners.filter(
@@ -65,13 +64,13 @@ export default async function toEndedDashboard(
 	const noWinners = !giveaway.winners.length;
 	const noUnclaimed = !unclaimedN;
 
-	if (giveaway.winnersArePublished()) {
-		publishWinnersButtons.push(
-			republishWinners.component(),
-			unpublishWinners.component()
+	if (giveaway.winnersAreAnnounced()) {
+		announceWinnersButtons.push(
+			reannounceWinners.component(),
+			unannounceWinners.component()
 		);
 	} else {
-		publishWinnersButtons.push(publishWinners.component());
+		announceWinnersButtons.push(announceWinners.component());
 	}
 
 	if (noWinners) {
@@ -86,21 +85,19 @@ export default async function toEndedDashboard(
 	}
 
 	const rows = [
-		new ActionRowBuilder<ButtonBuilder>().addComponents(
+		...components.createRows(
 			showAllWinners.component(),
-			...publishWinnersButtons
+			...announceWinnersButtons
 		),
 
-		new ActionRowBuilder<ButtonBuilder>().addComponents(
-			...rollWinnersButtons
-		),
+		...components.createRows(...rollWinnersButtons),
 
-		new ActionRowBuilder<ButtonBuilder>().addComponents(
+		...components.createRows(
 			deleteUnclaimedWinners.component().setDisabled(noUnclaimed),
 			deleteAllWinners.component().setDisabled(noWinners)
 		),
 
-		new ActionRowBuilder<ButtonBuilder>().addComponents(
+		...components.createRows(
 			reactivateGiveaway.component(),
 			deleteGiveaway.component()
 		)
@@ -134,7 +131,7 @@ export default async function toEndedDashboard(
 				await giveaway.edit({
 					ended: false,
 					nowOutdated: {
-						publishedMessage: true
+						announcementMessage: true
 					}
 				});
 
@@ -143,26 +140,26 @@ export default async function toEndedDashboard(
 				break;
 			}
 
-			case publishWinners.customId: {
-				toPublishWinners(buttonInteraction, giveaway.id);
+			case announceWinners.customId: {
+				toAnnounceWinners(buttonInteraction, giveaway.id);
 
 				break;
 			}
 
-			case republishWinners.customId: {
-				toPublishWinners(buttonInteraction, giveaway.id);
+			case reannounceWinners.customId: {
+				toAnnounceWinners(buttonInteraction, giveaway.id);
 
 				break;
 			}
 
-			case unpublishWinners.customId: {
+			case unannounceWinners.customId: {
 				const channel = giveaway.channel;
 
 				if (!channel) {
 					await interaction.editReply({
 						content: stripIndents`
-							${Emojis.Warn} The channel the giveaway was published in does not exist, or is not a valid channel.
-							Try again or republish the giveaway in a new channel.
+							${Emojis.Warn} The channel the giveaway was announced in does not exist, or is not a valid channel.
+							Try again or reannounce the giveaway in a new channel.
 
 							Current channel: <#${giveaway.channelId}> (${giveaway.channelId}).
 						`,
@@ -184,7 +181,7 @@ export default async function toEndedDashboard(
 
 				await interaction.editReply({
 					content: stripIndents`
-							${Emojis.V} The winners are now unpublished. 
+							${Emojis.V} The winners are no longer announced. 
 						`,
 					components: [],
 					embeds: []
@@ -252,7 +249,7 @@ export default async function toEndedDashboard(
 
 				const data = Buffer.from(string);
 				const attachment = new AttachmentBuilder(data).setName(
-					`giveaway-#${giveaway.guildRelativeId}-winners.txt`
+					`giveaway-${giveaway.asRelId}-winners.txt`
 				);
 
 				await interaction.followUp({

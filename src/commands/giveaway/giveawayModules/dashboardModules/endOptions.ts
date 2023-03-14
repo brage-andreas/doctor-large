@@ -5,7 +5,7 @@ import { longstamp } from "#helpers/timestamps.js";
 import { type EndAutomation } from "@prisma/client";
 import { oneLine, source, stripIndents } from "common-tags";
 import {
-	ActionRowBuilder,
+	bold,
 	ButtonStyle,
 	ComponentType,
 	EmbedBuilder,
@@ -48,7 +48,7 @@ export default async function toEndOptions(
 		endGiveaway,
 		endLevelEnd,
 		endLevelNone,
-		endLevelPublish,
+		endLevelAnnounce,
 		endLevelRoll,
 		roundDateToNearestHour,
 		setDate
@@ -81,15 +81,15 @@ export default async function toEndOptions(
 		const none = endLevelNone.component();
 		const end = endLevelEnd.component();
 		const roll = endLevelRoll.component();
-		const publish = endLevelPublish.component();
+		const announce = endLevelAnnounce.component();
 
 		const setSuccess = (...buttons: Array<ButtonBuilder>) =>
 			buttons.forEach((b) => b.setStyle(ButtonStyle.Success));
 
 		switch (endAutomationLevel) {
-			case "Publish": {
-				publish.setDisabled();
-				setSuccess(end, roll, publish);
+			case "Announce": {
+				announce.setDisabled();
+				setSuccess(end, roll, announce);
 
 				break;
 			}
@@ -115,7 +115,7 @@ export default async function toEndOptions(
 			}
 		}
 
-		return [none, end, roll, publish];
+		return [none, end, roll, announce];
 	};
 
 	//  hour in milliseconds = 3_600_000
@@ -144,15 +144,15 @@ export default async function toEndOptions(
 			value: stripIndents`
 				Define what should happen when the giveaway ends.
 				You can always end the giveaway manually.
-				The host will be notified: ${hostDMStr} before, and on end.
+				The host will be notified ${hostDMStr} before, and on end.
 
 				Levels:
-				1. **None**: No automation. (The host will be notified as normal.)
-				2. **End**: End the giveaway; no one can enter or leave.
-				3. **Roll**: Roll the winners. This will also End.
-				4. **Publish**: Publish and notify the winners. This will also End and Roll.
+				1. ${bold("None")}: No automation. (The host will be notified as normal.)
+				2. ${bold("End")}: End the giveaway; no one can enter or leave.
+				3. ${bold("Roll")}: Roll the winners. This will also End.
+				4. ${bold("Announce")}: Announce and notify the winners. This will also Roll.
 
-				Currently set to: **${endAutomationLevel}**
+				Currently set to: ${bold(endAutomationLevel)}
 			`
 		})
 		.setFooter({
@@ -177,7 +177,7 @@ export default async function toEndOptions(
 	}
 
 	if (!giveaway.channelId) {
-		missingParts.push("→ Publish the giveaway");
+		missingParts.push("→ Announce the giveaway");
 	}
 
 	const cannotEnd =
@@ -188,28 +188,20 @@ export default async function toEndOptions(
 			`
 			: undefined;
 
+	const rows = components.createRows(
+		setDate.component().setDisabled(true),
+		clearDate.component().setDisabled(!endDate),
+		roundDateToNearestHour.component().setDisabled(Boolean(isRounded)),
+		endGiveaway,
+		...plusButtons,
+		...minusButtons,
+		back,
+		...endLevelButtons()
+	);
+
 	const msg = await interaction.editReply({
 		content: cannotEnd,
-		components: [
-			new ActionRowBuilder<ButtonBuilder>().setComponents(
-				setDate.component().setDisabled(true),
-				clearDate.component().setDisabled(!endDate),
-				roundDateToNearestHour
-					.component()
-					.setDisabled(Boolean(isRounded)),
-				endGiveaway.component()
-			),
-			new ActionRowBuilder<ButtonBuilder>().setComponents(
-				...plusButtons.map((button) => button.component())
-			),
-			new ActionRowBuilder<ButtonBuilder>().setComponents(
-				...minusButtons.map((button) => button.component())
-			),
-			new ActionRowBuilder<ButtonBuilder>().setComponents(
-				back.component(),
-				...endLevelButtons()
-			)
-		],
+		components: rows,
 		embeds: [endOptionsEmbed]
 	});
 
@@ -239,7 +231,7 @@ export default async function toEndOptions(
 			await giveaway.edit({
 				endAutomation: newLevel,
 				nowOutdated: {
-					publishedMessage: true
+					announcementMessage: true
 				}
 			});
 
@@ -261,7 +253,7 @@ export default async function toEndOptions(
 				await giveaway.edit({
 					endDate: null,
 					nowOutdated: {
-						publishedMessage: true
+						announcementMessage: true
 					}
 				});
 
@@ -272,7 +264,7 @@ export default async function toEndOptions(
 				await giveaway.edit({
 					endDate: roundedDate,
 					nowOutdated: {
-						publishedMessage: true
+						announcementMessage: true
 					}
 				});
 
@@ -301,8 +293,8 @@ export default async function toEndOptions(
 				break;
 			}
 
-			case endLevelPublish.customId: {
-				await endLevel("Publish");
+			case endLevelAnnounce.customId: {
+				await endLevel("Announce");
 
 				break;
 			}
@@ -324,7 +316,7 @@ export default async function toEndOptions(
 			await giveaway.edit({
 				endDate: newEndDate,
 				nowOutdated: {
-					publishedMessage: true
+					announcementMessage: true
 				}
 			});
 		}

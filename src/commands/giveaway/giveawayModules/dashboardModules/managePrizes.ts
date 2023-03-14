@@ -6,7 +6,6 @@ import yesNo from "#helpers/yesNo.js";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
 import {
-	ActionRowBuilder,
 	ButtonBuilder,
 	ButtonStyle,
 	ComponentType,
@@ -46,23 +45,18 @@ export default async function toManagePrizes(
 			.setLabel(`Prize ${index + 1}`)
 	);
 
-	const sortedPrizeButtons = [
-		prizesButtons.slice(0, 5),
-		prizesButtons.slice(5, 10)
-	].filter((e) => e.length);
+	const prizeButtonsRow = components.createRows(...prizesButtons);
 
-	const { back, create, clear } = components.buttons;
-
-	const createButton = create
-		.component()
-		.setDisabled(giveaway.prizes.length >= 10);
+	const disableCreate = giveaway.prizes.length >= 10;
 
 	const rows = [
-		...sortedPrizeButtons,
-		[back.component(), createButton, clear.component()]
-	].map((buttonArray) =>
-		new ActionRowBuilder<ButtonBuilder>().setComponents(buttonArray)
-	);
+		...prizeButtonsRow,
+		...components.createRows(
+			components.buttons.back,
+			components.buttons.create.component().setDisabled(disableCreate),
+			components.buttons.clear
+		)
+	];
 
 	const getPrizesKey = (start: number, end: number) =>
 		giveaway.prizes.length
@@ -79,7 +73,7 @@ export default async function toManagePrizes(
 
 	const embed = new EmbedBuilder().setTitle("Prizes");
 
-	if (sortedPrizeButtons.length === 2) {
+	if (prizesButtons.length === 2) {
 		embed.setColor(Colors.Green).setFields(
 			{
 				inline: true,
@@ -92,7 +86,7 @@ export default async function toManagePrizes(
 				name: "Row 2"
 			}
 		);
-	} else if (sortedPrizeButtons.length === 1) {
+	} else if (prizesButtons.length === 1) {
 		embed.setColor(Colors.Green).setDescription(getPrizesKey(0, 5));
 	} else {
 		embed.setColor(Colors.Red).setDescription("There are no prizes yet.");
@@ -125,7 +119,7 @@ export default async function toManagePrizes(
 
 	collector.on("collect", async (buttonInteraction) => {
 		switch (buttonInteraction.customId) {
-			case back.customId: {
+			case components.buttons.back.customId: {
 				await buttonInteraction.deferUpdate();
 
 				toDashboard(buttonInteraction, id);
@@ -133,13 +127,13 @@ export default async function toManagePrizes(
 				return;
 			}
 
-			case create.customId: {
+			case components.buttons.create.customId: {
 				toCreatePrize(buttonInteraction, id, giveawayManager);
 
 				return;
 			}
 
-			case clear.customId: {
+			case components.buttons.clear.customId: {
 				await buttonInteraction.deferUpdate();
 
 				if (giveaway.winnersUserIds().size) {

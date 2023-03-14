@@ -119,7 +119,7 @@ export default async function toEditGiveaway(
 				description,
 				winnerQuantity,
 				nowOutdated: {
-					publishedMessage: true,
+					announcementMessage: true,
 					winnerMessage: true
 				}
 			});

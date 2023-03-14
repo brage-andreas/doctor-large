@@ -2,18 +2,13 @@ import components from "#components";
 import { Emojis } from "#constants";
 import GiveawayManager from "#database/giveaway.js";
 import { stripIndents } from "common-tags";
-import {
-	ActionRowBuilder,
-	ComponentType,
-	type ButtonBuilder,
-	type RepliableInteraction
-} from "discord.js";
+import { ComponentType, type RepliableInteraction } from "discord.js";
+import toAnnounceGiveaway from "./dashboardModules/announceGiveaway.js";
+import toAnnouncementOptions from "./dashboardModules/announcementOptions.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import toEditGiveaway from "./dashboardModules/editGiveaway.js";
 import toEndOptions from "./dashboardModules/endOptions.js";
 import toManagePrizes from "./dashboardModules/managePrizes.js";
-import toPublishGiveaway from "./dashboardModules/publishGiveaway.js";
-import toPublishingOptions from "./dashboardModules/publishingOptions.js";
 import toResetData from "./dashboardModules/resetData.js";
 import toSetPingRoles from "./dashboardModules/setPingRoles.js";
 import toSetRequiredRoles from "./dashboardModules/setRequiredRoles.js";
@@ -46,45 +41,28 @@ export default async function toDashboard(
 		return;
 	}
 
-	const {
-		publishingOptions,
-		publishGiveaway,
-		unlockEntries,
-		lockEntries,
-		endOptions,
-		setRequiredRoles,
-		setPingRoles,
-		managePrizes,
-		edit,
-		reset,
-		deleteGiveaway
-	} = components.buttons;
-
-	const publishButton = giveaway.publishedMessageId
-		? publishingOptions.component()
-		: publishGiveaway.component();
+	const announceButton = giveaway.announcementMessageId
+		? components.buttons.announcementOptions
+		: components.buttons.announceGiveaway;
 
 	const lockEntriesButton = giveaway.entriesLocked
-		? unlockEntries.component()
-		: lockEntries.component();
+		? components.buttons.unlockEntries
+		: components.buttons.lockEntries;
 
-	const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		publishButton,
-		endOptions.component(),
+	const rows = components.createRows(
+		announceButton,
+		components.buttons.endOptions,
 		lockEntriesButton,
-		setRequiredRoles.component(),
-		setPingRoles.component()
-	);
-
-	const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-		managePrizes.component(),
-		edit.component(),
-		reset.component("data"),
-		deleteGiveaway.component()
+		components.buttons.setRequiredRoles,
+		components.buttons.setPingRoles,
+		components.buttons.managePrizes,
+		components.buttons.edit,
+		components.buttons.reset.component("data"),
+		components.buttons.deleteGiveaway
 	);
 
 	const msg = await interaction.editReply({
-		components: [row1, row2],
+		components: rows,
 		...giveaway.toDashboardOverview()
 	});
 
@@ -104,12 +82,12 @@ export default async function toDashboard(
 	});
 
 	collector.on("collect", async (buttonInteraction) => {
-		if (buttonInteraction.customId !== edit.customId) {
+		if (buttonInteraction.customId !== components.buttons.edit.customId) {
 			await buttonInteraction.deferUpdate();
 		}
 
 		switch (buttonInteraction.customId) {
-			case edit.customId: {
+			case components.buttons.edit.customId: {
 				toEditGiveaway(
 					buttonInteraction,
 					interaction,
@@ -120,8 +98,8 @@ export default async function toDashboard(
 				break;
 			}
 
-			case publishGiveaway.customId: {
-				toPublishGiveaway(
+			case components.buttons.announceGiveaway.customId: {
+				toAnnounceGiveaway(
 					buttonInteraction,
 					giveawayId,
 					giveawayManager
@@ -130,8 +108,8 @@ export default async function toDashboard(
 				break;
 			}
 
-			case publishingOptions.customId: {
-				toPublishingOptions(
+			case components.buttons.announcementOptions.customId: {
+				toAnnouncementOptions(
 					buttonInteraction,
 					giveawayId,
 					giveawayManager
@@ -140,11 +118,11 @@ export default async function toDashboard(
 				break;
 			}
 
-			case lockEntries.customId: {
+			case components.buttons.lockEntries.customId: {
 				await giveaway.edit({
 					entriesLocked: true,
 					nowOutdated: {
-						publishedMessage: true
+						announcementMessage: true
 					}
 				});
 
@@ -153,11 +131,11 @@ export default async function toDashboard(
 				break;
 			}
 
-			case unlockEntries.customId: {
+			case components.buttons.unlockEntries.customId: {
 				await giveaway.edit({
 					entriesLocked: false,
 					nowOutdated: {
-						publishedMessage: true
+						announcementMessage: true
 					}
 				});
 
@@ -166,13 +144,13 @@ export default async function toDashboard(
 				break;
 			}
 
-			case endOptions.customId: {
+			case components.buttons.endOptions.customId: {
 				toEndOptions(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
-			case setRequiredRoles.customId: {
+			case components.buttons.setRequiredRoles.customId: {
 				toSetRequiredRoles(
 					buttonInteraction,
 					giveawayId,
@@ -182,25 +160,25 @@ export default async function toDashboard(
 				break;
 			}
 
-			case setPingRoles.customId: {
+			case components.buttons.setPingRoles.customId: {
 				toSetPingRoles(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
-			case managePrizes.customId: {
+			case components.buttons.managePrizes.customId: {
 				toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
-			case reset.customId: {
+			case components.buttons.reset.customId: {
 				toResetData(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
-			case deleteGiveaway.customId: {
+			case components.buttons.deleteGiveaway.customId: {
 				toDeleteGiveaway(
 					buttonInteraction,
 					giveawayId,

@@ -60,7 +60,7 @@ export default async function toSetRequiredRoles(
 			await giveaway.edit({
 				requiredRolesIds: component.values,
 				nowOutdated: {
-					publishedMessage: true
+					announcementMessage: true
 				}
 			});
 
@@ -75,7 +75,7 @@ export default async function toSetRequiredRoles(
 			await giveaway.edit({
 				requiredRolesIds: [],
 				nowOutdated: {
-					publishedMessage: true
+					announcementMessage: true
 				}
 			});
 

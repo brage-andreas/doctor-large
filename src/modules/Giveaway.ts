@@ -1,3 +1,4 @@
+import components from "#components";
 import { Colors, Emojis } from "#constants";
 import { default as GiveawayManager } from "#database/giveaway.js";
 import commandMention from "#helpers/commandMention.js";
@@ -20,10 +21,10 @@ import {
 } from "@prisma/client";
 import { oneLine, source, stripIndent, stripIndents } from "common-tags";
 import {
-	ActionRowBuilder,
-	ButtonBuilder,
-	ButtonStyle,
+	bold,
 	EmbedBuilder,
+	hideLinkEmbed,
+	hyperlink,
 	PermissionFlagsBits,
 	type Client,
 	type Guild,
@@ -63,8 +64,8 @@ export default class GiveawayModule implements ModifiedGiveaway {
 	public id: GiveawayId;
 	public lastEditedAt: Date;
 	public minimumAccountAge: string | null;
-	public publishedMessageId: string | null;
-	public publishedMessageUpdated: boolean;
+	public announcementMessageId: string | null;
+	public announcementMessageUpdated: boolean;
 	public title: string;
 	public winnerMessageId: string | null;
 	public winnerMessageUpdated: boolean;
@@ -78,6 +79,10 @@ export default class GiveawayModule implements ModifiedGiveaway {
 	public requiredRolesIds: Set<Snowflake>;
 	public winners: Array<Winner & { prize: PrizeModule }>;
 	// ----------------------
+
+	// -- Props --
+	public asRelId: `#${number}`;
+	// -----------
 
 	// -- Cache --
 	public pingRoles: Array<Role>;
@@ -94,9 +99,9 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		this.manager = new GiveawayManager(guild);
 
 		// -- Raw data --
-		this.publishedMessageUpdated = data.publishedMessageUpdated;
+		this.announcementMessageUpdated = data.announcementMessageUpdated;
 		this.winnerMessageUpdated = data.winnerMessageUpdated;
-		this.publishedMessageId = data.publishedMessageId;
+		this.announcementMessageId = data.announcementMessageId;
 		this.minimumAccountAge = data.minimumAccountAge;
 		this.guildRelativeId = data.guildRelativeId;
 		this.winnerMessageId = data.winnerMessageId;
@@ -144,14 +149,18 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			[] as Array<Winner & { prize: PrizeModule }>
 		);
 		// ----------------------
+
+		// -- Props --
+		this.asRelId = `#${this.guildRelativeId}`;
+		// -----------
 	}
 
-	public get publishedMessageIsOutdated() {
-		if (!this.publishedMessageId) {
+	public get announcementMessageIsOutdated() {
+		if (!this.announcementMessageId) {
 			return false;
 		}
 
-		return !this.publishedMessageUpdated;
+		return !this.announcementMessageUpdated;
 	}
 
 	public get winnerMessageIsOutdated() {
@@ -194,10 +203,10 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		return channel?.isTextBased() ? channel : null;
 	}
 
-	public get publishedMessageURL(): string | null {
+	public get announcementMessageURL(): string | null {
 		const gId = this.guildId;
 		const cId = this.channelId;
-		const mId = this.publishedMessageId;
+		const mId = this.announcementMessageId;
 
 		if (!cId || !mId) {
 			return null;
@@ -218,8 +227,8 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		return `https://discord.com/channels/${gId}/${cId}/${mId}`;
 	}
 
-	public get publishedMessage() {
-		return this._editMessage(this.publishedMessageId);
+	public get announcementMessage() {
+		return this._editMessage(this.announcementMessageId);
 	}
 
 	public get winnerMessage() {
@@ -234,7 +243,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		all?: boolean;
 	}): Promise<void> {
 		const resetAll = async () => {
-			await this.publishedMessage?.delete();
+			await this.announcementMessage?.delete();
 			await this.winnerMessage?.delete();
 
 			await this.manager.deleteWinners(this.data).then(async () => {
@@ -253,8 +262,8 @@ export default class GiveawayModule implements ModifiedGiveaway {
 					entriesUserIds: [],
 					minimumAccountAge: null,
 					pingRolesIds: [],
-					publishedMessageId: null,
-					publishedMessageUpdated: false,
+					announcementMessageId: null,
+					announcementMessageUpdated: false,
 					requiredRolesIds: [],
 					winnerMessageId: null,
 					winnerMessageUpdated: false
@@ -280,7 +289,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		};
 
 		const resetOptions = async () => {
-			await this.publishedMessage?.delete();
+			await this.announcementMessage?.delete();
 			await this.winnerMessage?.delete();
 
 			await this.manager.edit({
@@ -294,8 +303,8 @@ export default class GiveawayModule implements ModifiedGiveaway {
 					entriesLocked: false,
 					minimumAccountAge: null,
 					pingRolesIds: [],
-					publishedMessageId: null,
-					publishedMessageUpdated: false,
+					announcementMessageId: null,
+					announcementMessageUpdated: false,
 					requiredRolesIds: [],
 					winnerMessageId: null,
 					winnerMessageUpdated: false
@@ -304,7 +313,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		};
 
 		const resetPrizesAndWinners = async () => {
-			await this.publishedMessage?.delete();
+			await this.announcementMessage?.delete();
 			await this.winnerMessage?.delete();
 
 			await this.manager.deleteWinners(this.data).then(async () => {
@@ -316,8 +325,8 @@ export default class GiveawayModule implements ModifiedGiveaway {
 					id: this.id
 				},
 				data: {
-					publishedMessageId: null,
-					publishedMessageUpdated: false,
+					announcementMessageId: null,
+					announcementMessageUpdated: false,
 					winnerMessageId: null,
 					winnerMessageUpdated: false
 				}
@@ -477,11 +486,11 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		return this._winnersUserIds;
 	}
 
-	public isPublished(): this is this & { publishedMessageId: string } {
-		return Boolean(this.publishedMessageId);
+	public isAnnounced(): this is this & { announcementMessageId: string } {
+		return Boolean(this.announcementMessageId);
 	}
 
-	public winnersArePublished(): this is this & { winnerMessageId: string } {
+	public winnersAreAnnounced(): this is this & { winnerMessageId: string } {
 		return Boolean(this.winnerMessageId);
 	}
 
@@ -509,16 +518,18 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 	/**
 	 * Deletes all winners and prizes tied to the giveaway, and the giveaway itself.
-	 * Optional: Delete published messages, including the winner announcement.
+	 * Optional: Delete announced messages, including the winner announcement.
 	 */
-	public async delete(options: { withPublishedMessages: boolean }) {
-		const { withPublishedMessages } = options;
-
-		if (withPublishedMessages) {
+	public async delete({
+		withAnnouncementMessages
+	}: {
+		withAnnouncementMessages: boolean;
+	}) {
+		if (withAnnouncementMessages) {
 			const channel = this.channel;
 
 			if (channel) {
-				await this.publishedMessage?.delete();
+				await this.announcementMessage?.delete();
 				await this.winnerMessage?.delete();
 			}
 		}
@@ -532,7 +543,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const winners = s("winner", this.winnerQuantity);
 
 		return oneLine`
-			#${this.guildRelativeId} **${this.title}** - ${this.winnerQuantity} ${winners},
+			${this.asRelId} ${bold(this.title)} - ${this.winnerQuantity} ${winners},
 			${this.prizesQuantity()} ${s("prize", this.prizesQuantity())}
 		`;
 	}
@@ -541,8 +552,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const id = options?.userId;
 		const { ended } = this;
 
-		const idString = `#${this.guildRelativeId}`;
-		const prefix = `${" ".repeat(idString.length)} →`;
+		const prefix = `${" ".repeat(this.asRelId.length)} →`;
 
 		const isEntry = Boolean(id && this.entriesUserIds.has(id));
 		const isWinner = Boolean(id && this.winnersUserIds().has(id));
@@ -552,7 +562,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const winners = this.winnerQuantity || "None";
 
 		return source`
-			#${this.guildRelativeId} ${ended ? "[ENDED] " : ""}${this.title}
+			${this.asRelId} ${ended ? "[ENDED] " : ""}${this.title}
 			${prefix} Entries: ${entries}${isEntry ? " <-- You" : ""}
 			${prefix} Winners: ${winners}${isWinner ? " <-- You" : ""}
 			${prefix} Prizes: ${prizes}
@@ -567,7 +577,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		}
 
 		if (!this.channelId) {
-			missingParts.push("→ Publish the giveaway");
+			missingParts.push("→ Announce the giveaway");
 		}
 
 		if (!missingParts.length) {
@@ -644,7 +654,6 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const createdStr = `→ Created: ${longstamp(this.createdAt)}`;
 		const entriesStr = `→ Entries: ${this.entriesUserIds.size}`;
 		const hostStr = `→ Host: ${this.hostUserTag} (${this.hostUserId})`;
-		const idStr = `#${this.guildRelativeId}`;
 		const numberOfWinnersStr = `→ Number of winners: ${this.winnerQuantity}`;
 
 		const endedStr = `→ Ended: ${
@@ -655,29 +664,32 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			this.entriesLocked ? `${Emojis.Lock} Yes` : "No"
 		}`;
 
-		const publishedStr = `→ Published: ${
-			this.isPublished() ? "Yes" : "No"
+		const announcedStr = `→ Announced: ${
+			this.isAnnounced() ? "Yes" : "No"
 		}`;
 
-		const rawMessageUrl = this.publishedMessageURL;
+		const rawMessageUrl = this.announcementMessageURL;
 		const messageUrl = rawMessageUrl
-			? `→ [Link to giveaway](<${rawMessageUrl}>)`
+			? `→ ${hyperlink(
+					"Link to announcement",
+					hideLinkEmbed(rawMessageUrl)
+			  )}`
 			: null;
 
 		const winnersStr = this.winnersUserIds().size
-			? `→ Unique winners: **${this.winnersUserIds().size}**/${
-					this.winnerQuantity
-			  }`
+			? `→ Unique winners: ${bold(
+					this.winnersUserIds().size.toString()
+			  )}/${this.winnerQuantity}`
 			: `→ ${
 					this.entriesUserIds.size ? `${Emojis.Warn} ` : ""
 			  }No winners`;
 
-		const publishedOutdated = this.publishedMessageIsOutdated
-			? `${Emojis.Warn} The published message is outdated. Republish the giveaway.`
+		const announcementOutdated = this.announcementMessageIsOutdated
+			? `${Emojis.Warn} The giveaway announcement is outdated. Reannounce the giveaway.`
 			: "";
 
 		const winnerOutdated = this.winnerMessageIsOutdated
-			? `${Emojis.Warn} The winner announcement is outdated. Republish the winners.`
+			? `${Emojis.Warn} The winner announcement is outdated. Reannounce the winners.`
 			: "";
 
 		const infoField = stripIndents`
@@ -690,7 +702,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const optionsField = stripIndents`
 			${endedStr}
 			${lockEntriesStr}
-			${publishedStr}
+			${announcedStr}
 			${endStr}
 			${numberOfWinnersStr}
 			${minimumAccountAgeStr}
@@ -700,11 +712,11 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			.setTitle(this.title)
 			.setDescription(this.description)
 			.setFooter({
-				text: `Giveaway ${idStr} • Last edited`
+				text: `Giveaway ${this.asRelId} • Last edited`
 			})
 			.setTimestamp(this.lastEditedAt)
 			.setColor(
-				this.isPublished()
+				this.isAnnounced()
 					? Colors.Green
 					: this.ended
 					? Colors.Red
@@ -735,7 +747,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			content:
 				[
 					this.cannotEndContent(),
-					publishedOutdated,
+					announcementOutdated,
 					winnerOutdated
 				].join("\n\n") || undefined,
 			embeds: [embed]
@@ -770,7 +782,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			.setDescription(this.description)
 			.setColor(Colors.Green)
 			.setFooter({
-				text: `Giveaway #${this.guildRelativeId} • Hosted by ${this.hostUserTag}`
+				text: `Giveaway ${this.asRelId} • Hosted by ${this.hostUserTag}`
 			})
 			.setFields(
 				{
@@ -800,11 +812,9 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 		const embed = new EmbedBuilder()
 			.setColor(Colors.Green)
-			.setTitle(
-				`${Emojis.Tada} Giveaway #${this.guildRelativeId} has ended!`
-			)
+			.setTitle(`${Emojis.Tada} Giveaway ${this.asRelId} has ended!`)
 			.setFooter({
-				text: `Giveaway #${this.guildRelativeId} • Hosted by ${this.hostUserTag}`
+				text: `Giveaway ${this.asRelId} • Hosted by ${this.hostUserTag}`
 			}).setDescription(stripIndents`
 			${Emojis.StarEyes} The winners have been notified in DMs.
 			If you have DMs turned off, use ${myGiveawaysMention}.
@@ -823,7 +833,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		data: Prisma.GiveawayUpdateInput & {
 			nowOutdated: {
 				none?: boolean;
-				publishedMessage?: boolean;
+				announcementMessage?: boolean;
 				winnerMessage?: boolean;
 			};
 		}
@@ -833,7 +843,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 		if (
 			nowOutdated.none ||
-			(!nowOutdated.publishedMessage && !nowOutdated.winnerMessage)
+			(!nowOutdated.announcementMessage && !nowOutdated.winnerMessage)
 		) {
 			return await this.manager.edit({
 				where: { id: this.id },
@@ -841,20 +851,20 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			});
 		}
 
-		const publishedMessageUpdated =
-			this.isPublished() || data.publishedMessageId
-				? nowOutdated.publishedMessage
+		const announcementMessageUpdated =
+			this.isAnnounced() || data.announcementMessageId
+				? nowOutdated.announcementMessage
 				: undefined;
 
 		const winnerMessageUpdated =
-			this.winnersArePublished() || data.winnerMessageId
+			this.winnersAreAnnounced() || data.winnerMessageId
 				? nowOutdated.winnerMessage
 				: undefined;
 
 		return await this.manager.edit({
 			where: { id: this.id },
 			data: {
-				publishedMessageUpdated,
+				announcementMessageUpdated,
 				winnerMessageUpdated,
 				...data_
 			}
@@ -898,10 +908,10 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			ids.push(id);
 
 			const content = stripIndent`
-				**You just won a giveaway!** ${Emojis.Tada}
-				  → ${this.title} • #${this.guildRelativeId} • ${this.guild.name}.
+				${bold("You just won a giveaway!")} ${Emojis.Tada}
+				  → ${this.title} • ${this.asRelId} • ${this.guild.name}.
 
-				Make sure to **claim your prize(s)**!
+				Make sure to ${bold("claim your prize(s)")}!
 
 				Here is how:
 				  a) Use ${myGiveaways} in the server and claim your prizes.
@@ -910,22 +920,17 @@ export default class GiveawayModule implements ModifiedGiveaway {
 				GG!
 			`;
 
-			const url = this.winnerMessageURL;
-
-			const button = url
-				? new ButtonBuilder({
-						label: "Go to announcement",
-						style: ButtonStyle.Link,
-						url
-				  })
-				: undefined;
-
-			const components = button && [
-				new ActionRowBuilder<ButtonBuilder>().setComponents(button)
-			];
+			const rows = components.createRows(
+				this.winnerMessageURL
+					? components.buttons.url({
+							label: "Go to announcement",
+							url: this.winnerMessageURL
+					  })
+					: null
+			);
 
 			this.client.users
-				.send(userId, { content, components })
+				.send(userId, { content, components: rows })
 				.catch(() => null)
 				.then(() => null);
 		}

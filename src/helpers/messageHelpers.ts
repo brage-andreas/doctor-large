@@ -1,6 +1,9 @@
 import { Colors, RegExp } from "#constants";
 import {
 	EmbedBuilder,
+	hideLinkEmbed,
+	hyperlink,
+	italic,
 	type Attachment,
 	type Client,
 	type Message
@@ -50,19 +53,31 @@ const attachmentsToURL = (...attachments: Array<Attachment>) => {
 		(obj, attachment) => {
 			if (attachment.contentType?.startsWith("image")) {
 				obj.image.push(
-					`[Image ${obj.image.length + 1}](<${attachment.url}>)`
+					hyperlink(
+						`Image ${obj.image.length + 1}`,
+						hideLinkEmbed(attachment.url)
+					)
 				);
 			} else if (attachment.contentType?.startsWith("video")) {
 				obj.video.push(
-					`[Video ${obj.video.length + 1}](<${attachment.url}>)`
+					hyperlink(
+						`Video ${obj.video.length + 1}`,
+						hideLinkEmbed(attachment.url)
+					)
 				);
 			} else if (attachment.contentType?.startsWith("audio")) {
 				obj.audio.push(
-					`[Audio ${obj.audio.length + 1}](<${attachment.url}>)`
+					hyperlink(
+						`Audio ${obj.audio.length + 1}`,
+						hideLinkEmbed(attachment.url)
+					)
 				);
 			} else {
 				obj.other.push(
-					`[Attachment ${obj.other.length + 1}](<${attachment.url}>)`
+					hyperlink(
+						`Attachment ${obj.other.length + 1}`,
+						hideLinkEmbed(attachment.url)
+					)
 				);
 			}
 
@@ -137,7 +152,7 @@ export const messageToEmbed = (message: Message<true>) => {
 	if (message.content) {
 		content.push(message.content);
 	} else if (!message.embeds.length && !message.attachments.size) {
-		content.push("*No content.*");
+		content.push(italic("No content."));
 	}
 
 	embed.setDescription(content.join("\n\n") || null);

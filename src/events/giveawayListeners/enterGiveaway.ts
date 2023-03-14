@@ -4,7 +4,7 @@ import { listify } from "#helpers/listify.js";
 import { timestamp } from "#helpers/timestamps.js";
 import Logger from "#logger";
 import { oneLine, stripIndents } from "common-tags";
-import { type ButtonInteraction } from "discord.js";
+import { bold, type ButtonInteraction } from "discord.js";
 
 export default async function enterGiveaway(
 	interaction: ButtonInteraction<"cached">
@@ -89,7 +89,7 @@ export default async function enterGiveaway(
 			content: stripIndents`
 				Done! I removed your entry.
 				
-				You are **no longer entered** into giveaway #${giveaway.guildRelativeId}.
+				You are ${bold("no longer entered")} into giveaway ${giveaway.asRelId}.
 				I already miss you. ${Emojis.Pensive}
 			`,
 			ephemeral: true
@@ -109,9 +109,13 @@ export default async function enterGiveaway(
 
 		interaction.followUp({
 			content: stripIndents`
-				Done! Psst... I made sure the bouncer put you first in line. Don't tell anyone, OK? ${Emojis.Halo}
+				Done! Psst... I made sure the bouncer put you first in line. Don't tell anyone, OK? ${
+					Emojis.Halo
+				}
 				
-				${Emojis.Tada} You are **now entered** into giveaway #${giveaway.guildRelativeId}. Best of luck!
+				${Emojis.Tada} You are ${bold("now entered")} into giveaway #${
+				giveaway.guildRelativeId
+			}. Best of luck!
 				`,
 			ephemeral: true
 		});
