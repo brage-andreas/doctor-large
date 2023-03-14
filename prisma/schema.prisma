@@ -62,27 +62,27 @@ model Giveaway {
     guildRelativeId Int
     createdAt       DateTime @default(now())
 
-    channelId               String?
-    description             String
-    endAutomation           EndAutomation @default(End)
-    endDate                 DateTime?
-    ended                   Boolean       @default(false)
-    entriesLocked           Boolean       @default(false)
-    entriesUserIds          String[]      @default([])
-    hostNotified            HostNotified  @default(None)
-    hostUserId              String
-    hostUserTag             String
-    lastEditedAt            DateTime      @default(now()) @updatedAt
-    minimumAccountAge       String?
-    pingRolesIds            String[]      @default([])
-    prizes                  Prize[]
-    publishedMessageId      String?
-    publishedMessageUpdated Boolean       @default(false)
-    requiredRolesIds        String[]      @default([])
-    title                   String
-    winnerMessageId         String?
-    winnerMessageUpdated    Boolean       @default(false)
-    winnerQuantity          Int           @default(1)
+    announcementMessageId      String?
+    announcementMessageUpdated Boolean       @default(false)
+    channelId                  String?
+    description                String
+    endAutomation              EndAutomation @default(End)
+    endDate                    DateTime?
+    ended                      Boolean       @default(false)
+    entriesLocked              Boolean       @default(false)
+    entriesUserIds             String[]      @default([])
+    hostNotified               HostNotified  @default(None)
+    hostUserId                 String
+    hostUserTag                String
+    lastEditedAt               DateTime      @default(now()) @updatedAt
+    minimumAccountAge          String?
+    pingRolesIds               String[]      @default([])
+    prizes                     Prize[]
+    requiredRolesIds           String[]      @default([])
+    title                      String
+    winnerMessageId            String?
+    winnerMessageUpdated       Boolean       @default(false)
+    winnerQuantity             Int           @default(1)
 }
 
 model Note {
@@ -181,12 +181,12 @@ enum EndAutomation {
     None
     End
     Roll
-    Publish
+    Announce
 }
 
 enum HostNotified {
     None
-    BufferBefore
+    BeforeEnd
     OnEnd
 }
 
