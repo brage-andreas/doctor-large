@@ -1,29 +1,27 @@
 ## Quick start
 
 1. Create a `.env` file and populate it. Use `.env.example` as a reference.
-2. Install PostgreSQL and Node.js.
+2. Install `PostgreSQL` and `Node.js`.
 3. Create a server with name `postgres` and password `admin`.
 4. Create a database called `doctor-large`.
 5. Run `npm install`
 5. Run `npx prisma db push`.
 6. Run `npm run start`.
 
-## Publish or remove commands
+## Put or clear commands
  
 1. Populate the `CLIENT_ID` key in your `.env` file with your bot's user id.
-
-	(Optional) Populate the `GUILD_ID` key in your `.env` file with your desired guild's ID.
-
-2. Run `npm run commands:put` or `npm run commands:clear` to put or clear commands.
+2. (Optional) Populate the `GUILD_ID` key in your `.env` file with your desired guild's ID.
+3. Run `npm run commands:put` or `npm run commands:clear` to put or clear commands.
 
 
 ## Creating commands
 
-- Commands go in `./src/commands/*`.
-- Commands can be nested one layer (`./src/commands/**/*`).
-- Files can be prefixed with `mod.` to be ignored.
-- Files can be nested at least two layers deep to be ignored.
-- Commands must export a function `getCommand` that when called returns a function returning an object implementing the `CommandExport` type.
+- Commands go in `./src/commands/*`
+- Commands can be nested one layer (`./src/commands/**/*`)
+- Files can be prefixed with `mod.` to be ignored
+- Files can be nested at least two layers deep to be ignored
+- Commands must export a function `getCommand` that when called returns a function returning an object implementing the `CommandExport` type
 
 ### File structure example:
 ```
@@ -100,11 +98,11 @@ export const getCommand: () => Command = () => ({
 ```
 
 ## Creating events
-- Events go in `./src/events/*`.
-- Events cannot be nested. Any nested files will be ignored.
-- Events must export a function `getEvent` that when called returns a function returning an object implementing the `EventExport` type.
-- The function `execute` has the parameters as defined in discord.js' documentation.
-  (Exception: `ready` event, which is given the client.)
+- Events go in `./src/events/*`
+- Events cannot be nested. Any nested files will be ignored
+- Events must export a function `getEvent` that when called returns a function returning an object implementing the `EventExport` type
+- The function `execute` has the parameters as defined in discord.js' documentation
+  (Exception: `ready` event, which is given the client)
 
 ### File structure example:
 ```
