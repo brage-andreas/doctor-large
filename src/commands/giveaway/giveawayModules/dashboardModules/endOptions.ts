@@ -48,7 +48,7 @@ export default async function toEndOptions(
 		endGiveaway,
 		endLevelEnd,
 		endLevelNone,
-		endLevelPublish,
+		endLevelAnnounce,
 		endLevelRoll,
 		roundDateToNearestHour,
 		setDate
@@ -81,15 +81,15 @@ export default async function toEndOptions(
 		const none = endLevelNone.component();
 		const end = endLevelEnd.component();
 		const roll = endLevelRoll.component();
-		const publish = endLevelPublish.component();
+		const announce = endLevelAnnounce.component();
 
 		const setSuccess = (...buttons: Array<ButtonBuilder>) =>
 			buttons.forEach((b) => b.setStyle(ButtonStyle.Success));
 
 		switch (endAutomationLevel) {
-			case "Publish": {
-				publish.setDisabled();
-				setSuccess(end, roll, publish);
+			case "Announce": {
+				announce.setDisabled();
+				setSuccess(end, roll, announce);
 
 				break;
 			}
@@ -115,7 +115,7 @@ export default async function toEndOptions(
 			}
 		}
 
-		return [none, end, roll, publish];
+		return [none, end, roll, announce];
 	};
 
 	//  hour in milliseconds = 3_600_000
@@ -150,7 +150,7 @@ export default async function toEndOptions(
 				1. ${bold("None")}: No automation. (The host will be notified as normal.)
 				2. ${bold("End")}: End the giveaway; no one can enter or leave.
 				3. ${bold("Roll")}: Roll the winners. This will also End.
-				4. ${bold("Publish")}: Publish and notify the winners. This will also Roll.
+				4. ${bold("Announce")}: Announce and notify the winners. This will also Roll.
 
 				Currently set to: ${bold(endAutomationLevel)}
 			`
@@ -177,7 +177,7 @@ export default async function toEndOptions(
 	}
 
 	if (!giveaway.channelId) {
-		missingParts.push("→ Publish the giveaway");
+		missingParts.push("→ Announce the giveaway");
 	}
 
 	const cannotEnd =
@@ -231,7 +231,7 @@ export default async function toEndOptions(
 			await giveaway.edit({
 				endAutomation: newLevel,
 				nowOutdated: {
-					publishedMessage: true
+					announcementMessage: true
 				}
 			});
 
@@ -253,7 +253,7 @@ export default async function toEndOptions(
 				await giveaway.edit({
 					endDate: null,
 					nowOutdated: {
-						publishedMessage: true
+						announcementMessage: true
 					}
 				});
 
@@ -264,7 +264,7 @@ export default async function toEndOptions(
 				await giveaway.edit({
 					endDate: roundedDate,
 					nowOutdated: {
-						publishedMessage: true
+						announcementMessage: true
 					}
 				});
 
@@ -293,8 +293,8 @@ export default async function toEndOptions(
 				break;
 			}
 
-			case endLevelPublish.customId: {
-				await endLevel("Publish");
+			case endLevelAnnounce.customId: {
+				await endLevel("Announce");
 
 				break;
 			}
@@ -316,7 +316,7 @@ export default async function toEndOptions(
 			await giveaway.edit({
 				endDate: newEndDate,
 				nowOutdated: {
-					publishedMessage: true
+					announcementMessage: true
 				}
 			});
 		}

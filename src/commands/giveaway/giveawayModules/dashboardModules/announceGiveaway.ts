@@ -1,12 +1,10 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
+import hasPermissionsIn from "#helpers/hasPermissionsIn.js";
 import Logger from "#logger";
-import { stripIndents } from "common-tags";
+import { oneLine, stripIndents } from "common-tags";
 import {
-	hideLinkEmbed,
-	hyperlink,
-	PermissionFlagsBits,
 	type ButtonInteraction,
 	type GuildTextBasedChannel,
 	type NewsChannel,
@@ -14,7 +12,7 @@ import {
 } from "discord.js";
 import toDashboard from "../dashboard.js";
 
-export default async function toPublishGiveaway(
+export default async function toAnnounceGiveaway(
 	interaction: ButtonInteraction<"cached">,
 	id: number,
 	giveawayManager: GiveawayManager
@@ -53,7 +51,7 @@ export default async function toPublishGiveaway(
 	}
 
 	const chooseChannelStr = stripIndents`
-		Select the channel you would like to publish the giveaway in.
+		Select the channel you would like to announce the giveaway in.
 
 		${
 			giveaway.channelId
@@ -126,12 +124,18 @@ export default async function toPublishGiveaway(
 				channel = channel_;
 			}
 
-			const permsInChannel =
-				interaction.guild.members.me?.permissionsIn(channel);
+			const missingPerms = hasPermissionsIn(
+				channel,
+				"SendMessages",
+				"EmbedLinks"
+			);
 
-			if (!permsInChannel?.has(PermissionFlagsBits.SendMessages)) {
+			if (missingPerms.length) {
 				retry(
-					`${Emojis.Warn} I am missing permissions to send messages in ${channel} (${channel.id})`
+					oneLine`
+						${Emojis.Error} I am missing permissions
+						in ${channel}: ${missingPerms.join(", ")}
+					`
 				);
 
 				return;
@@ -149,28 +153,28 @@ export default async function toPublishGiveaway(
 			});
 
 			await giveaway.edit({
-				publishedMessageId: msg.id,
+				announcementMessageId: msg.id,
 				channelId: channel.id,
 				nowOutdated: {
-					publishedMessage: false
+					announcementMessage: false
 				}
 			});
 
 			new Logger({ prefix: "GIVEAWAY", interaction }).log(
-				`Published giveaway #${id} in ${channel.name} (${channel.id})`
+				`Announced giveaway #${id} in ${channel.name} (${channel.id})`
+			);
+
+			const urlButtonRows = components.createRows(
+				components.buttons.url({
+					label: "Go to announcement",
+					url: msg.url
+				})
 			);
 
 			await interaction.followUp({
-				components: [],
+				components: urlButtonRows,
 				ephemeral: true,
-				content: stripIndents`
-					${Emojis.Sparks} Done! Giveaway published in ${channel}.
-
-					Here is a ${hyperlink(
-						"link to your shiny new giveaway",
-						hideLinkEmbed(msg.url)
-					)}.
-				`,
+				content: `${Emojis.Sparks} Done! Giveaway announced in ${channel}.`,
 				embeds: []
 			});
 

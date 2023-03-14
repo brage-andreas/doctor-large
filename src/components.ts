@@ -404,23 +404,23 @@ const editPrizeModal = {
 			.setTitle("Edit prize")
 } as const;
 
-const publishGiveawayButton = {
-	customId: "publishGiveaway",
+const announceGiveawayButton = {
+	customId: "announcementGiveaway",
 	component: () =>
 		new ButtonBuilder({
-			customId: "publishGiveaway",
+			customId: "announcementGiveaway",
 			style: ButtonStyle.Success,
-			label: "Publish"
+			label: "Announce"
 		})
 } as const;
 
-const publishingOptionsButton = {
-	customId: "publishingOptions",
+const announcementOptionsButton = {
+	customId: "announcementOptions",
 	component: () =>
 		new ButtonBuilder({
-			customId: "publishingOptions",
+			customId: "announcementOptions",
 			style: ButtonStyle.Success,
-			label: "Publishing Options"
+			label: "Announcement options"
 		})
 } as const;
 
@@ -568,32 +568,32 @@ const reactivateGiveawayButton = {
 		})
 } as const;
 
-const publishWinnersButton = {
-	customId: "publishWinners",
+const announceWinnersButton = {
+	customId: "announceWinners",
 	component: () =>
 		new ButtonBuilder({
-			customId: "publishWinners",
-			label: "Publish winners",
+			customId: "announceWinners",
+			label: "Announce winners",
 			style: ButtonStyle.Success
 		})
 } as const;
 
-const republishWinnersButton = {
-	customId: "republishWinners",
+const reannounceWinnersButton = {
+	customId: "reannounceWinners",
 	component: () =>
 		new ButtonBuilder({
-			customId: "republishWinners",
-			label: "Republish winners",
+			customId: "reannounceWinners",
+			label: "Reannounce winners",
 			style: ButtonStyle.Success
 		})
 } as const;
 
-const unpublishWinnersButton = {
-	customId: "unpublishWinners",
+const unannounceWinnersButton = {
+	customId: "unannounceWinners",
 	component: () =>
 		new ButtonBuilder({
-			customId: "unpublishWinners",
-			label: "Unpublish winners",
+			customId: "unannounceWinners",
+			label: "Unannounce winners",
 			style: ButtonStyle.Secondary
 		})
 } as const;
@@ -917,12 +917,12 @@ const endLevelRollButton = {
 			.setStyle(ButtonStyle.Primary)
 } as const;
 
-const endLevelPublishButton = {
-	customId: "endLevelPublish",
+const endLevelAnnounceButton = {
+	customId: "endLevelAnnounce",
 	component: () =>
 		new ButtonBuilder()
-			.setCustomId("endLevelPublish")
-			.setLabel("Publish")
+			.setCustomId("endLevelAnnounce")
+			.setLabel("Announce")
 			.setStyle(ButtonStyle.Primary)
 } as const;
 
@@ -1081,23 +1081,23 @@ const buttons = {
 	recallCurrentMessage: recallCurrentMessageButton,
 	reportChannelOptions: reportChannelOptionsButton,
 	restrictRolesOptions: restrictRolesOptionsButton,
+	announcementOptions: announcementOptionsButton,
 	editCurrentMessage: editCurrentMessageButton,
 	reactivateGiveaway: reactivateGiveawayButton,
 	messageLogOptions: messageLogOptionsButton,
 	pinArchiveOptions: pinArchiveOptionsButton,
-	publishingOptions: publishingOptionsButton,
+	reannounceWinners: reannounceWinnersButton,
+	unannounceWinners: unannounceWinnersButton,
+	announceGiveaway: announceGiveawayButton,
 	deleteAllWinners: deleteAllWinnersButton,
+	endLevelAnnounce: endLevelAnnounceButton,
 	memberLogOptions: memberLogOptionsButton,
-	republishWinners: republishWinnersButton,
 	rerollAllWinners: rerollAllWinnersButton,
 	setRequiredRoles: setRequiredRolesButton,
-	unpublishWinners: unpublishWinnersButton,
 	acceptAllPrizes: acceptAllPrizesButton,
-	endLevelPublish: endLevelPublishButton,
-	publishGiveaway: publishGiveawayButton,
+	announceWinners: announceWinnersButton,
 	caseLogOptions: caseLogOptionsButton,
 	deleteGiveaway: deleteGiveawayButton,
-	publishWinners: publishWinnersButton,
 	showAllWinners: showAllWinnersButton,
 	viewAllEntered: viewAllEnteredButton,
 	endedGiveaway: endedGiveawayButton,

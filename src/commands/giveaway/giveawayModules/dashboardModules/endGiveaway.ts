@@ -56,7 +56,7 @@ export default async function toEndGiveaway(
 		await interaction
 			.followUp({
 				ephemeral: true,
-				content: `${Emojis.Warn} The giveaway has never been published.`
+				content: `${Emojis.Warn} The giveaway has never been announced.`
 			})
 			.catch(() => null);
 
@@ -117,7 +117,7 @@ export default async function toEndGiveaway(
 		ended: true,
 		entriesLocked: true,
 		nowOutdated: {
-			publishedMessage: false
+			announcementMessage: false
 		}
 	});
 
@@ -125,7 +125,7 @@ export default async function toEndGiveaway(
 		components.buttons.endedGiveaway.component()
 	);
 
-	await giveaway.publishedMessage?.edit({
+	await giveaway.announcementMessage?.edit({
 		allowedMentions: { parse: ["roles", "everyone"] },
 		components: endedGiveawayRows,
 		content: giveaway.pingRolesMentions?.join(" "),

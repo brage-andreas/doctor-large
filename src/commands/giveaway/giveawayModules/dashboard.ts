@@ -3,12 +3,12 @@ import { Emojis } from "#constants";
 import GiveawayManager from "#database/giveaway.js";
 import { stripIndents } from "common-tags";
 import { ComponentType, type RepliableInteraction } from "discord.js";
+import toAnnounceGiveaway from "./dashboardModules/announceGiveaway.js";
+import toAnnouncementOptions from "./dashboardModules/announcementOptions.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import toEditGiveaway from "./dashboardModules/editGiveaway.js";
 import toEndOptions from "./dashboardModules/endOptions.js";
 import toManagePrizes from "./dashboardModules/managePrizes.js";
-import toPublishGiveaway from "./dashboardModules/publishGiveaway.js";
-import toPublishingOptions from "./dashboardModules/publishingOptions.js";
 import toResetData from "./dashboardModules/resetData.js";
 import toSetPingRoles from "./dashboardModules/setPingRoles.js";
 import toSetRequiredRoles from "./dashboardModules/setRequiredRoles.js";
@@ -41,16 +41,16 @@ export default async function toDashboard(
 		return;
 	}
 
-	const publishButton = giveaway.publishedMessageId
-		? components.buttons.publishingOptions
-		: components.buttons.publishGiveaway;
+	const announceButton = giveaway.announcementMessageId
+		? components.buttons.announcementOptions
+		: components.buttons.announceGiveaway;
 
 	const lockEntriesButton = giveaway.entriesLocked
 		? components.buttons.unlockEntries
 		: components.buttons.lockEntries;
 
 	const rows = components.createRows(
-		publishButton,
+		announceButton,
 		components.buttons.endOptions,
 		lockEntriesButton,
 		components.buttons.setRequiredRoles,
@@ -98,8 +98,8 @@ export default async function toDashboard(
 				break;
 			}
 
-			case components.buttons.publishGiveaway.customId: {
-				toPublishGiveaway(
+			case components.buttons.announceGiveaway.customId: {
+				toAnnounceGiveaway(
 					buttonInteraction,
 					giveawayId,
 					giveawayManager
@@ -108,8 +108,8 @@ export default async function toDashboard(
 				break;
 			}
 
-			case components.buttons.publishingOptions.customId: {
-				toPublishingOptions(
+			case components.buttons.announcementOptions.customId: {
+				toAnnouncementOptions(
 					buttonInteraction,
 					giveawayId,
 					giveawayManager
@@ -122,7 +122,7 @@ export default async function toDashboard(
 				await giveaway.edit({
 					entriesLocked: true,
 					nowOutdated: {
-						publishedMessage: true
+						announcementMessage: true
 					}
 				});
 
@@ -135,7 +135,7 @@ export default async function toDashboard(
 				await giveaway.edit({
 					entriesLocked: false,
 					nowOutdated: {
-						publishedMessage: true
+						announcementMessage: true
 					}
 				});
 

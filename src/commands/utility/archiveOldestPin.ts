@@ -252,10 +252,17 @@ const chatInput = async (
 			components: rows
 		});
 
+		const urlButtonRows = components.createRows(
+			components.buttons.url({
+				label: "Go to message",
+				url
+			})
+		);
+
 		await interaction.editReply({
-			components: [],
+			components: urlButtonRows,
 			content: stripIndent`
-				${Emojis.V} Done! Here is ${hyperlink("a link", hideLinkEmbed(url))}.
+				${Emojis.V} Done! Successfully archive the pin.
 			`,
 			embeds: []
 		});

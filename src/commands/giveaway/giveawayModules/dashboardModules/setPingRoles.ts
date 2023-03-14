@@ -18,7 +18,7 @@ export default async function toSetPingRoles(
 	}
 
 	const choosePingRoleStr = stripIndents`
-			Select the roles you want to ping when publishing the giveaway.
+			Select the roles you want to ping when announcing the giveaway.
 			
 			Currently set to: ${
 				giveaway.pingRolesMentions?.length
@@ -61,7 +61,7 @@ export default async function toSetPingRoles(
 			await giveaway.edit({
 				pingRolesIds: [interaction.guild.roles.everyone.id],
 				nowOutdated: {
-					publishedMessage: true
+					announcementMessage: true
 				}
 			});
 
@@ -78,7 +78,7 @@ export default async function toSetPingRoles(
 			await giveaway.edit({
 				pingRolesIds: [],
 				nowOutdated: {
-					publishedMessage: true
+					announcementMessage: true
 				}
 			});
 
@@ -99,7 +99,7 @@ export default async function toSetPingRoles(
 			await giveaway.edit({
 				pingRolesIds: component.values,
 				nowOutdated: {
-					publishedMessage: true
+					announcementMessage: true
 				}
 			});
 

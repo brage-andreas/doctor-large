@@ -88,7 +88,7 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 			guildId,
 			guildRelativeId,
 			hostUserId,
-			publishedMessageId,
+			announcementMessageId,
 			title
 		} = giveaway;
 
@@ -96,8 +96,8 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 			client.guilds.cache.get(guildId)?.name ?? "unknown server";
 
 		const url =
-			channelId && publishedMessageId
-				? `https://discord.com/channels/${guildId}/${channelId}/${publishedMessageId}`
+			channelId && announcementMessageId
+				? `https://discord.com/channels/${guildId}/${channelId}/${announcementMessageId}`
 				: null;
 
 		const timeLeft = longstamp(endDate);
@@ -132,7 +132,7 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 				id: giveaway.id
 			},
 			data: {
-				hostNotified: "BufferBefore"
+				hostNotified: "BeforeEnd"
 			}
 		});
 	}
@@ -146,7 +146,7 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 			guildId,
 			guildRelativeId,
 			hostUserId,
-			publishedMessageId,
+			announcementMessageId,
 			title
 		} = giveaway;
 
@@ -160,8 +160,8 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 		const channel = channel_?.isTextBased() ? channel_ : null;
 
 		const url =
-			channelId && publishedMessageId
-				? `https://discord.com/channels/${guildId}/${channelId}/${publishedMessageId}`
+			channelId && announcementMessageId
+				? `https://discord.com/channels/${guildId}/${channelId}/${announcementMessageId}`
 				: null;
 
 		const string = source`
@@ -223,7 +223,7 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 
 		if (
 			(giveaway.endAutomation !== "Roll" &&
-				giveaway.endAutomation !== "Publish") ||
+				giveaway.endAutomation !== "Announce") ||
 			!guild
 		) {
 			continue;
@@ -242,7 +242,7 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 			winnerQuantity: module.winnerQuantity
 		});
 
-		if (giveaway.endAutomation === "Publish") {
+		if (giveaway.endAutomation === "Announce") {
 			await module.winnerMessage?.delete();
 
 			const rows = components.createRows(
@@ -251,8 +251,8 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 
 			let message: Message<true> | null | undefined;
 
-			if (giveaway.publishedMessageId) {
-				message = await module.publishedMessage
+			if (giveaway.announcementMessageId) {
+				message = await module.announcementMessage
 					?.reply({
 						...module.endedEmbed(),
 						components: rows
@@ -279,7 +279,7 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 				});
 			} else {
 				const msg = oneLine`
-					${Emojis.Error} Failed to publish winners for
+					${Emojis.Error} Failed to automatically announce winners for
 					#${giveaway.guildRelativeId} in ${guild.name}.
 				`;
 

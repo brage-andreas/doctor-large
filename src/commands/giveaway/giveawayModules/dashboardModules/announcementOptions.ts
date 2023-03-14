@@ -2,10 +2,8 @@ import components from "#components";
 import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
 import Logger from "#logger";
-import { stripIndents } from "common-tags";
+import { oneLine, stripIndents } from "common-tags";
 import {
-	hideLinkEmbed,
-	hyperlink,
 	PermissionFlagsBits,
 	type ButtonInteraction,
 	type ComponentType,
@@ -14,7 +12,7 @@ import {
 } from "discord.js";
 import toDashboard from "../dashboard.js";
 
-export default async function toPublishingOptions(
+export default async function toAnnouncementOptions(
 	interaction: ButtonInteraction<"cached">,
 	id: number,
 	giveawayManager: GiveawayManager
@@ -36,11 +34,11 @@ export default async function toPublishingOptions(
 	}
 
 	const chooseChannelStr = stripIndents`
-		Select the channel you would like to publish the giveaway in.
+		Select the channel you would like to announce the giveaway in.
 
 		${
-			giveaway.channelId
-				? `Previous channel: <#${giveaway.channelId}> (${giveaway.channelId})`
+			giveaway.channel
+				? `Previous channel: ${giveaway.channel} (${giveaway.channel.id})`
 				: ""
 		}
 	`;
@@ -96,7 +94,7 @@ export default async function toPublishingOptions(
 
 			if (!channelId) {
 				interaction.editReply({
-					content: `${Emojis.Warn} Something went wrong. Try again.`,
+					content: `${Emojis.Error} Something went wrong. Try again.`,
 					components: [],
 					embeds: []
 				});
@@ -110,7 +108,7 @@ export default async function toPublishingOptions(
 				| undefined;
 
 			if (!channel) {
-				retry(`${Emojis.Warn} This channel does not exist.`);
+				retry(`${Emojis.Error} This channel does not exist.`);
 
 				return;
 			}
@@ -118,9 +116,22 @@ export default async function toPublishingOptions(
 			const permsInChannel =
 				interaction.guild.members.me?.permissionsIn(channel);
 
+			const missingPermissions: Array<string> = [];
+
 			if (!permsInChannel?.has(PermissionFlagsBits.SendMessages)) {
+				missingPermissions.push("`Send Messages`");
+			}
+
+			if (!permsInChannel?.has(PermissionFlagsBits.EmbedLinks)) {
+				missingPermissions.push("`Embed Links`");
+			}
+
+			if (missingPermissions.length) {
 				retry(
-					`${Emojis.Error} I am missing permissions to send messages in ${channel} (${channelId})`
+					oneLine`
+						${Emojis.Error} I am missing permissions in
+						${channel} (${channel.id}): ${missingPermissions.join(", ")}
+					`
 				);
 
 				return;
@@ -135,31 +146,31 @@ export default async function toPublishingOptions(
 				embeds: [giveaway.toEmbed()]
 			});
 
-			await giveaway.publishedMessage?.delete();
+			await giveaway.announcementMessage?.delete();
+
+			const urlButtonRows = components.createRows(
+				components.buttons.url({
+					label: "Go to announcement",
+					url: message.url
+				})
+			);
 
 			interaction.followUp({
-				components: [],
+				components: urlButtonRows,
 				ephemeral: true,
-				content: stripIndents`
-					${Emojis.Sparks} Done! Giveaway published in ${channel}.
-					
-					Here is a ${hyperlink(
-						"link to your now perfected giveaway",
-						hideLinkEmbed(message.url)
-					)}.
-				`,
+				content: `${Emojis.Sparks} Done! Reannounced the giveaway in ${channel}.`,
 				embeds: []
 			});
 
 			logger.log(
-				`Republished giveaway #${giveaway.id} in ${channel.name} (${channelId})`
+				`Reannounced giveaway #${giveaway.id} in ${channel.name} (${channelId})`
 			);
 
 			giveaway.edit({
-				publishedMessageId: message.id,
+				announcementMessageId: message.id,
 				channelId,
 				nowOutdated: {
-					publishedMessage: false
+					announcementMessage: false
 				}
 			});
 		}
@@ -172,9 +183,9 @@ export default async function toPublishingOptions(
 		) {
 			await componentInteraction.deferUpdate();
 
-			if (!giveaway.channelId || !giveaway.publishedMessageId) {
+			if (!giveaway.channelId || !giveaway.announcementMessageId) {
 				componentInteraction.followUp({
-					content: `${Emojis.Warn} The giveaway has not been published yet.`,
+					content: `${Emojis.Warn} The giveaway is not announced.`,
 					ephemeral: true
 				});
 
@@ -189,7 +200,7 @@ export default async function toPublishingOptions(
 				retry(
 					stripIndents`
 						${Emojis.Warn} I cannot find channel: ${giveaway.channelId} (${giveaway.channelId}).
-						Maybe it has it been deleted?
+						It may have been deleted.
 					`
 				);
 
@@ -200,10 +211,7 @@ export default async function toPublishingOptions(
 				await componentInteraction.deferUpdate();
 
 				retry(
-					stripIndents`
-						${Emojis.Warn} The channel is not a text channel: ${giveaway.channelId} (${giveaway.channelId}).
-						I don't know how this happened.
-					`
+					`${Emojis.Warn} The channel is not a text channel: ${giveaway.channelId} (${giveaway.channelId}).`
 				);
 
 				return;
@@ -219,7 +227,7 @@ export default async function toPublishingOptions(
 
 			const urlOrNull = isEdit
 				? await channel.messages
-						.edit(giveaway.publishedMessageId, {
+						.edit(giveaway.announcementMessageId, {
 							allowedMentions: {
 								roles: [...giveaway.pingRolesIds]
 							},
@@ -232,31 +240,33 @@ export default async function toPublishingOptions(
 						.then((msg) => msg.url)
 						.catch(() => false)
 				: await channel.messages
-						.delete(giveaway.publishedMessageId)
+						.delete(giveaway.announcementMessageId)
 						.then(() => true)
 						.catch(() => false);
 
 			if (isEdit) {
+				const urlButtonRows = components.createRows(
+					typeof urlOrNull === "string"
+						? components.buttons.url({
+								label: "Go to announcement",
+								url: urlOrNull
+						  })
+						: null
+				);
+
 				interaction.followUp({
-					components: [],
+					components: urlButtonRows,
 					ephemeral: true,
 					content:
-						urlOrNull && typeof urlOrNull === "string"
-							? stripIndents`
-								${Emojis.Sparks} Done! Giveaway has been edited in ${channel}.
-								
-								Here is a ${hyperlink(
-									"link to your now perfected giveaway",
-									hideLinkEmbed(urlOrNull)
-								)}).
-							`
-							: `${Emojis.Warn} I could not edit the message. Maybe it has been deleted?`,
+						typeof urlOrNull === "string"
+							? `${Emojis.Sparks} Done! The announcement has been updated in ${channel}.`
+							: `${Emojis.Warn} I could not update the announcement. The message may have been deleted.`,
 					embeds: []
 				});
 
 				if (urlOrNull) {
 					logger.log(
-						`Edited giveaway #${giveaway.id} in ${channel.name} (${channel.id})`
+						`Edited the announcement of giveaway #${giveaway.id} in ${channel.name} (${channel.id})`
 					);
 				}
 			} else {
@@ -264,25 +274,25 @@ export default async function toPublishingOptions(
 					components: [],
 					ephemeral: true,
 					content: urlOrNull
-						? `${Emojis.Sparks} Done! Giveaway has been recalled from ${channel}. All data remain intact.`
-						: `${Emojis.Warn} I could not recall the Giveaway. The message might have already been deleted.`,
+						? `${Emojis.Sparks} Done! The announcement has been recalled from ${channel}. All data remain intact.`
+						: `${Emojis.Warn} I could not recall the announcement. The message may have been deleted.`,
 					embeds: []
 				});
 
 				if (urlOrNull) {
 					logger.log(
-						`Recalled giveaway #${giveaway.id} from ${channel.name} (${channel.id})`
+						`Recalled announcement of giveaway #${giveaway.id} from ${channel.name} (${channel.id})`
 					);
 				}
 			}
 
 			if (urlOrNull) {
 				await giveaway.edit({
-					publishedMessageId: isEdit
-						? giveaway.publishedMessageId
+					announcementMessageId: isEdit
+						? giveaway.announcementMessageId
 						: null,
 					nowOutdated: {
-						publishedMessage: false
+						announcementMessage: false
 					}
 				});
 

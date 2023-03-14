@@ -64,8 +64,8 @@ export default class GiveawayModule implements ModifiedGiveaway {
 	public id: GiveawayId;
 	public lastEditedAt: Date;
 	public minimumAccountAge: string | null;
-	public publishedMessageId: string | null;
-	public publishedMessageUpdated: boolean;
+	public announcementMessageId: string | null;
+	public announcementMessageUpdated: boolean;
 	public title: string;
 	public winnerMessageId: string | null;
 	public winnerMessageUpdated: boolean;
@@ -99,9 +99,9 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		this.manager = new GiveawayManager(guild);
 
 		// -- Raw data --
-		this.publishedMessageUpdated = data.publishedMessageUpdated;
+		this.announcementMessageUpdated = data.announcementMessageUpdated;
 		this.winnerMessageUpdated = data.winnerMessageUpdated;
-		this.publishedMessageId = data.publishedMessageId;
+		this.announcementMessageId = data.announcementMessageId;
 		this.minimumAccountAge = data.minimumAccountAge;
 		this.guildRelativeId = data.guildRelativeId;
 		this.winnerMessageId = data.winnerMessageId;
@@ -155,12 +155,12 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		// -----------
 	}
 
-	public get publishedMessageIsOutdated() {
-		if (!this.publishedMessageId) {
+	public get announcementMessageIsOutdated() {
+		if (!this.announcementMessageId) {
 			return false;
 		}
 
-		return !this.publishedMessageUpdated;
+		return !this.announcementMessageUpdated;
 	}
 
 	public get winnerMessageIsOutdated() {
@@ -203,10 +203,10 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		return channel?.isTextBased() ? channel : null;
 	}
 
-	public get publishedMessageURL(): string | null {
+	public get announcementMessageURL(): string | null {
 		const gId = this.guildId;
 		const cId = this.channelId;
-		const mId = this.publishedMessageId;
+		const mId = this.announcementMessageId;
 
 		if (!cId || !mId) {
 			return null;
@@ -227,8 +227,8 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		return `https://discord.com/channels/${gId}/${cId}/${mId}`;
 	}
 
-	public get publishedMessage() {
-		return this._editMessage(this.publishedMessageId);
+	public get announcementMessage() {
+		return this._editMessage(this.announcementMessageId);
 	}
 
 	public get winnerMessage() {
@@ -243,7 +243,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		all?: boolean;
 	}): Promise<void> {
 		const resetAll = async () => {
-			await this.publishedMessage?.delete();
+			await this.announcementMessage?.delete();
 			await this.winnerMessage?.delete();
 
 			await this.manager.deleteWinners(this.data).then(async () => {
@@ -262,8 +262,8 @@ export default class GiveawayModule implements ModifiedGiveaway {
 					entriesUserIds: [],
 					minimumAccountAge: null,
 					pingRolesIds: [],
-					publishedMessageId: null,
-					publishedMessageUpdated: false,
+					announcementMessageId: null,
+					announcementMessageUpdated: false,
 					requiredRolesIds: [],
 					winnerMessageId: null,
 					winnerMessageUpdated: false
@@ -289,7 +289,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		};
 
 		const resetOptions = async () => {
-			await this.publishedMessage?.delete();
+			await this.announcementMessage?.delete();
 			await this.winnerMessage?.delete();
 
 			await this.manager.edit({
@@ -303,8 +303,8 @@ export default class GiveawayModule implements ModifiedGiveaway {
 					entriesLocked: false,
 					minimumAccountAge: null,
 					pingRolesIds: [],
-					publishedMessageId: null,
-					publishedMessageUpdated: false,
+					announcementMessageId: null,
+					announcementMessageUpdated: false,
 					requiredRolesIds: [],
 					winnerMessageId: null,
 					winnerMessageUpdated: false
@@ -313,7 +313,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		};
 
 		const resetPrizesAndWinners = async () => {
-			await this.publishedMessage?.delete();
+			await this.announcementMessage?.delete();
 			await this.winnerMessage?.delete();
 
 			await this.manager.deleteWinners(this.data).then(async () => {
@@ -325,8 +325,8 @@ export default class GiveawayModule implements ModifiedGiveaway {
 					id: this.id
 				},
 				data: {
-					publishedMessageId: null,
-					publishedMessageUpdated: false,
+					announcementMessageId: null,
+					announcementMessageUpdated: false,
 					winnerMessageId: null,
 					winnerMessageUpdated: false
 				}
@@ -486,11 +486,11 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		return this._winnersUserIds;
 	}
 
-	public isPublished(): this is this & { publishedMessageId: string } {
-		return Boolean(this.publishedMessageId);
+	public isAnnounced(): this is this & { announcementMessageId: string } {
+		return Boolean(this.announcementMessageId);
 	}
 
-	public winnersArePublished(): this is this & { winnerMessageId: string } {
+	public winnersAreAnnounced(): this is this & { winnerMessageId: string } {
 		return Boolean(this.winnerMessageId);
 	}
 
@@ -518,16 +518,18 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 	/**
 	 * Deletes all winners and prizes tied to the giveaway, and the giveaway itself.
-	 * Optional: Delete published messages, including the winner announcement.
+	 * Optional: Delete announced messages, including the winner announcement.
 	 */
-	public async delete(options: { withPublishedMessages: boolean }) {
-		const { withPublishedMessages } = options;
-
-		if (withPublishedMessages) {
+	public async delete({
+		withAnnouncementMessages
+	}: {
+		withAnnouncementMessages: boolean;
+	}) {
+		if (withAnnouncementMessages) {
 			const channel = this.channel;
 
 			if (channel) {
-				await this.publishedMessage?.delete();
+				await this.announcementMessage?.delete();
 				await this.winnerMessage?.delete();
 			}
 		}
@@ -575,7 +577,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		}
 
 		if (!this.channelId) {
-			missingParts.push("→ Publish the giveaway");
+			missingParts.push("→ Announce the giveaway");
 		}
 
 		if (!missingParts.length) {
@@ -662,13 +664,16 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			this.entriesLocked ? `${Emojis.Lock} Yes` : "No"
 		}`;
 
-		const publishedStr = `→ Published: ${
-			this.isPublished() ? "Yes" : "No"
+		const announcedStr = `→ Announced: ${
+			this.isAnnounced() ? "Yes" : "No"
 		}`;
 
-		const rawMessageUrl = this.publishedMessageURL;
+		const rawMessageUrl = this.announcementMessageURL;
 		const messageUrl = rawMessageUrl
-			? `→ ${hyperlink("Link to giveaway", hideLinkEmbed(rawMessageUrl))}`
+			? `→ ${hyperlink(
+					"Link to announcement",
+					hideLinkEmbed(rawMessageUrl)
+			  )}`
 			: null;
 
 		const winnersStr = this.winnersUserIds().size
@@ -679,12 +684,12 @@ export default class GiveawayModule implements ModifiedGiveaway {
 					this.entriesUserIds.size ? `${Emojis.Warn} ` : ""
 			  }No winners`;
 
-		const publishedOutdated = this.publishedMessageIsOutdated
-			? `${Emojis.Warn} The published message is outdated. Republish the giveaway.`
+		const announcementOutdated = this.announcementMessageIsOutdated
+			? `${Emojis.Warn} The giveaway announcement is outdated. Reannounce the giveaway.`
 			: "";
 
 		const winnerOutdated = this.winnerMessageIsOutdated
-			? `${Emojis.Warn} The winner announcement is outdated. Republish the winners.`
+			? `${Emojis.Warn} The winner announcement is outdated. Reannounce the winners.`
 			: "";
 
 		const infoField = stripIndents`
@@ -697,7 +702,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const optionsField = stripIndents`
 			${endedStr}
 			${lockEntriesStr}
-			${publishedStr}
+			${announcedStr}
 			${endStr}
 			${numberOfWinnersStr}
 			${minimumAccountAgeStr}
@@ -711,7 +716,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			})
 			.setTimestamp(this.lastEditedAt)
 			.setColor(
-				this.isPublished()
+				this.isAnnounced()
 					? Colors.Green
 					: this.ended
 					? Colors.Red
@@ -742,7 +747,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			content:
 				[
 					this.cannotEndContent(),
-					publishedOutdated,
+					announcementOutdated,
 					winnerOutdated
 				].join("\n\n") || undefined,
 			embeds: [embed]
@@ -828,7 +833,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		data: Prisma.GiveawayUpdateInput & {
 			nowOutdated: {
 				none?: boolean;
-				publishedMessage?: boolean;
+				announcementMessage?: boolean;
 				winnerMessage?: boolean;
 			};
 		}
@@ -838,7 +843,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 		if (
 			nowOutdated.none ||
-			(!nowOutdated.publishedMessage && !nowOutdated.winnerMessage)
+			(!nowOutdated.announcementMessage && !nowOutdated.winnerMessage)
 		) {
 			return await this.manager.edit({
 				where: { id: this.id },
@@ -846,20 +851,20 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			});
 		}
 
-		const publishedMessageUpdated =
-			this.isPublished() || data.publishedMessageId
-				? nowOutdated.publishedMessage
+		const announcementMessageUpdated =
+			this.isAnnounced() || data.announcementMessageId
+				? nowOutdated.announcementMessage
 				: undefined;
 
 		const winnerMessageUpdated =
-			this.winnersArePublished() || data.winnerMessageId
+			this.winnersAreAnnounced() || data.winnerMessageId
 				? nowOutdated.winnerMessage
 				: undefined;
 
 		return await this.manager.edit({
 			where: { id: this.id },
 			data: {
-				publishedMessageUpdated,
+				announcementMessageUpdated,
 				winnerMessageUpdated,
 				...data_
 			}

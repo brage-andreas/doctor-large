@@ -51,21 +51,21 @@ export default async function toResetData(
 			→ Resets most of the options you can edit in the dashboard.
 			    (Excluding title, description, and winner quantity)
 			→ Resets entries, winners, and prizes. ${Emojis.Warn} They will not be notified.
-			→ Unpublishes the giveaway and the winners.
+			→ Unannounces the giveaway and the winners.
 				 
 			Level 3 - ${bold("Reset entries, winners, and prizes")}
 			→ Resets entries, winners, and prizes. ${Emojis.Warn} They will not be notified.
-			→ Unpublishes the giveaway and the winners.
+			→ Unannounces the giveaway and the winners.
 				 
 			Level 2 - ${bold("Reset entries and winners")}
 			→ Resets entries and winners. ${Emojis.Warn} They will not be notified.
-			→ Unpublishes the winners, but ${underscore("not")} the giveaway.
+			→ Unannounces the winners, but ${underscore("not")} the giveaway.
 				 
 			Level 1 - ${bold("Reset most options")}
 			→ Resets most of the options you can edit in the dashboard.
 			    (Excluding title, description, and winner quantity)
 			→ Does ${underscore("not")} reset winners, entries, or prizes.
-			→ Unpublishes the giveaway and the winners.
+			→ Unannounces the giveaway and the winners.
 		`,
 		embeds: []
 	});

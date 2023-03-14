@@ -7,8 +7,6 @@ import { stripIndents } from "common-tags";
 import { bold, ButtonStyle, type ButtonInteraction } from "discord.js";
 import toDashboard from "../dashboard.js";
 
-// TODO: delete published messages
-
 export default async function toDeleteGiveaway(
 	interaction: ButtonInteraction<"cached">,
 	id: number,
@@ -95,7 +93,7 @@ export default async function toDeleteGiveaway(
 		}
 	}
 
-	await giveaway.delete({ withPublishedMessages: true });
+	await giveaway.delete({ withAnnouncementMessages: true });
 
 	new Logger({ prefix: "GIVEAWAY", interaction }).log(
 		`Deleted giveaway #${giveaway.id}`
