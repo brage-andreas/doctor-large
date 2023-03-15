@@ -245,7 +245,7 @@ export default async function toConfigDashboard(
 					if (!confirmation) {
 						await buttonInteraction.followUp({
 							ephemeral: true,
-							content: `${Emojis.V} Cancelled resetting the config.`
+							content: `${Emojis.V} Canceled resetting the config.`
 						});
 
 						toConfigDashboard(buttonInteraction, configManager);

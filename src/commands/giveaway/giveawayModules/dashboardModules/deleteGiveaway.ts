@@ -53,7 +53,7 @@ export default async function toDeleteGiveaway(
 	if (!accept) {
 		interaction.followUp({
 			ephemeral: true,
-			content: `Alright! Cancelled deleting giveaway ${giveaway.asRelId}`
+			content: `Alright! Canceled deleting giveaway ${giveaway.asRelId}`
 		});
 
 		toDashboard(interaction, id);
@@ -84,7 +84,7 @@ export default async function toDeleteGiveaway(
 		if (!accept2) {
 			interaction.followUp({
 				ephemeral: true,
-				content: `Alright! Cancelled deleting giveaway ${giveaway.asRelId}`
+				content: `Alright! Canceled deleting giveaway ${giveaway.asRelId}`
 			});
 
 			toDashboard(interaction, id);

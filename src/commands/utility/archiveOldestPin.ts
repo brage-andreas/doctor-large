@@ -102,7 +102,7 @@ const chatInput = async (
 	if (!res) {
 		interaction.editReply({
 			components: [],
-			content: `${Emojis.Sparks} Alright! Cancelled archiving pins.`,
+			content: `${Emojis.Sparks} Alright! Canceled archiving pins.`,
 			embeds: []
 		});
 
@@ -157,7 +157,7 @@ const chatInput = async (
 		if (!component) {
 			await interaction.editReply({
 				components: [],
-				content: `${Emojis.Sparks} Alright! Cancelled archiving pins.`,
+				content: `${Emojis.Sparks} Alright! Canceled archiving pins.`,
 				embeds: []
 			});
 
@@ -167,7 +167,7 @@ const chatInput = async (
 		if (!component.isChannelSelectMenu()) {
 			await component.update({
 				components: [],
-				content: `${Emojis.Sparks} Alright! Cancelled archiving pins.`,
+				content: `${Emojis.Sparks} Alright! Canceled archiving pins.`,
 				embeds: []
 			});
 
@@ -273,7 +273,7 @@ const chatInput = async (
 		await interaction.editReply({
 			components: [],
 			content: stripIndent`
-				${Emojis.Error} Failed to unpin ${link}. Archive was cancelled.
+				${Emojis.Error} Failed to unpin ${link}. Archive was canceled.
 				
 				Causes of failure ${underscore("could")} be:
 				  a) message was unpinned since the command was used

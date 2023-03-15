@@ -113,7 +113,7 @@ export default async function toResetData(
 				if (!accept) {
 					await interaction.followUp({
 						ephemeral: true,
-						content: `Alright! Cancelled resetting giveaway ${giveaway.asRelId}`
+						content: `Alright! Canceled resetting giveaway ${giveaway.asRelId}`
 					});
 
 					toDashboard(interaction, id);
@@ -161,7 +161,7 @@ export default async function toResetData(
 				if (!accept) {
 					await interaction.followUp({
 						ephemeral: true,
-						content: `Alright! Cancelled resetting giveaway ${giveaway.asRelId}`
+						content: `Alright! Canceled resetting giveaway ${giveaway.asRelId}`
 					});
 
 					toDashboard(interaction, id);
@@ -208,7 +208,7 @@ export default async function toResetData(
 				if (!accept) {
 					await interaction.followUp({
 						ephemeral: true,
-						content: `Alright! Cancelled resetting giveaway ${giveaway.asRelId}`
+						content: `Alright! Canceled resetting giveaway ${giveaway.asRelId}`
 					});
 
 					toDashboard(interaction, id);
@@ -252,7 +252,7 @@ export default async function toResetData(
 				if (!accept) {
 					await interaction.followUp({
 						ephemeral: true,
-						content: `Alright! Cancelled resetting giveaway ${giveaway.asRelId}`
+						content: `Alright! Canceled resetting giveaway ${giveaway.asRelId}`
 					});
 
 					toDashboard(interaction, id);
