@@ -12,7 +12,12 @@ function getCommandData() {
 	const rawCommandData = [...new Set(commands.values())];
 
 	return rawCommandData.flatMap(({ data }) =>
-		[data.chatInput, data.contextMenu].filter(Boolean)
+		[
+			data.chatInput,
+			data.contextMenu,
+			data.messageContextMenu,
+			data.userContextMenu
+		].filter(Boolean)
 	) as Array<RESTPostAPIApplicationCommandsJSONBody>;
 }
 
