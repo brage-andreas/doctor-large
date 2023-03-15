@@ -1,6 +1,7 @@
 import type GiveawayModule from "#modules/Giveaway.js";
 import type { Giveaway, Prize, Winner } from "@prisma/client";
 import type {
+	ApplicationCommandType,
 	AutocompleteInteraction,
 	ChatInputCommandInteraction,
 	ClientEvents,
@@ -39,6 +40,12 @@ interface CommandExport {
 	data: {
 		chatInput?: RESTPostAPIChatInputApplicationCommandsJSONBody;
 		contextMenu?: RESTPostAPIContextMenuApplicationCommandsJSONBody;
+		messageContextMenu?: RESTPostAPIContextMenuApplicationCommandsJSONBody & {
+			type: ApplicationCommandType.Message;
+		};
+		userContextMenu?: RESTPostAPIContextMenuApplicationCommandsJSONBody & {
+			type: ApplicationCommandType.User;
+		};
 	};
 	handle: {
 		autocomplete?(interaction: CommandModuleInteractions): UnknownOrPromise;
