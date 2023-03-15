@@ -1,6 +1,7 @@
 import {
 	InteractionCollector,
 	InteractionType,
+	type ContextMenuCommandInteraction,
 	type Interaction,
 	type ModalBuilder,
 	type ModalSubmitInteraction,
@@ -10,7 +11,9 @@ import {
 export const modalId = () => `modal-${Date.now().toString().slice(-5)}`;
 
 export const ModalCollector = (
-	interaction: Interaction<"cached">,
+	interaction:
+		| ContextMenuCommandInteraction<"cached">
+		| Interaction<"cached">,
 	modal: ModalBuilder,
 	collectorOptions?: Omit<
 		ModalSubmitInteractionCollectorOptions<ModalSubmitInteraction>,
