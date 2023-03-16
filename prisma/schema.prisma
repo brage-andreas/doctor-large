@@ -118,18 +118,20 @@ model Report {
     createdAt       DateTime   @default(now())
     type            ReportType
 
-    anonymous          Boolean   @default(false)
-    authorUserId       String
-    authorUserTag      String
-    comment            String
-    processed          Boolean   @default(false)
-    processedAt        DateTime?
-    processedByUserId  String?
-    processedByUserTag String?
-    referencedBy       Case[]    @relation("reportReference")
-    targetMessageId    String?
-    targetUserId       String
-    targetUserTag      String
+    anonymous              Boolean   @default(false)
+    authorUserId           String
+    authorUserTag          String
+    comment                String
+    logChannelId           String?
+    logMessageId           String?
+    processedAt            DateTime?
+    processedByUserId      String?
+    processedByUserTag     String?
+    referencedBy           Case[]    @relation("reportReference")
+    targetMessageChannelId String?
+    targetMessageId        String?
+    targetUserId           String
+    targetUserTag          String
 }
 
 model Config {
