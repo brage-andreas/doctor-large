@@ -115,7 +115,9 @@ export const WIP_WARNING = oneLine`
  * Name: hide
  */
 export const HIDE_OPTION: APIApplicationCommandBasicOption = {
-	description: "Hide this command (True)",
+	description: "Hide this command. (True)",
 	name: "hide",
 	type: ApplicationCommandOptionType.Boolean
 };
+
+export const MAX_REPORT_COMMENT_LENGTH = 1024;

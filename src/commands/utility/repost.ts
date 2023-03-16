@@ -35,7 +35,7 @@ const data: CommandData = {
 		]
 	},
 	contextMenu: {
-		name: "Repost message",
+		name: "Repost",
 		dm_permission: false,
 		default_member_permissions:
 			PermissionFlagsBits.ManageMessages.toString(),
@@ -84,13 +84,13 @@ const chatInput = async (
 
 	const urlInput = interaction.options.getString("message_link", true);
 
-	const data = parseMessageURL(urlInput);
+	const parsedURL = parseMessageURL(urlInput);
 
-	if (!data) {
+	if (!parsedURL) {
 		await interaction.reply({
 			ephemeral: true,
 			content: stripIndents`
-				${Emojis.Error} Could not parse message URL. Double-check it and try again.
+				${Emojis.Error} Could not parse the message URL. Double-check it and try again.
 				\`${urlInput}\`
 			`
 		});
@@ -98,7 +98,7 @@ const chatInput = async (
 		return;
 	}
 
-	if (data.guildId !== interaction.guildId) {
+	if (parsedURL.guildId !== interaction.guildId) {
 		await interaction.reply({
 			ephemeral: true,
 			content: `${Emojis.Error} The message is not from this server.`
@@ -107,7 +107,7 @@ const chatInput = async (
 		return;
 	}
 
-	const channel = interaction.guild.channels.cache.get(data.channelId);
+	const channel = interaction.guild.channels.cache.get(parsedURL.channelId);
 
 	if (!channel?.isTextBased()) {
 		await interaction.reply({
@@ -133,7 +133,7 @@ const chatInput = async (
 		return;
 	}
 
-	const message = await messageFromURL(interaction.client, data);
+	const message = await messageFromURL(interaction.client, parsedURL);
 
 	if (!message) {
 		await interaction.reply({

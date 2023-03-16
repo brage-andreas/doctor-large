@@ -1,4 +1,4 @@
-import { Emojis, Giveaway, Prize } from "#constants";
+import { Emojis, Giveaway, MAX_REPORT_COMMENT_LENGTH, Prize } from "#constants";
 import { modalId } from "#helpers/ModalCollector.js";
 import { oneLine } from "common-tags";
 import {
@@ -146,6 +146,10 @@ const createRows = (
 	return rows.slice(0, 5);
 };
 
+// -------------------
+// - CREATE GIVEAWAY -
+// -------------------
+
 const modalGiveawayTitle = () =>
 	new TextInputBuilder({
 		customId: "title",
@@ -201,6 +205,10 @@ const createOptionsModal = {
 			]
 		})
 } as const;
+
+// -----------------
+// - EDIT GIVEAWAY -
+// -----------------
 
 const modalGiveawayNewTitle = (oldTitle: string) =>
 	new TextInputBuilder({
@@ -291,6 +299,10 @@ const editOptionsModal = {
 		})
 } as const;
 
+// ----------------
+// - CREATE PRIZE -
+// ----------------
+
 const modalCreatePrizeName = () =>
 	new TextInputBuilder()
 		.setPlaceholder("Example prize")
@@ -341,6 +353,10 @@ const createPrizeModal = {
 			.setCustomId(modalId())
 			.setTitle("Create prize")
 } as const;
+
+// --------------
+// - EDIT PRIZE -
+// --------------
 
 const modalEditPrizeName = (oldName: string) =>
 	new TextInputBuilder()
@@ -403,6 +419,37 @@ const editPrizeModal = {
 			.setCustomId(modalId())
 			.setTitle("Edit prize")
 } as const;
+
+// -----------------
+// - CREATE REPORT -
+// -----------------
+
+const modalCreateReportComment = () =>
+	new TextInputBuilder()
+		.setCustomId("comment")
+		.setLabel("Report comment for the moderators")
+		.setMaxLength(MAX_REPORT_COMMENT_LENGTH)
+		.setMinLength(1)
+		.setPlaceholder("Help them understand the context of this report.")
+		.setRequired(true)
+		.setStyle(TextInputStyle.Short);
+
+/**
+ * Children: comment
+ */
+const createReportModal = {
+	component: () =>
+		new ModalBuilder()
+			.setComponents(
+				new ActionRowBuilder<TextInputBuilder>().setComponents(
+					modalCreateReportComment()
+				)
+			)
+			.setCustomId(modalId())
+			.setTitle("Create report")
+} as const;
+
+// ---
 
 const announceGiveawayButton = {
 	customId: "announcementGiveaway",
@@ -1070,7 +1117,12 @@ const modals = {
 	/**
 	 * Children: newName, newAdditionalInfo, newQuantity
 	 */
-	editPrize: editPrizeModal
+	editPrize: editPrizeModal,
+
+	/**
+	 * Children: comment
+	 */
+	createReport: createReportModal
 } as const;
 
 const buttons = {
