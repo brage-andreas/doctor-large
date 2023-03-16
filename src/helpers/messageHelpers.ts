@@ -99,7 +99,7 @@ const isValidAttachment = (attachment: Attachment) =>
 		attachment.contentType ?? ""
 	) &&
 	[".jpg", ".png", ".gif"].some((e) =>
-		(attachment.name ?? "").toLowerCase().endsWith(e)
+		attachment.name.toLowerCase().endsWith(e)
 	);
 
 export const messageToEmbed = (message: Message<true>) => {
