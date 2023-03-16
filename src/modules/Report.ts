@@ -17,21 +17,22 @@ export class UserReportModule
 	public guild: Guild;
 	public manager: ReportManager;
 
-	public id: number;
-	public guildId: string;
-	public guildRelativeId: number;
-	public createdAt: Date;
-	public type: ReportType;
 	public anonymous: boolean;
 	public authorUserId: string;
 	public authorUserTag: string;
 	public comment: string;
-	public targetUserId: string;
-	public targetUserTag: string;
-	public processed: boolean;
+	public createdAt: Date;
+	public guildId: string;
+	public guildRelativeId: number;
+	public id: number;
+	public logChannelId: string | null;
+	public logMessageId: string | null;
 	public processedAt: Date | null;
 	public processedByUserId: string | null;
 	public processedByUserTag: string | null;
+	public targetUserId: string;
+	public targetUserTag: string;
+	public type: ReportType;
 
 	public constructor(manager: ReportManager, data: Report) {
 		this.client = manager.guild.client;
@@ -45,21 +46,22 @@ export class UserReportModule
 			);
 		}
 
-		this.id = data.id;
-		this.guildId = data.guildId;
-		this.guildRelativeId = data.guildRelativeId;
-		this.createdAt = data.createdAt;
-		this.type = data.type;
 		this.anonymous = data.anonymous;
 		this.authorUserId = data.authorUserId;
 		this.authorUserTag = data.authorUserTag;
 		this.comment = data.comment;
-		this.processed = data.processed;
+		this.createdAt = data.createdAt;
+		this.guildId = data.guildId;
+		this.guildRelativeId = data.guildRelativeId;
+		this.id = data.id;
+		this.logChannelId = data.logChannelId;
+		this.logMessageId = data.logMessageId;
 		this.processedAt = data.processedAt;
 		this.processedByUserId = data.processedByUserId;
 		this.processedByUserTag = data.processedByUserTag;
 		this.targetUserId = data.targetUserId;
 		this.targetUserTag = data.targetUserTag;
+		this.type = data.type;
 	}
 
 	public isMessageReport(): this is MessageReportModule {

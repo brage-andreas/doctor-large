@@ -4,6 +4,8 @@ import ConfigManager from "#database/config.js";
 import { messageFromURL, parseMessageURL } from "#helpers/messageHelpers.js";
 import { ModalCollector } from "#helpers/ModalCollector.js";
 import { timestamp } from "#helpers/timestamps.js";
+import yesNo from "#helpers/yesNo.js";
+import type ConfigModule from "#modules/Config.js";
 import { type CommandData, type CommandExport } from "#typings";
 import { stripIndents } from "common-tags";
 import {
@@ -88,12 +90,23 @@ const handleMessage = async (
 	interaction:
 		| ChatInputCommandInteraction<"cached">
 		| MessageContextMenuCommandInteraction<"cached">,
-	configManager: ConfigManager,
+	config: ConfigModule,
 	message: Message<true>,
 	comment: string,
 	anonymous?: boolean
 ) => {
-	await interaction.deferReply({});
+	const res = await yesNo({
+		medium: interaction,
+		data: {
+			content: "lol"
+		}
+	});
+
+	if (res) {
+		//
+	}
+
+	config;
 	message;
 	comment;
 	anonymous;
@@ -103,12 +116,13 @@ const handleMember = async (
 	interaction:
 		| ChatInputCommandInteraction<"cached">
 		| UserContextMenuCommandInteraction<"cached">,
-	configManager: ConfigManager,
+	config: ConfigModule,
 	member: GuildMember,
 	comment: string,
 	anonymous?: boolean
 ) => {
 	await interaction.editReply({});
+	config;
 	member;
 	comment;
 	anonymous;
@@ -129,6 +143,16 @@ const chatInput = async (
 	if (!validation) {
 		interaction.editReply({
 			content: `${Emojis.NoEntry} Reporting is disabled in this server, as it has not been set up.`
+		});
+
+		return;
+	}
+
+	const config = await configManager.get();
+
+	if (!config.reportEnabled) {
+		interaction.editReply({
+			content: `${Emojis.NoEntry} Reporting is disabled in this server.`
 		});
 
 		return;
@@ -185,13 +209,38 @@ const chatInput = async (
 			return;
 		}
 
-		handleMessage(interaction, message, comment, anonymous);
+		handleMessage(interaction, config, message, comment, anonymous);
 	}
 };
 
 const contextMenu = async (
 	interaction: ContextMenuCommandInteraction<"cached">
 ) => {
+	const configManager = new ConfigManager(interaction.guild);
+
+	const validation = await configManager
+		.validate()
+		.then(() => true)
+		.catch(() => false);
+
+	if (!validation) {
+		interaction.editReply({
+			content: `${Emojis.NoEntry} Reporting is disabled in this server, as it has not been set up.`
+		});
+
+		return;
+	}
+
+	const config = await configManager.get();
+
+	if (!config.reportEnabled) {
+		interaction.editReply({
+			content: `${Emojis.NoEntry} Reporting is disabled in this server.`
+		});
+
+		return;
+	}
+
 	const modal = components.modals.createReport.component();
 
 	await interaction.showModal(modal);
@@ -229,11 +278,21 @@ const contextMenu = async (
 		const comment = modalInteraction.fields.getTextInputValue("comment");
 
 		if (interaction.isMessageContextMenuCommand()) {
-			handleMessage(interaction, interaction.targetMessage, comment);
+			handleMessage(
+				interaction,
+				config,
+				interaction.targetMessage,
+				comment
+			);
 		}
 
 		if (interaction.isUserContextMenuCommand()) {
-			handleMember(interaction, interaction.targetMember, comment);
+			handleMember(
+				interaction,
+				config,
+				interaction.targetMember,
+				comment
+			);
 		}
 	});
 
