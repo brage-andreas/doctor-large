@@ -3,10 +3,10 @@ import { oneLine } from "common-tags";
 import {
 	ActivityType,
 	ApplicationCommandOptionType,
-	formatEmoji,
 	GatewayIntentBits,
-	type ActivitiesOptions,
-	type APIApplicationCommandBasicOption
+	formatEmoji,
+	type APIApplicationCommandBasicOption,
+	type ActivitiesOptions
 } from "discord.js";
 
 export const ACTIVITIES: Array<ActivitiesOptions> = [
@@ -63,6 +63,7 @@ export const Emojis = {
 	Ended: "🔸",
 	EnterGiveaway: "🎁",
 	Error: formatEmoji("1061984813650804799"),
+	FaceInClouds: "😶‍🌫️",
 	Grin: "😁",
 	Halo: "😇",
 	HeartBreak: "💔",
