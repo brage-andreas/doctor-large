@@ -1,6 +1,16 @@
+import { ColorsHex } from "#constants";
 import type ReportManager from "#database/report.js";
+import getMemberInfo from "#helpers/memberInfo.js";
+import { longstamp } from "#helpers/timestamps.js";
 import { type Report, type ReportType } from "@prisma/client";
-import { type Client, type Guild } from "discord.js";
+import { stripIndents } from "common-tags";
+import {
+	SnowflakeUtil,
+	userMention,
+	type APIEmbed,
+	type Client,
+	type Guild
+} from "discord.js";
 
 export const isMessageReport = (
 	data: Report
@@ -70,6 +80,44 @@ export class UserReportModule
 
 	public isUserReport(): this is UserReportModule {
 		return !this.isMessageReport();
+	}
+
+	public toEmbedSync(): APIEmbed {
+		const id = this.targetUserId;
+		const tag = this.targetUserTag;
+
+		return {
+			author: { name: `${this.authorUserTag} (${this.authorUserId})` },
+			color: this.processedAt ? ColorsHex.Green : ColorsHex.Red,
+			description: this.comment,
+			fields: [
+				{
+					inline: false,
+					name: "Target user info",
+					value: stripIndents`
+						Name: ${userMention(id)} - \`${tag}\` (${id})
+						Created: ${longstamp(SnowflakeUtil.timestampFrom(id))}
+					`
+				}
+			],
+			footer: { text: `Report #${this.guildRelativeId}` }
+		};
+	}
+
+	public async toEmbed(): Promise<APIEmbed> {
+		const target = await this.client.users
+			.fetch(this.targetUserId)
+			.catch(() => null);
+
+		const fields = target ? getMemberInfo(target, "Target") : [];
+
+		return {
+			author: { name: `${this.authorUserTag} (${this.authorUserId})` },
+			color: this.processedAt ? ColorsHex.Green : ColorsHex.Red,
+			description: this.comment,
+			fields,
+			footer: { text: `Report #${this.guildRelativeId}` }
+		};
 	}
 }
 

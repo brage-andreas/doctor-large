@@ -1,10 +1,11 @@
+import components from "#components";
 import {
 	isMessageReport,
 	MessageReportModule,
 	UserReportModule
 } from "#modules/Report.js";
 import { type Prisma, type Report } from "@prisma/client";
-import { type Guild } from "discord.js";
+import { type Guild, type MessageCreateOptions } from "discord.js";
 import prisma from "./prisma.js";
 
 export default class ReportManager {
@@ -56,5 +57,19 @@ export default class ReportManager {
 		const data_ = await this.prisma.create({ data });
 
 		return this.toModule(data_);
+	}
+
+	public async preparePost(
+		module: MessageReportModule | UserReportModule
+	): Promise<MessageCreateOptions> {
+		const rows = components.createRows(
+			components.buttons.attachToLatestCase,
+			components.buttons.markComplete
+		);
+
+		return {
+			components: rows,
+			embeds: [await module.toEmbed()]
+		};
 	}
 }
