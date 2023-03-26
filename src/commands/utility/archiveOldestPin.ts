@@ -130,7 +130,7 @@ const chatInput = async (
 
 	if (!uncertainChannel) {
 		const rows = components.createRows(
-			components.selectMenus.channelSelect.component({
+			components.selectMenus.channel.component({
 				channelTypes: [
 					ChannelType.GuildText,
 					ChannelType.GuildAnnouncement,

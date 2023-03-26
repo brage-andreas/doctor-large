@@ -27,10 +27,11 @@ export default async function toSetRequiredRoles(
 			}
 		`;
 
-	const { back, clear } = components.buttons;
-	const { roleSelect } = components.selectMenus;
-
-	const rows = components.createRows(roleSelect, back, clear);
+	const rows = components.createRows(
+		components.selectMenus.role,
+		components.buttons.back,
+		components.buttons.clear
+	);
 
 	const updateMsg = await interaction.editReply({
 		content: chooseRequiredRoleStr,
@@ -44,11 +45,26 @@ export default async function toSetRequiredRoles(
 	await component.deferUpdate();
 
 	switch (component.customId) {
-		case back.customId: {
+		case components.buttons.back.customId: {
 			break;
 		}
 
-		case roleSelect.customId: {
+		case components.buttons.clear.customId: {
+			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				`Cleared required roles of giveaway #${giveaway.id}`
+			);
+
+			await giveaway.edit({
+				requiredRolesIds: [],
+				nowOutdated: {
+					announcementMessage: true
+				}
+			});
+
+			break;
+		}
+
+		case components.selectMenus.role.customId: {
 			if (!component.isRoleSelectMenu()) {
 				return;
 			}
@@ -59,21 +75,6 @@ export default async function toSetRequiredRoles(
 
 			await giveaway.edit({
 				requiredRolesIds: component.values,
-				nowOutdated: {
-					announcementMessage: true
-				}
-			});
-
-			break;
-		}
-
-		case clear.customId: {
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
-				`Cleared required roles of giveaway #${giveaway.id}`
-			);
-
-			await giveaway.edit({
-				requiredRolesIds: [],
 				nowOutdated: {
 					announcementMessage: true
 				}

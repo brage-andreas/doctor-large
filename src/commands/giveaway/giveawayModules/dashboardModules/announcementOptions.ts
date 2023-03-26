@@ -44,7 +44,7 @@ export default async function toAnnouncementOptions(
 	`;
 
 	const rows = components.createRows(
-		components.selectMenus.channelSelect,
+		components.selectMenus.channel,
 		components.buttons.back,
 		components.buttons.lastChannel,
 		components.buttons.editCurrentMessage,
@@ -82,7 +82,7 @@ export default async function toAnnouncementOptions(
 
 		if (
 			componentInteraction.customId ===
-				components.selectMenus.channelSelect.customId ||
+				components.selectMenus.channel.customId ||
 			componentInteraction.customId ===
 				components.buttons.lastChannel.customId
 		) {

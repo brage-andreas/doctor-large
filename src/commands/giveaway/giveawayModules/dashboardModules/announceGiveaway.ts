@@ -61,7 +61,7 @@ export default async function toAnnounceGiveaway(
 	`;
 
 	const rows = components.createRows(
-		components.selectMenus.channelSelect,
+		components.selectMenus.channel,
 		components.buttons.back,
 		giveaway.channelId ? components.buttons.lastChannel : null
 	);
@@ -93,7 +93,7 @@ export default async function toAnnounceGiveaway(
 
 		if (
 			componentInteraction.customId ===
-				components.selectMenus.channelSelect.customId ||
+				components.selectMenus.channel.customId ||
 			componentInteraction.customId ===
 				components.buttons.lastChannel.customId
 		) {

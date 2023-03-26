@@ -41,7 +41,7 @@ const chatInput = async (interaction: CommandModuleInteractions) => {
 		const autorole = await autoroleManager.get();
 
 		const rows = components.createRows(
-			components.selectMenus.roleSelect,
+			components.selectMenus.role,
 			components.buttons.clear.component("roles"),
 			autorole.activated
 				? components.buttons.disable
@@ -67,7 +67,7 @@ const chatInput = async (interaction: CommandModuleInteractions) => {
 			let active = autorole.activated;
 			let rolesIdsArray = [...autorole.roleIds];
 
-			if (i.customId === components.selectMenus.roleSelect.customId) {
+			if (i.customId === components.selectMenus.role.customId) {
 				if (!i.isRoleSelectMenu()) {
 					return;
 				}

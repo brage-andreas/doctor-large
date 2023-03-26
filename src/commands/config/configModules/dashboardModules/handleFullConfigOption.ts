@@ -62,7 +62,7 @@ export default async function handleFullConfigOption(
 	);
 
 	const rows = components.createRows(
-		components.selectMenus.channelSelect.component({
+		components.selectMenus.channel.component({
 			channelTypes: options.channelTypes
 		}),
 		enabled ? components.buttons.disable : components.buttons.enable,
@@ -106,7 +106,7 @@ export default async function handleFullConfigOption(
 					break;
 				}
 
-				case components.selectMenus.channelSelect.customId: {
+				case components.selectMenus.channel.customId: {
 					if (!interaction.isChannelSelectMenu()) {
 						throw new Error(
 							"Channel select menu component is not of type ChannelSelectMenu"

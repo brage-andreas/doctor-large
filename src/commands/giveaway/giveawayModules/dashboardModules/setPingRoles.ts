@@ -27,14 +27,11 @@ export default async function toSetPingRoles(
 			}
 		`;
 
-	const { back, clear, setPingRolesToAtEveryone } = components.buttons;
-	const { roleSelect } = components.selectMenus;
-
 	const rows = components.createRows(
-		roleSelect,
-		back,
-		clear,
-		setPingRolesToAtEveryone
+		components.selectMenus.role,
+		components.buttons.back,
+		components.buttons.clear,
+		components.buttons.setPingRolesToAtEveryone
 	);
 
 	const updateMsg = await interaction.editReply({
@@ -47,11 +44,11 @@ export default async function toSetPingRoles(
 	});
 
 	switch (component.customId) {
-		case back.customId: {
+		case components.buttons.back.customId: {
 			break;
 		}
 
-		case setPingRolesToAtEveryone.customId: {
+		case components.buttons.setPingRolesToAtEveryone.customId: {
 			await component.deferUpdate();
 
 			new Logger({ prefix: "GIVEAWAY", interaction }).log(
@@ -68,7 +65,7 @@ export default async function toSetPingRoles(
 			break;
 		}
 
-		case clear.customId: {
+		case components.buttons.clear.customId: {
 			await component.deferUpdate();
 
 			new Logger({ prefix: "GIVEAWAY", interaction }).log(
@@ -85,7 +82,7 @@ export default async function toSetPingRoles(
 			break;
 		}
 
-		case roleSelect.customId: {
+		case components.selectMenus.role.customId: {
 			if (!component.isRoleSelectMenu()) {
 				return;
 			}

@@ -4,7 +4,7 @@ import {
 	RoleSelectMenuBuilder
 } from "discord.js";
 
-export const roleSelect = {
+export const role = {
 	customId: "roleSelect",
 	component: (
 		{ min, max }: { min: number; max: number } = { min: 1, max: 10 }
@@ -16,7 +16,7 @@ export const roleSelect = {
 		})
 } as const;
 
-export const channelSelect = {
+export const channel = {
 	customId: "channelSelect",
 	component: ({
 		channelTypes = [ChannelType.GuildText, ChannelType.GuildAnnouncement],

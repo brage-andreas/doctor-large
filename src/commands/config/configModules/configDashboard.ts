@@ -33,30 +33,19 @@ export default async function toConfigDashboard(
 
 	const embed = config.toEmbed();
 
-	const {
-		caseLogOptions,
-		memberLogOptions,
-		messageLogOptions,
-		pinArchiveOptions,
-		protectedChannelsOptions,
-		reportChannelOptions,
-		reset,
-		restrictRolesOptions
-	} = components.buttons;
-
 	const rows = [
 		...components.createRows(
-			caseLogOptions,
-			memberLogOptions,
-			reportChannelOptions,
-			messageLogOptions
+			components.buttons.caseLogOptions,
+			components.buttons.memberLogOptions,
+			components.buttons.reportChannelOptions,
+			components.buttons.messageLogOptions
 		),
 		...components.createRows(
-			pinArchiveOptions,
-			protectedChannelsOptions,
-			restrictRolesOptions
+			components.buttons.pinArchiveOptions,
+			components.buttons.protectedChannelsOptions,
+			components.buttons.restrictRolesOptions
 		),
-		...components.createRows(reset.component("config"))
+		...components.createRows(components.buttons.reset.component("config"))
 	];
 
 	const msg = await interaction.editReply({
@@ -85,7 +74,7 @@ export default async function toConfigDashboard(
 
 		const retry = async () => {
 			switch (buttonInteraction.customId) {
-				case caseLogOptions.customId: {
+				case components.buttons.caseLogOptions.customId: {
 					handleFullConfigOption(buttonInteraction, config, {
 						type: "caseLog",
 						channelTypes
@@ -107,7 +96,7 @@ export default async function toConfigDashboard(
 					break;
 				}
 
-				case memberLogOptions.customId: {
+				case components.buttons.memberLogOptions.customId: {
 					handleFullConfigOption(buttonInteraction, config, {
 						type: "memberLog",
 						channelTypes
@@ -129,7 +118,7 @@ export default async function toConfigDashboard(
 					break;
 				}
 
-				case messageLogOptions.customId: {
+				case components.buttons.messageLogOptions.customId: {
 					handleFullConfigOption(buttonInteraction, config, {
 						type: "messageLog",
 						channelTypes
@@ -151,7 +140,7 @@ export default async function toConfigDashboard(
 					break;
 				}
 
-				case reportChannelOptions.customId: {
+				case components.buttons.reportChannelOptions.customId: {
 					handleFullConfigOption(buttonInteraction, config, {
 						type: "report",
 						channelTypes: [...channelTypes, ChannelType.GuildForum]
@@ -173,7 +162,7 @@ export default async function toConfigDashboard(
 					break;
 				}
 
-				case pinArchiveOptions.customId: {
+				case components.buttons.pinArchiveOptions.customId: {
 					handleConfigOption
 						.channels(buttonInteraction, config, {
 							channelTypes,
@@ -199,7 +188,7 @@ export default async function toConfigDashboard(
 					break;
 				}
 
-				case protectedChannelsOptions.customId: {
+				case components.buttons.protectedChannelsOptions.customId: {
 					handleConfigOption
 						.channels(buttonInteraction, config, {
 							id: "protectedChannelsIds",
@@ -231,7 +220,7 @@ export default async function toConfigDashboard(
 					break;
 				}
 
-				case reset.customId: {
+				case components.buttons.reset.customId: {
 					const confirmation = await yesNo({
 						medium: buttonInteraction,
 						data: {
@@ -285,7 +274,7 @@ export default async function toConfigDashboard(
 					return;
 				}
 
-				case restrictRolesOptions.customId: {
+				case components.buttons.restrictRolesOptions.customId: {
 					handleConfigOption
 						.roles(buttonInteraction, config, {
 							type: "restrictRoles"
