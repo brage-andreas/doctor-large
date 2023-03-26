@@ -33,8 +33,9 @@ export const EVENT_DIR = new URL("./events", import.meta.url);
 export const RegExp = {
 	AcceptPrizeCustomId: /^accept-prize-(?<id>\d+)$/,
 	DashboardPrizeCustomId: /^dashboard-prize-(?<id>\d+)/,
+	Emoji: /<(?<animated>a?):(?<name>[\w\d]+):(?<id>\d{17,19})>/,
 	EnterGiveawayCustomId: /^enter-giveaway-(?<id>\d+)$/,
-	Id: /^\d{17,19}$/,
+	Id: /\d{17,19}/,
 	MessageURL:
 		/(?:https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/(?<guildId>\d{17,19})\/(?<channelId>\d{17,19})\/(?<messageId>\d{17,19}))/
 } as const;
