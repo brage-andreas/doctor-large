@@ -1091,6 +1091,24 @@ const acceptPrizeButton = (id: number) => ({
 			.setStyle(ButtonStyle.Success)
 });
 
+const attachToLatestCaseButton = {
+	customId: "attachToLatestCase",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("attachToLatestCase")
+			.setLabel("Attach to latest case")
+			.setStyle(ButtonStyle.Success)
+} as const;
+
+const markCompleteButton = {
+	customId: "markComplete",
+	component: () =>
+		new ButtonBuilder()
+			.setCustomId("markComplete")
+			.setLabel("Mark complete")
+			.setStyle(ButtonStyle.Secondary)
+} as const;
+
 // -------------
 
 const selects = {
@@ -1134,6 +1152,7 @@ const buttons = {
 	reportChannelOptions: reportChannelOptionsButton,
 	restrictRolesOptions: restrictRolesOptionsButton,
 	announcementOptions: announcementOptionsButton,
+	attachToLatestCase: attachToLatestCaseButton,
 	editCurrentMessage: editCurrentMessageButton,
 	reactivateGiveaway: reactivateGiveawayButton,
 	messageLogOptions: messageLogOptionsButton,
@@ -1161,6 +1180,7 @@ const buttons = {
 	endLevelNone: endLevelNoneButton,
 	endLevelRoll: endLevelRollButton,
 	managePrizes: managePrizesButton,
+	markComplete: markCompleteButton,
 	setPingRoles: setPingRolesButton,
 	acceptPrize: acceptPrizeButton,
 	endGiveaway: endGiveawayButton,
