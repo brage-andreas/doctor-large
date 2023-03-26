@@ -14,6 +14,10 @@ export default function getMemberInfo(
 export default function getMemberInfo(
 	member: GuildMember | User | null,
 	prefix?: string
+): [EmbedField, EmbedField] | [EmbedField];
+export default function getMemberInfo(
+	member: GuildMember | User | null,
+	prefix?: string
 ): [EmbedField, EmbedField] | [EmbedField] {
 	if (!member) {
 		return [
@@ -55,8 +59,12 @@ export default function getMemberInfo(
 
 	const filteredRoleMentions = [...member.roles.cache.values()].reduce(
 		(roleMentionsArray, role) => {
+			if (role.id === role.guild.id) {
+				return roleMentionsArray;
+			}
+
 			if (
-				numAtStart(role.name) &&
+				!numAtStart(role.name) ||
 				highestLevelRole <= numAtStart(role.name)
 			) {
 				roleMentionsArray.push(role.toString());
@@ -75,7 +83,11 @@ export default function getMemberInfo(
 			value: stripIndents`
 				Nickname: ${member.nickname ? `${member.nickname}` : "None"}
 				Joined: ${member.joinedAt ? longstamp(member.joinedAt) : "Unknown"}
-				Roles: ${listify(filteredRoleMentions, { length: 7 })}
+				Roles: ${
+					filteredRoleMentions.length
+						? listify(filteredRoleMentions, { length: 7 })
+						: "None"
+				}
 			`
 		}
 	];
