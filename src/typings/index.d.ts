@@ -1,21 +1,21 @@
 import type GiveawayModule from "#modules/Giveaway.js";
-import type { Giveaway, Prize, Winner } from "@prisma/client";
-import type {
-	APIActionRowComponent,
-	APIButtonComponent,
-	APIChannelSelectComponent,
-	APIMentionableSelectComponent,
-	APIRoleSelectComponent,
-	APISelectMenuComponent,
-	APIUserSelectComponent,
-	ApplicationCommandType,
-	AutocompleteInteraction,
-	ButtonStyle,
-	ChatInputCommandInteraction,
-	ClientEvents,
-	ContextMenuCommandInteraction,
-	RESTPostAPIChatInputApplicationCommandsJSONBody,
-	RESTPostAPIContextMenuApplicationCommandsJSONBody
+import { type Giveaway, type Prize, type Winner } from "@prisma/client";
+import {
+	type APIActionRowComponent,
+	type APIButtonComponent,
+	type APIChannelSelectComponent,
+	type APIMentionableSelectComponent,
+	type APIRoleSelectComponent,
+	type APISelectMenuComponent,
+	type APIUserSelectComponent,
+	type ApplicationCommandType,
+	type AutocompleteInteraction,
+	type ButtonStyle,
+	type ChatInputCommandInteraction,
+	type ClientEvents,
+	type ContextMenuCommandInteraction,
+	type RESTPostAPIChatInputApplicationCommandsJSONBody,
+	type RESTPostAPIContextMenuApplicationCommandsJSONBody
 } from "discord.js";
 
 type Prop<T extends object, P extends keyof T> = T[P];
