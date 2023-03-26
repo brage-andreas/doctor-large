@@ -675,7 +675,7 @@ export const attachToLatestCase = {
 	component: (): APIButtonComponentWithCustomId => ({
 		custom_id: "attachToLatestCase",
 		label: "Attach to latest case",
-		style: ButtonStyle.Success,
+		style: ButtonStyle.Primary,
 		type: ComponentType.Button
 	})
 } as const;
