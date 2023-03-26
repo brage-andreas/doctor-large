@@ -4,7 +4,7 @@ import {
 	MessageReportModule,
 	UserReportModule
 } from "#modules/Report.js";
-import { type Prisma, type Report } from "@prisma/client";
+import { ReportType, type Prisma, type Report } from "@prisma/client";
 import { type Guild, type MessageCreateOptions } from "discord.js";
 import prisma from "./prisma.js";
 
@@ -75,10 +75,22 @@ export default class ReportManager {
 		return (data?.guildRelativeId ?? 0) + 1;
 	}
 
-	public async create(data: Prisma.ReportCreateInput) {
-		const data_ = await this.prisma.create({ data });
+	public async createMessageReport(
+		data: Omit<Prisma.ReportCreateInput, "type"> & {
+			targetMessageId: string;
+			targetMessageChannelId: string;
+		}
+	) {
+		return await this.create({ ...data, type: ReportType.Message });
+	}
 
-		return this.toModule(data_);
+	public async createUserReport(
+		data: Omit<
+			Prisma.ReportCreateInput,
+			"targetMessageChannelId" | "targetMessageId" | "type"
+		>
+	) {
+		return await this.create({ ...data, type: ReportType.User });
 	}
 
 	public async preparePost(
@@ -93,5 +105,11 @@ export default class ReportManager {
 			components: rows,
 			embeds: [await module.toEmbed()]
 		};
+	}
+
+	private async create(data: Prisma.ReportCreateInput) {
+		const data_ = await this.prisma.create({ data });
+
+		return this.toModule(data_);
 	}
 }

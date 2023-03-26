@@ -11,18 +11,16 @@ import { ModalCollector } from "#helpers/ModalCollector.js";
 import yesNo from "#helpers/yesNo.js";
 import type ConfigModule from "#modules/Config.js";
 import { type CommandData, type CommandExport } from "#typings";
-import { ReportType } from "@prisma/client";
 import { stripIndents } from "common-tags";
 import {
 	ApplicationCommandOptionType,
 	ApplicationCommandType,
-	quote,
+	inlineCode,
 	type ChatInputCommandInteraction,
 	type ContextMenuCommandInteraction,
 	type GuildMember,
 	type Message,
-	type MessageContextMenuCommandInteraction,
-	type UserContextMenuCommandInteraction
+	type ModalSubmitInteraction
 } from "discord.js";
 
 const data: CommandData = {
@@ -95,7 +93,7 @@ const data: CommandData = {
 const handleMessage = async (
 	interaction:
 		| ChatInputCommandInteraction<"cached">
-		| MessageContextMenuCommandInteraction<"cached">,
+		| ModalSubmitInteraction<"cached">,
 	config: ConfigModule,
 	message: Message<true>,
 	comment: string,
@@ -103,28 +101,34 @@ const handleMessage = async (
 ) => {
 	const messageEmbed = messageToEmbed(message);
 
-	const anonymousComment = anonymous
-		? "\n\nYou opted to stay anonymous."
-		: "";
+	const anonymousComment = anonymous ? "→ You opted to stay anonymous\n" : "";
 
 	const res = await yesNo({
 		medium: interaction,
 		data: {
 			content: stripIndents`
-				Are you sure you want to report this message to the moderators?${anonymousComment}
-
-				You commented the following:
-				${quote(comment)}
+				${Emojis.FaceInClouds} Are you sure you want to report this message?
+				
+				${anonymousComment}→ Comment: ${inlineCode(comment.replaceAll("`", "\\`"))}
+				
+				The message:
 			`,
 			embeds: [messageEmbed]
 		}
 	});
 
+	const goToMessageRow = components.createRows(
+		components.buttons.url({
+			label: "Go to message",
+			url: message.url
+		})
+	);
+
 	if (!res) {
 		interaction.editReply({
-			components: [],
+			components: goToMessageRow,
 			content: `Alright! Canceled report on message by ${message.author}.`,
-			embeds: [messageEmbed]
+			embeds: []
 		});
 
 		return;
@@ -133,37 +137,88 @@ const handleMessage = async (
 	const reportManager = new ReportManager(interaction.guild);
 	const guildRelativeId = await reportManager.getNextGuildRelativeId();
 
-	const report = await reportManager.create({
+	const report = await reportManager.createMessageReport({
+		anonymous,
 		authorUserId: interaction.user.id,
 		authorUserTag: interaction.user.tag,
 		comment,
 		guildId: message.guildId,
 		guildRelativeId,
-		targetUserId: message.author.id,
-		targetUserTag: message.author.tag,
-		type: ReportType.Message,
-		anonymous,
 		targetMessageChannelId: message.channelId,
-		targetMessageId: message.id
+		targetMessageId: message.id,
+		targetUserId: message.author.id,
+		targetUserTag: message.author.tag
 	});
 
 	await config.postReport(report);
+
+	interaction.editReply({
+		components: goToMessageRow,
+		content: stripIndents`
+			${Emojis.Check} Done! Thank you for keeping the server safe ${Emojis.Sparks}
+			
+			You reported a message from ${message.author}.
+		`
+	});
 };
 
 const handleMember = async (
 	interaction:
 		| ChatInputCommandInteraction<"cached">
-		| UserContextMenuCommandInteraction<"cached">,
+		| ModalSubmitInteraction<"cached">,
 	config: ConfigModule,
 	member: GuildMember,
 	comment: string,
 	anonymous?: boolean
 ) => {
-	await interaction.editReply({});
-	config;
-	member;
-	comment;
-	anonymous;
+	const memberString = `${member} - \`${member.user.tag}\` (${member.id})`;
+
+	const anonymousComment = anonymous ? "→ You opted to stay anonymous\n" : "";
+
+	const res = await yesNo({
+		medium: interaction,
+		data: {
+			content: stripIndents`
+				${Emojis.FaceInClouds} Are you sure you want to report ${memberString}?
+				
+				${anonymousComment}→ Comment: ${inlineCode(comment.replaceAll("`", "\\`"))}
+			`
+		}
+	});
+
+	if (!res) {
+		interaction.editReply({
+			components: [],
+			content: `Alright! Canceled report on ${memberString}.`
+		});
+
+		return;
+	}
+
+	const reportManager = new ReportManager(interaction.guild);
+	const guildRelativeId = await reportManager.getNextGuildRelativeId();
+
+	const report = await reportManager.createUserReport({
+		anonymous,
+		authorUserId: interaction.user.id,
+		authorUserTag: interaction.user.tag,
+		comment,
+		guildId: member.guild.id,
+		guildRelativeId,
+		targetUserId: member.id,
+		targetUserTag: member.user.tag
+	});
+
+	await config.postReport(report);
+
+	interaction.editReply({
+		components: [],
+		content: stripIndents`
+			${Emojis.Check} Done! Thank you for keeping the server safe ${Emojis.Sparks}
+			
+			You reported ${memberString}.
+		`
+	});
 };
 
 const chatInput = async (
@@ -290,13 +345,13 @@ const contextMenu = async (
 	});
 
 	modalCollector.on("collect", async (modalInteraction) => {
-		await modalInteraction.deferUpdate();
+		await modalInteraction.deferReply({ ephemeral: true });
 
 		const comment = modalInteraction.fields.getTextInputValue("comment");
 
 		if (interaction.isMessageContextMenuCommand()) {
 			handleMessage(
-				interaction,
+				modalInteraction,
 				config,
 				interaction.targetMessage,
 				comment
@@ -305,7 +360,7 @@ const contextMenu = async (
 
 		if (interaction.isUserContextMenuCommand()) {
 			handleMember(
-				interaction,
+				modalInteraction,
 				config,
 				interaction.targetMember,
 				comment

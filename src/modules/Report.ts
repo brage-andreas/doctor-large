@@ -3,9 +3,14 @@ import type ReportManager from "#database/report.js";
 import getMemberInfo from "#helpers/memberInfo.js";
 import { longstamp } from "#helpers/timestamps.js";
 import { type Report, type ReportType } from "@prisma/client";
-import { stripIndents } from "common-tags";
+import { oneLine, stripIndents } from "common-tags";
 import {
 	SnowflakeUtil,
+	blockQuote,
+	bold,
+	hideLinkEmbed,
+	hyperlink,
+	inlineCode,
 	userMention,
 	type APIEmbed,
 	type APIEmbedAuthor,
@@ -83,10 +88,15 @@ export class UserReportModule
 		return !this.isMessageReport();
 	}
 
-	public toEmbedSync(): APIEmbed {
-		const id = this.targetUserId;
-		const tag = this.targetUserTag;
+	public targetMentionString() {
+		return oneLine`
+			${userMention(this.targetUserId)} -
+			${inlineCode(this.targetUserTag)}
+			(${this.targetUserId})
+		`;
+	}
 
+	public toEmbedSync(): APIEmbed {
 		return {
 			author: { name: `${this.authorUserTag} (${this.authorUserId})` },
 			color: this.processedAt ? ColorsHex.Green : ColorsHex.Red,
@@ -96,8 +106,8 @@ export class UserReportModule
 					inline: false,
 					name: "Target user info",
 					value: stripIndents`
-						Name: ${userMention(id)} - \`${tag}\` (${id})
-						Created: ${longstamp(SnowflakeUtil.timestampFrom(id))}
+						Name: ${this.targetMentionString()}
+						Created: ${longstamp(SnowflakeUtil.timestampFrom(this.targetUserId))}
 					`
 				}
 			],
@@ -105,34 +115,45 @@ export class UserReportModule
 		};
 	}
 
+	public async preparePost() {
+		return this.manager.preparePost(this);
+	}
+
 	public async toEmbed(): Promise<APIEmbed> {
-		const target = await this.client.users
-			.fetch(this.targetUserId)
-			.catch(() => null);
+		const target =
+			(await this.guild.members
+				.fetch(this.targetUserId)
+				.catch(() => null)) ??
+			(await this.client.users
+				.fetch(this.targetUserId)
+				.catch(() => null));
 
 		const fields = target ? getMemberInfo(target, "Target") : [];
 
 		const author: APIEmbedAuthor = this.anonymous
-			? { name: "Anonymous" }
+			? { name: "Anonymous user" }
 			: { name: `${this.authorUserTag} (${this.authorUserId})` };
 
 		return {
 			author,
 			color: this.processedAt ? ColorsHex.Green : ColorsHex.Red,
-			description: this.comment,
+			description: stripIndents`
+				${bold("Type")}: User report.
+				${bold("Target")}: ${this.targetMentionString()}
+
+				Author's comment:
+				${blockQuote(this.comment)}
+			`,
 			fields,
 			footer: { text: `Report #${this.guildRelativeId}` }
 		};
-	}
-
-	public async preparePost() {
-		return this.manager.preparePost(this);
 	}
 }
 
 export class MessageReportModule extends UserReportModule {
 	public targetMessageChannelId: string;
 	public targetMessageId: string;
+	public targetMessageURL: string;
 
 	public constructor(
 		manager: ReportManager,
@@ -143,8 +164,9 @@ export class MessageReportModule extends UserReportModule {
 	) {
 		super(manager, data);
 
-		this.targetMessageId = data.targetMessageId;
 		this.targetMessageChannelId = data.targetMessageChannelId;
+		this.targetMessageId = data.targetMessageId;
+		this.targetMessageURL = `https://discord.com/channels/${this.guildId}/${this.targetMessageChannelId}/${this.targetMessageId}`;
 	}
 
 	public async fetchTargetMessage() {
@@ -157,5 +179,37 @@ export class MessageReportModule extends UserReportModule {
 		}
 
 		return channel.messages.fetch(this.targetMessageId).catch(() => null);
+	}
+
+	public async toEmbed(): Promise<APIEmbed> {
+		const target =
+			(await this.guild.members
+				.fetch(this.targetUserId)
+				.catch(() => null)) ??
+			(await this.client.users
+				.fetch(this.targetUserId)
+				.catch(() => null));
+
+		const fields = target ? getMemberInfo(target, "Target") : [];
+
+		const author: APIEmbedAuthor = this.anonymous
+			? { name: "Anonymous user" }
+			: { name: `${this.authorUserTag} (${this.authorUserId})` };
+
+		const link = hyperlink("Message", hideLinkEmbed(this.targetMessageURL));
+
+		return {
+			author,
+			color: this.processedAt ? ColorsHex.Green : ColorsHex.Red,
+			description: stripIndents`
+					${bold("Type")}: Message report
+					${bold("Target")}: ${link} by ${this.targetMentionString()}
+					
+					Author's comment:
+					${blockQuote(this.comment)}
+				`,
+			fields,
+			footer: { text: `Report #${this.guildRelativeId}` }
+		};
 	}
 }
