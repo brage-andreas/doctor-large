@@ -42,7 +42,7 @@ async function roles(
 		`);
 
 	const rows = components.createRows(
-		components.selects.roleSelect.component(),
+		components.selectMenus.roleSelect.component(),
 		components.buttons.clear.component().setDisabled(!roleIds.size),
 		components.buttons.back
 	);
@@ -83,7 +83,7 @@ async function roles(
 					break;
 				}
 
-				case components.selects.roleSelect.customId: {
+				case components.selectMenus.roleSelect.customId: {
 					if (!interaction.isRoleSelectMenu()) {
 						throw new Error(
 							"Role select menu component is not of type RoleSelectMenu"
@@ -176,7 +176,7 @@ async function channels(
 	}
 
 	const rows = components.createRows(
-		components.selects.channelSelect.component(options),
+		components.selectMenus.channelSelect.component(options),
 		components.buttons.clear.component().setDisabled(isEmpty),
 		components.buttons.back
 	);
@@ -217,7 +217,7 @@ async function channels(
 					break;
 				}
 
-				case components.selects.channelSelect.customId: {
+				case components.selectMenus.channelSelect.customId: {
 					if (!interaction.isChannelSelectMenu()) {
 						throw new Error(
 							"Channel select menu component is not of type ChannelSelectMenu"

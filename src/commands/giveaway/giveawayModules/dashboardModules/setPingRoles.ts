@@ -28,7 +28,7 @@ export default async function toSetPingRoles(
 		`;
 
 	const { back, clear, setPingRolesToAtEveryone } = components.buttons;
-	const { roleSelect } = components.selects;
+	const { roleSelect } = components.selectMenus;
 
 	const rows = components.createRows(
 		roleSelect,

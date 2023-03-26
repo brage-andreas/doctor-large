@@ -28,7 +28,7 @@ export default async function toSetRequiredRoles(
 		`;
 
 	const { back, clear } = components.buttons;
-	const { roleSelect } = components.selects;
+	const { roleSelect } = components.selectMenus;
 
 	const rows = components.createRows(roleSelect, back, clear);
 
