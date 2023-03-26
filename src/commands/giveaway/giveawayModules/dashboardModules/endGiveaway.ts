@@ -2,11 +2,10 @@ import components from "#components";
 import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
 import s from "#helpers/s.js";
-import { timestamp } from "#helpers/timestamps.js";
 import yesNo from "#helpers/yesNo.js";
 import Logger from "#logger";
 import { oneLine, stripIndent, stripIndents } from "common-tags";
-import { bold, ButtonStyle, type ButtonInteraction } from "discord.js";
+import { bold, ButtonStyle, time, type ButtonInteraction } from "discord.js";
 import toDashboard from "../dashboard.js";
 
 export default async function toEndGiveaway(
@@ -73,9 +72,11 @@ export default async function toEndGiveaway(
 
 	if (giveaway.endDate) {
 		const isWas = Number(giveaway.endDate) < Date.now() ? "is" : "was";
-		const time = timestamp(giveaway.endDate, "R");
 
-		content += `\nThe giveaway ${isWas} set to end ${time}.`;
+		content += `\nThe giveaway ${isWas} set to end ${time(
+			giveaway.endDate,
+			"R"
+		)}.`;
 	}
 
 	if (prizesN < winnersN) {

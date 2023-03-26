@@ -3,7 +3,6 @@ import { Emojis } from "#constants";
 import ConfigManager from "#database/config.js";
 import { messageFromURL, parseMessageURL } from "#helpers/messageHelpers.js";
 import { ModalCollector } from "#helpers/ModalCollector.js";
-import { timestamp } from "#helpers/timestamps.js";
 import yesNo from "#helpers/yesNo.js";
 import type ConfigModule from "#modules/Config.js";
 import { type CommandData, type CommandExport } from "#typings";
@@ -11,6 +10,7 @@ import { stripIndents } from "common-tags";
 import {
 	ApplicationCommandOptionType,
 	ApplicationCommandType,
+	time,
 	type ChatInputCommandInteraction,
 	type ContextMenuCommandInteraction,
 	type GuildMember,
@@ -249,7 +249,7 @@ const contextMenu = async (
 
 	const msg = await interaction.editReply({
 		components: cancel,
-		content: `Creating a report... (time limit ${timestamp(
+		content: `Creating a report... (time limit ${time(
 			Date.now() + 300_000,
 			"R"
 		)})`

@@ -2,10 +2,13 @@ import components from "#components";
 import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
 import { ModalCollector } from "#helpers/ModalCollector.js";
-import { timestamp } from "#helpers/timestamps.js";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
-import { type ButtonInteraction, type RepliableInteraction } from "discord.js";
+import {
+	time,
+	type ButtonInteraction,
+	type RepliableInteraction
+} from "discord.js";
 import toDashboard from "../dashboard.js";
 
 export default async function toEditGiveaway(
@@ -63,7 +66,7 @@ export default async function toEditGiveaway(
 
 	const msg = await originalInteraction.editReply({
 		components: cancel,
-		content: `Editing the giveaway... (time limit ${timestamp(
+		content: `Editing the giveaway... (time limit ${time(
 			Date.now() + 300_000,
 			"R"
 		)})`,

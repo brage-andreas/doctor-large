@@ -1,10 +1,9 @@
 import { Emojis, RegExp } from "#constants";
 import GiveawayManager from "#database/giveaway.js";
 import { listify } from "#helpers/listify.js";
-import { timestamp } from "#helpers/timestamps.js";
 import Logger from "#logger";
 import { oneLine, stripIndents } from "common-tags";
-import { bold, type ButtonInteraction } from "discord.js";
+import { bold, time, type ButtonInteraction } from "discord.js";
 
 export default async function enterGiveaway(
 	interaction: ButtonInteraction<"cached">
@@ -63,7 +62,7 @@ export default async function enterGiveaway(
 
 		const accountAge = Date.now() - interaction.user.createdTimestamp;
 
-		const whenTheyWillBeOldEnough = timestamp(
+		const whenTheyWillBeOldEnough = time(
 			Date.now() + minimumAccountAge - accountAge,
 			"R"
 		);
