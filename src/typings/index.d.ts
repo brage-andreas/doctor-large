@@ -1,6 +1,13 @@
 import type GiveawayModule from "#modules/Giveaway.js";
 import type { Giveaway, Prize, Winner } from "@prisma/client";
 import type {
+	APIActionRowComponent,
+	APIButtonComponent,
+	APIChannelSelectComponent,
+	APIMentionableSelectComponent,
+	APIRoleSelectComponent,
+	APISelectMenuComponent,
+	APIUserSelectComponent,
 	ApplicationCommandType,
 	AutocompleteInteraction,
 	ChatInputCommandInteraction,
@@ -79,3 +86,28 @@ export type PrizeWithIncludes = Prize & {
 	winners: Array<Winner>;
 	giveaway: GiveawayModule;
 };
+
+export type CreateRowsCompatibleAPIComponent =
+	| APIButtonComponent
+	| APIChannelSelectComponent
+	| APIMentionableSelectComponent
+	| APIRoleSelectComponent
+	| APISelectMenuComponent
+	| APIUserSelectComponent;
+
+export type CreateRowsCompatibleRow =
+	| APIActionRowComponent<APIButtonComponent>
+	| APIActionRowComponent<APIChannelSelectComponent>
+	| APIActionRowComponent<APIMentionableSelectComponent>
+	| APIActionRowComponent<APIRoleSelectComponent>
+	| APIActionRowComponent<APISelectMenuComponent>
+	| APIActionRowComponent<APIUserSelectComponent>;
+
+export interface ComponentObject {
+	readonly customId?: string;
+	component(...params: Array<unknown>): CreateRowsCompatibleAPIComponent;
+}
+
+export interface ComponentObjectWithNoParams extends ComponentObject {
+	component(): CreateRowsCompatibleAPIComponent;
+}
