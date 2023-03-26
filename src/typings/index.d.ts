@@ -10,6 +10,7 @@ import type {
 	APIUserSelectComponent,
 	ApplicationCommandType,
 	AutocompleteInteraction,
+	ButtonStyle,
 	ChatInputCommandInteraction,
 	ClientEvents,
 	ContextMenuCommandInteraction,
@@ -103,11 +104,21 @@ export type CreateRowsCompatibleRow =
 	| APIActionRowComponent<APISelectMenuComponent>
 	| APIActionRowComponent<APIUserSelectComponent>;
 
-export interface ComponentObject {
+export interface ComponentObject<
+	T extends CreateRowsCompatibleAPIComponent = CreateRowsCompatibleAPIComponent
+> {
 	readonly customId?: string;
-	component(...params: Array<unknown>): CreateRowsCompatibleAPIComponent;
+	component(...params: Array<unknown>): T;
 }
 
-export interface ComponentObjectWithNoParams extends ComponentObject {
-	component(): CreateRowsCompatibleAPIComponent;
+export interface ComponentObjectWithNoParams<
+	T extends CreateRowsCompatibleAPIComponent = CreateRowsCompatibleAPIComponent
+> extends ComponentObject<T> {
+	component(): T;
 }
+
+export type CustomIdCompatibleButtonStyle =
+	| ButtonStyle.Danger
+	| ButtonStyle.Primary
+	| ButtonStyle.Secondary
+	| ButtonStyle.Success;
