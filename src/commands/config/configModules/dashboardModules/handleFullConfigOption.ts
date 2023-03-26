@@ -66,7 +66,7 @@ export default async function handleFullConfigOption(
 			channelTypes: options.channelTypes
 		}),
 		enabled ? components.buttons.disable : components.buttons.enable,
-		components.buttons.clear.component().setDisabled(!channelId),
+		components.set.disabled(components.buttons.clear, !channelId),
 		components.buttons.back
 	);
 

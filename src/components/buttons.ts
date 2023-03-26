@@ -1,4 +1,5 @@
 import { Emojis, RegExp } from "#constants";
+import { type CustomIdCompatibleButtonStyle } from "#typings";
 import {
 	ButtonStyle,
 	ComponentType,
@@ -6,12 +7,6 @@ import {
 	type APIButtonComponentWithURL,
 	type APIMessageComponentEmoji
 } from "discord.js";
-
-type CustomIdCompatibleStyle =
-	| ButtonStyle.Danger
-	| ButtonStyle.Primary
-	| ButtonStyle.Secondary
-	| ButtonStyle.Success;
 
 const formatEmoji = (emoji: string): APIMessageComponentEmoji => {
 	if (!emoji.startsWith("<")) {
@@ -319,9 +314,9 @@ export const clear = {
 
 export const create = {
 	customId: "create",
-	component: (): APIButtonComponentWithCustomId => ({
+	component: (suffix?: string): APIButtonComponentWithCustomId => ({
 		custom_id: "create",
-		label: "Create",
+		label: suffix ? `Create ${suffix}` : "Create",
 		style: ButtonStyle.Success,
 		type: ComponentType.Button
 	})
@@ -381,7 +376,7 @@ export const viewAllHosted = {
 export const yes = {
 	customId: "yes",
 	component: (
-		style: CustomIdCompatibleStyle
+		style: CustomIdCompatibleButtonStyle
 	): APIButtonComponentWithCustomId => ({
 		custom_id: "yes",
 		emoji: formatEmoji(Emojis.Check),
@@ -394,7 +389,7 @@ export const yes = {
 export const no = {
 	customId: "no",
 	component: (
-		style: CustomIdCompatibleStyle
+		style: CustomIdCompatibleButtonStyle
 	): APIButtonComponentWithCustomId => ({
 		custom_id: "no",
 		emoji: formatEmoji(Emojis.Cross),

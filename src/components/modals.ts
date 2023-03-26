@@ -3,7 +3,6 @@ import { modalId } from "#helpers/ModalCollector.js";
 import { oneLine } from "common-tags";
 import {
 	ComponentType,
-	ModalBuilder,
 	TextInputStyle,
 	type APIModalInteractionResponseCallbackData,
 	type APITextInputComponent
@@ -48,25 +47,24 @@ const modalGiveawaywinnerQuantity = (): APITextInputComponent => ({
  * Children: title, description, winnerQuantity
  */
 export const createGiveaway = {
-	component: () =>
-		new ModalBuilder({
-			custom_id: modalId(),
-			title: "Create a giveaway",
-			components: [
-				{
-					type: ComponentType.ActionRow,
-					components: [modalGiveawayTitle()]
-				},
-				{
-					type: ComponentType.ActionRow,
-					components: [modalGiveawayDescription()]
-				},
-				{
-					type: ComponentType.ActionRow,
-					components: [modalGiveawaywinnerQuantity()]
-				}
-			]
-		})
+	component: (): APIModalInteractionResponseCallbackData => ({
+		custom_id: modalId(),
+		title: "Create a giveaway",
+		components: [
+			{
+				components: [modalGiveawayTitle()],
+				type: ComponentType.ActionRow
+			},
+			{
+				components: [modalGiveawayDescription()],
+				type: ComponentType.ActionRow
+			},
+			{
+				components: [modalGiveawaywinnerQuantity()],
+				type: ComponentType.ActionRow
+			}
+		]
+	})
 } as const;
 
 // -----------------
@@ -144,27 +142,24 @@ export const editGiveaway = {
 		oldTitle: string;
 		oldDescription: string | null;
 		oldWinnerQuantity: number;
-	}) =>
-		new ModalBuilder({
-			custom_id: modalId(),
-			title: `Edit giveaway #${guildRelativeId}`,
-			components: [
-				{
-					type: ComponentType.ActionRow,
-					components: [modalGiveawayNewTitle(oldTitle)]
-				},
-				{
-					type: ComponentType.ActionRow,
-					components: [modalGiveawayNewDescription(oldDescription)]
-				},
-				{
-					type: ComponentType.ActionRow,
-					components: [
-						modalGiveawayNewWinnerQuantity(oldWinnerQuantity)
-					]
-				}
-			]
-		})
+	}): APIModalInteractionResponseCallbackData => ({
+		custom_id: modalId(),
+		title: `Edit giveaway #${guildRelativeId}`,
+		components: [
+			{
+				type: ComponentType.ActionRow,
+				components: [modalGiveawayNewTitle(oldTitle)]
+			},
+			{
+				type: ComponentType.ActionRow,
+				components: [modalGiveawayNewDescription(oldDescription)]
+			},
+			{
+				type: ComponentType.ActionRow,
+				components: [modalGiveawayNewWinnerQuantity(oldWinnerQuantity)]
+			}
+		]
+	})
 } as const;
 
 // ----------------

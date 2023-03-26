@@ -6,10 +6,10 @@ import yesNo from "#helpers/yesNo.js";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
 import {
-	ButtonBuilder,
 	ButtonStyle,
 	ComponentType,
 	EmbedBuilder,
+	type APIButtonComponentWithCustomId,
 	type ButtonInteraction,
 	type ModalSubmitInteraction
 } from "discord.js";
@@ -38,12 +38,13 @@ export default async function toManagePrizes(
 		return;
 	}
 
-	const prizesButtons = giveaway.prizes.map(({ id }, index) =>
-		new ButtonBuilder()
-			.setCustomId(`dashboard-prize-${id}`)
-			.setStyle(ButtonStyle.Primary)
-			.setLabel(`Prize ${index + 1}`)
-	);
+	const prizesButtons: Array<APIButtonComponentWithCustomId> =
+		giveaway.prizes.map(({ id }, index) => ({
+			custom_id: `dashboard-prize-${id}`,
+			label: `Prize ${index + 1}`,
+			style: ButtonStyle.Primary,
+			type: ComponentType.Button
+		}));
 
 	const prizeButtonsRow = components.createRows(...prizesButtons);
 
@@ -53,7 +54,7 @@ export default async function toManagePrizes(
 		...prizeButtonsRow,
 		...components.createRows(
 			components.buttons.back,
-			components.buttons.create.component().setDisabled(disableCreate),
+			components.set.disabled(components.buttons.create, disableCreate),
 			components.buttons.clear
 		)
 	];

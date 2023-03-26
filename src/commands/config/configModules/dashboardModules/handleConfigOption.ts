@@ -43,7 +43,7 @@ async function roles(
 
 	const rows = components.createRows(
 		components.selectMenus.role.component(),
-		components.buttons.clear.component().setDisabled(!roleIds.size),
+		components.set.disabled(components.buttons.clear, !roleIds.size),
 		components.buttons.back
 	);
 
@@ -177,7 +177,7 @@ async function channels(
 
 	const rows = components.createRows(
 		components.selectMenus.channel.component(options),
-		components.buttons.clear.component().setDisabled(isEmpty),
+		components.set.disabled(components.buttons.clear, isEmpty),
 		components.buttons.back
 	);
 

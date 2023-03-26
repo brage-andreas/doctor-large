@@ -7,8 +7,8 @@ import { source, stripIndents } from "common-tags";
 import {
 	AttachmentBuilder,
 	ComponentType,
+	type APIButtonComponentWithCustomId,
 	type AutocompleteInteraction,
-	type ButtonBuilder,
 	type Interaction
 } from "discord.js";
 import toDashboard from "./dashboard.js";
@@ -40,8 +40,8 @@ export default async function toEndedDashboard(
 		return;
 	}
 
-	const announceWinnersButtons: Array<ButtonBuilder> = [];
-	const rollWinnersButtons: Array<ButtonBuilder> = [];
+	const announceWinnersButtons: Array<APIButtonComponentWithCustomId> = [];
+	const rollWinnersButtons: Array<APIButtonComponentWithCustomId> = [];
 
 	const unclaimedN = giveaway.winners.filter(
 		({ claimed }) => !claimed
@@ -65,35 +65,38 @@ export default async function toEndedDashboard(
 		rollWinnersButtons.push(components.buttons.rollWinners.component());
 	} else {
 		rollWinnersButtons.push(
-			components.buttons.rerollWinners
-				.component(unclaimedN)
-				.setDisabled(noUnclaimed),
-			components.buttons.rerollAllWinners
-				.component(giveaway.winners.length)
-				.setDisabled(noWinners)
+			components.set.disabled(
+				components.buttons.rerollWinners.component(unclaimedN),
+				noUnclaimed
+			),
+			components.buttons.rerollAllWinners.component(
+				giveaway.winners.length
+			)
 		);
 	}
 
 	const rows = [
 		...components.createRows(
-			components.buttons.showAllWinners.component(),
+			components.buttons.showAllWinners,
 			...announceWinnersButtons
 		),
 
 		...components.createRows(...rollWinnersButtons),
 
 		...components.createRows(
-			components.buttons.deleteUnclaimedWinners
-				.component()
-				.setDisabled(noUnclaimed),
-			components.buttons.deleteAllWinners
-				.component()
-				.setDisabled(noWinners)
+			components.set.disabled(
+				components.buttons.deleteUnclaimedWinners,
+				noUnclaimed
+			),
+			components.set.disabled(
+				components.buttons.deleteAllWinners,
+				noWinners
+			)
 		),
 
 		...components.createRows(
-			components.buttons.reactivateGiveaway.component(),
-			components.buttons.deleteGiveaway.component()
+			components.buttons.reactivateGiveaway,
+			components.buttons.deleteGiveaway
 		)
 	];
 

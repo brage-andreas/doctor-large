@@ -21,7 +21,7 @@ import {
 	ComponentType,
 	EmbedBuilder,
 	PermissionFlagsBits,
-	type ButtonBuilder,
+	type APIButtonComponentWithCustomId,
 	type ButtonInteraction,
 	type ChatInputCommandInteraction,
 	type EmbedField,
@@ -154,7 +154,7 @@ const run = async (
 			viewAllHostedButton
 		].filter(
 			(buttonOrNull) => buttonOrNull !== null
-		) as Array<ButtonBuilder>;
+		) as Array<APIButtonComponentWithCustomId>;
 
 	const getRows = () => {
 		const buttons = getButtonArray();
@@ -273,7 +273,8 @@ const run = async (
 
 		if (buttonInteraction.customId === acceptAllPrizes.customId) {
 			if (!isAuthor) {
-				acceptAllPrizesButton?.setDisabled(true);
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				acceptAllPrizesButton!.disabled = true;
 
 				await interaction.followUp({
 					ephemeral: true,
@@ -305,8 +306,10 @@ const run = async (
 					.join(", ")}`
 			);
 
-			acceptAllPrizesButton?.setDisabled(true);
-			viewAllPrizesButton?.setDisabled(false);
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			acceptAllPrizesButton!.disabled = true;
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			viewAllPrizesButton!.disabled = false;
 
 			await buttonInteraction.followUp({
 				ephemeral: true,
@@ -354,7 +357,8 @@ const run = async (
 				files: [getAttachment(string)]
 			});
 
-			viewAllEnteredButton?.setDisabled(true);
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			viewAllEnteredButton!.disabled = true;
 
 			await interaction.editReply({
 				components: getRows()
@@ -392,7 +396,8 @@ const run = async (
 				files: [getAttachment(string)]
 			});
 
-			viewAllPrizesButton?.setDisabled(true);
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			viewAllPrizesButton!.disabled = true;
 
 			await interaction.editReply({
 				components: getRows()
@@ -416,7 +421,8 @@ const run = async (
 				files: [getAttachment(string)]
 			});
 
-			viewAllHostedButton?.setDisabled(true);
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			viewAllHostedButton!.disabled = true;
 
 			await interaction.editReply({
 				components: getRows()

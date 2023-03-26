@@ -9,7 +9,7 @@ import {
 	ButtonStyle,
 	ComponentType,
 	EmbedBuilder,
-	type ButtonBuilder,
+	type APIButtonComponent,
 	type ButtonInteraction
 } from "discord.js";
 import ms from "ms";
@@ -73,33 +73,36 @@ export default async function toEndOptions(
 		const roll = components.buttons.endLevelRoll.component();
 		const announce = components.buttons.endLevelAnnounce.component();
 
-		const setSuccess = (...buttons: Array<ButtonBuilder>) =>
-			buttons.forEach((b) => b.setStyle(ButtonStyle.Success));
+		const setSuccess = (...buttons: Array<APIButtonComponent>) =>
+			buttons.forEach((b) => {
+				b.style = ButtonStyle.Success;
+			});
 
 		switch (endAutomationLevel) {
 			case EndAutomation.Announce: {
-				announce.setDisabled();
+				announce.disabled = true;
 				setSuccess(end, roll, announce);
 
 				break;
 			}
 
 			case EndAutomation.Roll: {
-				roll.setDisabled();
+				roll.disabled = true;
 				setSuccess(end, roll);
 
 				break;
 			}
 
 			case EndAutomation.End: {
-				end.setDisabled();
+				end.disabled = true;
 				setSuccess(end);
 
 				break;
 			}
 
 			case EndAutomation.None: {
-				none.setStyle(ButtonStyle.Success).setDisabled();
+				none.style = ButtonStyle.Success;
+				none.disabled = true;
 
 				break;
 			}
@@ -179,11 +182,12 @@ export default async function toEndOptions(
 			: undefined;
 
 	const rows = components.createRows(
-		components.buttons.setDate.component().setDisabled(true),
-		components.buttons.clearDate.component().setDisabled(!endDate),
-		components.buttons.roundDateToNearestHour
-			.component()
-			.setDisabled(Boolean(isRounded)),
+		components.set.disabled(components.buttons.setDate, true),
+		components.set.disabled(components.buttons.clearDate, !endDate),
+		components.set.disabled(
+			components.buttons.roundDateToNearestHour,
+			isRounded
+		),
 		components.buttons.endGiveaway,
 		...plusButtons,
 		...minusButtons,

@@ -1,5 +1,6 @@
 import components from "#components";
 import { Emojis } from "#constants";
+import { type CustomIdCompatibleButtonStyle } from "#typings";
 import {
 	ButtonStyle,
 	ComponentType,
@@ -25,8 +26,8 @@ import {
 export default async function yesNo(options: {
 	respondToIgnore?: boolean;
 	timeActive?: number;
-	yesStyle?: ButtonStyle;
-	noStyle?: ButtonStyle;
+	yesStyle?: CustomIdCompatibleButtonStyle;
+	noStyle?: CustomIdCompatibleButtonStyle;
 	medium:
 		| ContextMenuCommandInteraction<"cached">
 		| Exclude<Interaction<"cached">, AutocompleteInteraction>
