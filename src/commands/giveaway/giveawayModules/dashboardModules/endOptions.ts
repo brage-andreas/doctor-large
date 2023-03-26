@@ -2,7 +2,7 @@ import components from "#components";
 import { Colors, Emojis, Giveaway } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
 import { longstamp } from "#helpers/timestamps.js";
-import { type EndAutomation } from "@prisma/client";
+import { EndAutomation } from "@prisma/client";
 import { oneLine, source, stripIndents } from "common-tags";
 import {
 	bold,
@@ -77,28 +77,28 @@ export default async function toEndOptions(
 			buttons.forEach((b) => b.setStyle(ButtonStyle.Success));
 
 		switch (endAutomationLevel) {
-			case "Announce": {
+			case EndAutomation.Announce: {
 				announce.setDisabled();
 				setSuccess(end, roll, announce);
 
 				break;
 			}
 
-			case "Roll": {
+			case EndAutomation.Roll: {
 				roll.setDisabled();
 				setSuccess(end, roll);
 
 				break;
 			}
 
-			case "End": {
+			case EndAutomation.End: {
 				end.setDisabled();
 				setSuccess(end);
 
 				break;
 			}
 
-			case "None": {
+			case EndAutomation.None: {
 				none.setStyle(ButtonStyle.Success).setDisabled();
 
 				break;
@@ -270,25 +270,25 @@ export default async function toEndOptions(
 			}
 
 			case components.buttons.endLevelNone.customId: {
-				await endLevel("None");
+				await endLevel(EndAutomation.None);
 
 				break;
 			}
 
 			case components.buttons.endLevelEnd.customId: {
-				await endLevel("End");
+				await endLevel(EndAutomation.End);
 
 				break;
 			}
 
 			case components.buttons.endLevelRoll.customId: {
-				await endLevel("Roll");
+				await endLevel(EndAutomation.Roll);
 
 				break;
 			}
 
 			case components.buttons.endLevelAnnounce.customId: {
-				await endLevel("Announce");
+				await endLevel(EndAutomation.Announce);
 
 				break;
 			}
