@@ -260,7 +260,7 @@ const chatInput = async (
 		await interaction.editReply({
 			components: urlButtonRows,
 			content: stripIndent`
-				${Emojis.V} Done! Successfully archive the pin.
+				${Emojis.Check} Done! Successfully archive the pin.
 			`,
 			embeds: []
 		});

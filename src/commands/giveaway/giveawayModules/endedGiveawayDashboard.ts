@@ -175,7 +175,7 @@ export default async function toEndedDashboard(
 
 				await interaction.editReply({
 					content: stripIndents`
-							${Emojis.V} The winners are no longer announced. 
+							${Emojis.Check} The winners are no longer announced. 
 						`,
 					components: [],
 					embeds: []

@@ -55,6 +55,8 @@ export const ColorsHex = {
 } as const;
 
 export const Emojis = {
+	Check: formatEmoji("1054081028962136104"),
+	Cross: formatEmoji("1054081030107185252"),
 	Cry: "😢",
 	Edit: "✍️",
 	Ended: "🔸",
@@ -78,10 +80,8 @@ export const Emojis = {
 	Tada: "🎉",
 	Think: "🤔",
 	Unlock: "🔓",
-	V: formatEmoji("1054081028962136104"),
 	Warn: formatEmoji("1080833238823608520"),
-	WIP: "🚧",
-	X: formatEmoji("1054081030107185252")
+	WIP: "🚧"
 } as const;
 
 export const INTENTS = [

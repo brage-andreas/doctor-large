@@ -101,7 +101,7 @@ export default async function toDeleteGiveaway(
 
 	interaction.editReply({
 		components: [],
-		content: `${Emojis.V} Successfully deleted giveaway ${giveaway.asRelId}.`,
+		content: `${Emojis.Check} Successfully deleted giveaway ${giveaway.asRelId}.`,
 		embeds: []
 	});
 }

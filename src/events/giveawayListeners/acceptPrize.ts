@@ -47,7 +47,7 @@ export default async function acceptPrize(
 	if (!prizes?.unclaimed.size) {
 		interaction.followUp({
 			content: stripIndents`
-				${Emojis.V} You have already claimed all your prizes. You're all set! ${Emojis.Grin}
+				${Emojis.Check} You have already claimed all your prizes. You're all set! ${Emojis.Grin}
 
 				Use ${myGiveaways} if you need a reminder of what your extraordinary success.
 			`,
