@@ -15,7 +15,7 @@
 		"target": "ESNext",
 
 		"paths": {
-			"#components": ["./src/components.ts"],
+			"#components": ["./src/components/index.ts"],
 			"#constants": ["./src/constants.ts"],
 			"#database/*": ["./src/database/*"],
 			"#helpers/*": ["./src/helpers/*"],

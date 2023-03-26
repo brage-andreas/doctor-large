@@ -42,7 +42,7 @@
 		"typescript": "^4.9.5"
 	},
 	"imports": {
-		"#components": "./dist/components.js",
+		"#components": "./dist/components/index.js",
 		"#constants": "./dist/constants.js",
 		"#database/*": "./dist/database/*",
 		"#helpers/*": "./dist/helpers/*",
