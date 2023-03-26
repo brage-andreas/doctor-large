@@ -16,7 +16,13 @@ export default class ReportManager {
 		this.guild = guild;
 	}
 
-	public toModule(data: Report | null | undefined) {
+	public toModule(data: Report): MessageReportModule | UserReportModule;
+	public toModule(
+		data: Report | null | undefined
+	): MessageReportModule | UserReportModule | null | undefined;
+	public toModule(
+		data: Report | null | undefined
+	): MessageReportModule | UserReportModule | null | undefined {
 		if (!data) {
 			return null;
 		}
@@ -51,6 +57,22 @@ export default class ReportManager {
 		}
 
 		return data.map((data) => this.toModule(data));
+	}
+
+	public async getNextGuildRelativeId(): Promise<number> {
+		const data = await this.prisma.findFirst({
+			where: {
+				guildId: this.guild.id
+			},
+			orderBy: {
+				id: "desc"
+			},
+			select: {
+				guildRelativeId: true
+			}
+		});
+
+		return (data?.guildRelativeId ?? 0) + 1;
 	}
 
 	public async create(data: Prisma.ReportCreateInput) {

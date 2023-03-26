@@ -8,6 +8,7 @@ import {
 	SnowflakeUtil,
 	userMention,
 	type APIEmbed,
+	type APIEmbedAuthor,
 	type Client,
 	type Guild
 } from "discord.js";
@@ -111,13 +112,21 @@ export class UserReportModule
 
 		const fields = target ? getMemberInfo(target, "Target") : [];
 
+		const author: APIEmbedAuthor = this.anonymous
+			? { name: "Anonymous" }
+			: { name: `${this.authorUserTag} (${this.authorUserId})` };
+
 		return {
-			author: { name: `${this.authorUserTag} (${this.authorUserId})` },
+			author,
 			color: this.processedAt ? ColorsHex.Green : ColorsHex.Red,
 			description: this.comment,
 			fields,
 			footer: { text: `Report #${this.guildRelativeId}` }
 		};
+	}
+
+	public async preparePost() {
+		return this.manager.preparePost(this);
 	}
 }
 

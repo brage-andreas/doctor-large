@@ -1,16 +1,22 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import ConfigManager from "#database/config.js";
-import { messageFromURL, parseMessageURL } from "#helpers/messageHelpers.js";
+import ReportManager from "#database/report.js";
+import {
+	messageFromURL,
+	messageToEmbed,
+	parseMessageURL
+} from "#helpers/messageHelpers.js";
 import { ModalCollector } from "#helpers/ModalCollector.js";
 import yesNo from "#helpers/yesNo.js";
 import type ConfigModule from "#modules/Config.js";
 import { type CommandData, type CommandExport } from "#typings";
+import { ReportType } from "@prisma/client";
 import { stripIndents } from "common-tags";
 import {
 	ApplicationCommandOptionType,
 	ApplicationCommandType,
-	time,
+	quote,
 	type ChatInputCommandInteraction,
 	type ContextMenuCommandInteraction,
 	type GuildMember,
@@ -95,21 +101,53 @@ const handleMessage = async (
 	comment: string,
 	anonymous?: boolean
 ) => {
+	const messageEmbed = messageToEmbed(message);
+
+	const anonymousComment = anonymous
+		? "\n\nYou opted to stay anonymous."
+		: "";
+
 	const res = await yesNo({
 		medium: interaction,
 		data: {
-			content: "lol"
+			content: stripIndents`
+				Are you sure you want to report this message to the moderators?${anonymousComment}
+
+				You commented the following:
+				${quote(comment)}
+			`,
+			embeds: [messageEmbed]
 		}
 	});
 
-	if (res) {
-		//
+	if (!res) {
+		interaction.editReply({
+			components: [],
+			content: `Alright! Canceled report on message by ${message.author}.`,
+			embeds: [messageEmbed]
+		});
+
+		return;
 	}
 
-	config;
-	message;
-	comment;
-	anonymous;
+	const reportManager = new ReportManager(interaction.guild);
+	const guildRelativeId = await reportManager.getNextGuildRelativeId();
+
+	const report = await reportManager.create({
+		authorUserId: interaction.user.id,
+		authorUserTag: interaction.user.tag,
+		comment,
+		guildId: message.guildId,
+		guildRelativeId,
+		targetUserId: message.author.id,
+		targetUserTag: message.author.tag,
+		type: ReportType.Message,
+		anonymous,
+		targetMessageChannelId: message.channelId,
+		targetMessageId: message.id
+	});
+
+	await config.postReport(report);
 };
 
 const handleMember = async (
@@ -224,7 +262,8 @@ const contextMenu = async (
 		.catch(() => false);
 
 	if (!validation) {
-		interaction.editReply({
+		interaction.reply({
+			ephemeral: true,
 			content: `${Emojis.NoEntry} Reporting is disabled in this server, as it has not been set up.`
 		});
 
@@ -234,7 +273,8 @@ const contextMenu = async (
 	const config = await configManager.get();
 
 	if (!config.reportEnabled) {
-		interaction.editReply({
+		interaction.reply({
+			ephemeral: true,
 			content: `${Emojis.NoEntry} Reporting is disabled in this server.`
 		});
 
@@ -245,36 +285,13 @@ const contextMenu = async (
 
 	await interaction.showModal(modal);
 
-	const cancel = components.createRows(components.buttons.cancel.component());
-
-	const msg = await interaction.editReply({
-		components: cancel,
-		content: `Creating a report... (time limit ${time(
-			Date.now() + 300_000,
-			"R"
-		)})`
-	});
-
 	const modalCollector = ModalCollector(interaction, modal, {
 		time: 180_000
 	});
 
-	const cancelCollector = msg.createMessageComponentCollector({
-		filter: (i) => i.user.id === interaction.user.id,
-		max: 1,
-		time: 190_000
-	});
+	modalCollector.on("collect", async (modalInteraction) => {
+		await modalInteraction.deferUpdate();
 
-	cancelCollector.on("collect", async (i) => {
-		modalCollector.stop("manual");
-
-		await i.update({
-			components: [],
-			content: "Canceled the report."
-		});
-	});
-
-	modalCollector.on("collect", (modalInteraction) => {
 		const comment = modalInteraction.fields.getTextInputValue("comment");
 
 		if (interaction.isMessageContextMenuCommand()) {
@@ -293,15 +310,6 @@ const contextMenu = async (
 				interaction.targetMember,
 				comment
 			);
-		}
-	});
-
-	modalCollector.on("end", (_, reason) => {
-		if (reason === "time") {
-			interaction.editReply({
-				components: [],
-				content: "Report timed out."
-			});
 		}
 	});
 };

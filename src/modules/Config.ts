@@ -1,5 +1,6 @@
 import { Colors, Emojis } from "#constants";
 import type ConfigManager from "#database/config.js";
+import ReportManager from "#database/report.js";
 import { type Config } from "@prisma/client";
 import { source } from "common-tags";
 import {
@@ -15,6 +16,7 @@ import {
 	type GuildTextBasedChannel,
 	type Role
 } from "discord.js";
+import { type MessageReportModule, type UserReportModule } from "./Report.js";
 
 function channel(
 	guild: Guild,
@@ -149,7 +151,7 @@ export default class ConfigModule
 		return this.protectedChannelsIds.has(id);
 	}
 
-	public createCaseLog() {
+	public postCaseLog() {
 		// TODO
 	}
 
@@ -165,12 +167,55 @@ export default class ConfigModule
 		// TODO
 	}
 
-	public createMessageLog() {
+	public postMessageLog() {
 		// TODO
 	}
 
-	public createReport() {
-		// TODO
+	public async postReport(
+		reportOrReportId: MessageReportModule | UserReportModule | number
+	) {
+		if (!this.reportEnabled) {
+			return false;
+		}
+
+		if (!this.reportChannel) {
+			return false;
+		}
+
+		let report: MessageReportModule | UserReportModule;
+
+		if (typeof reportOrReportId === "object") {
+			report = reportOrReportId;
+		} else {
+			const reportManager = new ReportManager(this.guild);
+			const res = await reportManager.get(reportOrReportId);
+
+			if (!res) {
+				return false;
+			}
+
+			report = res;
+		}
+
+		const message = await report.preparePost();
+
+		if (!this.reportChannel.isTextBased()) {
+			return await this.reportChannel.threads
+				.create({
+					message,
+					name: `Report #${report.guildRelativeId} by ${report.authorUserTag}`
+				})
+				.then(() => true)
+				.catch(() => false);
+		}
+
+		return await this.reportChannel
+			.send({
+				...message,
+				content: `Report #${report.guildRelativeId} by ${report.authorUserTag}`
+			})
+			.then(() => true)
+			.catch(() => false);
 	}
 
 	public setProtectedChannels() {
