@@ -1,48 +1,48 @@
-// -------------------
-// - CREATE GIVEAWAY -
-// -------------------
-
 import { Emojis, Giveaway, MAX_REPORT_COMMENT_LENGTH, Prize } from "#constants";
 import { modalId } from "#helpers/ModalCollector.js";
 import { oneLine } from "common-tags";
 import {
-	ActionRowBuilder,
 	ComponentType,
 	ModalBuilder,
-	TextInputBuilder,
-	TextInputStyle
+	TextInputStyle,
+	type APIModalInteractionResponseCallbackData,
+	type APITextInputComponent
 } from "discord.js";
 
-const modalGiveawayTitle = () =>
-	new TextInputBuilder({
-		customId: "title",
-		label: "Title",
-		maxLength: Giveaway.MaxTitleLength,
-		placeholder: "Summer Giveaway 2044",
-		required: true,
-		style: TextInputStyle.Short
-	});
+// -------------------
+// - CREATE GIVEAWAY -
+// -------------------
 
-const modalGiveawayDescription = () =>
-	new TextInputBuilder({
-		customId: "description",
-		label: `Description (max ${Giveaway.MaxDescriptionLines} lines)`,
-		maxLength: Giveaway.MaxDescriptionLength,
-		style: TextInputStyle.Paragraph,
-		placeholder: oneLine`
+const modalGiveawayTitle = (): APITextInputComponent => ({
+	custom_id: "title",
+	label: "Title",
+	max_length: Giveaway.MaxTitleLength,
+	placeholder: "Summer Giveaway 2044",
+	required: true,
+	style: TextInputStyle.Short,
+	type: ComponentType.TextInput
+});
+
+const modalGiveawayDescription = (): APITextInputComponent => ({
+	custom_id: "description",
+	label: `Description (max ${Giveaway.MaxDescriptionLines} lines)`,
+	max_length: Giveaway.MaxDescriptionLength,
+	style: TextInputStyle.Paragraph,
+	placeholder: oneLine`
 			It's this time of year again!
 			This is a thanks for a good year 💝
-		`
-	});
+		`,
+	type: ComponentType.TextInput
+});
 
-const modalGiveawaywinnerQuantity = () =>
-	new TextInputBuilder({
-		customId: "winnerQuantity",
-		label: "Number of winners",
-		maxLength: Giveaway.ManWinnerQuantityLength,
-		style: TextInputStyle.Short,
-		placeholder: "1"
-	});
+const modalGiveawaywinnerQuantity = (): APITextInputComponent => ({
+	custom_id: "winnerQuantity",
+	label: "Number of winners",
+	max_length: Giveaway.ManWinnerQuantityLength,
+	style: TextInputStyle.Short,
+	placeholder: "1",
+	type: ComponentType.TextInput
+});
 
 /**
  * Children: title, description, winnerQuantity
@@ -50,7 +50,7 @@ const modalGiveawaywinnerQuantity = () =>
 export const createGiveaway = {
 	component: () =>
 		new ModalBuilder({
-			customId: modalId(),
+			custom_id: modalId(),
 			title: "Create a giveaway",
 			components: [
 				{
@@ -73,16 +73,16 @@ export const createGiveaway = {
 // - EDIT GIVEAWAY -
 // -----------------
 
-const modalGiveawayNewTitle = (oldTitle: string) =>
-	new TextInputBuilder({
-		customId: "newTitle",
-		label: "New Title",
-		maxLength: Giveaway.MaxTitleLength,
-		style: TextInputStyle.Short,
-		required: true,
-		value: oldTitle,
-		placeholder: oldTitle
-	});
+const modalGiveawayNewTitle = (oldTitle: string): APITextInputComponent => ({
+	custom_id: "newTitle",
+	label: "New Title",
+	max_length: Giveaway.MaxTitleLength,
+	style: TextInputStyle.Short,
+	required: true,
+	value: oldTitle,
+	placeholder: oldTitle,
+	type: ComponentType.TextInput
+});
 
 const EMPTY_DESCRIPTION = `${Emojis.Sleep} Whoa so empty — there is no description`;
 const parsePlaceholder = (string: string | null) => {
@@ -97,33 +97,38 @@ const parsePlaceholder = (string: string | null) => {
 	return string;
 };
 
-const modalGiveawayNewDescription = (oldDescription: string | null) => {
-	const builder = new TextInputBuilder({
-		customId: "newDescription",
+const modalGiveawayNewDescription = (
+	oldDescription: string | null
+): APITextInputComponent => {
+	const builder: APITextInputComponent = {
+		custom_id: "newDescription",
 		label: `New description (max ${Giveaway.MaxDescriptionLines} lines)`,
-		maxLength: Giveaway.MaxDescriptionLength,
+		max_length: Giveaway.MaxDescriptionLength,
 		style: TextInputStyle.Paragraph,
-		required: true
-	});
+		required: true,
+		type: ComponentType.TextInput
+	};
 
 	if (oldDescription) {
-		builder.setValue(oldDescription);
-		builder.setPlaceholder(parsePlaceholder(oldDescription));
+		builder.value = oldDescription;
+		builder.placeholder = parsePlaceholder(oldDescription);
 	}
 
 	return builder;
 };
 
-const modalGiveawayNewWinnerQuantity = (oldNumberOfWinners: number) =>
-	new TextInputBuilder({
-		customId: "newWinnerQuantity",
-		label: "New number of winners",
-		maxLength: Giveaway.ManWinnerQuantityLength,
-		style: TextInputStyle.Short,
-		required: true,
-		value: oldNumberOfWinners.toString(),
-		placeholder: oldNumberOfWinners.toString()
-	});
+const modalGiveawayNewWinnerQuantity = (
+	oldNumberOfWinners: number
+): APITextInputComponent => ({
+	custom_id: "newWinnerQuantity",
+	label: "New number of winners",
+	max_length: Giveaway.ManWinnerQuantityLength,
+	style: TextInputStyle.Short,
+	required: true,
+	value: oldNumberOfWinners.toString(),
+	placeholder: oldNumberOfWinners.toString(),
+	type: ComponentType.TextInput
+});
 
 /**
  * Children: newTitle, newDescription, newWinnerQuantity
@@ -141,7 +146,7 @@ export const editGiveaway = {
 		oldWinnerQuantity: number;
 	}) =>
 		new ModalBuilder({
-			customId: modalId(),
+			custom_id: modalId(),
 			title: `Edit giveaway #${guildRelativeId}`,
 			components: [
 				{
@@ -166,93 +171,106 @@ export const editGiveaway = {
 // - CREATE PRIZE -
 // ----------------
 
-const modalCreatePrizeName = () =>
-	new TextInputBuilder()
-		.setPlaceholder("Example prize")
-		.setMaxLength(Prize.MaxTitleLength)
-		.setMinLength(1)
-		.setCustomId("name")
-		.setRequired(true)
-		.setLabel("Name")
-		.setStyle(TextInputStyle.Short);
+const modalCreatePrizeName = (): APITextInputComponent => ({
+	placeholder: "Example prize",
+	max_length: Prize.MaxTitleLength,
+	min_length: 1,
+	custom_id: "name",
+	required: true,
+	label: "Name",
+	style: TextInputStyle.Short,
+	type: ComponentType.TextInput
+});
 
-const modalCreatePrizeAdditionalInfo = () =>
-	new TextInputBuilder()
-		.setPlaceholder("This prize was made with love!")
-		.setMaxLength(Prize.MaxAdditionalInfoLength)
-		.setMinLength(1)
-		.setCustomId("additionalInfo")
-		.setRequired(false)
-		.setLabel("Additional info")
-		.setStyle(TextInputStyle.Short);
+const modalCreatePrizeAdditionalInfo = (): APITextInputComponent => ({
+	placeholder: "This prize was made with love!",
+	max_length: Prize.MaxAdditionalInfoLength,
+	min_length: 1,
+	custom_id: "additionalInfo",
+	required: false,
+	label: "Additional info",
+	style: TextInputStyle.Short,
+	type: ComponentType.TextInput
+});
 
-const modalCreatePrizeQuantity = () =>
-	new TextInputBuilder()
-		.setPlaceholder("1")
-		.setMaxLength(Prize.MaxQuantityLength)
-		.setMinLength(1)
-		.setCustomId("quantity")
-		.setRequired(true)
-		.setLabel("Quantity (max 10)")
-		.setStyle(TextInputStyle.Short);
+const modalCreatePrizeQuantity = (): APITextInputComponent => ({
+	placeholder: "1",
+	max_length: Prize.MaxQuantityLength,
+	min_length: 1,
+	custom_id: "quantity",
+	required: true,
+	label: "Quantity (max 10)",
+	style: TextInputStyle.Short,
+	type: ComponentType.TextInput
+});
 
 /**
  * Children: title, additionalInfo, quantity
  */
 export const createPrize = {
-	component: () =>
-		new ModalBuilder()
-			.setComponents(
-				new ActionRowBuilder<TextInputBuilder>().setComponents(
-					modalCreatePrizeName()
-				),
-				new ActionRowBuilder<TextInputBuilder>().setComponents(
-					modalCreatePrizeAdditionalInfo()
-				),
-				new ActionRowBuilder<TextInputBuilder>().setComponents(
-					modalCreatePrizeQuantity()
-				)
-			)
-			.setCustomId(modalId())
-			.setTitle("Create prize")
+	component: (): APIModalInteractionResponseCallbackData => ({
+		components: [
+			{
+				components: [modalCreatePrizeName()],
+				type: ComponentType.ActionRow
+			},
+			{
+				components: [modalCreatePrizeAdditionalInfo()],
+				type: ComponentType.ActionRow
+			},
+			{
+				components: [modalCreatePrizeQuantity()],
+				type: ComponentType.ActionRow
+			}
+		],
+		custom_id: modalId(),
+		title: "Create prize"
+	})
 } as const;
 
 // --------------
 // - EDIT PRIZE -
 // --------------
 
-const modalEditPrizeName = (oldName: string) =>
-	new TextInputBuilder()
-		.setPlaceholder("Example prize")
-		.setMaxLength(Prize.MaxTitleLength)
-		.setMinLength(1)
-		.setCustomId("newName")
-		.setRequired(true)
-		.setLabel("Name")
-		.setValue(oldName)
-		.setStyle(TextInputStyle.Short);
+const modalEditPrizeName = (oldName: string): APITextInputComponent => ({
+	placeholder: "Example prize",
+	max_length: Prize.MaxTitleLength,
+	min_length: 1,
+	custom_id: "newName",
+	required: true,
+	label: "Name",
+	value: oldName,
+	style: TextInputStyle.Short,
+	type: ComponentType.TextInput
+});
 
-const modalEditPrizeAdditionalInfo = (oldAdditionalInfo: string | null) =>
-	new TextInputBuilder()
-		.setPlaceholder("This prize was made with love!")
-		.setMaxLength(Prize.MaxAdditionalInfoLength)
-		.setMinLength(1)
-		.setCustomId("newAdditionalInfo")
-		.setRequired(false)
-		.setLabel("Additional info")
-		.setValue(oldAdditionalInfo ?? "")
-		.setStyle(TextInputStyle.Short);
+const modalEditPrizeAdditionalInfo = (
+	oldAdditionalInfo: string | null
+): APITextInputComponent => ({
+	placeholder: "This prize was made with love!",
+	max_length: Prize.MaxAdditionalInfoLength,
+	min_length: 1,
+	custom_id: "newAdditionalInfo",
+	required: false,
+	label: "Additional info",
+	value: oldAdditionalInfo ?? "",
+	style: TextInputStyle.Short,
+	type: ComponentType.TextInput
+});
 
-const modalEditPrizeQuantity = (oldQuantity: number) =>
-	new TextInputBuilder()
-		.setPlaceholder("1")
-		.setMaxLength(Prize.MaxQuantityLength)
-		.setMinLength(1)
-		.setCustomId("newQuantity")
-		.setRequired(true)
-		.setLabel("Quantity")
-		.setValue(oldQuantity.toString())
-		.setStyle(TextInputStyle.Short);
+const modalEditPrizeQuantity = (
+	oldQuantity: number
+): APITextInputComponent => ({
+	placeholder: "1",
+	max_length: Prize.MaxQuantityLength,
+	min_length: 1,
+	custom_id: "newQuantity",
+	required: true,
+	label: "Quantity",
+	value: oldQuantity.toString(),
+	style: TextInputStyle.Short,
+	type: ComponentType.TextInput
+});
 
 /**
  * Children: newName, newAdditionalInfo, newQuantity
@@ -266,50 +284,55 @@ export const editPrize = {
 		oldName: string;
 		oldAdditionalInfo: string | null;
 		oldQuantity: number;
-	}) =>
-		new ModalBuilder()
-			.setComponents(
-				new ActionRowBuilder<TextInputBuilder>().setComponents(
-					modalEditPrizeName(oldName)
-				),
-				new ActionRowBuilder<TextInputBuilder>().setComponents(
-					modalEditPrizeAdditionalInfo(oldAdditionalInfo)
-				),
-				new ActionRowBuilder<TextInputBuilder>().setComponents(
-					modalEditPrizeQuantity(oldQuantity)
-				)
-			)
-			.setCustomId(modalId())
-			.setTitle("Edit prize")
+	}): APIModalInteractionResponseCallbackData => ({
+		components: [
+			{
+				components: [modalEditPrizeName(oldName)],
+				type: ComponentType.ActionRow
+			},
+			{
+				components: [modalEditPrizeAdditionalInfo(oldAdditionalInfo)],
+				type: ComponentType.ActionRow
+			},
+			{
+				components: [modalEditPrizeQuantity(oldQuantity)],
+				type: ComponentType.ActionRow
+			}
+		],
+		custom_id: modalId(),
+		title: "Edit prize"
+	})
 } as const;
 
 // -----------------
 // - CREATE REPORT -
 // -----------------
 
-const modalCreateReportComment = () =>
-	new TextInputBuilder()
-		.setCustomId("comment")
-		.setLabel("Report comment for the moderators")
-		.setMaxLength(MAX_REPORT_COMMENT_LENGTH)
-		.setMinLength(1)
-		.setPlaceholder("Help them understand the context of this report.")
-		.setRequired(true)
-		.setStyle(TextInputStyle.Short);
+const modalCreateReportComment = (): APITextInputComponent => ({
+	custom_id: "comment",
+	label: "Report comment for the moderators",
+	max_length: MAX_REPORT_COMMENT_LENGTH,
+	min_length: 1,
+	placeholder: "Help them understand the context of this report.",
+	required: true,
+	style: TextInputStyle.Short,
+	type: ComponentType.TextInput
+});
 
 /**
  * Children: comment
  */
 export const createReport = {
-	component: () =>
-		new ModalBuilder()
-			.setComponents(
-				new ActionRowBuilder<TextInputBuilder>().setComponents(
-					modalCreateReportComment()
-				)
-			)
-			.setCustomId(modalId())
-			.setTitle("Create report")
+	component: (): APIModalInteractionResponseCallbackData => ({
+		components: [
+			{
+				components: [modalCreateReportComment()],
+				type: ComponentType.ActionRow
+			}
+		],
+		custom_id: modalId(),
+		title: "Create report"
+	})
 } as const;
 
 // ---
