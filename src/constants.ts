@@ -42,10 +42,16 @@ export const RegExp = {
 // Using Discord's colours if possible
 //    https://discord.com/branding
 export const Colors = {
-	EmbedInvisible: "#2B2D31",
-	Green: "#57F287",
-	Red: "#ED4245",
-	Yellow: "#FEE75C"
+	EmbedInvisible: "#2b2d31",
+	Green: "#57f287",
+	Red: "#ed4245",
+	Yellow: "#fee75c"
+} as const;
+export const ColorsHex = {
+	EmbedInvisible: 0x2b2d31,
+	Green: 0x57f287,
+	Red: 0xed4245,
+	Yellow: 0xfee75c
 } as const;
 
 export const Emojis = {
