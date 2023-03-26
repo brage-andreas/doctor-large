@@ -1,41 +1,23 @@
 import {
-	ActionRowBuilder,
+	type ComponentObjectWithNoParams,
+	type CreateRowsCompatibleAPIComponent,
+	type CreateRowsCompatibleRow
+} from "#typings";
+import {
 	ComponentType,
-	type ButtonBuilder,
-	type ChannelSelectMenuBuilder,
-	type MentionableSelectMenuBuilder,
-	type RoleSelectMenuBuilder,
-	type StringSelectMenuBuilder,
-	type UserSelectMenuBuilder
+	type APIActionRowComponent,
+	type APIButtonComponent
 } from "discord.js";
-
-interface ComponentObject {
-	readonly customId?: string;
-	component(): CompatibleComponentBuilder;
-}
-
-type CompatibleComponentBuilder =
-	| ButtonBuilder
-	| ChannelSelectMenuBuilder
-	| MentionableSelectMenuBuilder
-	| RoleSelectMenuBuilder
-	| StringSelectMenuBuilder
-	| UserSelectMenuBuilder;
-
-type CompatibleActionRow =
-	| ActionRowBuilder<ButtonBuilder>
-	| ActionRowBuilder<ChannelSelectMenuBuilder>
-	| ActionRowBuilder<MentionableSelectMenuBuilder>
-	| ActionRowBuilder<RoleSelectMenuBuilder>
-	| ActionRowBuilder<StringSelectMenuBuilder>
-	| ActionRowBuilder<UserSelectMenuBuilder>;
 
 export const createRows = (
 	...components: Array<
-		CompatibleComponentBuilder | ComponentObject | null | undefined
+		| ComponentObjectWithNoParams
+		| CreateRowsCompatibleAPIComponent
+		| null
+		| undefined
 	>
-): Array<CompatibleActionRow> => {
-	const rows: Array<CompatibleActionRow> = [];
+): Array<CreateRowsCompatibleRow> => {
+	const rows: Array<CreateRowsCompatibleRow> = [];
 
 	for (const componentOrObject of components) {
 		if (!componentOrObject) {
@@ -47,91 +29,40 @@ export const createRows = (
 				? componentOrObject.component()
 				: componentOrObject;
 
-		if (!component.data.type) {
+		if (component.type !== ComponentType.Button) {
+			rows.push({
+				components: [component],
+				type: ComponentType.ActionRow
+			});
+
 			continue;
 		}
 
-		switch (component.data.type) {
-			case ComponentType.Button: {
-				let last = rows.at(-1) ?? new ActionRowBuilder<ButtonBuilder>();
+		let last = rows.at(-1) ?? {
+			components: [],
+			type: ComponentType.ActionRow
+		};
 
-				if (
-					last.components.some(
-						(c) => c.data.type !== ComponentType.Button
-					)
-				) {
-					last = new ActionRowBuilder<ButtonBuilder>();
-				} else if (last.components.length) {
-					rows.pop();
-				}
+		if (last.components.some((c) => c.type !== ComponentType.Button)) {
+			last = {
+				components: [],
+				type: ComponentType.ActionRow
+			};
+		} else if (last.components.length) {
+			rows.pop();
+		}
 
-				last = last as ActionRowBuilder<ButtonBuilder>;
+		last = last as APIActionRowComponent<APIButtonComponent>;
 
-				if (last.components.length === 5) {
-					const newRow =
-						new ActionRowBuilder<ButtonBuilder>().setComponents(
-							component as ButtonBuilder
-						);
+		if (last.components.length === 5) {
+			rows.push({
+				components: [component],
+				type: ComponentType.ActionRow
+			});
+		} else {
+			last.components.push(component);
 
-					rows.push(newRow);
-				} else {
-					last.addComponents(component as ButtonBuilder);
-
-					rows.push(last);
-				}
-
-				break;
-			}
-
-			case ComponentType.ChannelSelect: {
-				rows.push(
-					new ActionRowBuilder<ChannelSelectMenuBuilder>().setComponents(
-						component as ChannelSelectMenuBuilder
-					)
-				);
-
-				break;
-			}
-
-			case ComponentType.MentionableSelect: {
-				rows.push(
-					new ActionRowBuilder<MentionableSelectMenuBuilder>().setComponents(
-						component as MentionableSelectMenuBuilder
-					)
-				);
-
-				break;
-			}
-
-			case ComponentType.RoleSelect: {
-				rows.push(
-					new ActionRowBuilder<RoleSelectMenuBuilder>().setComponents(
-						component as RoleSelectMenuBuilder
-					)
-				);
-
-				break;
-			}
-
-			case ComponentType.StringSelect: {
-				rows.push(
-					new ActionRowBuilder<StringSelectMenuBuilder>().setComponents(
-						component as StringSelectMenuBuilder
-					)
-				);
-
-				break;
-			}
-
-			case ComponentType.UserSelect: {
-				rows.push(
-					new ActionRowBuilder<UserSelectMenuBuilder>().setComponents(
-						component as UserSelectMenuBuilder
-					)
-				);
-
-				break;
-			}
+			rows.push(last);
 		}
 	}
 
