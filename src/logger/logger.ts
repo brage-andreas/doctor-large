@@ -1,8 +1,4 @@
-import {
-	DEFAULT_LOGGER_COLOR,
-	DEFAULT_LOGGER_PREFIX,
-	MAX_LOGGER_PREFIX_PAD as MAX_LOGGER_PREFIX_PAD_LENGTH
-} from "#constants";
+import { DEFAULT_LOGGER_COLOR, DEFAULT_LOGGER_PREFIX } from "#constants";
 import { type Color } from "#typings";
 import {
 	type ContextMenuCommandInteraction,
@@ -126,34 +122,25 @@ export default class Logger {
 			timeZone: "UTC"
 		});
 
-		const maxLength = Math.max(
-			this.prefix.length,
-			MAX_LOGGER_PREFIX_PAD_LENGTH
-		);
-
-		const prefix = grey("::").padStart(maxLength, " ");
+		const prefix = grey("::");
 
 		const color = getColorFn(this.color);
 
 		console.log(`${color(this.prefix)} ${grey(date)}`);
 
 		for (const item of itemsToLog) {
-			const isFunction = typeof item === "function";
-			const isObject = typeof item === "object";
-			const isError = item instanceof Error;
-
 			let string: string;
 
-			if (isError) {
+			if (item instanceof Error) {
 				string = item.stack ?? `${item.name}: ${item.message}`;
-			} else if (isObject || isFunction) {
+			} else if (typeof item === "object" || typeof item === "function") {
 				string = JSON.stringify(item, replacer, 2);
 			} else {
 				string = String(item);
 			}
 
 			for (const line of string.split("\n")) {
-				console.log(`${prefix} ${line}`);
+				console.log(`  ${prefix} ${line}`);
 			}
 		}
 
