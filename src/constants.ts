@@ -33,7 +33,7 @@ export const EVENT_DIR = new URL("./events", import.meta.url);
 export const RegExp = {
 	AcceptPrizeCustomId: /^accept-prize-(?<id>\d+)$/,
 	DashboardPrizeCustomId: /^dashboard-prize-(?<id>\d+)/,
-	Emoji: /<(?<animated>a?):(?<name>[\w\d]+):(?<id>\d{17,19})>/,
+	Emoji: /<(?<animated>a?):(?<name>\w+):(?<id>\d{17,19})>/,
 	EnterGiveawayCustomId: /^enter-giveaway-(?<id>\d+)$/,
 	Id: /\d{17,19}/,
 	MessageURL:

@@ -21,11 +21,11 @@ import {
 } from "@prisma/client";
 import { oneLine, source, stripIndent, stripIndents } from "common-tags";
 import {
-	bold,
 	EmbedBuilder,
+	PermissionFlagsBits,
+	bold,
 	hideLinkEmbed,
 	hyperlink,
-	PermissionFlagsBits,
 	type Client,
 	type Guild,
 	type GuildMember,
@@ -144,8 +144,10 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		);
 
 		this.winners = this.prizes.reduce(
-			(winners, prize) =>
-				winners.concat(prize.winners.map((w) => ({ ...w, prize }))),
+			(winners, prize) => [
+				...winners,
+				...prize.winners.map((w) => ({ ...w, prize }))
+			],
 			[] as Array<Winner & { prize: PrizeModule }>
 		);
 		// ----------------------

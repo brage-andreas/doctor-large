@@ -99,8 +99,8 @@ const run = async (
 			};
 
 			map.set(g.guildRelativeId, {
-				claimed: old.claimed.concat([...prizes.claimed.values()]),
-				unclaimed: old.unclaimed.concat([...prizes.unclaimed.values()])
+				claimed: [...old.claimed, ...prizes.claimed.values()],
+				unclaimed: [...old.unclaimed, ...prizes.unclaimed.values()]
 			});
 
 			const claimedSize = [...prizes.claimed.values()].reduce(
