@@ -20,9 +20,8 @@
 	"author": "Drango",
 	"license": "MIT",
 	"dependencies": {
-		"@drango/tag-functions": "^1.0.9",
 		"@prisma/client": "^4.11.0",
-		"common-tags": "^1.8.2",
+		"common-tags": "^2.0.0-alpha.1",
 		"discord.js": "^14.8.0",
 		"dotenv": "^16.0.3",
 		"ms": "^2.1.3"
