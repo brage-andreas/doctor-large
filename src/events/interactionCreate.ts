@@ -69,7 +69,7 @@ const execute = async (interaction: Interaction) => {
 
 	if (interaction.isChatInputCommand()) {
 		if (!command.handle.chatInput) {
-			throw new Error(
+			throw new TypeError(
 				`Command '${interaction.commandName}' called as type 'chatInput' is missing handle of same type`
 			);
 		}
@@ -77,7 +77,7 @@ const execute = async (interaction: Interaction) => {
 		await command.handle.chatInput(interaction);
 	} else if (interaction.isAutocomplete()) {
 		if (!command.handle.autocomplete) {
-			throw new Error(
+			throw new TypeError(
 				`Command '${interaction.commandName}' called as type 'autocomplete' is missing handle of same type`
 			);
 		}
@@ -85,7 +85,7 @@ const execute = async (interaction: Interaction) => {
 		await command.handle.autocomplete(interaction);
 	} else if (interaction.isContextMenuCommand()) {
 		if (!command.handle.contextMenu) {
-			throw new Error(
+			throw new TypeError(
 				`Command '${interaction.commandName}' called as type 'contextMenu' is missing handle of same type`
 			);
 		}

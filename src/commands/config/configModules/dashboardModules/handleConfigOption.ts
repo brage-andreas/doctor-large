@@ -89,7 +89,7 @@ async function roles(
 
 				case components.selectMenus.role.customId: {
 					if (!interaction.isRoleSelectMenu()) {
-						throw new Error(
+						throw new TypeError(
 							"Role select menu component is not of type RoleSelectMenu"
 						);
 					}
@@ -101,7 +101,7 @@ async function roles(
 
 				case components.buttons.clear.customId: {
 					if (!interaction.isButton()) {
-						throw new Error(
+						throw new TypeError(
 							"Button component is not of type Button"
 						);
 					}
@@ -223,7 +223,7 @@ async function channels(
 
 				case components.selectMenus.channel.customId: {
 					if (!interaction.isChannelSelectMenu()) {
-						throw new Error(
+						throw new TypeError(
 							"Channel select menu component is not of type ChannelSelectMenu"
 						);
 					}
@@ -235,7 +235,7 @@ async function channels(
 
 				case components.buttons.clear.customId: {
 					if (!interaction.isButton()) {
-						throw new Error(
+						throw new TypeError(
 							"Button component is not of type Button"
 						);
 					}

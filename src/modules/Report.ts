@@ -57,7 +57,7 @@ export class UserReportModule
 		this.manager = manager;
 
 		if (manager.guild.id !== data.guildId) {
-			throw new Error(
+			throw new TypeError(
 				`Value 'manager.guild.id' (${manager.guild.id}) does not match 'data.guildId' (${data.guildId}).`
 			);
 		}

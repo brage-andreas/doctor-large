@@ -18,7 +18,7 @@ const formatEmoji = (emoji: string): APIMessageComponentEmoji => {
 	const match = emoji.match(RegExp.Emoji);
 
 	if (!match?.groups) {
-		throw new Error(
+		throw new TypeError(
 			`Supplied emoji is not unicode nor Discord emoji: ${emoji}`
 		);
 	}

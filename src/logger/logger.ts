@@ -85,7 +85,7 @@ export default class Logger {
 
 	private _logInteraction(...messages: Array<unknown>) {
 		if (!this.interaction) {
-			throw new Error("`this.interaction` is not set");
+			throw new TypeError("`this.interaction` is not set");
 		}
 
 		const { channel, guild: interactionGuild, user } = this.interaction;

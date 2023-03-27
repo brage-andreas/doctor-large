@@ -19,7 +19,7 @@ export default async function loadEvents(client: Client) {
 		}
 
 		const err = (string: string) => {
-			throw new Error(`File '/events/${fileName}' ${string}`);
+			throw new TypeError(`File '/events/${fileName}' ${string}`);
 		};
 
 		const rawEventImport = await import(url.toString());

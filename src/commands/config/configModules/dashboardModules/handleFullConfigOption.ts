@@ -111,7 +111,7 @@ export default async function handleFullConfigOption(
 
 				case components.selectMenus.channel.customId: {
 					if (!interaction.isChannelSelectMenu()) {
-						throw new Error(
+						throw new TypeError(
 							"Channel select menu component is not of type ChannelSelectMenu"
 						);
 					}
@@ -123,7 +123,7 @@ export default async function handleFullConfigOption(
 
 				case components.buttons.enable.customId: {
 					if (!interaction.isButton()) {
-						throw new Error(
+						throw new TypeError(
 							"Button component is not of type Button"
 						);
 					}
@@ -135,7 +135,7 @@ export default async function handleFullConfigOption(
 
 				case components.buttons.disable.customId: {
 					if (!interaction.isButton()) {
-						throw new Error(
+						throw new TypeError(
 							"Button component is not of type Button"
 						);
 					}
@@ -147,7 +147,7 @@ export default async function handleFullConfigOption(
 
 				case components.buttons.clear.customId: {
 					if (!interaction.isButton()) {
-						throw new Error(
+						throw new TypeError(
 							"Button component is not of type Button"
 						);
 					}

@@ -25,11 +25,11 @@ export default async function putCommandsToDiscord(
 	{ clear }: { clear: boolean } = { clear: false }
 ) {
 	if (!process.env.BOT_TOKEN) {
-		throw new Error("'BOT_TOKEN' option is not defined in .env");
+		throw new TypeError("'BOT_TOKEN' option is not defined in .env");
 	}
 
 	if (!process.env.CLIENT_ID) {
-		throw new Error("'CLIENT_ID' option not defined in .env");
+		throw new TypeError("'CLIENT_ID' option not defined in .env");
 	}
 
 	const {
@@ -39,13 +39,13 @@ export default async function putCommandsToDiscord(
 	} = process.env;
 
 	if (!RegExp.Id.test(clientId)) {
-		throw new Error(
+		throw new TypeError(
 			`'CLIENT_ID' option defined in .env is faulty: ${clientId}`
 		);
 	}
 
 	if (guildId && !RegExp.Id.test(guildId)) {
-		throw new Error(
+		throw new TypeError(
 			`'GUILD_ID' option defined in .env is faulty: ${guildId}`
 		);
 	}
