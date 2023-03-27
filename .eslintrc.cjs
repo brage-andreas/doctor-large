@@ -2,8 +2,7 @@ const { builtinModules } = require("node:module");
 const { Linter } = require("eslint");
 const eslintConfig = require("./.eslintrc.json");
 
-// Two `.eslintrc` files are being used as there is better intellisense
-// in the JSON file, and this is the best of both worlds
+// Two `.eslintrc` files are being used since there is better intellisense in the JSON file.
 
 /**
  * @type {Linter.Config}
