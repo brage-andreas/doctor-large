@@ -201,22 +201,47 @@ export default class ConfigModule
 		const message = await report.preparePost();
 
 		if (!this.reportChannel.isTextBased()) {
-			return await this.reportChannel.threads
+			const thread = await this.reportChannel.threads
 				.create({
 					message,
 					name: `Report #${report.guildRelativeId} by ${report.authorUserTag}`
 				})
-				.then(() => true)
-				.catch(() => false);
+				.catch(() => null);
+
+			if (!thread) {
+				return false;
+			}
+
+			report.manager.edit({
+				where: {
+					id: report.id
+				},
+				data: {
+					logChannelId: thread.id,
+					logMessageId: thread.id
+				}
+			});
+
+			return true;
 		}
 
-		return await this.reportChannel
-			.send({
-				...message,
-				content: `Report #${report.guildRelativeId} by ${report.authorUserTag}`
-			})
-			.then(() => true)
-			.catch(() => false);
+		const msg = await this.reportChannel.send(message).catch(() => null);
+
+		if (!msg) {
+			return false;
+		}
+
+		report.manager.edit({
+			where: {
+				id: report.id
+			},
+			data: {
+				logChannelId: this.reportChannelId,
+				logMessageId: msg.id
+			}
+		});
+
+		return true;
 	}
 
 	public setProtectedChannels() {
