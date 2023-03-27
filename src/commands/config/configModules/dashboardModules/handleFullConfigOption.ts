@@ -4,6 +4,7 @@ import type ConfigModule from "#modules/Config.js";
 import { stripIndent } from "common-tags";
 import {
 	EmbedBuilder,
+	inlineCode,
 	type ButtonInteraction,
 	type ChannelSelectMenuInteraction,
 	type ChannelType,
@@ -27,7 +28,9 @@ const createEmbed = (
 				channel
 					? `${channel} - #${channel.name} (${channel.id})`
 					: channelId
-					? `${Emojis.Warn} Channel \`${channelId}\` not found`
+					? `${Emojis.Warn} Channel ${inlineCode(
+							channelId
+					  )} not found`
 					: `Not set${comment ? `. ${comment}` : ""}`
 			}
 			Enabled: ${enabled ? `${Emojis.On} Yes` : `${Emojis.Off} No`}

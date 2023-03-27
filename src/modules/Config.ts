@@ -4,9 +4,10 @@ import ReportManager from "#database/report.js";
 import { type Config } from "@prisma/client";
 import { source } from "common-tags";
 import {
-	bold,
 	ChannelType,
 	EmbedBuilder,
+	bold,
+	inlineCode,
 	type Channel,
 	type ChannelResolvable,
 	type Client,
@@ -244,7 +245,9 @@ export default class ConfigModule
 				return `${Emojis.On} • ${Emojis.Error} Channel not found.`;
 			}
 
-			return `${Emojis.On} • ${channel} (\`#${channel.name}\`, \`${channelId}\`)`;
+			return `${Emojis.On} • ${channel} (${inlineCode(
+				`#${channel.name}`
+			)}), ${inlineCode(channelId)})`;
 		};
 
 		const pinArchiveStr = this.pinArchiveChannel
@@ -266,7 +269,9 @@ export default class ConfigModule
 
 						return channel
 							? `→ ${channel} (${type})`
-							: `→ ${Emojis.Warn} Unknown channel \`${id}\``;
+							: `→ ${Emojis.Warn} Unknown channel ${inlineCode(
+									id
+							  )}`;
 					})
 					.slice(0, 5)}
 				${

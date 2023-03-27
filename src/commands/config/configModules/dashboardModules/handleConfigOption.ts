@@ -1,9 +1,10 @@
 import components from "#components";
 import { Colors, Emojis } from "#constants";
 import ConfigModule from "#modules/Config.js";
-import { source } from "common-tags";
+import { oneLine, source } from "common-tags";
 import {
 	EmbedBuilder,
+	inlineCode,
 	type ButtonInteraction,
 	type ChannelSelectMenuInteraction,
 	type ChannelType
@@ -26,8 +27,11 @@ async function roles(
 		const role = interaction.guild.roles.cache.get(id);
 
 		return role
-			? `→ \`${role.id}\` ${role} (\`@${role.name}\`)`
-			: `→ ${Emojis.Error} Role \`${id}\` not found.`;
+			? oneLine`
+				→ ${inlineCode(role.id)} ${role}
+				(${inlineCode(`@${role.name}`)})
+			`
+			: `→ ${Emojis.Error} Role ${inlineCode(id)} not found.`;
 	});
 
 	const nameString = options.type.split(/(?=[A-Z])/).join(" ");
@@ -151,8 +155,8 @@ async function channels(
 			const type = ConfigModule.getTypeFromChannel(channel);
 
 			return channel
-				? `→ \`${channel.id}\` ${channel} (${type})`
-				: `→ ${Emojis.Warn} Unknown channel \`${id}\``;
+				? `→ ${inlineCode(channel.id)} ${channel} (${type})`
+				: `→ ${Emojis.Warn} Unknown channel ${inlineCode(id)}`;
 		});
 
 	const embed = new EmbedBuilder()

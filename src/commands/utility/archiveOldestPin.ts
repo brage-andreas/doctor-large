@@ -10,9 +10,10 @@ import { type CommandData, type CommandExport } from "#typings";
 import { oneLine, stripIndent, stripIndents } from "common-tags";
 import {
 	ChannelType,
+	PermissionFlagsBits,
 	hideLinkEmbed,
 	hyperlink,
-	PermissionFlagsBits,
+	inlineCode,
 	underscore,
 	type ChatInputCommandInteraction,
 	type GuildTextBasedChannel,
@@ -50,7 +51,7 @@ const chatInput = async (
 		await interaction.editReply({
 			content: oneLine`
 				${Emojis.Error} I am missing permissions to unpin messages in
-				this channel. Permissions needed: \`Manage Messages\`.
+				this channel. Permissions needed: ${inlineCode("Manage Messages")}.
 			`
 		});
 
@@ -184,7 +185,9 @@ const chatInput = async (
 		if (!selectedChannel) {
 			await component.editReply({
 				components: [],
-				content: `${Emojis.Error} I could not find channel \`${channelId}\`. Please try again later.`,
+				content: `${Emojis.Error} I could not find channel ${inlineCode(
+					channelId
+				)}. Please try again later.`,
 				embeds: []
 			});
 
@@ -278,7 +281,7 @@ const chatInput = async (
 				Causes of failure ${underscore("could")} be:
 				  a) message was unpinned since the command was used
 				  b) message was deleted since the command was used
-				  c) I am missing \`Manage Messages\` permission
+				  c) I am missing ${inlineCode("Manage Messages")} permission
 			`,
 			embeds: []
 		});

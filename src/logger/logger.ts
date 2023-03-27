@@ -73,7 +73,7 @@ export default class Logger {
 
 		if (this.guild) {
 			const { name, id } = this.guild;
-			const guildString = `${grey`Guild:`} ${name} ${grey`(${id})`}`;
+			const guildString = `${grey("Guild:")} ${name} ${grey(`(${id})`)}`;
 
 			toLog.push(guildString);
 		}
@@ -91,21 +91,25 @@ export default class Logger {
 		const { channel, guild: interactionGuild, user } = this.interaction;
 		const guild = this.guild ?? interactionGuild;
 
-		const prefixArr = [`${grey`User:`} ${user.tag} ${grey(user.id)}`];
+		const prefixArr = [`${grey("User:")} ${user.tag} ${grey(user.id)}`];
 
 		if (channel) {
 			prefixArr.push(
-				`${grey`Channel:`} #${channel.name} ${grey`(${channel.id})`}`
+				`${grey("Channel:")} #${channel.name} ${grey(
+					`(${channel.id})`
+				)}`
 			);
 		}
 
-		prefixArr.push(`${grey`Guild:`} ${guild.name} ${grey`(${guild.id})`}`);
+		prefixArr.push(
+			`${grey("Guild:")} ${guild.name} ${grey(`(${guild.id})`)}`
+		);
 
-		const toLog = [prefixArr.join(grey` | `)];
+		const toLog = [prefixArr.join(grey(" | "))];
 
 		const commandString =
 			this.interaction.isChatInputCommand() &&
-			grey`>> ${this.interaction}`;
+			grey(`>> ${this.interaction}`);
 
 		if (commandString) {
 			toLog.push(commandString);

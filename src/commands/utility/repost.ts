@@ -13,6 +13,7 @@ import {
 	ApplicationCommandOptionType,
 	ApplicationCommandType,
 	PermissionFlagsBits,
+	inlineCode,
 	type ChatInputCommandInteraction,
 	type Message,
 	type MessageContextMenuCommandInteraction
@@ -91,7 +92,7 @@ const chatInput = async (
 			ephemeral: true,
 			content: stripIndents`
 				${Emojis.Error} Could not parse the message URL. Double-check it and try again.
-				\`${urlInput}\`
+				${inlineCode(urlInput)}
 			`
 		});
 
@@ -112,7 +113,9 @@ const chatInput = async (
 	if (!channel?.isTextBased()) {
 		await interaction.reply({
 			ephemeral: true,
-			content: `${Emojis.Error} The channel from the URL is invalid: \`${urlInput}\``
+			content: `${
+				Emojis.Error
+			} The channel from the URL is invalid: ${inlineCode(urlInput)}`
 		});
 
 		return;
@@ -138,7 +141,9 @@ const chatInput = async (
 	if (!message) {
 		await interaction.reply({
 			ephemeral: true,
-			content: `${Emojis.Error} I could not find a message with the URL: \`${urlInput}\``
+			content: `${
+				Emojis.Error
+			} I could not find a message with the URL: ${inlineCode(urlInput)}`
 		});
 
 		return;

@@ -9,6 +9,7 @@ import {
 	ButtonStyle,
 	ComponentType,
 	EmbedBuilder,
+	inlineCode,
 	type APIButtonComponentWithCustomId,
 	type ButtonInteraction,
 	type ModalSubmitInteraction
@@ -65,7 +66,7 @@ export default async function toManagePrizes(
 					.slice(start, end)
 					.map(
 						(prize, index) =>
-							`\` Prize ${start + index + 1} \` - ${
+							`${inlineCode(`Prize ${start + index + 1}`)} - ${
 								prize.quantity
 							}x ${prize.name}`
 					)

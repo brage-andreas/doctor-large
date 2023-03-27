@@ -133,7 +133,7 @@ const importAndSetCommandIntoMap = async (relativePath: string) => {
 		name = cmd.data.chatInput.name;
 	}
 
-	console.log(grey`Loaded command '${name}'`);
+	console.log(grey(`Loaded command '${name}'`));
 };
 
 const isFolder = (url: URL) => existsSync(url) && lstatSync(url).isDirectory();

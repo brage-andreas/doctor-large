@@ -1,5 +1,10 @@
 import { stripIndents } from "common-tags";
-import { type EmbedField, type GuildMember, type User } from "discord.js";
+import {
+	inlineCode,
+	type EmbedField,
+	type GuildMember,
+	type User
+} from "discord.js";
 import { listify } from "./listify.js";
 import { longstamp } from "./timestamps.js";
 
@@ -38,7 +43,7 @@ export default function getMemberInfo(
 		inline: false,
 		name: prefix ? `${prefix} user info` : "User info",
 		value: stripIndents`
-			Name: ${user} - \`${user.tag}\` (${user.id})
+			Name: ${user} - ${inlineCode(user.tag)} (${user.id})
 			Created: ${longstamp(user.createdAt)}
 		`
 	};

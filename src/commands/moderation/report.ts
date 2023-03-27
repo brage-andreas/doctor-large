@@ -171,7 +171,9 @@ const handleMember = async (
 	comment: string,
 	anonymous?: boolean
 ) => {
-	const memberString = `${member} - \`${member.user.tag}\` (${member.id})`;
+	const memberString = `${member} - ${inlineCode(member.user.tag)} (${
+		member.id
+	})`;
 
 	const anonymousComment = anonymous ? "→ You opted to stay anonymous\n" : "";
 
@@ -264,7 +266,7 @@ const chatInput = async (
 			await interaction.editReply({
 				content: stripIndents`
 					${Emojis.Error} Could not parse the message URL. Double-check it and try again.
-					\`${messageURL}\`
+					${inlineCode(messageURL)}
 				`
 			});
 
@@ -285,7 +287,11 @@ const chatInput = async (
 
 		if (!channel?.isTextBased()) {
 			await interaction.editReply({
-				content: `${Emojis.Error} The channel from the URL is invalid: \`${messageURL}\``
+				content: `${
+					Emojis.Error
+				} The channel from the URL is invalid: ${inlineCode(
+					messageURL
+				)}`
 			});
 
 			return;
@@ -296,7 +302,11 @@ const chatInput = async (
 		if (!message) {
 			await interaction.reply({
 				ephemeral: true,
-				content: `${Emojis.Error} I could not find a message with the URL: \`${messageURL}\``
+				content: `${
+					Emojis.Error
+				} I could not find a message with the URL: ${inlineCode(
+					messageURL
+				)}`
 			});
 
 			return;
