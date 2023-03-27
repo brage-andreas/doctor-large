@@ -12,7 +12,7 @@
 		"sourceType": "module"
 	},
 
-	"plugins": ["@typescript-eslint", "import"],
+	"plugins": ["@typescript-eslint", "import", "unicorn"],
 	"extends": [
 		"eslint:recommended",
 		"plugin:@typescript-eslint/recommended",
@@ -112,6 +112,14 @@
 		"prefer-template": "error",
 		"quote-props": ["error", "consistent-as-needed"],
 		"quotes": ["error", "double", { "avoidEscape": true }],
+		"unicorn/better-regex": "error",
+		"unicorn/new-for-builtins": "error",
+		"unicorn/no-instanceof-array": "error",
+		"unicorn/no-new-buffer": "error",
+		"unicorn/prefer-node-protocol": "error",
+		"unicorn/prefer-spread": "error",
+		"unicorn/prefer-string-slice": "error",
+		"unicorn/require-array-join-separator": "error",
 		"yoda": ["error", "never"]
 	}
 }
