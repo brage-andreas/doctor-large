@@ -2,14 +2,16 @@ import components from "#components";
 import { Emojis } from "#constants";
 import ConfigManager from "#database/config.js";
 import ReportManager from "#database/report.js";
+import { ModalCollector } from "#helpers/ModalCollector.js";
 import {
 	messageFromURL,
 	messageToEmbed,
 	parseMessageURL
 } from "#helpers/messageHelpers.js";
-import { ModalCollector } from "#helpers/ModalCollector.js";
+import trim from "#helpers/trim.js";
 import yesNo from "#helpers/yesNo.js";
 import type ConfigModule from "#modules/Config.js";
+import { type UserReportModule } from "#modules/Report.js";
 import { type CommandData, type CommandExport } from "#typings";
 import { stripIndents } from "common-tags";
 import {
@@ -101,18 +103,30 @@ const handleMessage = async (
 ) => {
 	const messageEmbed = messageToEmbed(message);
 
-	const anonymousComment = anonymous ? "→ You opted to stay anonymous\n" : "";
+	const reportManager = new ReportManager(interaction.guild);
+
+	const hasRecentReport = await reportManager.hasRecentReport({
+		targetMessageId: message.id,
+		targetUserId: message.author.id
+	});
 
 	const res = await yesNo({
 		medium: interaction,
 		data: {
-			content: stripIndents`
+			content: trim(stripIndents`
 				${Emojis.FaceInClouds} Are you sure you want to report this message?
+
+				${
+					hasRecentReport
+						? `${Emojis.Warn} This member or message has recently been reported. Multiple reports may not be necessary.`
+						: ""
+				}
 				
-				${anonymousComment}→ Comment: ${inlineCode(comment.replaceAll("`", "\\`"))}
+				${anonymous ? "→ You opted to stay anonymous" : ""}
+				→ Comment: ${inlineCode(comment.replaceAll("`", "\\`"))}
 				
 				The message:
-			`,
+			`),
 			embeds: [messageEmbed]
 		}
 	});
@@ -134,7 +148,6 @@ const handleMessage = async (
 		return;
 	}
 
-	const reportManager = new ReportManager(interaction.guild);
 	const guildRelativeId = await reportManager.getNextGuildRelativeId();
 
 	const report = await reportManager.createMessageReport({
@@ -175,16 +188,27 @@ const handleMember = async (
 		member.id
 	})`;
 
-	const anonymousComment = anonymous ? "→ You opted to stay anonymous\n" : "";
+	const reportManager = new ReportManager(interaction.guild);
+
+	const hasRecentReport = await reportManager.hasRecentReport({
+		targetUserId: member.id
+	});
 
 	const res = await yesNo({
 		medium: interaction,
 		data: {
-			content: stripIndents`
+			content: trim(stripIndents`
 				${Emojis.FaceInClouds} Are you sure you want to report ${memberString}?
 				
-				${anonymousComment}→ Comment: ${inlineCode(comment.replaceAll("`", "\\`"))}
-			`
+				${
+					hasRecentReport
+						? `${Emojis.Warn} This member has recently been reported. Multiple reports may not be necessary.`
+						: ""
+				}
+
+				${anonymous ? "→ You opted to stay anonymous" : ""}
+				→ Comment: ${inlineCode(comment.replaceAll("`", "\\`"))}
+			`)
 		}
 	});
 
@@ -197,10 +221,9 @@ const handleMember = async (
 		return;
 	}
 
-	const reportManager = new ReportManager(interaction.guild);
 	const guildRelativeId = await reportManager.getNextGuildRelativeId();
 
-	const report = await reportManager.createUserReport({
+	const report = await reportManager.createUserReport<UserReportModule>({
 		anonymous,
 		authorUserId: interaction.user.id,
 		authorUserTag: interaction.user.tag,

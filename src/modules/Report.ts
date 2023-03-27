@@ -6,10 +6,6 @@ import { type Report, type ReportType } from "@prisma/client";
 import { oneLine, stripIndents } from "common-tags";
 import {
 	SnowflakeUtil,
-	blockQuote,
-	bold,
-	hideLinkEmbed,
-	hyperlink,
 	inlineCode,
 	userMention,
 	type APIEmbed,
@@ -23,7 +19,7 @@ export const isMessageReport = (
 ): data is Report & {
 	targetMessageChannelId: string;
 	targetMessageId: string;
-} => "targetMessageChannelId" in data && "targetMessageId" in data;
+} => Boolean(data.targetMessageChannelId) && Boolean(data.targetMessageId);
 
 export class UserReportModule
 	implements Omit<Report, "targetMessageChannelId" | "targetMessageId">
@@ -137,13 +133,6 @@ export class UserReportModule
 		return {
 			author,
 			color: this.processedAt ? ColorsHex.Green : ColorsHex.Red,
-			description: stripIndents`
-				${bold("Type")}: User report.
-				${bold("Target")}: ${this.targetMentionString()}
-
-				Author's comment:
-				${blockQuote(this.comment)}
-			`,
 			fields,
 			footer: { text: `Report #${this.guildRelativeId}` }
 		};
@@ -196,18 +185,9 @@ export class MessageReportModule extends UserReportModule {
 			? { name: "Anonymous user" }
 			: { name: `${this.authorUserTag} (${this.authorUserId})` };
 
-		const link = hyperlink("Message", hideLinkEmbed(this.targetMessageURL));
-
 		return {
 			author,
 			color: this.processedAt ? ColorsHex.Green : ColorsHex.Red,
-			description: stripIndents`
-					${bold("Type")}: Message report
-					${bold("Target")}: ${link} by ${this.targetMentionString()}
-					
-					Author's comment:
-					${blockQuote(this.comment)}
-				`,
 			fields,
 			footer: { text: `Report #${this.guildRelativeId}` }
 		};

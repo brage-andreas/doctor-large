@@ -1,11 +1,22 @@
 import components from "#components";
+import { messageToEmbed } from "#helpers/messageHelpers.js";
 import {
 	isMessageReport,
 	MessageReportModule,
 	UserReportModule
 } from "#modules/Report.js";
 import { ReportType, type Prisma, type Report } from "@prisma/client";
-import { type Guild, type MessageCreateOptions } from "discord.js";
+import { oneLine, stripIndent } from "common-tags";
+import {
+	blockQuote,
+	bold,
+	inlineCode,
+	userMention,
+	type APIButtonComponent,
+	type APIEmbed,
+	type Guild,
+	type MessageCreateOptions
+} from "discord.js";
 import prisma from "./prisma.js";
 
 export default class ReportManager {
@@ -75,41 +86,135 @@ export default class ReportManager {
 		return (data?.guildRelativeId ?? 0) + 1;
 	}
 
-	public async createMessageReport(
+	public async hasRecentReport({
+		targetMessageId,
+		targetUserId
+	}: {
+		targetMessageId?: string;
+		targetUserId?: string;
+	}): Promise<boolean> {
+		if (!targetMessageId && !targetUserId) {
+			return false;
+		}
+
+		const THIRTY_MINUTES = 1_800_000;
+		const thirtyMinutesAgo = new Date(Date.now() - THIRTY_MINUTES);
+
+		const res = await this.prisma.findFirst({
+			where: {
+				createdAt: {
+					gte: thirtyMinutesAgo
+				},
+				targetMessageId,
+				targetUserId
+			},
+			select: {
+				type: true
+			}
+		});
+
+		return Boolean(res);
+	}
+
+	public async edit(args: Prisma.ReportUpdateArgs) {
+		const data_ = await this.prisma.update({ ...args });
+
+		return this.toModule(data_);
+	}
+
+	public async createMessageReport<
+		T extends MessageReportModule | UserReportModule
+	>(
 		data: Omit<Prisma.ReportCreateInput, "type"> & {
 			targetMessageId: string;
 			targetMessageChannelId: string;
 		}
 	) {
-		return await this.create({ ...data, type: ReportType.Message });
+		return await this.create<T>({ ...data, type: ReportType.Message });
 	}
 
-	public async createUserReport(
+	public async createUserReport<
+		T extends MessageReportModule | UserReportModule
+	>(
 		data: Omit<
 			Prisma.ReportCreateInput,
 			"targetMessageChannelId" | "targetMessageId" | "type"
 		>
 	) {
-		return await this.create({ ...data, type: ReportType.User });
+		return await this.create<T>({ ...data, type: ReportType.User });
 	}
 
 	public async preparePost(
-		module: MessageReportModule | UserReportModule
+		report: MessageReportModule | UserReportModule
 	): Promise<MessageCreateOptions> {
-		const rows = components.createRows(
-			components.buttons.attachToLatestCase,
-			components.buttons.markComplete
-		);
+		const buttons: Array<APIButtonComponent> = [
+			components.buttons.attachToLatestCase.component(),
+			components.buttons.markComplete.component()
+		];
+
+		const authorShortMention = report.anonymous
+			? "anonymous user"
+			: userMention(report.authorUserId);
+
+		const authorFullMention = report.anonymous
+			? "Anonymous user"
+			: oneLine`
+				${userMention(report.authorUserId)} -
+				${inlineCode(report.authorUserTag)}
+				(${report.authorUserId})
+			`;
+
+		const embeds: Array<APIEmbed> = [];
+		let content: string;
+
+		if (report.isMessageReport()) {
+			const urlButton = components.buttons.url({
+				label: "Go to message",
+				url: report.targetMessageURL
+			});
+
+			buttons.push(urlButton.component());
+
+			const msg = await report.fetchTargetMessage();
+
+			if (msg) {
+				embeds.push(messageToEmbed(msg));
+			}
+
+			content = stripIndent`
+				${bold(`Report #${report.guildRelativeId}`)} by ${authorShortMention}
+				  → Type: Message report
+				  → Target: Message by ${report.targetMentionString()}
+				  → Author: ${authorFullMention}
+
+				Comment:
+				${blockQuote(report.comment)}
+			`;
+		} else {
+			content = stripIndent`
+				${bold(`Report #${report.guildRelativeId}`)} by ${authorShortMention}
+				  → Type: User report
+				  → Target: ${report.targetMentionString()}
+
+				Comment:
+				${blockQuote(report.comment)}
+			`;
+		}
+
+		embeds.push(await report.toEmbed());
 
 		return {
-			components: rows,
-			embeds: [await module.toEmbed()]
+			components: components.createRows(...buttons),
+			content,
+			embeds
 		};
 	}
 
-	private async create(data: Prisma.ReportCreateInput) {
+	private async create<T extends MessageReportModule | UserReportModule>(
+		data: Prisma.ReportCreateInput
+	): Promise<T> {
 		const data_ = await this.prisma.create({ data });
 
-		return this.toModule(data_);
+		return this.toModule(data_) as T;
 	}
 }
