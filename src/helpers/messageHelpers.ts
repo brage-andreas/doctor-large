@@ -1,9 +1,9 @@
-import { Colors, RegExp } from "#constants";
+import { ColorsHex, RegExp } from "#constants";
 import {
-	EmbedBuilder,
 	hideLinkEmbed,
 	hyperlink,
 	italic,
+	type APIEmbed,
 	type Attachment,
 	type Client,
 	type Message
@@ -103,16 +103,15 @@ const isValidAttachment = (attachment: Attachment) =>
 	);
 
 export const messageToEmbed = (message: Message<true>) => {
-	const embed = new EmbedBuilder()
-		.setAuthor({
-			iconURL: message.author.displayAvatarURL(),
+	const embed: APIEmbed = {
+		author: {
+			icon_url: message.author.displayAvatarURL(),
 			name: `${message.author.tag} (${message.author.id})`
-		})
-		.setColor(Colors.EmbedInvisible)
-		.setFooter({ text: `#${message.channel.name}` })
-		.setTimestamp(message.createdAt);
-
-	const content: Array<string> = [];
+		},
+		color: ColorsHex.EmbedInvisible,
+		footer: { text: `#${message.channel.name}` },
+		timestamp: message.createdAt.toISOString()
+	};
 
 	if (message.embeds.length) {
 		const emb = message.embeds.find(
@@ -122,13 +121,15 @@ export const messageToEmbed = (message: Message<true>) => {
 		const url = emb?.image?.url ?? emb?.thumbnail?.url;
 
 		if (url) {
-			embed.setImage(url);
+			embed.image = { url };
 		}
 	}
 
+	const content: Array<string> = [];
+
 	if (message.attachments.size) {
-		const attachment = message.attachments.find((a) =>
-			isValidAttachment(a)
+		const attachment = message.attachments.find((attachment) =>
+			isValidAttachment(attachment)
 		);
 
 		if (message.attachments.size > 1) {
@@ -145,7 +146,7 @@ export const messageToEmbed = (message: Message<true>) => {
 		}
 
 		if (attachment) {
-			embed.setImage(attachment.url);
+			embed.image = { url: attachment.url };
 		}
 	}
 
@@ -155,7 +156,7 @@ export const messageToEmbed = (message: Message<true>) => {
 		content.push(italic("No content."));
 	}
 
-	embed.setDescription(content.join("\n\n") || null);
+	embed.description = content.join("\n\n") || undefined;
 
 	return embed;
 };
