@@ -102,14 +102,22 @@ const isValidAttachment = (attachment: Attachment) =>
 		attachment.name.toLowerCase().endsWith(e)
 	);
 
-export const messageToEmbed = (message: Message<true>) => {
+export const messageToEmbed = (
+	message: Message<true>,
+	options?: { withIds?: boolean }
+) => {
+	const footerText = options?.withIds
+		? `${message.id} • #${message.channel.name} (${message.channelId})`
+		: `#${message.channel.name}`;
+
 	const embed: APIEmbed = {
 		author: {
 			icon_url: message.author.displayAvatarURL(),
-			name: `${message.author.tag} (${message.author.id})`
+			name: `${message.author.tag} (${message.author.id})`,
+			url: message.url
 		},
 		color: ColorsHex.EmbedInvisible,
-		footer: { text: `#${message.channel.name}` },
+		footer: { text: footerText },
 		timestamp: message.createdAt.toISOString()
 	};
 
