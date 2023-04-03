@@ -1,17 +1,22 @@
-import { ColorsHex } from "#constants";
+import components from "#components";
+import { ColorsHex, Emojis } from "#constants";
 import type ReportManager from "#database/report.js";
 import getMemberInfo from "#helpers/memberInfo.js";
+import { messageToEmbed } from "#helpers/messageHelpers.js";
 import { longstamp } from "#helpers/timestamps.js";
 import { type Report, type ReportType } from "@prisma/client";
-import { oneLine, stripIndents } from "common-tags";
+import { oneLine, source, stripIndent, stripIndents } from "common-tags";
 import {
-	SnowflakeUtil,
+	blockQuote,
+	bold,
 	inlineCode,
+	quote,
 	userMention,
 	type APIEmbed,
 	type APIEmbedAuthor,
 	type Client,
-	type Guild
+	type Guild,
+	type MessageCreateOptions
 } from "discord.js";
 
 export const isMessageReport = (
@@ -84,58 +89,120 @@ export class UserReportModule
 		return !this.isMessageReport();
 	}
 
-	public targetMentionString() {
-		return oneLine`
-			${userMention(this.targetUserId)} -
-			${inlineCode(this.targetUserTag)}
-			(${this.targetUserId})
-		`;
+	public async fetchTarget() {
+		const member = await this.guild.members
+			.fetch({ user: this.targetUserId, force: true })
+			.catch(() => null);
+
+		if (member) {
+			return member;
+		}
+
+		return await this.client.users
+			.fetch(this.targetUserId, { force: true })
+			.catch(() => null);
 	}
 
-	public toEmbedSync(): APIEmbed {
-		return {
-			author: { name: `${this.authorUserTag} (${this.authorUserId})` },
-			color: this.processedAt ? ColorsHex.Green : ColorsHex.Red,
-			description: this.comment,
-			fields: [
-				{
-					inline: false,
-					name: "Target user info",
-					value: stripIndents`
-						Name: ${this.targetMentionString()}
-						Created: ${longstamp(SnowflakeUtil.timestampFrom(this.targetUserId))}
-					`
-				}
-			],
-			footer: { text: `Report #${this.guildRelativeId}` }
-		};
+	public authorMentionString() {
+		return this.userMentionString(this.authorUserId, this.authorUserTag);
+	}
+
+	public targetMentionString() {
+		return this.userMentionString(this.targetUserId, this.targetUserTag);
 	}
 
 	public async preparePost() {
 		return this.manager.preparePost(this);
 	}
 
-	public async toEmbed(): Promise<APIEmbed> {
-		const target =
-			(await this.guild.members
-				.fetch(this.targetUserId)
-				.catch(() => null)) ??
-			(await this.client.users
-				.fetch(this.targetUserId)
-				.catch(() => null));
+	public async generatePost(): Promise<MessageCreateOptions> {
+		const rows = components.createRows(
+			components.buttons.attachToLatestCase,
+			components.buttons.markComplete
+		);
 
-		const fields = target ? getMemberInfo(target, "Target") : [];
+		const authorMention = this.anonymous
+			? "Anonymous user"
+			: oneLine`
+				${userMention(this.authorUserId)} -
+				${inlineCode(this.authorUserTag)}
+				(${this.authorUserId})
+			`;
 
-		const author: APIEmbedAuthor = this.anonymous
-			? { name: "Anonymous user" }
-			: { name: `${this.authorUserTag} (${this.authorUserId})` };
+		const target = await this.fetchTarget();
 
-		return {
-			author,
+		const memberInfoEmbed: APIEmbed = {
 			color: this.processedAt ? ColorsHex.Green : ColorsHex.Red,
-			fields,
-			footer: { text: `Report #${this.guildRelativeId}` }
+			fields: target ? getMemberInfo(target) : [],
+			title: "Target information"
 		};
+
+		const content = stripIndent`
+			${bold(`Report #${this.guildRelativeId}`)}
+			User report
+			  → Author: ${authorMention}
+			  → Target: ${this.targetMentionString()}
+
+			Comment:
+			${blockQuote(this.comment)}
+		`;
+
+		return { components: rows, content, embeds: [memberInfoEmbed] };
+	}
+
+	protected userMentionString(id: string, tag: string) {
+		return `${userMention(id)} - ${inlineCode(tag)} (${id})` as const;
+	}
+
+	protected async generateBasePost(
+		typeSpecificInformation: string
+	): Promise<MessageCreateOptions> {
+		const target = await this.fetchTarget();
+
+		const memberInfoEmbed: APIEmbed = {
+			color: this.processedAt ? ColorsHex.Green : ColorsHex.Red,
+			fields: target ? getMemberInfo(target) : [],
+			title: "Target information"
+		};
+
+		const rows = components.createRows(
+			components.buttons.attachToLatestCase,
+			components.buttons.markComplete
+		);
+
+		const authorMention = this.anonymous
+			? "Anonymous user"
+			: this.authorMentionString();
+
+		const ifProcessed =
+			this.processedAt &&
+			this.processedByUserId &&
+			this.processedByUserTag
+				? stripIndents`
+					- At: ${longstamp(this.processedAt)}
+					- By: ${this.userMentionString(this.processedByUserId, this.processedByUserTag)}
+				`
+				: "";
+
+		const content = source`
+			${bold(`Report #${this.guildRelativeId}`)}
+			${this.type} report by ${authorMention}.
+			${quote(this.comment)}
+
+			${bold("Info")}
+			  → Created ${longstamp(this.createdAt)}
+			  → Processed: ${
+					this.processedAt
+						? `${Emojis.Check} Yes`
+						: `${Emojis.Cross} No`
+				}
+			    ${ifProcessed}
+			  → Target user: \`${this.targetUserId}\`
+
+			${typeSpecificInformation}
+		`.trimEnd();
+
+		return { components: rows, content, embeds: [memberInfoEmbed] };
 	}
 }
 
@@ -190,6 +257,45 @@ export class MessageReportModule extends UserReportModule {
 			color: this.processedAt ? ColorsHex.Green : ColorsHex.Red,
 			fields,
 			footer: { text: `Report #${this.guildRelativeId}` }
+		};
+	}
+
+	public async generatePost(): Promise<MessageCreateOptions> {
+		const message = await this.fetchTargetMessage();
+
+		if (!message) {
+			return await this.generateBasePost(
+				stripIndent`
+					${bold("Message")}
+					→ Message author: ${this.targetMentionString()}
+					→ URL: ${this.targetMessageURL}
+				`
+			);
+		}
+
+		const base = await this.generateBasePost(
+			stripIndent`
+				${bold("Message")}
+				→ Message author: ${this.targetMentionString()}
+				→ URL: ${this.targetMessageURL}
+
+				Message preview:
+			`
+		);
+
+		const baseComponents = base.components ?? [];
+		const baseEmbeds = base.embeds ?? [];
+
+		const messageEmbed = messageToEmbed(message, { withIds: true });
+
+		const messageButtonRow = components.createRows(
+			components.buttons.url({ label: "Go to message", url: message.url })
+		);
+
+		return {
+			...base,
+			components: [...messageButtonRow, ...baseComponents],
+			embeds: [messageEmbed, ...baseEmbeds]
 		};
 	}
 }

@@ -1,22 +1,10 @@
-import components from "#components";
-import { messageToEmbed } from "#helpers/messageHelpers.js";
 import {
 	isMessageReport,
 	MessageReportModule,
 	UserReportModule
 } from "#modules/Report.js";
 import { ReportType, type Prisma, type Report } from "@prisma/client";
-import { oneLine, stripIndent } from "common-tags";
-import {
-	blockQuote,
-	bold,
-	inlineCode,
-	userMention,
-	type APIButtonComponent,
-	type APIEmbed,
-	type Guild,
-	type MessageCreateOptions
-} from "discord.js";
+import { type Guild, type MessageCreateOptions } from "discord.js";
 import prisma from "./prisma.js";
 
 export default class ReportManager {
@@ -147,67 +135,7 @@ export default class ReportManager {
 	public async preparePost(
 		report: MessageReportModule | UserReportModule
 	): Promise<MessageCreateOptions> {
-		const buttons: Array<APIButtonComponent> = [
-			components.buttons.attachToLatestCase.component(),
-			components.buttons.markComplete.component()
-		];
-
-		const authorShortMention = report.anonymous
-			? "anonymous user"
-			: userMention(report.authorUserId);
-
-		const authorFullMention = report.anonymous
-			? "Anonymous user"
-			: oneLine`
-				${userMention(report.authorUserId)} -
-				${inlineCode(report.authorUserTag)}
-				(${report.authorUserId})
-			`;
-
-		const embeds: Array<APIEmbed> = [];
-		let content: string;
-
-		if (report.isMessageReport()) {
-			const urlButton = components.buttons.url({
-				label: "Go to message",
-				url: report.targetMessageURL
-			});
-
-			buttons.push(urlButton.component());
-
-			const msg = await report.fetchTargetMessage();
-
-			if (msg) {
-				embeds.push(messageToEmbed(msg));
-			}
-
-			content = stripIndent`
-				${bold(`Report #${report.guildRelativeId}`)} by ${authorShortMention}
-				  → Type: Message report
-				  → Target: Message by ${report.targetMentionString()}
-				  → Author: ${authorFullMention}
-
-				Comment:
-				${blockQuote(report.comment)}
-			`;
-		} else {
-			content = stripIndent`
-				${bold(`Report #${report.guildRelativeId}`)} by ${authorShortMention}
-				  → Type: User report
-				  → Target: ${report.targetMentionString()}
-
-				Comment:
-				${blockQuote(report.comment)}
-			`;
-		}
-
-		embeds.push(await report.toEmbed());
-
-		return {
-			components: components.createRows(...buttons),
-			content,
-			embeds
-		};
+		return await report.generatePost();
 	}
 
 	private async create<T extends MessageReportModule | UserReportModule>(
