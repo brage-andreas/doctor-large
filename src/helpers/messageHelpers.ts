@@ -9,10 +9,20 @@ import {
 	type Message
 } from "discord.js";
 
-export function parseMessageURL(url: string) {
+export function messageURL<
+	G extends string,
+	C extends string,
+	M extends string
+>(guildId: G, channelId: C, messageId: M) {
+	return `https://discord.com/channels/${guildId}/${channelId}/${messageId}` as const;
+}
+
+export function parseMessageURL(
+	url: string
+): { guildId: string; channelId: string; messageId: string } | null {
 	const match = url.match(RegExp.MessageURL)?.groups;
 
-	if (!match) {
+	if (!match?.guildId || !match.channelId || !match.channelId) {
 		return null;
 	}
 
@@ -21,15 +31,18 @@ export function parseMessageURL(url: string) {
 
 export async function messageFromURL(
 	client: Client<true>,
-	data: string | { guildId: string; channelId: string; messageId: string }
-) {
-	const data_ = typeof data === "string" ? parseMessageURL(data) : data;
+	dataOrURL:
+		| string
+		| { guildId: string; channelId: string; messageId: string }
+): Promise<Message<true> | null> {
+	const data =
+		typeof dataOrURL === "string" ? parseMessageURL(dataOrURL) : dataOrURL;
 
-	if (!data_) {
-		return false;
+	if (!data) {
+		return null;
 	}
 
-	const { guildId, channelId, messageId } = data_;
+	const { guildId, channelId, messageId } = data;
 
 	const guild = client.guilds.cache.get(guildId);
 
