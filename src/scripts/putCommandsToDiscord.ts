@@ -28,41 +28,41 @@ export default async function putCommandsToDiscord(
 		throw new TypeError("'BOT_TOKEN' option is not defined in .env");
 	}
 
-	if (!process.env.CLIENT_ID) {
-		throw new TypeError("'CLIENT_ID' option not defined in .env");
+	if (!process.env.APPLICATION_ID) {
+		throw new TypeError("'APPLICATION_ID' option not defined in .env");
 	}
 
 	const {
 		BOT_TOKEN: token,
-		CLIENT_ID: clientId,
+		APPLICATION_ID: applicationId,
 		GUILD_ID: guildId
 	} = process.env;
 
-	if (!RegExp.Id.test(clientId)) {
+	if (!RegExp.Snowflake.test(applicationId)) {
 		throw new TypeError(
-			`'CLIENT_ID' option defined in .env is faulty: ${clientId}`
+			`'APPLICATION_ID' option defined in .env is faulty: ${applicationId}`
 		);
 	}
 
-	if (guildId && !RegExp.Id.test(guildId)) {
+	if (guildId && !RegExp.Snowflake.test(guildId)) {
 		throw new TypeError(
 			`'GUILD_ID' option defined in .env is faulty: ${guildId}`
 		);
 	}
 
-	const commandData = !clear ? getCommandData() : [];
-
 	const rest = new REST().setToken(token);
 
-	const route = guildId
-		? Routes.applicationGuildCommands(clientId, guildId)
-		: Routes.applicationCommands(clientId);
+	const body = clear ? [] : getCommandData();
 
-	await rest
-		.put(route, { body: commandData })
-		.then(() => {
-			const suffix = guildId ? `in guild: ${guildId}` : "globally";
-			console.log(`Put ${commandData.length} commands ${suffix}`);
-		})
-		.catch(console.log);
+	const route = guildId
+		? Routes.applicationGuildCommands(applicationId, guildId)
+		: Routes.applicationCommands(applicationId);
+
+	await rest.put(route, { body });
+
+	console.log(
+		`Put ${body.length} commands ${
+			guildId ? `in guild: ${guildId}` : "globally"
+		}`
+	);
 }
