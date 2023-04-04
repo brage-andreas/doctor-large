@@ -10,7 +10,7 @@
 
 ## Put or clear commands
  
-1. Populate the `CLIENT_ID` key in your `.env` file with your bot's user id.
+1. Populate the `APPLICATION_ID` key in your `.env` file with your application id (the bot's user id).
 2. (Optional) Populate the `GUILD_ID` key in your `.env` file with your desired guild's ID.
 3. Run `npm run commands:put` or `npm run commands:clear` to put or clear commands.
 
