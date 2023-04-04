@@ -1,4 +1,4 @@
-import { RegExp } from "#constants";
+import { Regex } from "#constants";
 import commands from "#scripts/loadCommands.js";
 import { type EventExport } from "#typings";
 import { stripIndents } from "common-tags";
@@ -33,7 +33,7 @@ const execute = async (interaction: Interaction) => {
 	}
 
 	if (interaction.isButton()) {
-		const { AcceptPrizeCustomId, EnterGiveawayCustomId } = RegExp;
+		const { AcceptPrizeCustomId, EnterGiveawayCustomId } = Regex;
 
 		if (EnterGiveawayCustomId.test(interaction.customId)) {
 			await enterGiveaway(interaction);

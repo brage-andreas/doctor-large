@@ -1,4 +1,4 @@
-import { ColorsHex, RegExp } from "#constants";
+import { ColorsHex, Regex } from "#constants";
 import {
 	hideLinkEmbed,
 	hyperlink,
@@ -20,7 +20,7 @@ export function messageURL<
 export function parseMessageURL(
 	url: string
 ): { guildId: string; channelId: string; messageId: string } | null {
-	const match = url.match(RegExp.MessageURL)?.groups;
+	const match = url.match(Regex.MessageURL)?.groups;
 
 	if (!match?.guildId || !match.channelId || !match.channelId) {
 		return null;

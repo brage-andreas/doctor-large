@@ -31,7 +31,7 @@ export const ACTIVITIES: Array<ActivitiesOptions> = [
 export const COMMAND_DIR = new URL("./commands", import.meta.url);
 export const EVENT_DIR = new URL("./events", import.meta.url);
 
-export const RegExp = {
+export const Regex = {
 	AcceptPrizeCustomId: /^accept-prize-(?<id>\d+)$/,
 	DashboardPrizeCustomId: /^dashboard-prize-(?<id>\d+)/,
 	Emoji: /<(?<animated>a?):(?<name>\w+):(?<id>\d{17,19})>/,

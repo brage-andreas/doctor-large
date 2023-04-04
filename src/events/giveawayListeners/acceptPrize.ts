@@ -1,4 +1,4 @@
-import { Emojis, RegExp } from "#constants";
+import { Emojis, Regex } from "#constants";
 import GiveawayManager from "#database/giveaway.js";
 import commandMention from "#helpers/commandMention.js";
 import Logger from "#logger";
@@ -8,7 +8,7 @@ import { bold, type ButtonInteraction } from "discord.js";
 export default async function acceptPrize(
 	interaction: ButtonInteraction<"cached">
 ) {
-	const match = interaction.customId.match(RegExp.AcceptPrizeCustomId);
+	const match = interaction.customId.match(Regex.AcceptPrizeCustomId);
 	const prizeId = match?.groups?.id;
 
 	if (!prizeId) {

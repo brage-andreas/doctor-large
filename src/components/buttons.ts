@@ -1,4 +1,4 @@
-import { Emojis, RegExp } from "#constants";
+import { Emojis, Regex } from "#constants";
 import { type CustomIdCompatibleButtonStyle } from "#typings";
 import {
 	ButtonStyle,
@@ -15,7 +15,7 @@ const formatEmoji = (emoji: string): APIMessageComponentEmoji => {
 		};
 	}
 
-	const match = emoji.match(RegExp.Emoji);
+	const match = emoji.match(Regex.Emoji);
 
 	if (!match?.groups) {
 		throw new TypeError(

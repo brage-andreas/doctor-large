@@ -1,5 +1,5 @@
 import components from "#components";
-import { Colors, Emojis, RegExp } from "#constants";
+import { Colors, Emojis, Regex } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
 import s from "#helpers/s.js";
 import yesNo from "#helpers/yesNo.js";
@@ -173,7 +173,7 @@ export default async function toManagePrizes(
 		await buttonInteraction.deferUpdate();
 
 		const match = buttonInteraction.customId.match(
-			RegExp.DashboardPrizeCustomId
+			Regex.DashboardPrizeCustomId
 		);
 
 		const prizeIdString = match?.groups?.id;

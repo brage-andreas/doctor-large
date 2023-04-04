@@ -1,4 +1,4 @@
-import { RegExp } from "#constants";
+import { Regex } from "#constants";
 import { REST } from "@discordjs/rest";
 import {
 	Routes,
@@ -38,13 +38,13 @@ export default async function putCommandsToDiscord(
 		GUILD_ID: guildId
 	} = process.env;
 
-	if (!RegExp.Snowflake.test(applicationId)) {
+	if (!Regex.Snowflake.test(applicationId)) {
 		throw new TypeError(
 			`'APPLICATION_ID' option defined in .env is faulty: ${applicationId}`
 		);
 	}
 
-	if (guildId && !RegExp.Snowflake.test(guildId)) {
+	if (guildId && !Regex.Snowflake.test(guildId)) {
 		throw new TypeError(
 			`'GUILD_ID' option defined in .env is faulty: ${guildId}`
 		);

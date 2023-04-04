@@ -1,4 +1,4 @@
-import { Emojis, RegExp } from "#constants";
+import { Emojis, Regex } from "#constants";
 import GiveawayManager from "#database/giveaway.js";
 import { listify } from "#helpers/listify.js";
 import Logger from "#logger";
@@ -8,7 +8,7 @@ import { bold, time, type ButtonInteraction } from "discord.js";
 export default async function enterGiveaway(
 	interaction: ButtonInteraction<"cached">
 ) {
-	const id = interaction.customId.match(RegExp.EnterGiveawayCustomId)?.groups
+	const id = interaction.customId.match(Regex.EnterGiveawayCustomId)?.groups
 		?.id;
 
 	if (!id) {
