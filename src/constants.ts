@@ -3,10 +3,10 @@ import { oneLine } from "common-tags";
 import {
 	ActivityType,
 	ApplicationCommandOptionType,
-	GatewayIntentBits,
 	formatEmoji,
-	type APIApplicationCommandBasicOption,
-	type ActivitiesOptions
+	GatewayIntentBits,
+	type ActivitiesOptions,
+	type APIApplicationCommandBasicOption
 } from "discord.js";
 
 export const ACTIVITIES: Array<ActivitiesOptions> = [
@@ -36,9 +36,9 @@ export const RegExp = {
 	DashboardPrizeCustomId: /^dashboard-prize-(?<id>\d+)/,
 	Emoji: /<(?<animated>a?):(?<name>\w+):(?<id>\d{17,19})>/,
 	EnterGiveawayCustomId: /^enter-giveaway-(?<id>\d+)$/,
-	Id: /\d{17,19}/,
 	MessageURL:
-		/(?:https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/(?<guildId>\d{17,19})\/(?<channelId>\d{17,19})\/(?<messageId>\d{17,19}))/
+		/(?:https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/(?<guildId>\d{17,19})\/(?<channelId>\d{17,19})\/(?<messageId>\d{17,19}))/,
+	Snowflake: /\d{17,19}/
 } as const;
 
 // Using Discord's colours if possible
