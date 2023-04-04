@@ -2,7 +2,7 @@ import components from "#components";
 import { ColorsHex, Emojis } from "#constants";
 import type ReportManager from "#database/report.js";
 import getMemberInfo from "#helpers/memberInfo.js";
-import { messageToEmbed } from "#helpers/messageHelpers.js";
+import { messageToEmbed, messageURL } from "#helpers/messageHelpers.js";
 import { longstamp } from "#helpers/timestamps.js";
 import { type Report, type ReportType } from "@prisma/client";
 import { oneLine, source, stripIndent, stripIndents } from "common-tags";
@@ -222,7 +222,11 @@ export class MessageReportModule extends UserReportModule {
 
 		this.targetMessageChannelId = data.targetMessageChannelId;
 		this.targetMessageId = data.targetMessageId;
-		this.targetMessageURL = `https://discord.com/channels/${this.guildId}/${this.targetMessageChannelId}/${this.targetMessageId}`;
+		this.targetMessageURL = messageURL(
+			data.guildId,
+			data.targetMessageChannelId,
+			data.targetMessageId
+		);
 	}
 
 	public async fetchTargetMessage() {

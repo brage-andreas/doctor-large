@@ -1,6 +1,7 @@
 import components from "#components";
 import { Emojis, Giveaway } from "#constants";
 import prisma from "#database/prisma.js";
+import { messageURL } from "#helpers/messageHelpers.js";
 import { longstamp } from "#helpers/timestamps.js";
 import GiveawayModule from "#modules/Giveaway.js";
 import { type GiveawayWithIncludes, type WinnerId } from "#typings";
@@ -97,7 +98,7 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 
 		const url =
 			channelId && announcementMessageId
-				? `https://discord.com/channels/${guildId}/${channelId}/${announcementMessageId}`
+				? messageURL(guildId, channelId, announcementMessageId)
 				: null;
 
 		const timeLeft = longstamp(endDate);
@@ -161,7 +162,7 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 
 		const url =
 			channelId && announcementMessageId
-				? `https://discord.com/channels/${guildId}/${channelId}/${announcementMessageId}`
+				? messageURL(guildId, channelId, announcementMessageId)
 				: null;
 
 		const string = source`

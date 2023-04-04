@@ -3,6 +3,7 @@ import { Colors, Emojis } from "#constants";
 import { default as GiveawayManager } from "#database/giveaway.js";
 import commandMention from "#helpers/commandMention.js";
 import { listify } from "#helpers/listify.js";
+import { messageURL } from "#helpers/messageHelpers.js";
 import s from "#helpers/s.js";
 import { longstamp } from "#helpers/timestamps.js";
 import {
@@ -21,11 +22,11 @@ import {
 } from "@prisma/client";
 import { oneLine, source, stripIndent, stripIndents } from "common-tags";
 import {
-	EmbedBuilder,
-	PermissionFlagsBits,
 	bold,
+	EmbedBuilder,
 	hideLinkEmbed,
 	hyperlink,
+	PermissionFlagsBits,
 	type Client,
 	type Guild,
 	type GuildMember,
@@ -206,27 +207,23 @@ export default class GiveawayModule implements ModifiedGiveaway {
 	}
 
 	public get announcementMessageURL(): string | null {
-		const gId = this.guildId;
-		const cId = this.channelId;
-		const mId = this.announcementMessageId;
-
-		if (!cId || !mId) {
+		if (!this.channelId || !this.announcementMessageId) {
 			return null;
 		}
 
-		return `https://discord.com/channels/${gId}/${cId}/${mId}`;
+		return messageURL(
+			this.guildId,
+			this.channelId,
+			this.announcementMessageId
+		);
 	}
 
 	public get winnerMessageURL(): string | null {
-		const gId = this.guildId;
-		const cId = this.channelId;
-		const mId = this.winnerMessageId;
-
-		if (!cId || !mId) {
+		if (!this.channelId || !this.winnerMessageId) {
 			return null;
 		}
 
-		return `https://discord.com/channels/${gId}/${cId}/${mId}`;
+		return messageURL(this.guildId, this.channelId, this.winnerMessageId);
 	}
 
 	public get announcementMessage() {
