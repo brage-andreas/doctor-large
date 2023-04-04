@@ -18,6 +18,17 @@ import {
 	type RESTPostAPIContextMenuApplicationCommandsJSONBody
 } from "discord.js";
 
+declare global {
+	namespace NodeJS {
+		interface ProcessEnv {
+			APPLICATION_ID: string;
+			BOT_TOKEN: string;
+			DATABASE_URL: `postgres://${string}:${string}@${string}:${number}/${string}?schema=${string}`;
+			GUILD_ID?: string | undefined;
+		}
+	}
+}
+
 type Prop<T extends object, P extends keyof T> = T[P];
 type UnknownOrPromise = Promise<unknown> | unknown;
 
