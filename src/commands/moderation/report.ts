@@ -2,14 +2,15 @@ import components from "#components";
 import { Emojis } from "#constants";
 import ConfigManager from "#database/config.js";
 import ReportManager from "#database/report.js";
-import { ModalCollector } from "#helpers/ModalCollector.js";
 import {
 	messageFromURL,
 	messageToEmbed,
 	parseMessageURL
 } from "#helpers/messageHelpers.js";
-import trim from "#helpers/trim.js";
+import { ModalCollector } from "#helpers/ModalCollector.js";
+import squash from "#helpers/squash.js";
 import yesNo from "#helpers/yesNo.js";
+import Logger from "#logger";
 import type ConfigModule from "#modules/Config.js";
 import { type UserReportModule } from "#modules/Report.js";
 import { type CommandData, type CommandExport } from "#typings";
@@ -113,7 +114,7 @@ const handleMessage = async (
 	const res = await yesNo({
 		medium: interaction,
 		data: {
-			content: trim(stripIndents`
+			content: squash(stripIndents`
 				${Emojis.FaceInClouds} Are you sure you want to report this message?
 
 				${
@@ -165,6 +166,10 @@ const handleMessage = async (
 
 	await config.postReport(report);
 
+	new Logger({ interaction, prefix: "REPORT" }).log(
+		`Reported message ${message.id} by ${message.author.tag} (${message.author.id})`
+	);
+
 	interaction.editReply({
 		components: goToMessageRow,
 		content: stripIndents`
@@ -197,7 +202,7 @@ const handleMember = async (
 	const res = await yesNo({
 		medium: interaction,
 		data: {
-			content: trim(stripIndents`
+			content: squash(stripIndents`
 				${Emojis.FaceInClouds} Are you sure you want to report ${memberString}?
 				
 				${
@@ -235,6 +240,10 @@ const handleMember = async (
 	});
 
 	await config.postReport(report);
+
+	new Logger({ interaction, prefix: "REPORT" }).log(
+		`Reported member ${member.user.tag} (${member.user.id})`
+	);
 
 	interaction.editReply({
 		components: [],

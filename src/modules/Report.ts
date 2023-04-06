@@ -3,11 +3,11 @@ import { ColorsHex, Emojis } from "#constants";
 import type ReportManager from "#database/report.js";
 import getMemberInfo from "#helpers/memberInfo.js";
 import { messageToEmbed, messageURL } from "#helpers/messageHelpers.js";
+import squash from "#helpers/squash.js";
 import { longstamp } from "#helpers/timestamps.js";
 import { type Report, type ReportType } from "@prisma/client";
-import { oneLine, source, stripIndent, stripIndents } from "common-tags";
+import { source, stripIndent, stripIndents } from "common-tags";
 import {
-	blockQuote,
 	bold,
 	inlineCode,
 	quote,
@@ -115,56 +115,19 @@ export class UserReportModule
 		return this.manager.preparePost(this);
 	}
 
+	// Message module requires async
+	// eslint-disable-next-line @typescript-eslint/require-await
 	public async generatePost(): Promise<MessageCreateOptions> {
-		const rows = components.createRows(
-			components.buttons.attachToLatestCase,
-			components.buttons.markComplete
-		);
-
-		const authorMention = this.anonymous
-			? "Anonymous user"
-			: oneLine`
-				${userMention(this.authorUserId)} -
-				${inlineCode(this.authorUserTag)}
-				(${this.authorUserId})
-			`;
-
-		const target = await this.fetchTarget();
-
-		const memberInfoEmbed: APIEmbed = {
-			color: this.processedAt ? ColorsHex.Green : ColorsHex.Red,
-			fields: target ? getMemberInfo(target) : [],
-			title: "Target information"
-		};
-
-		const content = stripIndent`
-			${bold(`Report #${this.guildRelativeId}`)}
-			User report
-			  → Author: ${authorMention}
-			  → Target: ${this.targetMentionString()}
-
-			Comment:
-			${blockQuote(this.comment)}
-		`;
-
-		return { components: rows, content, embeds: [memberInfoEmbed] };
+		return this.generateBasePost();
 	}
 
 	protected userMentionString(id: string, tag: string) {
 		return `${userMention(id)} - ${inlineCode(tag)} (${id})` as const;
 	}
 
-	protected async generateBasePost(
-		typeSpecificInformation: string
-	): Promise<MessageCreateOptions> {
-		const target = await this.fetchTarget();
-
-		const memberInfoEmbed: APIEmbed = {
-			color: this.processedAt ? ColorsHex.Green : ColorsHex.Red,
-			fields: target ? getMemberInfo(target) : [],
-			title: "Target information"
-		};
-
+	protected generateBasePost(
+		typeSpecificInformation?: string | null | undefined
+	) {
 		const rows = components.createRows(
 			components.buttons.attachToLatestCase,
 			components.buttons.markComplete
@@ -179,30 +142,32 @@ export class UserReportModule
 			this.processedByUserId &&
 			this.processedByUserTag
 				? stripIndents`
-					- At: ${longstamp(this.processedAt)}
+					- At: ${longstamp(this.processedAt, { extraLong: true })}
 					- By: ${this.userMentionString(this.processedByUserId, this.processedByUserTag)}
 				`
 				: "";
 
-		const content = source`
-			${bold(`Report #${this.guildRelativeId}`)}
+		const content = squash(source`
+			${this.processedAt ? `(${Emojis.Check} Processed) ` : ""}${bold(
+			`Report #${this.guildRelativeId}`
+		)}
 			${this.type} report by ${authorMention}.
 			${quote(this.comment)}
 
 			${bold("Info")}
-			  → Created ${longstamp(this.createdAt)}
+			  → Created ${longstamp(this.createdAt, { extraLong: true })}
+			  → Target user: ${this.targetMentionString()}
 			  → Processed: ${
 					this.processedAt
 						? `${Emojis.Check} Yes`
 						: `${Emojis.Cross} No`
 				}
-			    ${ifProcessed}
-			  → Target user: \`${this.targetUserId}\`
+			      ${ifProcessed}
 
-			${typeSpecificInformation}
-		`.trimEnd();
+			${typeSpecificInformation ?? ""}
+		`).trim();
 
-		return { components: rows, content, embeds: [memberInfoEmbed] };
+		return { components: rows, content };
 	}
 }
 
@@ -268,7 +233,7 @@ export class MessageReportModule extends UserReportModule {
 		const message = await this.fetchTargetMessage();
 
 		if (!message) {
-			return await this.generateBasePost(
+			return this.generateBasePost(
 				stripIndent`
 					${bold("Message")}
 					→ Message author: ${this.targetMentionString()}
@@ -277,7 +242,7 @@ export class MessageReportModule extends UserReportModule {
 			);
 		}
 
-		const base = await this.generateBasePost(
+		const base = this.generateBasePost(
 			stripIndent`
 				${bold("Message")}
 				→ Message author: ${this.targetMentionString()}
@@ -287,9 +252,6 @@ export class MessageReportModule extends UserReportModule {
 			`
 		);
 
-		const baseComponents = base.components ?? [];
-		const baseEmbeds = base.embeds ?? [];
-
 		const messageEmbed = messageToEmbed(message, { withIds: true });
 
 		const messageButtonRow = components.createRows(
@@ -298,8 +260,8 @@ export class MessageReportModule extends UserReportModule {
 
 		return {
 			...base,
-			components: [...messageButtonRow, ...baseComponents],
-			embeds: [messageEmbed, ...baseEmbeds]
+			components: [...messageButtonRow, ...base.components],
+			embeds: [messageEmbed]
 		};
 	}
 }

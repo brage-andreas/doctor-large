@@ -75,10 +75,12 @@ export default async function toConfigDashboard(
 		const retry = async () => {
 			switch (buttonInteraction.customId) {
 				case components.buttons.caseLogOptions.customId: {
-					handleFullConfigOption(buttonInteraction, config, {
-						type: "caseLog",
+					handleFullConfigOption(
+						buttonInteraction,
+						config,
+						"caseLog",
 						channelTypes
-					})
+					)
 						.then(async (res) => {
 							logger.log("Edited case log");
 
@@ -97,67 +99,79 @@ export default async function toConfigDashboard(
 				}
 
 				case components.buttons.memberLogOptions.customId: {
-					handleFullConfigOption(buttonInteraction, config, {
-						type: "memberLog",
+					const res = await handleFullConfigOption(
+						buttonInteraction,
+						config,
+						"memberLog",
 						channelTypes
-					})
-						.then(async (res) => {
-							logger.log("Edited member log");
+					).catch(() => null);
 
-							config = await config.edit({
-								memberLogChannelId: res.channelId,
-								memberLogEnabled: res.enabled
-							});
+					if (!res) {
+						toConfigDashboard(buttonInteraction, configManager);
 
-							retry();
-						})
-						.catch(async () =>
-							toConfigDashboard(buttonInteraction, configManager)
-						);
+						return;
+					}
+
+					logger.log("Edited member log");
+
+					config = await config.edit({
+						memberLogChannelId: res.channelId,
+						memberLogEnabled: res.enabled
+					});
+
+					retry();
 
 					break;
 				}
 
 				case components.buttons.messageLogOptions.customId: {
-					handleFullConfigOption(buttonInteraction, config, {
-						type: "messageLog",
+					const res = await handleFullConfigOption(
+						buttonInteraction,
+						config,
+						"messageLog",
 						channelTypes
-					})
-						.then(async (res) => {
-							logger.log("Edited message log");
+					).catch(() => null);
 
-							config = await config.edit({
-								messageLogChannelId: res.channelId,
-								messageLogEnabled: res.enabled
-							});
+					if (!res) {
+						toConfigDashboard(buttonInteraction, configManager);
 
-							retry();
-						})
-						.catch(async () =>
-							toConfigDashboard(buttonInteraction, configManager)
-						);
+						return;
+					}
+
+					logger.log("Edited message log");
+
+					config = await config.edit({
+						messageLogChannelId: res.channelId,
+						messageLogEnabled: res.enabled
+					});
+
+					retry();
 
 					break;
 				}
 
 				case components.buttons.reportChannelOptions.customId: {
-					handleFullConfigOption(buttonInteraction, config, {
-						type: "report",
-						channelTypes: [...channelTypes, ChannelType.GuildForum]
-					})
-						.then(async (res) => {
-							logger.log("Edited report option");
+					const res = await handleFullConfigOption(
+						buttonInteraction,
+						config,
+						"report",
+						[...channelTypes, ChannelType.GuildForum]
+					).catch(() => null);
 
-							config = await config.edit({
-								reportChannelId: res.channelId,
-								reportEnabled: res.enabled
-							});
+					if (!res) {
+						toConfigDashboard(buttonInteraction, configManager);
 
-							retry();
-						})
-						.catch(async () =>
-							toConfigDashboard(buttonInteraction, configManager)
-						);
+						return;
+					}
+
+					logger.log("Edited report option");
+
+					config = await config.edit({
+						reportChannelId: res.channelId,
+						reportEnabled: res.enabled
+					});
+
+					retry();
 
 					break;
 				}
