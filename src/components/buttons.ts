@@ -623,7 +623,7 @@ export const protectedChannelsOptions = {
 	customId: "protectedChannelsOptions",
 	component: (): APIButtonComponentWithCustomId => ({
 		custom_id: "protectedChannelsOptions",
-		label: "Protected cchannels options",
+		label: "Protected channels options",
 		style: ButtonStyle.Primary,
 		type: ComponentType.Button
 	})
