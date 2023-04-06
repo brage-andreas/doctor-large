@@ -689,3 +689,23 @@ export const markComplete = {
 		type: ComponentType.Button
 	})
 } as const;
+
+export const targetInfo = {
+	customId: "targetInfo",
+	component: (): APIButtonComponentWithCustomId => ({
+		custom_id: "targetInfo",
+		label: "Target info",
+		style: ButtonStyle.Secondary,
+		type: ComponentType.Button
+	})
+} as const;
+
+export const authorInfo = {
+	customId: "authorInfo",
+	component: (): APIButtonComponentWithCustomId => ({
+		custom_id: "authorInfo",
+		label: "Author info",
+		style: ButtonStyle.Secondary,
+		type: ComponentType.Button
+	})
+} as const;
