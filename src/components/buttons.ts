@@ -690,22 +690,13 @@ export const markComplete = {
 	})
 } as const;
 
-export const targetInfo = {
-	customId: "targetInfo",
-	component: (): APIButtonComponentWithCustomId => ({
-		custom_id: "targetInfo",
-		label: "Target info",
-		style: ButtonStyle.Secondary,
-		type: ComponentType.Button
-	})
-} as const;
-
-export const authorInfo = {
-	customId: "authorInfo",
-	component: (): APIButtonComponentWithCustomId => ({
-		custom_id: "authorInfo",
-		label: "Author info",
-		style: ButtonStyle.Secondary,
-		type: ComponentType.Button
-	})
-} as const;
+export const memberInfo = (userId: string) =>
+	({
+		customId: `member-info-${userId}`,
+		component: (prefix = "Member"): APIButtonComponentWithCustomId => ({
+			custom_id: `member-info-${userId}`,
+			label: `${prefix} info`,
+			style: ButtonStyle.Secondary,
+			type: ComponentType.Button
+		})
+	} as const);
