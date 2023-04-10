@@ -65,9 +65,7 @@ export default async function handleFullConfigOption(
 	);
 
 	const rows = components.createRows(
-		components.selectMenus.channel.component({
-			channelTypes
-		}),
+		components.selectMenus.channel.component({ channelTypes }),
 		enabled ? components.buttons.disable : components.buttons.enable,
 		components.set.disabled(components.buttons.clear, !channelId),
 		components.buttons.back

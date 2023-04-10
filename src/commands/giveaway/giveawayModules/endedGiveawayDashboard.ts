@@ -75,30 +75,26 @@ export default async function toEndedDashboard(
 		);
 	}
 
-	const rows = [
-		...components.createRows(
-			components.buttons.showAllWinners,
-			...announceWinnersButtons
+	const rows = components.createRows.specific(
+		announceWinnersButtons.length + 1,
+		rollWinnersButtons.length,
+		2,
+		2
+	)(
+		components.buttons.showAllWinners,
+		...announceWinnersButtons,
+		// ---
+		...rollWinnersButtons,
+		// ---
+		components.set.disabled(
+			components.buttons.deleteUnclaimedWinners,
+			noUnclaimed
 		),
-
-		...components.createRows(...rollWinnersButtons),
-
-		...components.createRows(
-			components.set.disabled(
-				components.buttons.deleteUnclaimedWinners,
-				noUnclaimed
-			),
-			components.set.disabled(
-				components.buttons.deleteAllWinners,
-				noWinners
-			)
-		),
-
-		...components.createRows(
-			components.buttons.reactivateGiveaway,
-			components.buttons.deleteGiveaway
-		)
-	];
+		components.set.disabled(components.buttons.deleteAllWinners, noWinners),
+		// ---
+		components.buttons.reactivateGiveaway,
+		components.buttons.deleteGiveaway
+	);
 
 	const msg = await interaction.editReply({
 		components: rows,

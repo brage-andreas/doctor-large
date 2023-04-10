@@ -47,18 +47,15 @@ export default async function toManagePrizes(
 			type: ComponentType.Button
 		}));
 
-	const prizeButtonsRow = components.createRows(...prizesButtons);
-
 	const disableCreate = giveaway.prizes.length >= 10;
 
-	const rows = [
-		...prizeButtonsRow,
-		...components.createRows(
-			components.buttons.back,
-			components.set.disabled(components.buttons.create, disableCreate),
-			components.buttons.clear
-		)
-	];
+	const rows = components.createRows.specific(prizesButtons.length, 3)(
+		...prizesButtons,
+		// ---
+		components.buttons.back,
+		components.set.disabled(components.buttons.create, disableCreate),
+		components.buttons.clear
+	);
 
 	const getPrizesKey = (start: number, end: number) =>
 		giveaway.prizes.length

@@ -46,7 +46,7 @@ async function roles(
 		`);
 
 	const rows = components.createRows(
-		components.selectMenus.role.component(),
+		components.selectMenus.role,
 		components.set.disabled(components.buttons.clear, !roleIds.size),
 		components.buttons.back
 	);

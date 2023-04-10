@@ -33,20 +33,18 @@ export default async function toConfigDashboard(
 
 	const embed = config.toEmbed();
 
-	const rows = [
-		...components.createRows(
-			components.buttons.caseLogOptions,
-			components.buttons.memberLogOptions,
-			components.buttons.reportChannelOptions,
-			components.buttons.messageLogOptions
-		),
-		...components.createRows(
-			components.buttons.pinArchiveOptions,
-			components.buttons.protectedChannelsOptions,
-			components.buttons.restrictRolesOptions
-		),
-		...components.createRows(components.buttons.reset.component("config"))
-	];
+	const rows = components.createRows.specific(4, 3, 1)(
+		components.buttons.caseLogOptions,
+		components.buttons.memberLogOptions,
+		components.buttons.reportChannelOptions,
+		components.buttons.messageLogOptions,
+		// ---
+		components.buttons.pinArchiveOptions,
+		components.buttons.protectedChannelsOptions,
+		components.buttons.restrictRolesOptions,
+		// ---
+		components.buttons.reset.component("config")
+	);
 
 	const msg = await interaction.editReply({
 		components: rows,
