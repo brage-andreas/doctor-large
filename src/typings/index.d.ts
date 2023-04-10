@@ -133,3 +133,26 @@ export type CustomIdCompatibleButtonStyle =
 	| ButtonStyle.Primary
 	| ButtonStyle.Secondary
 	| ButtonStyle.Success;
+
+export interface CreateRows {
+	(...components: CreateRowsInput): Array<CreateRowsCompatibleRow>;
+	uniform(length?: number): {
+		(...components: CreateRowsInput): Array<CreateRowsCompatibleRow>;
+	};
+	specific(
+		lengthRow1?: number,
+		lengthRow2?: number,
+		lengthRow3?: number,
+		lengthRow4?: number,
+		lengthRow5?: number
+	): {
+		(...components: CreateRowsInput): Array<CreateRowsCompatibleRow>;
+	};
+}
+
+export type CreateRowsInput = Array<
+	| ComponentObjectWithNoParams
+	| CreateRowsCompatibleAPIComponent
+	| null
+	| undefined
+>;
