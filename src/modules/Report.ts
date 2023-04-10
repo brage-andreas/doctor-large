@@ -128,7 +128,14 @@ export class UserReportModule
 	protected generateBasePost(
 		typeSpecificInformation?: string | null | undefined
 	) {
-		const rows = components.createRows(
+		const rows = components.createRows.uniform(2)(
+			components.buttons
+				.memberInfo(this.targetUserId)
+				.component("Target"),
+			components.buttons
+				.memberInfo(this.authorUserId)
+				.component("Author"),
+			// ---
 			components.buttons.attachToLatestCase,
 			components.buttons.markComplete
 		);
