@@ -1,13 +1,44 @@
 import { type Color } from "#typings";
-import { oneLine } from "common-tags";
+import { oneLine, oneLineTrim } from "common-tags";
 import {
 	ActivityType,
 	ApplicationCommandOptionType,
-	formatEmoji,
 	GatewayIntentBits,
-	type ActivitiesOptions,
-	type APIApplicationCommandBasicOption
+	formatEmoji,
+	type APIApplicationCommandBasicOption,
+	type ActivitiesOptions
 } from "discord.js";
+
+const FlatRegex = {
+	AcceptPrizeCustomId: /^accept-prize-(?<id>\d+)$/,
+	DashboardPrizeCustomId: /^dashboard-prize-(?<id>\d+)/,
+	EnterGiveawayCustomId: /^enter-giveaway-(?<id>\d+)$/,
+	Snowflake: /\d{17,19}/
+} as const;
+
+const getFlat = (regex: keyof typeof FlatRegex) => FlatRegex[regex].source;
+
+const DynamicRegex = {
+	Emoji: new RegExp(
+		`<(?<animated>a?):(?<name>\\w+):(?<id>${getFlat("Snowflake")})>`
+	),
+	MemberInfoCustomId: new RegExp(
+		`member-info-(?<id>${getFlat("Snowflake")})`
+	),
+	MessageURL: new RegExp(
+		oneLineTrim`
+			(?:https?:\\/\\/(?:ptb\\.|canary\\.)?discord(?:app)?\\.com\\/channels\\/
+			(?<guildId>${getFlat("Snowflake")})\\/
+			(?<channelId>${getFlat("Snowflake")})\\/
+			(?<messageId>${getFlat("Snowflake")}))
+		`
+	)
+} as const;
+
+export const Regex = {
+	...FlatRegex,
+	...DynamicRegex
+} as const;
 
 export const ACTIVITIES: Array<ActivitiesOptions> = [
 	{ type: ActivityType.Listening, name: "Rocket Jump Waltz (12 hours)" },
@@ -30,16 +61,6 @@ export const ACTIVITIES: Array<ActivitiesOptions> = [
 
 export const COMMAND_DIR = new URL("./commands", import.meta.url);
 export const EVENT_DIR = new URL("./events", import.meta.url);
-
-export const Regex = {
-	AcceptPrizeCustomId: /^accept-prize-(?<id>\d+)$/,
-	DashboardPrizeCustomId: /^dashboard-prize-(?<id>\d+)/,
-	Emoji: /<(?<animated>a?):(?<name>\w+):(?<id>\d{17,19})>/,
-	EnterGiveawayCustomId: /^enter-giveaway-(?<id>\d+)$/,
-	MessageURL:
-		/(?:https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/(?<guildId>\d{17,19})\/(?<channelId>\d{17,19})\/(?<messageId>\d{17,19}))/,
-	Snowflake: /\d{17,19}/
-} as const;
 
 // Using Discord's colours if possible
 //    https://discord.com/branding
