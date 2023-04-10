@@ -110,26 +110,28 @@ export default class ReportManager {
 		return this.toModule(data_);
 	}
 
-	public async createMessageReport<
-		T extends MessageReportModule | UserReportModule
-	>(
+	public async createMessageReport(
 		data: Omit<Prisma.ReportCreateInput, "type"> & {
 			targetMessageId: string;
 			targetMessageChannelId: string;
 		}
 	) {
-		return await this.create<T>({ ...data, type: ReportType.Message });
+		return await this.create<MessageReportModule>({
+			...data,
+			type: ReportType.Message
+		});
 	}
 
-	public async createUserReport<
-		T extends MessageReportModule | UserReportModule
-	>(
+	public async createUserReport(
 		data: Omit<
 			Prisma.ReportCreateInput,
 			"targetMessageChannelId" | "targetMessageId" | "type"
 		>
 	) {
-		return await this.create<T>({ ...data, type: ReportType.User });
+		return await this.create<UserReportModule>({
+			...data,
+			type: ReportType.User
+		});
 	}
 
 	public async preparePost(
