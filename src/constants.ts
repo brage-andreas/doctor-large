@@ -10,27 +10,48 @@ import {
 } from "discord.js";
 
 const FlatRegex = {
+	/**
+	 * `^accept-prize-(?<id>\d+)$`
+	 */
 	AcceptPrizeCustomId: /^accept-prize-(?<id>\d+)$/,
-	DashboardPrizeCustomId: /^dashboard-prize-(?<id>\d+)/,
+	/**
+	 * `^dashboard-prize-(?<id>\d+)$`
+	 */
+	DashboardPrizeCustomId: /^dashboard-prize-(?<id>\d+)$/,
+	/**
+	 * `^enter-giveaway-(?<id>\d+)$`
+	 */
 	EnterGiveawayCustomId: /^enter-giveaway-(?<id>\d+)$/,
+	/**
+	 * `\d{17,19}`
+	 */
 	Snowflake: /\d{17,19}/
 } as const;
 
 const getFlat = (regex: keyof typeof FlatRegex) => FlatRegex[regex].source;
 
 const DynamicRegex = {
+	/**
+	 * `<(?<animated>a?):(?<name>\w+):(?<id>{Snowflake})>`
+	 */
 	Emoji: new RegExp(
 		`<(?<animated>a?):(?<name>\\w+):(?<id>${getFlat("Snowflake")})>`
 	),
+	/**
+	 * `^member-info-(?<id>{Snowflake})-(?<prefix>.+)$`
+	 */
 	MemberInfoCustomId: new RegExp(
-		`member-info-(?<id>${getFlat("Snowflake")})`
+		`^member-info-(?<id>${getFlat("Snowflake")})-(?<prefix>.+)$`
 	),
+	/**
+	 * https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/(?<guildId>{Snowflake})\/(?<channelId>{Snowflake})\/(?<messageId>{Snowflake})
+	 */
 	MessageURL: new RegExp(
 		oneLineTrim`
-			(?:https?:\\/\\/(?:ptb\\.|canary\\.)?discord(?:app)?\\.com\\/channels\\/
+			https?:\\/\\/(?:ptb\\.|canary\\.)?discord(?:app)?\\.com\\/channels\\/
 			(?<guildId>${getFlat("Snowflake")})\\/
 			(?<channelId>${getFlat("Snowflake")})\\/
-			(?<messageId>${getFlat("Snowflake")}))
+			(?<messageId>${getFlat("Snowflake")})
 		`
 	)
 } as const;
