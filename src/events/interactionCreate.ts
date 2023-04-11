@@ -3,8 +3,9 @@ import commands from "#scripts/loadCommands.js";
 import { type EventExport } from "#typings";
 import { stripIndents } from "common-tags";
 import { Events, type Interaction } from "discord.js";
-import acceptPrize from "./giveawayListeners/acceptPrize.js";
-import enterGiveaway from "./giveawayListeners/enterGiveaway.js";
+import acceptPrize from "./buttons/acceptPrize.js";
+import enterGiveaway from "./buttons/enterGiveaway.js";
+import memberInfo from "./buttons/memberInfo.js";
 
 const execute = async (interaction: Interaction) => {
 	if (!interaction.inGuild()) {
@@ -33,16 +34,20 @@ const execute = async (interaction: Interaction) => {
 	}
 
 	if (interaction.isButton()) {
-		const { AcceptPrizeCustomId, EnterGiveawayCustomId } = Regex;
+		if (Regex.AcceptPrizeCustomId.test(interaction.customId)) {
+			await acceptPrize(interaction);
 
-		if (EnterGiveawayCustomId.test(interaction.customId)) {
+			return;
+		}
+
+		if (Regex.EnterGiveawayCustomId.test(interaction.customId)) {
 			await enterGiveaway(interaction);
 
 			return;
 		}
 
-		if (AcceptPrizeCustomId.test(interaction.customId)) {
-			await acceptPrize(interaction);
+		if (Regex.MemberInfoCustomId.test(interaction.customId)) {
+			await memberInfo(interaction);
 
 			return;
 		}
