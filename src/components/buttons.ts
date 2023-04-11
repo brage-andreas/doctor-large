@@ -670,31 +670,55 @@ export const acceptPrize = (id: number) => ({
 	})
 });
 
-export const attachToLatestCase = {
-	customId: "attachToLatestCase",
-	component: (): APIButtonComponentWithCustomId => ({
-		custom_id: "attachToLatestCase",
-		label: "Attach to latest case",
-		style: ButtonStyle.Primary,
-		type: ComponentType.Button
-	})
-} as const;
-
-export const markComplete = {
-	customId: "markComplete",
-	component: (): APIButtonComponentWithCustomId => ({
-		custom_id: "markComplete",
-		label: "Mark complete",
-		style: ButtonStyle.Secondary,
-		type: ComponentType.Button
-	})
-} as const;
-
-export const memberInfo = (userId: string) =>
+export const attachToLatestCase = (reportId: number) =>
 	({
-		customId: `member-info-${userId}`,
-		component: (prefix = "Member"): APIButtonComponentWithCustomId => ({
-			custom_id: `member-info-${userId}`,
+		customId: `attach-report-${reportId}-to-latest-case`,
+		component: (): APIButtonComponentWithCustomId => ({
+			custom_id: `attach-report-${reportId}-to-latest-case`,
+			label: "Attach to latest case",
+			style: ButtonStyle.Primary,
+			type: ComponentType.Button
+		})
+	} as const);
+
+export const unattachReportFromCases = (reportId: number) =>
+	({
+		customId: `unattach-report-${reportId}-from-cases`,
+		component: (): APIButtonComponentWithCustomId => ({
+			custom_id: "Case",
+			label: `unattach-report-${reportId}-from-cases`,
+			style: ButtonStyle.Primary,
+			type: ComponentType.Button
+		})
+	} as const);
+
+export const markReportProcessed = (reportId: number) =>
+	({
+		customId: `mark-report-processed-${reportId}`,
+		component: (): APIButtonComponentWithCustomId => ({
+			custom_id: `mark-report-${reportId}-processed`,
+			label: "Mark processed",
+			style: ButtonStyle.Secondary,
+			type: ComponentType.Button
+		})
+	} as const);
+
+export const markReportUnprocessed = (reportId: number) =>
+	({
+		customId: `mark-report-${reportId}-unprocessed`,
+		component: (): APIButtonComponentWithCustomId => ({
+			custom_id: `mark-report-${reportId}-unprocessed`,
+			label: "Mark unprocessed",
+			style: ButtonStyle.Danger,
+			type: ComponentType.Button
+		})
+	} as const);
+
+export const memberInfo = (userId: string, prefix = "Member") =>
+	({
+		customId: `member-info-${userId}-${prefix}`,
+		component: (): APIButtonComponentWithCustomId => ({
+			custom_id: `member-info-${userId}-${prefix}`,
 			label: `${prefix} info`,
 			style: ButtonStyle.Secondary,
 			type: ComponentType.Button
