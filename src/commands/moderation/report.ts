@@ -12,7 +12,6 @@ import squash from "#helpers/squash.js";
 import yesNo from "#helpers/yesNo.js";
 import Logger from "#logger";
 import type ConfigModule from "#modules/Config.js";
-import { type UserReportModule } from "#modules/Report.js";
 import { type CommandData, type CommandExport } from "#typings";
 import { stripIndents } from "common-tags";
 import {
@@ -228,7 +227,7 @@ const handleMember = async (
 
 	const guildRelativeId = await reportManager.getNextGuildRelativeId();
 
-	const report = await reportManager.createUserReport<UserReportModule>({
+	const report = await reportManager.createUserReport({
 		anonymous,
 		authorUserId: interaction.user.id,
 		authorUserTag: interaction.user.tag,

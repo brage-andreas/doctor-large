@@ -5,9 +5,11 @@ import getMemberInfo from "#helpers/memberInfo.js";
 import { messageToEmbed, messageURL } from "#helpers/messageHelpers.js";
 import squash from "#helpers/squash.js";
 import { longstamp } from "#helpers/timestamps.js";
+import { type CaseWithIncludes, type ReportWithIncludes } from "#typings";
 import { type Report, type ReportType } from "@prisma/client";
 import { source, stripIndent, stripIndents } from "common-tags";
 import {
+	Routes,
 	bold,
 	inlineCode,
 	quote,
@@ -27,10 +29,11 @@ export const isMessageReport = (
 } => Boolean(data.targetMessageChannelId) && Boolean(data.targetMessageId);
 
 export class UserReportModule
-	implements Omit<Report, "targetMessageChannelId" | "targetMessageId">
+	implements
+		Omit<ReportWithIncludes, "targetMessageChannelId" | "targetMessageId">
 {
 	public client: Client<true>;
-	public data: Report;
+	public data: ReportWithIncludes;
 	public guild: Guild;
 	public manager: ReportManager;
 
@@ -47,11 +50,12 @@ export class UserReportModule
 	public processedAt: Date | null;
 	public processedByUserId: string | null;
 	public processedByUserTag: string | null;
+	public referencedBy: Array<CaseWithIncludes>;
 	public targetUserId: string;
 	public targetUserTag: string;
 	public type: ReportType;
 
-	public constructor(manager: ReportManager, data: Report) {
+	public constructor(manager: ReportManager, data: ReportWithIncludes) {
 		this.client = manager.guild.client;
 		this.data = data;
 		this.guild = manager.guild;
@@ -76,6 +80,7 @@ export class UserReportModule
 		this.processedAt = data.processedAt;
 		this.processedByUserId = data.processedByUserId;
 		this.processedByUserTag = data.processedByUserTag;
+		this.referencedBy = data.referencedBy;
 		this.targetUserId = data.targetUserId;
 		this.targetUserTag = data.targetUserTag;
 		this.type = data.type;
@@ -87,6 +92,23 @@ export class UserReportModule
 
 	public isUserReport(): this is UserReportModule {
 		return !this.isMessageReport();
+	}
+
+	public async editLog() {
+		if (!this.logChannelId || !this.logMessageId) {
+			return false;
+		}
+
+		const body = await this.preparePost();
+		const fullRoute = Routes.channelMessage(
+			this.logChannelId,
+			this.logMessageId
+		);
+
+		return await this.client.rest
+			.patch(fullRoute, { body })
+			.then(() => true)
+			.catch(() => false);
 	}
 
 	public async fetchTarget() {
@@ -130,14 +152,16 @@ export class UserReportModule
 	) {
 		const rows = components.createRows.uniform(2)(
 			components.buttons
-				.memberInfo(this.targetUserId)
-				.component("Target"),
+				.memberInfo(this.targetUserId, "Target")
+				.component(),
 			components.buttons
-				.memberInfo(this.authorUserId)
-				.component("Author"),
+				.memberInfo(this.authorUserId, "Author")
+				.component(),
 			// ---
-			components.buttons.attachToLatestCase,
-			components.buttons.markComplete
+			components.buttons.attachToLatestCase(this.id),
+			this.processedAt
+				? components.buttons.markReportUnprocessed(this.id)
+				: components.buttons.markReportProcessed(this.id)
 		);
 
 		const authorMention = this.anonymous
@@ -185,7 +209,7 @@ export class MessageReportModule extends UserReportModule {
 
 	public constructor(
 		manager: ReportManager,
-		data: Report & {
+		data: ReportWithIncludes & {
 			targetMessageId: string;
 			targetMessageChannelId: string;
 		}

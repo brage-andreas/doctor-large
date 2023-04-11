@@ -3,7 +3,8 @@ import {
 	MessageReportModule,
 	UserReportModule
 } from "#modules/Report.js";
-import { ReportType, type Prisma, type Report } from "@prisma/client";
+import { type ReportWithIncludes } from "#typings";
+import { ReportType, type Prisma } from "@prisma/client";
 import { type Guild, type MessageCreateOptions } from "discord.js";
 import prisma from "./prisma.js";
 
@@ -15,12 +16,14 @@ export default class ReportManager {
 		this.guild = guild;
 	}
 
-	public toModule(data: Report): MessageReportModule | UserReportModule;
 	public toModule(
-		data: Report | null | undefined
+		data: ReportWithIncludes
+	): MessageReportModule | UserReportModule;
+	public toModule(
+		data: ReportWithIncludes | null | undefined
 	): MessageReportModule | UserReportModule | null | undefined;
 	public toModule(
-		data: Report | null | undefined
+		data: ReportWithIncludes | null | undefined
 	): MessageReportModule | UserReportModule | null | undefined {
 		if (!data) {
 			return null;
@@ -34,7 +37,19 @@ export default class ReportManager {
 	}
 
 	public async get(reportId: number) {
-		const data = await this.prisma.findUnique({ where: { id: reportId } });
+		const data = await this.prisma.findUnique({
+			where: { id: reportId },
+			include: {
+				referencedBy: {
+					include: {
+						note: true,
+						reference: true,
+						referencedBy: true,
+						report: true
+					}
+				}
+			}
+		});
 
 		return this.toModule(data);
 	}
@@ -48,6 +63,16 @@ export default class ReportManager {
 				guildId: this.guild.id,
 				targetUserId: options?.targetUserId,
 				processedByUserId: options?.processedByUserId
+			},
+			include: {
+				referencedBy: {
+					include: {
+						note: true,
+						reference: true,
+						referencedBy: true,
+						report: true
+					}
+				}
 			}
 		});
 
@@ -105,7 +130,19 @@ export default class ReportManager {
 	}
 
 	public async edit(args: Prisma.ReportUpdateArgs) {
-		const data_ = await this.prisma.update({ ...args });
+		const data_ = await this.prisma.update({
+			...args,
+			include: {
+				referencedBy: {
+					include: {
+						note: true,
+						reference: true,
+						referencedBy: true,
+						report: true
+					}
+				}
+			}
+		});
 
 		return this.toModule(data_);
 	}
@@ -143,7 +180,19 @@ export default class ReportManager {
 	private async create<T extends MessageReportModule | UserReportModule>(
 		data: Prisma.ReportCreateInput
 	): Promise<T> {
-		const data_ = await this.prisma.create({ data });
+		const data_ = await this.prisma.create({
+			data,
+			include: {
+				referencedBy: {
+					include: {
+						note: true,
+						reference: true,
+						referencedBy: true,
+						report: true
+					}
+				}
+			}
+		});
 
 		return this.toModule(data_) as T;
 	}
