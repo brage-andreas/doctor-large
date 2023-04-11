@@ -1,5 +1,12 @@
 import type GiveawayModule from "#modules/Giveaway.js";
-import { type Giveaway, type Prize, type Winner } from "@prisma/client";
+import {
+	type Case,
+	type Giveaway,
+	type Note,
+	type Prize,
+	type Report,
+	type Winner
+} from "@prisma/client";
 import {
 	type APIActionRowComponent,
 	type APIButtonComponent,
@@ -97,6 +104,17 @@ export type GiveawayWithIncludes = Giveaway & {
 export type PrizeWithIncludes = Prize & {
 	winners: Array<Winner>;
 	giveaway: GiveawayModule;
+};
+
+export type CaseWithIncludes = Case & {
+	referencedBy: Array<Case>;
+	note: Note | null;
+	reference: Case | null;
+	report: Report | null;
+};
+
+export type ReportWithIncludes = Report & {
+	referencedBy: Array<CaseWithIncludes>;
 };
 
 export type CreateRowsCompatibleAPIComponent =
