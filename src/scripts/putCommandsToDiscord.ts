@@ -24,17 +24,17 @@ function getCommandData() {
 export default async function putCommandsToDiscord(
 	{ clear }: { clear: boolean } = { clear: false }
 ) {
-	if (!process.env.BOT_TOKEN) {
-		throw new TypeError("'BOT_TOKEN' option is not defined in .env");
-	}
-
-	if (!process.env.APPLICATION_ID) {
+	if (!process.env.DISCORD_APPLICATION_ID) {
 		throw new TypeError("'APPLICATION_ID' option not defined in .env");
 	}
 
+	if (!process.env.DISCORD_APPLICATION_TOKEN) {
+		throw new TypeError("'BOT_TOKEN' option is not defined in .env");
+	}
+
 	const {
-		BOT_TOKEN: token,
-		APPLICATION_ID: applicationId,
+		DISCORD_APPLICATION_ID: applicationId,
+		DISCORD_APPLICATION_TOKEN: token,
 		GUILD_ID: guildId
 	} = process.env;
 

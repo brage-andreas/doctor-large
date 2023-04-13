@@ -28,9 +28,9 @@ import {
 declare global {
 	namespace NodeJS {
 		interface ProcessEnv {
-			APPLICATION_ID: string;
-			BOT_TOKEN: string;
 			DATABASE_URL: `postgres://${string}:${string}@${string}:${number}/${string}?schema=${string}`;
+			DISCORD_APPLICATION_ID: string;
+			DISCORD_APPLICATION_TOKEN: string;
 			GUILD_ID?: string | undefined;
 		}
 	}
