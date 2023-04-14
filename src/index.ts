@@ -1,8 +1,20 @@
-import { ACTIVITIES, INTENTS } from "#constants";
+import { ACTIVITIES, INTENTS, Regex } from "#constants";
 import Logger from "#logger";
 import loadEvents from "#scripts/loadEvents.js";
 import { Client } from "discord.js";
 import process from "node:process";
+
+if (!process.env.DISCORD_APPLICATION_TOKEN) {
+	throw new TypeError("'DISCORD_APPLICATION_TOKEN' is not defined in .env");
+}
+
+if (
+	!Regex.DiscordApplicationToken.test(process.env.DISCORD_APPLICATION_TOKEN)
+) {
+	throw new TypeError(
+		"'DISCORD_APPLICATION_TOKEN' defined in .env is faulty"
+	);
+}
 
 const client = new Client({
 	intents: INTENTS,
