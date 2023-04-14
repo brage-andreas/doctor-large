@@ -25,7 +25,11 @@ const FlatRegex = {
 	/**
 	 * `\d{17,19}`
 	 */
-	Snowflake: /\d{17,19}/
+	Snowflake: /\d{17,19}/,
+	/**
+	 * `[\w-]{24}\.[\w-]{6}\.[\w-]{27}`
+	 */
+	DiscordApplicationToken: /[\w-]{24}\.[\w-]{6}\.[\w-]{27}/
 } as const;
 
 const getFlat = (regex: keyof typeof FlatRegex) => FlatRegex[regex].source;
