@@ -1,0 +1,70 @@
+import { Emojis, Regex } from "#constants";
+import ReportManager from "#database/report.js";
+import Logger from "#logger";
+import { oneLine } from "common-tags";
+import { type ButtonInteraction } from "discord.js";
+
+export default async function markReportProcessed(
+	interaction: ButtonInteraction<"cached">
+) {
+	const match = interaction.customId.match(Regex.MarkReportProcessed);
+	const reportId = match?.groups?.id ? Number(match.groups.id) : undefined;
+
+	if (!reportId) {
+		await interaction.editReply({
+			content: `${Emojis.Error} This button is faulty.`
+		});
+
+		return;
+	}
+
+	await interaction.deferReply({ ephemeral: true });
+
+	const reportManager = new ReportManager(interaction.guild);
+	const report = await reportManager.get(reportId);
+
+	if (!report) {
+		await interaction.editReply({
+			content: `${Emojis.Error} This report no longer exists.`
+		});
+
+		return;
+	}
+
+	const ress = await report
+		.edit({
+			processedAt: interaction.createdAt,
+			processedByUserId: interaction.user.id,
+			processedByUserTag: interaction.user.tag
+		})
+		.catch(() => null);
+
+	if (!ress) {
+		await interaction.editReply({
+			content: oneLine`
+				${Emojis.Error} Something went wrong marking this report processed.
+				Check if it still exists and try again.
+			`
+		});
+
+		return;
+	}
+
+	const res = await report.editLog();
+
+	new Logger({ color: "grey", prefix: "REPORT", interaction }).log(
+		`Marked report #${report.id} processed`
+	);
+
+	if (!res) {
+		await interaction.editReply({
+			content: `${Emojis.Warn} Could not update the report log, but the report has been marked processed.`
+		});
+
+		return;
+	}
+
+	await interaction.editReply({
+		content: `${Emojis.Check} Marked report processed.`
+	});
+}
