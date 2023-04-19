@@ -61,7 +61,7 @@ const handle = async (
 
 	const row = components.createRows(urlButton);
 
-	new Logger({ interaction, prefix: "REPOST" }).log(
+	new Logger({ interaction, label: "REPOST" }).log(
 		`Reposted message (${message.id}) by ${message.author.tag}`
 	);
 

@@ -50,7 +50,7 @@ export default async function toSetRequiredRoles(
 		}
 
 		case components.buttons.clear.customId: {
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			new Logger({ label: "GIVEAWAY", interaction }).log(
 				`Cleared required roles of giveaway #${giveaway.id}`
 			);
 
@@ -69,7 +69,7 @@ export default async function toSetRequiredRoles(
 				return;
 			}
 
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			new Logger({ label: "GIVEAWAY", interaction }).log(
 				`Edited required roles of giveaway #${giveaway.id}`
 			);
 

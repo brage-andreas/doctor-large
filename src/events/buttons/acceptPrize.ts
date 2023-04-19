@@ -68,7 +68,7 @@ export default async function acceptPrize(
 
 	new Logger({
 		color: "green",
-		prefix: "GIVEAWAY"
+		label: "GIVEAWAY"
 	}).log(
 		oneLine`
 			User ${interaction.user.tag} (${userId})

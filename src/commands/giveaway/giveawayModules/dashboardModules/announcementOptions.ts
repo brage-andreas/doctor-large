@@ -51,7 +51,7 @@ export default async function toAnnouncementOptions(
 		components.buttons.recallCurrentMessage
 	);
 
-	const logger = new Logger({ prefix: "GIVEAWAY", interaction });
+	const logger = new Logger({ label: "GIVEAWAY", interaction });
 
 	const retry = async (message?: string) => {
 		if (message) {

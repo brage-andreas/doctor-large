@@ -5,7 +5,7 @@ import s from "#helpers/s.js";
 import yesNo from "#helpers/yesNo.js";
 import Logger from "#logger";
 import { oneLine, stripIndent, stripIndents } from "common-tags";
-import { bold, ButtonStyle, time, type ButtonInteraction } from "discord.js";
+import { ButtonStyle, bold, time, type ButtonInteraction } from "discord.js";
 import toDashboard from "../dashboard.js";
 
 export default async function toEndGiveaway(
@@ -134,7 +134,7 @@ export default async function toEndGiveaway(
 	});
 
 	new Logger({
-		prefix: "GIVEAWAY",
+		label: "GIVEAWAY",
 		color: "red",
 		interaction
 	}).log(`Ended giveaway #${id}`);

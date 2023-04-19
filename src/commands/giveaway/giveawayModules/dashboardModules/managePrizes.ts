@@ -91,7 +91,7 @@ export default async function toManagePrizes(
 		embed.setColor(Colors.Red).setDescription("There are no prizes yet.");
 	}
 
-	new Logger({ prefix: "GIVEAWAY", interaction }).log(
+	new Logger({ label: "GIVEAWAY", interaction }).log(
 		`Opened prizes manager for giveaway #${giveaway.id}`
 	);
 

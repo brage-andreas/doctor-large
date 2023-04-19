@@ -66,7 +66,7 @@ const chatInput = async (
 				break;
 			}
 
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			new Logger({ label: "GIVEAWAY", interaction }).log(
 				`Opened dashboard of giveaway with ID #${id}`
 			);
 

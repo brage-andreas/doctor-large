@@ -160,7 +160,7 @@ export default async function toAnnounceGiveaway(
 				}
 			});
 
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			new Logger({ label: "GIVEAWAY", interaction }).log(
 				`Announced giveaway #${id} in ${channel.name} (${channel.id})`
 			);
 

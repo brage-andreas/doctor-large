@@ -237,7 +237,7 @@ const chatInput = async (
 		.catch(() => false);
 
 	if (unpinned) {
-		new Logger({ interaction, prefix: "ARCHIVE PINS" }).log(
+		new Logger({ interaction, label: "ARCHIVE PINS" }).log(
 			`Archived pin ${message.id} by ${message.author.tag} (${message.author.id})`,
 			`in archive channel #${channel.name} (${channel.id})`
 		);

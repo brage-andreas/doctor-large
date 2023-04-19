@@ -47,7 +47,7 @@ export default async function memberInfo(
 		timestamp: new Date().toISOString()
 	};
 
-	new Logger({ color: "grey", prefix: "BUTTON", interaction }).log(
+	new Logger({ color: "grey", label: "BUTTON", interaction }).log(
 		`Opened member info of ${memberId}`
 	);
 

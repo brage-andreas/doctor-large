@@ -8,7 +8,7 @@ import checkTimestamps from "../jobs/index.js";
 const execute = (client: Client<true>) => {
 	console.log();
 
-	new Logger({ prefix: "READY", color: "green" }).log(
+	new Logger({ label: "READY", color: "green" }).log(
 		`Online as ${client.user.tag} (${client.user.id})`
 	);
 

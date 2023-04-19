@@ -96,7 +96,7 @@ export default async function enterGiveaway(
 
 		new Logger({
 			color: "grey",
-			prefix: "GIVEAWAY"
+			label: "GIVEAWAY"
 		}).log(
 			oneLine`
 				User ${interaction.user.tag} (${interaction.user.id})
@@ -121,7 +121,7 @@ export default async function enterGiveaway(
 
 		new Logger({
 			color: "grey",
-			prefix: "GIVEAWAY"
+			label: "GIVEAWAY"
 		}).log(
 			oneLine`
 				User ${interaction.user.tag} (${interaction.user.id})

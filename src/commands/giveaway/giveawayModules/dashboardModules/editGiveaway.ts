@@ -45,7 +45,7 @@ export default async function toEditGiveaway(
 		.showModal(editGiveawayModal)
 		.then(() => true)
 		.catch((error) => {
-			new Logger({ interaction, prefix: "EDIT GIVEAWAY" }).log(
+			new Logger({ interaction, label: "EDIT GIVEAWAY" }).log(
 				"Failed to show edit modal:",
 				error
 			);
@@ -113,7 +113,7 @@ export default async function toEditGiveaway(
 			description !== giveaway.description ||
 			winnerQuantity !== giveaway.winnerQuantity
 		) {
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			new Logger({ label: "GIVEAWAY", interaction }).log(
 				`Edited giveaway #${id}`
 			);
 

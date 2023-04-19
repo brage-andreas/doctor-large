@@ -54,7 +54,7 @@ const run = async (
 	const isAuthor = target.id === interaction.user.id;
 	const tag = target.tag;
 
-	const logger = new Logger({ prefix: "MY GIVEAWAYS", interaction });
+	const logger = new Logger({ label: "MY GIVEAWAYS", interaction });
 
 	const giveawayManager = new GiveawayManager(interaction.guild);
 

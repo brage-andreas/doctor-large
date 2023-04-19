@@ -45,7 +45,7 @@ export default async function toCreatePrize(
 			quantity
 		});
 
-		new Logger({ prefix: "GIVEAWAY", interaction }).log(
+		new Logger({ label: "GIVEAWAY", interaction }).log(
 			`Created prize #${id} in giveaway #${giveawayId}`
 		);
 

@@ -28,7 +28,7 @@ const chatInput = async (
 
 	const configManager = new ConfigManager(interaction.guild);
 
-	const logger = new Logger({ interaction, prefix: "CONFIG" });
+	const logger = new Logger({ interaction, label: "CONFIG" });
 
 	await configManager
 		.validate()

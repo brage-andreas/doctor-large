@@ -122,7 +122,7 @@ export async function toAnnounceWinners(
 	}
 
 	new Logger({
-		prefix: "GIVEAWAY"
+		label: "GIVEAWAY"
 	}).log(
 		`Announced winners of giveaway #${id} in #${channel.name} (${channel.id})`
 	);
@@ -250,7 +250,7 @@ export async function reannounceWinners(
 	});
 
 	new Logger({
-		prefix: "GIVEAWAY"
+		label: "GIVEAWAY"
 	}).log(
 		`Reannounced winners of giveaway #${giveaway.id} in #${channel.name} (${channel.id})`
 	);
@@ -303,7 +303,7 @@ export async function autoAnnounceWinners(
 
 	new Logger({
 		color: "grey",
-		prefix: "GIVEAWAY",
+		label: "GIVEAWAY",
 		guild: giveaway.guild
 	}).log(
 		`Automatically announced winners of giveaway #${giveaway.id}. Sent DMs to winners`

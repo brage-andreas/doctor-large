@@ -5,9 +5,9 @@ import yesNo from "#helpers/yesNo.js";
 import Logger from "#logger";
 import { stripIndent, stripIndents } from "common-tags";
 import {
-	bold,
 	ButtonStyle,
 	ComponentType,
+	bold,
 	underscore,
 	type ButtonInteraction
 } from "discord.js";
@@ -125,7 +125,7 @@ export default async function toResetData(
 					all: true
 				});
 
-				new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				new Logger({ label: "GIVEAWAY", interaction }).log(
 					`Level 4 reset giveaway #${giveaway.id}`
 				);
 
@@ -174,7 +174,7 @@ export default async function toResetData(
 					prizesAndWinners: true
 				});
 
-				new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				new Logger({ label: "GIVEAWAY", interaction }).log(
 					`Level 3 reset giveaway #${giveaway.id}`
 				);
 
@@ -218,7 +218,7 @@ export default async function toResetData(
 
 				await giveaway.reset({ entriesAndWinners: true });
 
-				new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				new Logger({ label: "GIVEAWAY", interaction }).log(
 					`Level 2 reset giveaway #${giveaway.id}`
 				);
 
@@ -262,7 +262,7 @@ export default async function toResetData(
 
 				await giveaway.reset({ options: true });
 
-				new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				new Logger({ label: "GIVEAWAY", interaction }).log(
 					`Level 1 reset giveaway #${giveaway.id}`
 				);
 

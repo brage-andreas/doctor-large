@@ -35,7 +35,7 @@ const chatInput = async (interaction: CommandModuleInteractions) => {
 	const autoroleManager = new AutoroleManager(interaction.guild);
 	await autoroleManager.initialize();
 
-	const logger = new Logger({ prefix: "AUTOROLE", interaction });
+	const logger = new Logger({ label: "AUTOROLE", interaction });
 
 	const dashboard = async () => {
 		const autorole = await autoroleManager.get();

@@ -52,7 +52,7 @@ export default async function markReportProcessed(
 
 	const res = await report.editLog();
 
-	new Logger({ color: "grey", prefix: "REPORT", interaction }).log(
+	new Logger({ color: "grey", label: "REPORT", interaction }).log(
 		`Marked report #${report.id} processed`
 	);
 

@@ -47,7 +47,7 @@ export default async function (
 			title
 		});
 
-		new Logger({ prefix: "GIVEAWAY", interaction }).log(
+		new Logger({ label: "GIVEAWAY", interaction }).log(
 			`Created giveaway with ID #${id}`
 		);
 
