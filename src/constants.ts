@@ -41,7 +41,11 @@ const FlatRegex = {
 	/**
 	 * `^unattach-report-(?<id>\d+)-from-cases$`
 	 */
-	UnattachReportFromCases: /^unattach-report-(?<id>\d+)-from-cases$/
+	UnattachReportFromCases: /^unattach-report-(?<id>\d+)-from-cases$/,
+	/**
+	 * `[\w-]{24}\.[\w-]{6}\.[\w-]{27}`
+	 */
+	DiscordApplicationToken: /[\w-]{24}\.[\w-]{6}\.[\w-]{27}/
 } as const;
 
 const getFlat = (regex: keyof typeof FlatRegex) => FlatRegex[regex].source;

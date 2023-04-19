@@ -1,6 +1,6 @@
 ## Quick start
 
-1. Create a `.env` file and populate it. Use `.env.example` as a reference.
+1. Create a `.env` file and populate it. Use `.env.template` as a reference.
 2. Install `PostgreSQL` and `Node.js`.
 3. Create a server with name `postgres` and password `admin`.
 4. Create a database called `doctor-large`.

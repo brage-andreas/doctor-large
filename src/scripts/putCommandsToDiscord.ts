@@ -24,30 +24,40 @@ function getCommandData() {
 export default async function putCommandsToDiscord(
 	{ clear }: { clear: boolean } = { clear: false }
 ) {
-	if (!process.env.BOT_TOKEN) {
-		throw new TypeError("'BOT_TOKEN' option is not defined in .env");
+	if (!process.env.DISCORD_APPLICATION_ID) {
+		throw new TypeError("'DISCORD_APPLICATION_ID' not defined in .env");
 	}
 
-	if (!process.env.APPLICATION_ID) {
-		throw new TypeError("'APPLICATION_ID' option not defined in .env");
+	if (!process.env.DISCORD_APPLICATION_TOKEN) {
+		throw new TypeError(
+			"'DISCORD_APPLICATION_TOKEN' is not defined in .env"
+		);
+	}
+
+	if (
+		!Regex.DiscordApplicationToken.test(
+			process.env.DISCORD_APPLICATION_TOKEN
+		)
+	) {
+		throw new TypeError(
+			"'DISCORD_APPLICATION_TOKEN' defined in .env is faulty"
+		);
 	}
 
 	const {
-		BOT_TOKEN: token,
-		APPLICATION_ID: applicationId,
+		DISCORD_APPLICATION_ID: applicationId,
+		DISCORD_APPLICATION_TOKEN: token,
 		GUILD_ID: guildId
 	} = process.env;
 
 	if (!Regex.Snowflake.test(applicationId)) {
 		throw new TypeError(
-			`'APPLICATION_ID' option defined in .env is faulty: ${applicationId}`
+			`'DISCORD_APPLICATION_ID' defined in .env is faulty: ${applicationId}`
 		);
 	}
 
 	if (guildId && !Regex.Snowflake.test(guildId)) {
-		throw new TypeError(
-			`'GUILD_ID' option defined in .env is faulty: ${guildId}`
-		);
+		throw new TypeError(`'GUILD_ID' defined in .env is faulty: ${guildId}`);
 	}
 
 	const rest = new REST().setToken(token);
