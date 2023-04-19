@@ -15,6 +15,10 @@ const FlatRegex = {
 	 */
 	AcceptPrizeCustomId: /^accept-prize-(?<id>\d+)$/,
 	/**
+	 * `^attach-report-(?<id>\d+)-to-latest-case$`
+	 */
+	AttachReportToLatestCase: /^attach-report-(?<id>\d+)-to-latest-case$/,
+	/**
 	 * `^dashboard-prize-(?<id>\d+)$`
 	 */
 	DashboardPrizeCustomId: /^dashboard-prize-(?<id>\d+)$/,
@@ -23,9 +27,21 @@ const FlatRegex = {
 	 */
 	EnterGiveawayCustomId: /^enter-giveaway-(?<id>\d+)$/,
 	/**
+	 * `^mark-report-processed-(?<id>\d+)$`
+	 */
+	MarkReportProcessed: /^mark-report-processed-(?<id>\d+)$/,
+	/**
+	 * `^mark-report-(?<id>\d+)-unprocessed$`
+	 */
+	MarkReportUnprocessed: /^mark-report-(?<id>\d+)-unprocessed$/,
+	/**
 	 * `\d{17,19}`
 	 */
-	Snowflake: /\d{17,19}/
+	Snowflake: /\d{17,19}/,
+	/**
+	 * `^unattach-report-(?<id>\d+)-from-cases$`
+	 */
+	UnattachReportFromCases: /^unattach-report-(?<id>\d+)-from-cases$/
 } as const;
 
 const getFlat = (regex: keyof typeof FlatRegex) => FlatRegex[regex].source;
