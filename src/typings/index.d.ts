@@ -48,21 +48,16 @@ export type Color =
 	| "white"
 	| "yellow";
 
-export interface EventExport {
+export interface EventExportData {
 	event: keyof ClientEvents;
 	execute(...args: Array<unknown>): Promise<unknown> | unknown;
 }
-
 export interface EventImport {
-	getEvent(): EventExport;
+	getEvent(): EventExportData;
 }
+export type EventExport = () => EventExportData;
 
-export type CommandModuleInteractions =
-	| AutocompleteInteraction<"cached">
-	| ChatInputCommandInteraction<"cached">
-	| ContextMenuCommandInteraction<"cached">;
-
-interface CommandExport {
+export interface CommandExportData {
 	data: {
 		chatInput?: RESTPostAPIChatInputApplicationCommandsJSONBody;
 		contextMenu?: RESTPostAPIContextMenuApplicationCommandsJSONBody;
@@ -74,17 +69,23 @@ interface CommandExport {
 		};
 	};
 	handle: {
-		autocomplete?(interaction: CommandModuleInteractions): UnknownOrPromise;
-		chatInput?(interaction: CommandModuleInteractions): UnknownOrPromise;
-		contextMenu?(interaction: CommandModuleInteractions): UnknownOrPromise;
+		autocomplete?(
+			interaction: AutocompleteInteraction<"cached">
+		): UnknownOrPromise;
+		chatInput?(
+			interaction: ChatInputCommandInteraction<"cached">
+		): UnknownOrPromise;
+		contextMenu?(
+			interaction: ContextMenuCommandInteraction<"cached">
+		): UnknownOrPromise;
 	};
 }
-
-export type CommandData = Prop<CommandExport, "data">;
-
 export interface CommandImport {
-	getCommand(): CommandExport;
+	getCommand(): CommandExportData;
 }
+export type CommandData = Prop<CommandExportData, "data">;
+export type CommandExport = () => CommandExportData;
+export type CommandHandle = Prop<CommandExportData, "handle">;
 
 interface PrizesOfMapObj {
 	prize: Prize;

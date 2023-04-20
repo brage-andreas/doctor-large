@@ -27,7 +27,7 @@ const execute = (client: Client<true>) => {
 	}, 43_200_000 /* 12 hours */);
 };
 
-export const getEvent: () => EventExport = () => ({
+export const getEvent: EventExport = () => ({
 	event: Events.ClientReady,
 	execute
 });

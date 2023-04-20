@@ -35,7 +35,7 @@ const execute = async (member: GuildMember) => {
 	}
 };
 
-export const getEvent: () => EventExport = () => ({
+export const getEvent: EventExport = () => ({
 	event: Events.GuildMemberAdd,
 	execute
 });
