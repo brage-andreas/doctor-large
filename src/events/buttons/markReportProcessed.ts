@@ -31,15 +31,16 @@ export default async function markReportProcessed(
 		return;
 	}
 
-	const ress = await report
+	const dataEditedSuccess = await report
 		.edit({
 			processedAt: interaction.createdAt,
 			processedByUserId: interaction.user.id,
 			processedByUserTag: interaction.user.tag
 		})
-		.catch(() => null);
+		.then(() => true)
+		.catch(() => false);
 
-	if (!ress) {
+	if (!dataEditedSuccess) {
 		await interaction.editReply({
 			content: oneLine`
 				${Emojis.Error} Something went wrong marking this report processed.
@@ -50,13 +51,13 @@ export default async function markReportProcessed(
 		return;
 	}
 
-	const res = await report.editLog();
+	const logEditedSuccess = await report.editLog();
 
 	new Logger({ color: "grey", label: "REPORT", interaction }).log(
 		`Marked report #${report.id} processed`
 	);
 
-	if (!res) {
+	if (!logEditedSuccess) {
 		await interaction.editReply({
 			content: `${Emojis.Warn} Could not update the report log, but the report has been marked processed.`
 		});
