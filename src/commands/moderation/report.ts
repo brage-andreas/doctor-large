@@ -202,13 +202,13 @@ const handleMember = async (
 		medium: interaction,
 		data: {
 			content: squash(stripIndents`
-				${Emojis.FaceInClouds} Are you sure you want to report ${memberString}?
-				
 				${
 					hasRecentReport
 						? `${Emojis.Warn} This member has recently been reported. Multiple reports may not be necessary.`
 						: ""
 				}
+
+				${Emojis.FaceInClouds} Are you sure you want to report ${memberString}?
 
 				${anonymous ? "→ You opted to stay anonymous" : ""}
 				→ Comment: ${inlineCode(comment.replaceAll("`", "\\`"))}
