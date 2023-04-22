@@ -162,7 +162,7 @@ const contextMenu = async (
 	handle(interaction, interaction.targetMessage);
 };
 
-export const getCommand: () => CommandExport = () => ({
+export const getCommand: CommandExport = () => ({
 	data,
 	handle: {
 		chatInput,

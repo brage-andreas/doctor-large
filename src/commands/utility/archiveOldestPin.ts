@@ -288,7 +288,7 @@ const chatInput = async (
 	}
 };
 
-export const getCommand: () => CommandExport = () => ({
+export const getCommand: CommandExport = () => ({
 	data,
 	handle: {
 		chatInput
