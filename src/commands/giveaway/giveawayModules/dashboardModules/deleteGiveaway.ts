@@ -4,7 +4,7 @@ import commandMention from "#helpers/commandMention.js";
 import yesNo from "#helpers/yesNo.js";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
-import { bold, ButtonStyle, type ButtonInteraction } from "discord.js";
+import { ButtonStyle, bold, type ButtonInteraction } from "discord.js";
 import toDashboard from "../dashboard.js";
 
 export default async function toDeleteGiveaway(
@@ -95,7 +95,7 @@ export default async function toDeleteGiveaway(
 
 	await giveaway.delete({ withAnnouncementMessages: true });
 
-	new Logger({ prefix: "GIVEAWAY", interaction }).log(
+	new Logger({ label: "GIVEAWAY", interaction }).log(
 		`Deleted giveaway #${giveaway.id}`
 	);
 

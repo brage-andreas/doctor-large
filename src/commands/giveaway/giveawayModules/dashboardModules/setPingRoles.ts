@@ -51,7 +51,7 @@ export default async function toSetPingRoles(
 		case components.buttons.setPingRolesToAtEveryone.customId: {
 			await component.deferUpdate();
 
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			new Logger({ label: "GIVEAWAY", interaction }).log(
 				`Set ping roles of giveaway #${giveaway.id} to @everyone`
 			);
 
@@ -68,7 +68,7 @@ export default async function toSetPingRoles(
 		case components.buttons.clear.customId: {
 			await component.deferUpdate();
 
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			new Logger({ label: "GIVEAWAY", interaction }).log(
 				`Cleared ping roles of giveaway #${giveaway.id}`
 			);
 
@@ -89,7 +89,7 @@ export default async function toSetPingRoles(
 
 			await component.deferUpdate();
 
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			new Logger({ label: "GIVEAWAY", interaction }).log(
 				`Edited ping roles of giveaway #${giveaway.id}`
 			);
 

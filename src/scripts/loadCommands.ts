@@ -1,10 +1,10 @@
 import { COMMAND_DIR } from "#constants";
-import { type CommandExport, type CommandImport } from "#typings";
+import { type CommandExportData, type CommandImport } from "#typings";
 import console from "node:console";
 import { existsSync, lstatSync, readdirSync } from "node:fs";
 import { grey } from "../logger/color.js";
 
-const commands: Map<string, CommandExport> = new Map();
+const commands: Map<string, CommandExportData> = new Map();
 
 const importAndSetCommandIntoMap = async (relativePath: string) => {
 	const err = (string: string) => {

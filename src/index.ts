@@ -28,7 +28,7 @@ const client = new Client({
 });
 
 process.on("unhandledRejection", (error) => {
-	new Logger({ prefix: "ERROR", color: "red" }).log(error);
+	new Logger({ label: "ERROR", color: "red" }).log(error);
 });
 
 await loadEvents(client);

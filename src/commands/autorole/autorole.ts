@@ -2,13 +2,12 @@ import components from "#components";
 import { HIDE_OPTION } from "#constants";
 import AutoroleManager from "#database/autorole.js";
 import Logger from "#logger";
-import {
-	type CommandData,
-	type CommandExport,
-	type CommandModuleInteractions
-} from "#typings";
+import { type CommandData, type CommandExport } from "#typings";
 import { oneLine } from "common-tags";
-import { PermissionFlagsBits } from "discord.js";
+import {
+	PermissionFlagsBits,
+	type ChatInputCommandInteraction
+} from "discord.js";
 
 const data: CommandData = {
 	chatInput: {
@@ -23,7 +22,9 @@ const data: CommandData = {
 	}
 };
 
-const chatInput = async (interaction: CommandModuleInteractions) => {
+const chatInput = async (
+	interaction: ChatInputCommandInteraction<"cached">
+) => {
 	if (!interaction.isChatInputCommand()) {
 		return;
 	}
@@ -35,7 +36,7 @@ const chatInput = async (interaction: CommandModuleInteractions) => {
 	const autoroleManager = new AutoroleManager(interaction.guild);
 	await autoroleManager.initialize();
 
-	const logger = new Logger({ prefix: "AUTOROLE", interaction });
+	const logger = new Logger({ label: "AUTOROLE", interaction });
 
 	const dashboard = async () => {
 		const autorole = await autoroleManager.get();
@@ -126,7 +127,7 @@ const chatInput = async (interaction: CommandModuleInteractions) => {
 	await dashboard();
 };
 
-export const getCommand: () => CommandExport = () => ({
+export const getCommand: CommandExport = () => ({
 	data,
 	handle: {
 		chatInput

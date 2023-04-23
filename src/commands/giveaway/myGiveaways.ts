@@ -54,7 +54,7 @@ const run = async (
 	const isAuthor = target.id === interaction.user.id;
 	const tag = target.tag;
 
-	const logger = new Logger({ prefix: "MY GIVEAWAYS", interaction });
+	const logger = new Logger({ label: "MY GIVEAWAYS", interaction });
 
 	const giveawayManager = new GiveawayManager(interaction.guild);
 
@@ -449,7 +449,7 @@ const contextMenu = async (
 	await run(interaction, interaction.targetUser);
 };
 
-export const getCommand: () => CommandExport = () => ({
+export const getCommand: CommandExport = () => ({
 	data,
 	handle: {
 		chatInput,

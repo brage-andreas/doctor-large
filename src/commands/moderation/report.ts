@@ -165,7 +165,7 @@ const handleMessage = async (
 
 	await config.postReport(report);
 
-	new Logger({ interaction, prefix: "REPORT" }).log(
+	new Logger({ interaction, label: "REPORT" }).log(
 		`Reported message ${message.id} by ${message.author.tag} (${message.author.id})`
 	);
 
@@ -202,13 +202,13 @@ const handleMember = async (
 		medium: interaction,
 		data: {
 			content: squash(stripIndents`
-				${Emojis.FaceInClouds} Are you sure you want to report ${memberString}?
-				
 				${
 					hasRecentReport
 						? `${Emojis.Warn} This member has recently been reported. Multiple reports may not be necessary.`
 						: ""
 				}
+
+				${Emojis.FaceInClouds} Are you sure you want to report ${memberString}?
 
 				${anonymous ? "→ You opted to stay anonymous" : ""}
 				→ Comment: ${inlineCode(comment.replaceAll("`", "\\`"))}
@@ -240,7 +240,7 @@ const handleMember = async (
 
 	await config.postReport(report);
 
-	new Logger({ interaction, prefix: "REPORT" }).log(
+	new Logger({ interaction, label: "REPORT" }).log(
 		`Reported member ${member.user.tag} (${member.user.id})`
 	);
 
@@ -410,7 +410,7 @@ const contextMenu = async (
 	});
 };
 
-export const getCommand: () => CommandExport = () => ({
+export const getCommand: CommandExport = () => ({
 	data,
 	handle: {
 		chatInput,

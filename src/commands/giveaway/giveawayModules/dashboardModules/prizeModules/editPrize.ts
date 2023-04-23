@@ -56,7 +56,7 @@ export default async function toEditPrize(
 			}
 		});
 
-		new Logger({ prefix: "GIVEAWAY", interaction }).log(
+		new Logger({ label: "GIVEAWAY", interaction }).log(
 			`Edited prize #${prize.id} in giveaway #${giveawayId}`
 		);
 

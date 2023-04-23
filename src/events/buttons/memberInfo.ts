@@ -47,8 +47,8 @@ export default async function memberInfo(
 		timestamp: new Date().toISOString()
 	};
 
-	new Logger({ color: "grey", prefix: "REPORT", interaction }).log(
-		`Opened member info of ${memberId} from button`
+	new Logger({ color: "grey", label: "BUTTON", interaction }).log(
+		`Opened member info of ${memberId}`
 	);
 
 	await interaction.editReply({

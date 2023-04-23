@@ -99,7 +99,7 @@ const execute = async (interaction: Interaction) => {
 	}
 };
 
-export const getEvent: () => EventExport = () => ({
+export const getEvent: EventExport = () => ({
 	event: Events.InteractionCreate,
 	execute
 });

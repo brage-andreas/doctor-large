@@ -27,7 +27,7 @@ export default class Logger {
 		color?: Color;
 		guild?: Guild;
 		interaction?: AnyInteraction;
-		prefix?: string;
+		label?: string;
 	}) {
 		if (options) {
 			this.setOptions(options);

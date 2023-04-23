@@ -1,5 +1,5 @@
 import { EVENT_DIR } from "#constants";
-import { type EventExport } from "#typings";
+import { type EventExportData } from "#typings";
 import { type Client } from "discord.js";
 import console from "node:console";
 import { readdirSync, statSync } from "node:fs";
@@ -9,7 +9,7 @@ const isFolder = (url: URL) =>
 	statSync(url, { throwIfNoEntry: false })?.isDirectory();
 
 export default async function loadEvents(client: Client) {
-	const events: Set<EventExport> = new Set();
+	const events: Set<EventExportData> = new Set();
 
 	for (const fileName of readdirSync(EVENT_DIR)) {
 		const url = new URL(`../events/${fileName}`, import.meta.url);
@@ -66,7 +66,7 @@ export default async function loadEvents(client: Client) {
 			);
 		}
 
-		events.add(rawEvent as EventExport);
+		events.add(rawEvent as EventExportData);
 	}
 
 	events.forEach(({ event, execute }) => {

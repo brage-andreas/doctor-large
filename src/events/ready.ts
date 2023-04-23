@@ -8,7 +8,7 @@ import checkTimestamps from "../jobs/index.js";
 const execute = (client: Client<true>) => {
 	console.log();
 
-	new Logger({ prefix: "READY", color: "green" }).log(
+	new Logger({ label: "READY", color: "green" }).log(
 		`Online as ${client.user.tag} (${client.user.id})`
 	);
 
@@ -27,7 +27,7 @@ const execute = (client: Client<true>) => {
 	}, 43_200_000 /* 12 hours */);
 };
 
-export const getEvent: () => EventExport = () => ({
+export const getEvent: EventExport = () => ({
 	event: Events.ClientReady,
 	execute
 });

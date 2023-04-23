@@ -8,7 +8,7 @@ const execute = async (member: GuildMember) => {
 		return;
 	}
 
-	const logger = new Logger({ prefix: "AUTOROLE", guild: member.guild });
+	const logger = new Logger({ label: "AUTOROLE", guild: member.guild });
 
 	const autoroleManager = new AutoroleManager(member.guild);
 	await autoroleManager.initialize();
@@ -35,7 +35,7 @@ const execute = async (member: GuildMember) => {
 	}
 };
 
-export const getEvent: () => EventExport = () => ({
+export const getEvent: EventExport = () => ({
 	event: Events.GuildMemberAdd,
 	execute
 });

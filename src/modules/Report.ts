@@ -6,7 +6,7 @@ import { messageToEmbed, messageURL } from "#helpers/messageHelpers.js";
 import squash from "#helpers/squash.js";
 import { longstamp } from "#helpers/timestamps.js";
 import { type CaseWithIncludes, type ReportWithIncludes } from "#typings";
-import { type Report, type ReportType } from "@prisma/client";
+import { type Prisma, type Report, type ReportType } from "@prisma/client";
 import { source, stripIndent, stripIndents } from "common-tags";
 import {
 	Routes,
@@ -92,6 +92,10 @@ export class UserReportModule
 
 	public isUserReport(): this is UserReportModule {
 		return !this.isMessageReport();
+	}
+
+	public async edit(data: Prisma.ReportUpdateInput) {
+		return await this.manager.edit({ data, where: { id: this.id } });
 	}
 
 	public async editLog() {

@@ -82,7 +82,7 @@ export default async function toPrizeDashboard(
 
 				await giveawayManager.deletePrize(prize.id);
 
-				new Logger({ prefix: "GIVEAWAY", interaction }).log(
+				new Logger({ label: "GIVEAWAY", interaction }).log(
 					`Deleted prize ${prize.id} in giveaway #${giveawayId}`
 				);
 

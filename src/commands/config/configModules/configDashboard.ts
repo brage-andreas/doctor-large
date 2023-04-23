@@ -29,7 +29,7 @@ export default async function toConfigDashboard(
 ) {
 	let config = await configManager.get();
 
-	const logger = new Logger({ interaction, prefix: "CONFIG" });
+	const logger = new Logger({ interaction, label: "CONFIG" });
 
 	const embed = config.toEmbed();
 
