@@ -169,3 +169,9 @@ export type CreateRowsInput = Array<
 	| null
 	| undefined
 >;
+
+export interface CountPrizeWinner {
+	count: number;
+	prize: Prize;
+	winner: Winner;
+}

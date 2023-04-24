@@ -11,8 +11,8 @@ import Logger from "#logger";
 import {
 	type CommandData,
 	type CommandExport,
-	type GiveawayId,
-	type PrizesOfMapObj
+	type CountPrizeWinner,
+	type GiveawayId
 } from "#typings";
 import { oneLine, source, stripIndents } from "common-tags";
 import {
@@ -124,8 +124,8 @@ const run = async (
 		new Map<
 			GiveawayId,
 			{
-				claimed: Array<PrizesOfMapObj>;
-				unclaimed: Array<PrizesOfMapObj>;
+				claimed: Array<CountPrizeWinner>;
+				unclaimed: Array<CountPrizeWinner>;
 			}
 		>()
 	);

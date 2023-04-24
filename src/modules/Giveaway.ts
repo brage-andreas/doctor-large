@@ -7,10 +7,10 @@ import { messageURL } from "#helpers/messageHelpers.js";
 import s from "#helpers/s.js";
 import { longstamp } from "#helpers/timestamps.js";
 import {
+	type CountPrizeWinner,
 	type GiveawayId,
 	type GiveawayWithIncludes,
 	type PrizeId,
-	type PrizesOfMapObj,
 	type Snowflake,
 	type WinnerId
 } from "#typings";
@@ -22,11 +22,11 @@ import {
 } from "@prisma/client";
 import { oneLine, source, stripIndent, stripIndents } from "common-tags";
 import {
-	bold,
 	EmbedBuilder,
+	PermissionFlagsBits,
+	bold,
 	hideLinkEmbed,
 	hyperlink,
-	PermissionFlagsBits,
 	type Client,
 	type Guild,
 	type GuildMember,
@@ -391,7 +391,10 @@ export default class GiveawayModule implements ModifiedGiveaway {
 	public prizesOfAllWinners() {
 		const map = new Map<
 			Snowflake,
-			{ claimed: Array<PrizesOfMapObj>; unclaimed: Array<PrizesOfMapObj> }
+			{
+				claimed: Array<CountPrizeWinner>;
+				unclaimed: Array<CountPrizeWinner>;
+			}
 		>();
 
 		this.winnersUserIds().forEach((id) => {
@@ -430,15 +433,15 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 				const { prize, prizeId, claimed } = winner;
 				let newPrizes: {
-					claimed: Map<number, PrizesOfMapObj>;
-					unclaimed: Map<number, PrizesOfMapObj>;
+					claimed: Map<number, CountPrizeWinner>;
+					unclaimed: Map<number, CountPrizeWinner>;
 				} = { claimed: new Map(), unclaimed: new Map() };
 
-				const oldClaimed: PrizesOfMapObj = prizes.claimed.get(
+				const oldClaimed: CountPrizeWinner = prizes.claimed.get(
 					prizeId
 				) ?? { prize, winner, count: 0 };
 
-				const oldUnclaimed: PrizesOfMapObj = prizes.unclaimed.get(
+				const oldUnclaimed: CountPrizeWinner = prizes.unclaimed.get(
 					prizeId
 				) ?? { prize, winner, count: 0 };
 
@@ -469,8 +472,8 @@ export default class GiveawayModule implements ModifiedGiveaway {
 				return newPrizes;
 			},
 			{ claimed: new Map(), unclaimed: new Map() } as {
-				claimed: Map<PrizeId, PrizesOfMapObj>;
-				unclaimed: Map<PrizeId, PrizesOfMapObj>;
+				claimed: Map<PrizeId, CountPrizeWinner>;
+				unclaimed: Map<PrizeId, CountPrizeWinner>;
 			}
 		);
 
