@@ -87,12 +87,6 @@ export type CommandData = Prop<CommandExportData, "data">;
 export type CommandExport = () => CommandExportData;
 export type CommandHandle = Prop<CommandExportData, "handle">;
 
-interface PrizesOfMapObj {
-	prize: Prize;
-	winner: Winner;
-	count: number;
-}
-
 export type GiveawayId = Prop<Giveaway, "id">;
 export type PrizeId = Prop<Prize, "id">;
 export type WinnerId = Prop<Winner, "id">;

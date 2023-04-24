@@ -1,5 +1,5 @@
 import { EVENT_DIR } from "#constants";
-import { type EventExportData } from "#typings";
+import { type EventExportData, type EventImport } from "#typings";
 import { type Client } from "discord.js";
 import console from "node:console";
 import { readdirSync, statSync } from "node:fs";
@@ -22,7 +22,7 @@ export default async function loadEvents(client: Client) {
 			throw new TypeError(`File '/events/${fileName}' ${string}`);
 		};
 
-		const rawEventImport = await import(url.toString());
+		const rawEventImport = (await import(url.toString())) as EventImport;
 
 		if (typeof rawEventImport !== "object") {
 			err("does not export an object");
@@ -66,7 +66,7 @@ export default async function loadEvents(client: Client) {
 			);
 		}
 
-		events.add(rawEvent as EventExportData);
+		events.add(rawEvent);
 	}
 
 	events.forEach(({ event, execute }) => {
