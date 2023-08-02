@@ -2,7 +2,7 @@ import components from "#components";
 import { Emojis } from "#constants";
 import ConfigManager from "#database/config.js";
 import prisma from "#database/prisma.js";
-import yesNo from "#helpers/yesNo.js";
+import { yesNo } from "#helpers";
 import Logger from "#logger";
 import {
 	ChannelType,
@@ -13,7 +13,6 @@ import {
 import handleConfigOption from "./dashboardModules/handleConfigOption.js";
 import handleFullConfigOption from "./dashboardModules/handleFullConfigOption.js";
 import toNoConfigDashboard from "./noConfigDashboard.js";
-
 const channelTypes = [
 	ChannelType.GuildText,
 	ChannelType.GuildAnnouncement,

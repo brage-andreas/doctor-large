@@ -1,6 +1,6 @@
 import components from "#components";
 import type GiveawayManager from "#database/giveaway.js";
-import { listify } from "#helpers/listify.js";
+import { listify } from "#helpers";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
 import { type ButtonInteraction } from "discord.js";

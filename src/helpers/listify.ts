@@ -1,7 +1,7 @@
-export const listify = (
+export default function listify(
 	elements: Array<string>,
 	options: { length: number; give?: number }
-): string => {
+) {
 	const { length, give } = options;
 	const elements_ = structuredClone(elements);
 
@@ -23,4 +23,4 @@ export const listify = (
 	const lastElement = elements_.splice(-1, 1)[0];
 
 	return `${elements_.join(", ")}, and ${lastElement}`;
-};
+}

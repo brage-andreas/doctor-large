@@ -1,7 +1,7 @@
 import components from "#components";
 import { Colors, Emojis, Giveaway } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
-import { longstamp } from "#helpers/timestamps.js";
+import { longstamp } from "#helpers";
 import { EndAutomation } from "@prisma/client";
 import { oneLine, stripIndents } from "common-tags";
 import {

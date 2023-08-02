@@ -1,5 +1,5 @@
 import { Emojis, Giveaway, MAX_REPORT_COMMENT_LENGTH, Prize } from "#constants";
-import { modalId } from "#helpers/ModalCollector.js";
+import { modalId } from "#helpers";
 import { oneLine } from "common-tags";
 import {
 	ComponentType,

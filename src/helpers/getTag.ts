@@ -34,7 +34,7 @@ const normalizeData = (
 	return data;
 };
 
-export function getTag(
+export default function getTag(
 	userOrMember:
 		| GuildMember
 		| User

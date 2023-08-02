@@ -1,11 +1,7 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import ConfigManager from "#database/config.js";
-import {
-	messageFromURL,
-	messageToEmbed,
-	parseMessageURL
-} from "#helpers/messageHelpers.js";
+import { messageFromURL, messageToEmbed, parseMessageURL } from "#helpers";
 import Logger from "#logger";
 import { type CommandData, type CommandExport } from "#typings";
 import { stripIndents } from "common-tags";

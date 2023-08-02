@@ -3,13 +3,13 @@ import { Emojis } from "#constants";
 import ConfigManager from "#database/config.js";
 import ReportManager from "#database/report.js";
 import {
+	ModalCollector,
 	messageFromURL,
 	messageToEmbed,
-	parseMessageURL
-} from "#helpers/messageHelpers.js";
-import { ModalCollector } from "#helpers/ModalCollector.js";
-import squash from "#helpers/squash.js";
-import yesNo from "#helpers/yesNo.js";
+	parseMessageURL,
+	squash,
+	yesNo
+} from "#helpers";
 import Logger from "#logger";
 import type ConfigModule from "#modules/Config.js";
 import { type CommandData, type CommandExport } from "#typings";
@@ -24,7 +24,6 @@ import {
 	type Message,
 	type ModalSubmitInteraction
 } from "discord.js";
-
 const data: CommandData = {
 	chatInput: {
 		name: "report",

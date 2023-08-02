@@ -1,7 +1,7 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
-import yesNo from "#helpers/yesNo.js";
+import { yesNo } from "#helpers";
 import Logger from "#logger";
 import { stripIndent, stripIndents } from "common-tags";
 import {

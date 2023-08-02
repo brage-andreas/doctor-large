@@ -1,7 +1,7 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
-import getMissingPermissions from "#helpers/getMissingPermissions.js";
+import { getMissingPermissions } from "#helpers";
 import Logger from "#logger";
 import { oneLine, stripIndents } from "common-tags";
 import {

@@ -1,5 +1,5 @@
 import { ColorsHex, Emojis, Regex } from "#constants";
-import getMemberInfo from "#helpers/memberInfo.js";
+import { getMemberInfo } from "#helpers";
 import Logger from "#logger";
 import { type APIEmbed, type ButtonInteraction } from "discord.js";
 

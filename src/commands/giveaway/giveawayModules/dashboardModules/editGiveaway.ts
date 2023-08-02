@@ -1,7 +1,7 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
-import { ModalCollector } from "#helpers/ModalCollector.js";
+import { ModalCollector } from "#helpers";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
 import {

@@ -1,6 +1,6 @@
 import { Emojis, Regex } from "#constants";
 import GiveawayManager from "#database/giveaway.js";
-import { listify } from "#helpers/listify.js";
+import { listify } from "#helpers";
 import Logger from "#logger";
 import { oneLine, stripIndents } from "common-tags";
 import { bold, time, type ButtonInteraction } from "discord.js";

@@ -1,7 +1,6 @@
 import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
-import commandMention from "#helpers/commandMention.js";
-import yesNo from "#helpers/yesNo.js";
+import { commandMention, yesNo } from "#helpers";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
 import { ButtonStyle, bold, type ButtonInteraction } from "discord.js";

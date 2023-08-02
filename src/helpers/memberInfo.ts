@@ -5,8 +5,8 @@ import {
 	type GuildMember,
 	type User
 } from "discord.js";
-import { listify } from "./listify.js";
-import { longstamp } from "./timestamps.js";
+import listify from "./listify.js";
+import longstamp from "./timestamps.js";
 
 export default function getMemberInfo(
 	member: GuildMember,

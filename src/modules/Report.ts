@@ -1,11 +1,14 @@
 import components from "#components";
 import { ColorsHex, Emojis } from "#constants";
 import type ReportManager from "#database/report.js";
-import { getTag } from "#helpers/getTag.js";
-import getMemberInfo from "#helpers/memberInfo.js";
-import { messageToEmbed, messageURL } from "#helpers/messageHelpers.js";
-import squash from "#helpers/squash.js";
-import { longstamp } from "#helpers/timestamps.js";
+import {
+	getMemberInfo,
+	getTag,
+	longstamp,
+	messageToEmbed,
+	messageURL,
+	squash
+} from "#helpers";
 import { type CaseWithIncludes, type ReportWithIncludes } from "#typings";
 import { type Prisma, type Report, type ReportType } from "@prisma/client";
 import { source, stripIndent, stripIndents } from "common-tags";
@@ -17,7 +20,6 @@ import {
 	type Guild,
 	type MessageCreateOptions
 } from "discord.js";
-
 export const isMessageReport = (
 	data: Report
 ): data is Report & {

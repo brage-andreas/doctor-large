@@ -1,10 +1,13 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import ConfigManager from "#database/config.js";
-import getMissingPermissions from "#helpers/getMissingPermissions.js";
-import { listify } from "#helpers/listify.js";
-import { messageToEmbed } from "#helpers/messageHelpers.js";
-import yesNo from "#helpers/yesNo.js";
+import {
+	getMissingPermissions,
+	listify,
+	messageToEmbed,
+	yesNo
+} from "#helpers";
+
 import Logger from "#logger";
 import { type CommandData, type CommandExport } from "#typings";
 import { oneLine, stripIndent, stripIndents } from "common-tags";
@@ -19,7 +22,6 @@ import {
 	type GuildTextBasedChannel,
 	type TextChannel
 } from "discord.js";
-
 const data: CommandData = {
 	chatInput: {
 		name: "archive-oldest-pin",
