@@ -20,7 +20,7 @@ import {
 	type Prisma,
 	type Winner
 } from "@prisma/client";
-import { oneLine, source, stripIndent, stripIndents } from "common-tags";
+import { oneLine, stripIndent, stripIndents } from "common-tags";
 import {
 	EmbedBuilder,
 	PermissionFlagsBits,
@@ -554,8 +554,6 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const id = options?.userId;
 		const { ended } = this;
 
-		const prefix = `${" ".repeat(this.asRelId.length)} →`;
-
 		const isEntry = Boolean(id && this.entriesUserIds.has(id));
 		const isWinner = Boolean(id && this.winnersUserIds().has(id));
 
@@ -563,11 +561,11 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const prizes = this.prizesQuantity() || "None";
 		const winners = this.winnerQuantity || "None";
 
-		return source`
-			${this.asRelId} ${ended ? "[ENDED] " : ""}${this.title}
-			${prefix} Entries: ${entries}${isEntry ? " <-- You" : ""}
-			${prefix} Winners: ${winners}${isWinner ? " <-- You" : ""}
-			${prefix} Prizes: ${prizes}
+		return stripIndents`
+			### ${this.asRelId} ${ended ? "[ENDED] " : ""}${this.title}
+			* Entries: ${entries}${isEntry ? " <-- You" : ""}
+			* Winners: ${winners}${isWinner ? " <-- You" : ""}
+			* Prizes: ${prizes}
 		`;
 	}
 
@@ -575,33 +573,33 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		const missingParts: Array<string> = [];
 
 		if (!this.prizesQuantity()) {
-			missingParts.push("→ Add one or more prizes");
+			missingParts.push("* Add one or more prizes");
 		}
 
 		if (!this.channelId) {
-			missingParts.push("→ Announce the giveaway");
+			missingParts.push("* Announce the giveaway");
 		}
 
 		if (!missingParts.length) {
 			return "";
 		}
 
-		return source`
+		return stripIndents`
 			${Emojis.Error} The giveaway cannot be ended:
-			  ${missingParts.join("\n")}
+			${missingParts.join("\n")}
 		`;
 	}
 
 	public toDashboardOverview() {
 		const requiredRolesStr =
 			this.requiredRolesIds.size && this.requiredRolesMentions?.length
-				? `→ Required roles (${this.requiredRolesIds.size}): ${listify(
+				? `* Required roles (${this.requiredRolesIds.size}): ${listify(
 						this.requiredRolesMentions,
 						{ length: 5 }
 				  )}`
-				: "→ Required roles: None";
+				: "* Required roles: None";
 
-		const minimumAccountAgeStr = `→ Minimum account age: ${
+		const minimumAccountAgeStr = `* Minimum account age: ${
 			this.minimumAccountAge
 				? ms(Number(this.minimumAccountAge), { long: true })
 				: "None"
@@ -609,11 +607,11 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 		const pingRolesStr =
 			this.hasPingRoles && this.pingRolesMentions?.length
-				? `→ Ping roles (${this.pingRolesIds.size}): ${listify(
+				? `* Ping roles (${this.pingRolesIds.size}): ${listify(
 						this.pingRolesMentions,
 						{ length: 10 }
 				  )}`
-				: "→ Ping roles: None";
+				: "* Ping roles: None";
 
 		const badPingRoles = [...this.pingRolesIds].filter((roleId) => {
 			const mentionable = this.guild.roles.cache.get(roleId)?.mentionable;
@@ -642,8 +640,8 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		`;
 
 		const endStr = this.endDate
-			? `→ End date: ${longstamp(this.endDate)}`
-			: `→ End date: ${Emojis.Warn} No set end date.`;
+			? `* End date: ${longstamp(this.endDate)}`
+			: `* End date: ${Emojis.Warn} No set end date.`;
 
 		const prizesName = this.prizes.length
 			? `Prizes (${this.prizesQuantity()})`
@@ -653,36 +651,36 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			? this.prizes.map((prize) => prize.toShortString()).join("\n")
 			: `${Emojis.Warn} No set prizes`;
 
-		const createdStr = `→ Created: ${longstamp(this.createdAt)}`;
-		const entriesStr = `→ Entries: ${this.entriesUserIds.size}`;
-		const hostStr = `→ Host: ${this.hostUserTag} (${this.hostUserId})`;
-		const numberOfWinnersStr = `→ Number of winners: ${this.winnerQuantity}`;
+		const createdStr = `* Created: ${longstamp(this.createdAt)}`;
+		const entriesStr = `* Entries: ${this.entriesUserIds.size}`;
+		const hostStr = `* Host: ${this.hostUserTag} (${this.hostUserId})`;
+		const numberOfWinnersStr = `* Number of winners: ${this.winnerQuantity}`;
 
-		const endedStr = `→ Ended: ${
+		const endedStr = `* Ended: ${
 			this.ended ? `${Emojis.Ended} Yes` : "No"
 		}`;
 
-		const lockEntriesStr = `→ Entries locked: ${
+		const lockEntriesStr = `* Entries locked: ${
 			this.entriesLocked ? `${Emojis.Lock} Yes` : "No"
 		}`;
 
-		const announcedStr = `→ Announced: ${
+		const announcedStr = `* Announced: ${
 			this.isAnnounced() ? "Yes" : "No"
 		}`;
 
 		const rawMessageUrl = this.announcementMessageURL;
 		const messageUrl = rawMessageUrl
-			? `→ ${hyperlink(
+			? `* ${hyperlink(
 					"Link to announcement",
 					hideLinkEmbed(rawMessageUrl)
 			  )}`
 			: null;
 
 		const winnersStr = this.winnersUserIds().size
-			? `→ Unique winners: ${bold(
+			? `* Unique winners: ${bold(
 					this.winnersUserIds().size.toString()
 			  )}/${this.winnerQuantity}`
-			: `→ ${
+			: `* ${
 					this.entriesUserIds.size ? `${Emojis.Warn} ` : ""
 			  }No winners`;
 
@@ -757,23 +755,23 @@ export default class GiveawayModule implements ModifiedGiveaway {
 	}
 
 	public toEmbed() {
-		const winnerQuantityStr = `→ Number of winners: ${this.winnerQuantity}`;
+		const winnerQuantityStr = `* Number of winners: ${this.winnerQuantity}`;
 
-		const requiredRolesStr = `→ Roles required to enter: ${
+		const requiredRolesStr = `* Roles required to enter: ${
 			this.requiredRolesIds.size && this.requiredRolesMentions?.length
 				? listify(this.requiredRolesMentions, { length: 10 })
 				: "None"
 		}`;
 
-		const minimumAccountAgeStr = `→ Minimum account age: ${
+		const minimumAccountAgeStr = `* Minimum account age: ${
 			this.minimumAccountAge
 				? ms(Number(this.minimumAccountAge), { long: true })
 				: "None"
 		}`;
 
 		const endStr = this.endDate
-			? `→ The giveaway will end: ${longstamp(this.endDate)}`
-			: "→ The giveaway has no set end date. Enter while you can!";
+			? `* The giveaway will end: ${longstamp(this.endDate)}`
+			: "* The giveaway has no set end date. Enter while you can!";
 
 		const prizesStr = this.prizes.length
 			? this.prizes.map((prize) => prize.toShortString()).join("\n")
@@ -910,14 +908,14 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			ids.push(id);
 
 			const content = stripIndent`
-				${bold("You just won a giveaway!")} ${Emojis.Tada}
-				  → ${this.title} • ${this.asRelId} • ${this.guild.name}.
+				# You just won a giveaway! ${Emojis.Tada}
+				* ${this.title} • ${this.asRelId} • ${this.guild.name}.
 
 				Make sure to ${bold("claim your prize(s)")}!
 
-				Here is how:
-				  a) Use ${myGiveaways} in the server and claim your prizes.
-				  b) Click the "${Emojis.StarEyes} Accept Prize" button in the announcement.
+				## How to claim your prizes
+				* Use ${myGiveaways} in the server and claim your prizes.
+				* Click the "${Emojis.StarEyes} Accept Prize" button in the announcement.
 
 				GG!
 			`;

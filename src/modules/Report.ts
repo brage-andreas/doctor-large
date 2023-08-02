@@ -10,7 +10,6 @@ import { type Prisma, type Report, type ReportType } from "@prisma/client";
 import { source, stripIndent, stripIndents } from "common-tags";
 import {
 	Routes,
-	bold,
 	inlineCode,
 	quote,
 	userMention,
@@ -177,27 +176,22 @@ export class UserReportModule
 			this.processedByUserId &&
 			this.processedByUserTag
 				? stripIndents`
-					- At: ${longstamp(this.processedAt, { extraLong: true })}
-					- By: ${this.userMentionString(this.processedByUserId, this.processedByUserTag)}
+					* At: ${longstamp(this.processedAt, { extraLong: true })}
+					* By: ${this.userMentionString(this.processedByUserId, this.processedByUserTag)}
 				`
 				: "";
 
 		const content = squash(source`
-			${this.processedAt ? `(${Emojis.Check} Processed) ` : ""}${bold(
-			`Report #${this.guildRelativeId}`
-		)}
+			# [${this.processedAt ? Emojis.Check : Emojis.Cross}] Report #${
+			this.guildRelativeId
+		}
 			${this.type} report by ${authorMention}.
+			* Created ${longstamp(this.createdAt, { extraLong: true })}
+			* Target user: ${this.targetMentionString()}
+			* Processed: ${this.processedAt ? `${Emojis.Check} Yes` : `${Emojis.Cross} No`}
+			${ifProcessed}
+			
 			${quote(this.comment)}
-
-			${bold("Info")}
-			  → Created ${longstamp(this.createdAt, { extraLong: true })}
-			  → Target user: ${this.targetMentionString()}
-			  → Processed: ${
-					this.processedAt
-						? `${Emojis.Check} Yes`
-						: `${Emojis.Cross} No`
-				}
-			      ${ifProcessed}
 
 			${typeSpecificInformation ?? ""}
 		`).trim();
@@ -270,20 +264,20 @@ export class MessageReportModule extends UserReportModule {
 		if (!message) {
 			return this.generateBasePost(
 				stripIndent`
-					${bold("Message")}
-					→ Message author: ${this.targetMentionString()}
-					→ URL: ${this.targetMessageURL}
+					## Message
+					* Message author: ${this.targetMentionString()}
+					* URL: ${this.targetMessageURL}
 				`
 			);
 		}
 
 		const base = this.generateBasePost(
 			stripIndent`
-				${bold("Message")}
-				→ Message author: ${this.targetMentionString()}
-				→ URL: ${this.targetMessageURL}
+				## Message
+				* Message author: ${this.targetMentionString()}
+				* URL: ${this.targetMessageURL}
 
-				Message preview:
+				## Message preview:
 			`
 		);
 

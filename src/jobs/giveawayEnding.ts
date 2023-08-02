@@ -105,7 +105,7 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 
 		const string = source`
 			${bold("A giveaway you are hosting is about to end!")} ${Emojis.Sparks}
-			  → ${title} • #${guildRelativeId} • ${guildName}
+			* ${title} • #${guildRelativeId} • ${guildName}
 
 			It will end ${timeLeft}.
 
@@ -167,21 +167,21 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 
 		const string = source`
 			${bold("A giveaway you are hosting just ended!")} ${Emojis.Sparks}.
-			  → ${title} • #${guildRelativeId} • ${guildName}.
+			* ${title} • #${guildRelativeId} • ${guildName}.
 
 			End automation was set to: ${bold(endAutomation)}.
 
 			How to see winners:
-			  1. Go to ${guildName}.
-			  2. Open the dashboard of giveaway #${guildRelativeId}.
-			  3. Click the "Show all winners" button.
+			1. Go to ${guildName}.
+			2. Open the dashboard of giveaway #${guildRelativeId}.
+			3. Click the "Show all winners" button.
 
 			The winners have to manually claim their prizes.
 			If a winner does not respond, you can re-roll unclaimed prizes.
 
 			The winners can claim their prizes using:
-			  a) The /my-giveaways command.
-			  b) The "${Emojis.StarEyes} Accept Prize" button in the announcement.
+			* The /my-giveaways command.
+			* The "${Emojis.StarEyes} Accept Prize" button in the announcement.
 
 			GG!
 		`;

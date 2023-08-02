@@ -1,7 +1,7 @@
 import components from "#components";
 import { Colors, Emojis } from "#constants";
 import ConfigModule from "#modules/Config.js";
-import { oneLine, source } from "common-tags";
+import { oneLine, source, stripIndents } from "common-tags";
 import {
 	EmbedBuilder,
 	inlineCode,
@@ -28,10 +28,10 @@ async function roles(
 
 		return role
 			? oneLine`
-				→ ${inlineCode(role.id)} ${role}
+				* ${inlineCode(role.id)} ${role}
 				(${inlineCode(`@${role.name}`)})
 			`
-			: `→ ${Emojis.Error} Role ${inlineCode(id)} not found.`;
+			: `* ${Emojis.Error} Role ${inlineCode(id)} not found.`;
 	});
 
 	const nameString = options.type.split(/(?=[A-Z])/).join(" ");
@@ -40,9 +40,9 @@ async function roles(
 	const embed = new EmbedBuilder()
 		.setTitle(name)
 		.setColor(roleIds.size ? Colors.Green : Colors.Yellow)
-		.setDescription(source`
+		.setDescription(stripIndents`
 			Roles:
-			  ${rolesStringArray}
+			${rolesStringArray}
 		`);
 
 	const rows = components.createRows(
@@ -155,8 +155,8 @@ async function channels(
 			const type = ConfigModule.getTypeFromChannel(channel);
 
 			return channel
-				? `→ ${inlineCode(channel.id)} ${channel} (${type})`
-				: `→ ${Emojis.Warn} Unknown channel ${inlineCode(id)}`;
+				? `* ${inlineCode(channel.id)} ${channel} (${type})`
+				: `* ${Emojis.Warn} Unknown channel ${inlineCode(id)}`;
 		});
 
 	const embed = new EmbedBuilder()

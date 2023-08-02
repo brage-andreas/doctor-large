@@ -21,7 +21,7 @@ export default class Logger {
 	public color: Color = DEFAULT_LOGGER_COLOR;
 	public guild?: Guild;
 	public interaction?: AnyInteraction;
-	public prefix: string = DEFAULT_LOGGER_PREFIX;
+	public label: string = DEFAULT_LOGGER_PREFIX;
 
 	public constructor(options?: {
 		color?: Color;
@@ -41,7 +41,7 @@ export default class Logger {
 			| ContextMenuCommandInteraction<"cached">
 			| Interaction<"cached">
 			| undefined;
-		prefix?: string | undefined;
+		label?: string | undefined;
 	}) {
 		if (options.color) {
 			this.color = options.color;
@@ -55,8 +55,8 @@ export default class Logger {
 			this.interaction = options.interaction;
 		}
 
-		if (options.prefix) {
-			this.prefix = formatType(options.prefix);
+		if (options.label) {
+			this.label = formatType(options.label);
 		}
 
 		return this;
@@ -130,7 +130,7 @@ export default class Logger {
 
 		const color = getColorFn(this.color);
 
-		console.log(`${color(this.prefix)} ${grey(date)}`);
+		console.log(`${color(this.label)} ${grey(date)}`);
 
 		for (const item of itemsToLog) {
 			let string: string;
