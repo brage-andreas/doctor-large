@@ -1,10 +1,6 @@
 import { stripIndents } from "common-tags";
-import {
-	inlineCode,
-	type EmbedField,
-	type GuildMember,
-	type User
-} from "discord.js";
+import { type EmbedField, type GuildMember, type User } from "discord.js";
+import getTag from "./getTag.js";
 import listify from "./listify.js";
 import longstamp from "./timestamps.js";
 
@@ -30,8 +26,8 @@ export default function getMemberInfo(
 				inline: false,
 				name: prefix ? `${prefix} user info` : "User info",
 				value: stripIndents`
-					Name: Unknown user
-					Created: Unknown user
+					* Name: Unknown user
+					* Created: Unknown user
 				`
 			}
 		];
@@ -43,8 +39,8 @@ export default function getMemberInfo(
 		inline: false,
 		name: prefix ? `${prefix} user info` : "User info",
 		value: stripIndents`
-			Name: ${user} - ${inlineCode(user.tag)} (${user.id})
-			Created: ${longstamp(user.createdAt)}
+			* Name: ${getTag(user, { id: true })}
+			* Created: ${longstamp(user.createdAt)}
 		`
 	};
 
@@ -86,9 +82,9 @@ export default function getMemberInfo(
 			inline: false,
 			name: prefix ? `${prefix} member info` : "Member info",
 			value: stripIndents`
-				Nickname: ${member.nickname ? `${member.nickname}` : "None"}
-				Joined: ${member.joinedAt ? longstamp(member.joinedAt) : "Unknown"}
-				Roles: ${
+				* Nickname: ${member.nickname ? `${member.nickname}` : "None"}
+				* Joined: ${member.joinedAt ? longstamp(member.joinedAt) : "Unknown"}
+				* Roles: ${
 					filteredRoleMentions.length
 						? listify(filteredRoleMentions, { length: 7 })
 						: "None"
