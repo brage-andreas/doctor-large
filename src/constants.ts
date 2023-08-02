@@ -27,9 +27,9 @@ const FlatRegex = {
 	 */
 	EnterGiveawayCustomId: /^enter-giveaway-(?<id>\d+)$/,
 	/**
-	 * `^mark-report-processed-(?<id>\d+)$`
+	 * `^mark-report-(?<id>\d+)-processed$`
 	 */
-	MarkReportProcessed: /^mark-report-processed-(?<id>\d+)$/,
+	MarkReportProcessed: /^mark-report-(?<id>\d+)-processed$/,
 	/**
 	 * `^mark-report-(?<id>\d+)-unprocessed$`
 	 */

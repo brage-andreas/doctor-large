@@ -5,6 +5,8 @@ import { stripIndents } from "common-tags";
 import { Events, type Interaction } from "discord.js";
 import acceptPrize from "./buttons/acceptPrize.js";
 import enterGiveaway from "./buttons/enterGiveaway.js";
+import markReportProcessed from "./buttons/markReportProcessed.js";
+import markReportUnprocessed from "./buttons/markReportUnprocessed.js";
 import memberInfo from "./buttons/memberInfo.js";
 
 const execute = async (interaction: Interaction) => {
@@ -42,6 +44,18 @@ const execute = async (interaction: Interaction) => {
 
 		if (Regex.EnterGiveawayCustomId.test(interaction.customId)) {
 			await enterGiveaway(interaction);
+
+			return;
+		}
+
+		if (Regex.MarkReportProcessed.test(interaction.customId)) {
+			await markReportProcessed(interaction);
+
+			return;
+		}
+
+		if (Regex.MarkReportUnprocessed.test(interaction.customId)) {
+			await markReportUnprocessed(interaction);
 
 			return;
 		}

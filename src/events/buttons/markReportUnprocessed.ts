@@ -7,12 +7,13 @@ import { type ButtonInteraction } from "discord.js";
 export default async function markReportUnprocessed(
 	interaction: ButtonInteraction<"cached">
 ) {
-	const match = interaction.customId.match(Regex.MarkReportProcessed);
+	const match = interaction.customId.match(Regex.MarkReportUnprocessed);
 	const reportId = match?.groups?.id ? Number(match.groups.id) : undefined;
 
 	if (!reportId) {
-		await interaction.editReply({
-			content: `${Emojis.Error} This button is faulty.`
+		await interaction.reply({
+			content: `${Emojis.Error} This button is faulty.`,
+			ephemeral: true
 		});
 
 		return;
@@ -60,13 +61,13 @@ export default async function markReportUnprocessed(
 
 	if (!logEditedSuccess) {
 		await interaction.editReply({
-			content: `${Emojis.Warn} Could not update the report log, but the report has been marked processed.`
+			content: `${Emojis.Warn} Could not update the report log, but the report has been marked unprocessed.`
 		});
 
 		return;
 	}
 
 	await interaction.editReply({
-		content: `${Emojis.Check} Marked report processed.`
+		content: `${Emojis.Check} Marked report unprocessed.`
 	});
 }

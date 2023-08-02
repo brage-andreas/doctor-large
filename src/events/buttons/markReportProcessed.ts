@@ -11,8 +11,9 @@ export default async function markReportProcessed(
 	const reportId = match?.groups?.id ? Number(match.groups.id) : undefined;
 
 	if (!reportId) {
-		await interaction.editReply({
-			content: `${Emojis.Error} This button is faulty.`
+		await interaction.reply({
+			content: `${Emojis.Error} This button is faulty.`,
+			ephemeral: true
 		});
 
 		return;

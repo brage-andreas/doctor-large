@@ -694,7 +694,7 @@ export const unattachReportFromCases = (reportId: number) =>
 
 export const markReportProcessed = (reportId: number) =>
 	({
-		customId: `mark-report-processed-${reportId}`,
+		customId: `mark-report-${reportId}-processed`,
 		component: (): APIButtonComponentWithCustomId => ({
 			custom_id: `mark-report-${reportId}-processed`,
 			label: "Mark processed",
