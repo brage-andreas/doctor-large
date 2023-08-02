@@ -241,7 +241,7 @@ const run = async (
 		embeds: [embed]
 	});
 
-	logger.log(`Sent overview${isAuthor ? `of ${tag} (${target.id})` : ""}`);
+	logger.log(`Sent overview of ${tag} (${target.id})`);
 
 	if (!rows.length) {
 		return;
