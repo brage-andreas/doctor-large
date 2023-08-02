@@ -46,7 +46,7 @@
 		"#components": "./dist/components/index.js",
 		"#constants": "./dist/constants.js",
 		"#database/*": "./dist/database/*",
-		"#helpers/*": "./dist/helpers/*",
+		"#helpers": "./dist/helpers/index.js",
 		"#logger": "./dist/logger/logger.js",
 		"#modules/*": "./dist/modules/*",
 		"#scripts/*": "./dist/scripts/*",
