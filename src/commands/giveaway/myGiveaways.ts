@@ -7,6 +7,7 @@ import {
 	MY_GIVEAWAYS_MAX_PRIZES
 } from "#constants";
 import GiveawayManager from "#database/giveaway.js";
+import { getTag } from "#helpers";
 import Logger from "#logger";
 import {
 	type CommandData,
@@ -52,7 +53,7 @@ const run = async (
 	target: User
 ) => {
 	const isAuthor = target.id === interaction.user.id;
-	const tag = target.tag;
+	const tag = getTag(target);
 
 	const logger = new Logger({ label: "MY GIVEAWAYS", interaction });
 
@@ -178,7 +179,7 @@ const run = async (
 
 			if (noLimits) {
 				return {
-					name: `Giveaway #${id} (${n})`,
+					name: `Prizes of giveaway #${id} (${n})`,
 					value: arr.join("\n"),
 					inline: true
 				};
@@ -194,7 +195,7 @@ const run = async (
 			};
 		});
 
-	const MAX_LEN = 3900; // arbitrary - must be 4096 or under but there are also fields;
+	const MAX_TOTAL_FIELD_LEN = 3900; // arbitrary - must be 4096 or under;
 	const fields: Array<EmbedField> = [];
 
 	for (const field of prizesArr()) {
@@ -203,7 +204,10 @@ const run = async (
 			0
 		);
 
-		if (MAX_LEN <= fieldTotalLen + field.name.length + field.value.length) {
+		if (
+			MAX_TOTAL_FIELD_LEN <=
+			fieldTotalLen + field.name.length + field.value.length
+		) {
 			break;
 		}
 
@@ -212,17 +216,18 @@ const run = async (
 
 	const embed = new EmbedBuilder()
 		.setColor(prizeCount.unclaimed ? Colors.Yellow : Colors.Green)
-		.setTitle(isAuthor ? "My Giveaways" : `${tag}'s Giveaways`)
+		.setTitle(`${tag}'s giveaways`)
 		.setFields(
 			{
 				name: "Stats",
 				value: stripIndents`
 					Entered: ${entered.length}
-					* Won: ${winCount}
-					Hosted: ${hosted.length}
-					Prizes: ${prizeCount.all}
-					* Claimed: ${prizeCount.claimed}
-					* Unclaimed: ${prizeCount.unclaimed}
+					Won: ${winCount}${hosted.length ? `\nHosted: ${hosted.length}` : ""}
+					Prizes: ${prizeCount.all} ${
+					prizeCount.unclaimed
+						? `(${prizeCount.unclaimed} unclaimed!)`
+						: ""
+				}
 				`
 			},
 			...fields
