@@ -216,13 +216,13 @@ const run = async (
 		.setFields(
 			{
 				name: "Stats",
-				value: source`
+				value: stripIndents`
 					Entered: ${entered.length}
-					​    └─ Won: ${winCount}
+					* Won: ${winCount}
 					Hosted: ${hosted.length}
 					Prizes: ${prizeCount.all}
-					​	 ├─ Claimed: ${prizeCount.claimed}
-					​	 └─ Unclaimed: ${prizeCount.unclaimed}
+					* Claimed: ${prizeCount.claimed}
+					* Unclaimed: ${prizeCount.unclaimed}
 				`
 			},
 			...fields

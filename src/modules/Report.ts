@@ -1,6 +1,7 @@
 import components from "#components";
 import { ColorsHex, Emojis } from "#constants";
 import type ReportManager from "#database/report.js";
+import { getTag } from "#helpers/getTag.js";
 import getMemberInfo from "#helpers/memberInfo.js";
 import { messageToEmbed, messageURL } from "#helpers/messageHelpers.js";
 import squash from "#helpers/squash.js";
@@ -10,9 +11,6 @@ import { type Prisma, type Report, type ReportType } from "@prisma/client";
 import { source, stripIndent, stripIndents } from "common-tags";
 import {
 	Routes,
-	inlineCode,
-	quote,
-	userMention,
 	type APIEmbed,
 	type APIEmbedAuthor,
 	type Client,
@@ -102,7 +100,7 @@ export class UserReportModule
 			return false;
 		}
 
-		const body = await this.preparePost();
+		const body = await this.generatePost();
 		const fullRoute = Routes.channelMessage(
 			this.logChannelId,
 			this.logMessageId
@@ -129,15 +127,20 @@ export class UserReportModule
 	}
 
 	public authorMentionString() {
-		return this.userMentionString(this.authorUserId, this.authorUserTag);
+		const split = this.authorUserTag.split("#");
+
+		return getTag({
+			id: this.authorUserId,
+			username: split[0],
+			discriminator: split[1]
+		});
 	}
 
 	public targetMentionString() {
-		return this.userMentionString(this.targetUserId, this.targetUserTag);
-	}
-
-	public async preparePost() {
-		return this.manager.preparePost(this);
+		return getTag({
+			id: this.targetUserId,
+			tag: this.targetUserTag
+		});
 	}
 
 	// Message module requires async
@@ -146,14 +149,10 @@ export class UserReportModule
 		return this.generateBasePost();
 	}
 
-	protected userMentionString(id: string, tag: string) {
-		return `${userMention(id)} - ${inlineCode(tag)} (${id})` as const;
-	}
-
 	protected generateBasePost(
 		typeSpecificInformation?: string | null | undefined
 	) {
-		const rows = components.createRows.uniform(2)(
+		const rows = components.createRows.specific(2, 3)(
 			components.buttons
 				.memberInfo(this.targetUserId, "Target")
 				.component(),
@@ -162,6 +161,10 @@ export class UserReportModule
 				.component(),
 			// ---
 			components.buttons.attachToLatestCase(this.id),
+			this.referencedBy.length
+				? components.buttons.unattachReportFromCases(this.id)
+				: null,
+			// ---
 			this.processedAt
 				? components.buttons.markReportUnprocessed(this.id)
 				: components.buttons.markReportProcessed(this.id)
@@ -177,21 +180,20 @@ export class UserReportModule
 			this.processedByUserTag
 				? stripIndents`
 					* At: ${longstamp(this.processedAt, { extraLong: true })}
-					* By: ${this.userMentionString(this.processedByUserId, this.processedByUserTag)}
+					* By: ${getTag({ id: this.processedByUserId, tag: this.processedByUserTag })}
 				`
 				: "";
 
+		const emoji = this.processedAt ? Emojis.Check : Emojis.Cross;
 		const content = squash(source`
-			# [${this.processedAt ? Emojis.Check : Emojis.Cross}] Report #${
-			this.guildRelativeId
-		}
-			${this.type} report by ${authorMention}.
+			# [${emoji}] Report #${this.guildRelativeId}
+			### ${this.type} report by ${authorMention}.
 			* Created ${longstamp(this.createdAt, { extraLong: true })}
 			* Target user: ${this.targetMentionString()}
 			* Processed: ${this.processedAt ? `${Emojis.Check} Yes` : `${Emojis.Cross} No`}
 			${ifProcessed}
-			
-			${quote(this.comment)}
+			* Author-provided comment:
+			> ${this.comment}
 
 			${typeSpecificInformation ?? ""}
 		`).trim();
@@ -274,10 +276,9 @@ export class MessageReportModule extends UserReportModule {
 		const base = this.generateBasePost(
 			stripIndent`
 				## Message
-				* Message author: ${this.targetMentionString()}
-				* URL: ${this.targetMessageURL}
-
-				## Message preview:
+				* Author: ${this.targetMentionString()}
+				* [Message URL](<${this.targetMessageURL}>)
+				* Preview:
 			`
 		);
 

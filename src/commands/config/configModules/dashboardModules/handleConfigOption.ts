@@ -1,7 +1,7 @@
 import components from "#components";
 import { Colors, Emojis } from "#constants";
 import ConfigModule from "#modules/Config.js";
-import { oneLine, source, stripIndents } from "common-tags";
+import { stripIndents } from "common-tags";
 import {
 	EmbedBuilder,
 	inlineCode,
@@ -27,10 +27,7 @@ async function roles(
 		const role = interaction.guild.roles.cache.get(id);
 
 		return role
-			? oneLine`
-				* ${inlineCode(role.id)} ${role}
-				(${inlineCode(`@${role.name}`)})
-			`
+			? `* \`${role.id}\` ${role} (@${role.name})`
 			: `* ${Emojis.Error} Role ${inlineCode(id)} not found.`;
 	});
 
@@ -155,8 +152,8 @@ async function channels(
 			const type = ConfigModule.getTypeFromChannel(channel);
 
 			return channel
-				? `* ${inlineCode(channel.id)} ${channel} (${type})`
-				: `* ${Emojis.Warn} Unknown channel ${inlineCode(id)}`;
+				? `* \`${channel.id}\` ${channel} (${type})`
+				: `* ${Emojis.Warn} Unknown channel \`${id}\``;
 		});
 
 	const embed = new EmbedBuilder()
@@ -173,10 +170,7 @@ async function channels(
 	if (!channelIdsArray) {
 		embed.setDescription(`${channelOrChannels}: None`);
 	} else {
-		embed.setDescription(source`
-			${channelOrChannels}
-			  ${channelStringArray}
-		`);
+		embed.setDescription(`${channelOrChannels}:\n${channelStringArray}`);
 	}
 
 	const rows = components.createRows(
