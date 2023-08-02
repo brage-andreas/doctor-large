@@ -198,7 +198,7 @@ export default class ConfigModule
 			report = res;
 		}
 
-		const message = await report.preparePost();
+		const message = await report.generatePost();
 
 		if (!this.reportChannel.isTextBased()) {
 			const thread = await this.reportChannel.threads

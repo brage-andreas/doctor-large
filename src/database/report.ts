@@ -171,7 +171,7 @@ export default class ReportManager {
 		});
 	}
 
-	public async preparePost(
+	public async generatePost(
 		report: MessageReportModule | UserReportModule
 	): Promise<MessageCreateOptions> {
 		return await report.generatePost();
