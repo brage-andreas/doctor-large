@@ -44,7 +44,7 @@ export default async function markReportProcessed(
 		await interaction.editReply({
 			content: oneLine`
 				${Emojis.Error} Something went wrong marking this report processed.
-				Check if it still exists and try again.
+				Check if the report still exists and try again.
 			`
 		});
 
