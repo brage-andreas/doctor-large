@@ -227,7 +227,7 @@ export default async function toEndedDashboard(
 									}
 								);
 
-								return `→ ${wI} ${userTag} - ${claimedStr}. Won at ${time} UTC`;
+								return `* ${wI} ${userTag} - ${claimedStr}. Won at ${time} UTC`;
 							}
 						);
 

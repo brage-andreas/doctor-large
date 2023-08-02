@@ -173,7 +173,7 @@ const run = async (
 
 				n += p.count;
 
-				return `→ ${p.count}x ${name}${!claim ? " (UNCLAIMED)" : ""}`;
+				return `* ${p.count}x ${name}${!claim ? " (UNCLAIMED)" : ""}`;
 			});
 
 			if (noLimits) {

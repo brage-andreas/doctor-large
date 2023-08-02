@@ -47,25 +47,27 @@ export default async function toResetData(
 		content: stripIndent`
 			Select a reset level.
 
-			Level 4 - ${bold("Wipe everything")}
-			→ Resets most of the options you can edit in the dashboard.
-			    (Excluding title, description, and winner quantity)
-			→ Resets entries, winners, and prizes. ${Emojis.Warn} They will not be notified.
-			→ Unannounces the giveaway and the winners.
+			## Level 4 - Wipe everything
+			* Resets most of the options you can edit in the dashboard (excluding title, description, and winner quantity).
+			* Resets entries, winners, and prizes. ${
+				Emojis.Warn
+			} Users will not be notified.
+			* Unannounces the giveaway and any winners.
 				 
-			Level 3 - ${bold("Reset entries, winners, and prizes")}
-			→ Resets entries, winners, and prizes. ${Emojis.Warn} They will not be notified.
-			→ Unannounces the giveaway and the winners.
+			## Level 3 - Reset entries, winners, and prizes
+			* Resets entries, winners, and prizes. ${
+				Emojis.Warn
+			} Users will not be notified.
+			* Unannounces the giveaway and the winners.
 				 
-			Level 2 - ${bold("Reset entries and winners")}
-			→ Resets entries and winners. ${Emojis.Warn} They will not be notified.
-			→ Unannounces the winners, but ${underscore("not")} the giveaway.
+			## Level 2 - Reset entries and winners
+			* Resets entries and winners. ${Emojis.Warn} They will not be notified.
+			* Unannounces the winners, but ${underscore("not")} the giveaway.
 				 
-			Level 1 - ${bold("Reset most options")}
-			→ Resets most of the options you can edit in the dashboard.
-			    (Excluding title, description, and winner quantity)
-			→ Does ${underscore("not")} reset winners, entries, or prizes.
-			→ Unannounces the giveaway and the winners.
+			## Level 1 - Reset most options
+			* Resets most of the options you can edit in the dashboard (excluding title, description, and winner quantity)
+			* Does ${underscore("not")} reset winners, entries, or prizes.
+			* Unannounces the giveaway and the winners.
 		`,
 		embeds: []
 	});

@@ -114,16 +114,15 @@ const handleMessage = async (
 		medium: interaction,
 		data: {
 			content: squash(stripIndents`
-				${Emojis.FaceInClouds} Are you sure you want to report this message?
-
+				## ${Emojis.FaceInClouds} Are you sure you want to report this message?
 				${
 					hasRecentReport
 						? `${Emojis.Warn} This member or message has recently been reported. Multiple reports may not be necessary.`
 						: ""
 				}
 				
-				${anonymous ? "→ You opted to stay anonymous" : ""}
-				→ Comment: ${inlineCode(comment.replaceAll("`", "\\`"))}
+				${anonymous ? "* You opted to stay anonymous" : ""}
+				* Comment: ${inlineCode(comment.replaceAll("`", "\\`"))}
 				
 				The message:
 			`),
@@ -202,16 +201,15 @@ const handleMember = async (
 		medium: interaction,
 		data: {
 			content: squash(stripIndents`
+				${Emojis.FaceInClouds} Are you sure you want to report ${memberString}?
 				${
 					hasRecentReport
 						? `${Emojis.Warn} This member has recently been reported. Multiple reports may not be necessary.`
 						: ""
 				}
 
-				${Emojis.FaceInClouds} Are you sure you want to report ${memberString}?
-
-				${anonymous ? "→ You opted to stay anonymous" : ""}
-				→ Comment: ${inlineCode(comment.replaceAll("`", "\\`"))}
+				${anonymous ? "* You opted to stay anonymous" : ""}
+				* Comment: ${inlineCode(comment.replaceAll("`", "\\`"))}
 			`)
 		}
 	});

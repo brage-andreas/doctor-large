@@ -3,12 +3,12 @@ import { Colors, Emojis, Giveaway } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
 import { longstamp } from "#helpers/timestamps.js";
 import { EndAutomation } from "@prisma/client";
-import { oneLine, source, stripIndents } from "common-tags";
+import { oneLine, stripIndents } from "common-tags";
 import {
-	bold,
 	ButtonStyle,
 	ComponentType,
 	EmbedBuilder,
+	bold,
 	type APIButtonComponent,
 	type ButtonInteraction
 } from "discord.js";
@@ -166,18 +166,18 @@ export default async function toEndOptions(
 	const missingParts: Array<string> = [];
 
 	if (!giveaway.prizesQuantity()) {
-		missingParts.push("→ Add one or more prizes");
+		missingParts.push("* Add one or more prizes");
 	}
 
 	if (!giveaway.channelId) {
-		missingParts.push("→ Announce the giveaway");
+		missingParts.push("* Announce the giveaway");
 	}
 
 	const cannotEnd =
 		!giveaway.prizesQuantity() || !giveaway.channelId
-			? source`
+			? stripIndents`
 				${Emojis.Error} The giveaway cannot be ended:
-				  ${missingParts.join("\n")}
+				${missingParts.join("\n")}
 			`
 			: undefined;
 

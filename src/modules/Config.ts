@@ -293,8 +293,8 @@ export default class ConfigModule
 						const type = ConfigModule.getTypeFromChannel(channel);
 
 						return channel
-							? `→ ${channel} (${type})`
-							: `→ ${Emojis.Warn} Unknown channel ${inlineCode(
+							? `* ${channel} (${type})`
+							: `* ${Emojis.Warn} Unknown channel ${inlineCode(
 									id
 							  )}`;
 					})
@@ -317,8 +317,8 @@ export default class ConfigModule
 						const role = this.guild.roles.cache.get(id);
 
 						return role
-							? `→ ${role}`
-							: `→ ${Emojis.Warn} Unknown role ${id}`;
+							? `* ${role}`
+							: `* ${Emojis.Warn} Unknown role ${id}`;
 					})
 					.slice(0, 5)}
 				${restrictRoles_.length > 5 ? `and ${restrictRoles_.length - 5} more...` : ""}
