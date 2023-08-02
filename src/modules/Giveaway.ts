@@ -20,7 +20,7 @@ import {
 	type Prisma,
 	type Winner
 } from "@prisma/client";
-import { oneLine, source, stripIndent, stripIndents } from "common-tags";
+import { oneLine, stripIndent, stripIndents } from "common-tags";
 import {
 	EmbedBuilder,
 	PermissionFlagsBits,
@@ -584,9 +584,9 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			return "";
 		}
 
-		return source`
+		return stripIndents`
 			${Emojis.Error} The giveaway cannot be ended:
-			  ${missingParts.join("\n")}
+			${missingParts.join("\n")}
 		`;
 	}
 
