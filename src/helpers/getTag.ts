@@ -24,10 +24,16 @@ const normalizeData = (
 	if (!("username" in data) && !("guild" in data)) {
 		const split = data.tag.split("#");
 
+		if (split.length === 1) {
+			split.push("0");
+		}
+
+		const discriminator = split.pop() ?? "0";
+
 		return {
-			discriminator: split[1],
+			discriminator,
 			id: data.id,
-			username: split[0]
+			username: split.join("#")
 		};
 	}
 
