@@ -30,7 +30,7 @@ model Case {
     logMessageChannelId String?
     logMessageId        String?
     moderatorUserId     String
-    moderatorUserTag    String
+    moderatorUsername   String
     note                Note?     @relation("noteReference", fields: [noteId], references: [id])
     noteId              Int?
     // Present for: Slowmode
@@ -49,7 +49,7 @@ model Case {
     // First element may be: User, Channel. Only multiple elements if type is MultiBan.
     targetIds           String[]
     // Present for: Warn, Mute, Unmute, Kick, Softban, Ban, Unban
-    targetUserTag       String?
+    targetUsername      String?
     // Present for: Mute
     temporary           Boolean?
     // Present for: Slowmode
@@ -73,7 +73,7 @@ model Giveaway {
     entriesUserIds             String[]      @default([])
     hostNotified               HostNotified  @default(None)
     hostUserId                 String
-    hostUserTag                String
+    hostUsername               String
     lastEditedAt               DateTime      @default(now()) @updatedAt
     minimumAccountAge          String?
     pingRolesIds               String[]      @default([])
@@ -91,12 +91,12 @@ model Note {
     createdAt           DateTime @default(now())
     guildUserRelativeId Int
 
-    authorId     String
-    authorTag    String
-    content      String
-    referencedBy Case[] @relation("noteReference")
-    userId       String
-    userTag      String
+    authorId       String
+    authorUsername String
+    content        String
+    referencedBy   Case[] @relation("noteReference")
+    targetUserId   String
+    targetUsername String
 }
 
 model Prize {
@@ -120,18 +120,18 @@ model Report {
 
     anonymous              Boolean   @default(false)
     authorUserId           String
-    authorUserTag          String
+    authorUsername         String
     comment                String
     logChannelId           String?
     logMessageId           String?
     processedAt            DateTime?
     processedByUserId      String?
-    processedByUserTag     String?
+    processedByUsername    String?
     referencedBy           Case[]    @relation("reportReference")
     targetMessageChannelId String?
     targetMessageId        String?
     targetUserId           String
-    targetUserTag          String
+    targetUsername         String
 }
 
 model Config {
