@@ -31,58 +31,31 @@ export class UserReportModule
 	implements
 		Omit<ReportWithIncludes, "targetMessageChannelId" | "targetMessageId">
 {
-	public client: Client<true>;
-	public data: ReportWithIncludes;
-	public guild: Guild;
-	public manager: ReportManager;
+	public client!: Client<true>;
+	public data!: ReportWithIncludes;
+	public guild!: Guild;
+	public manager!: ReportManager;
 
-	public anonymous: boolean;
-	public authorUserId: string;
-	public authorUserTag: string;
-	public comment: string;
-	public createdAt: Date;
-	public guildId: string;
-	public guildRelativeId: number;
-	public id: number;
-	public logChannelId: string | null;
-	public logMessageId: string | null;
-	public processedAt: Date | null;
-	public processedByUserId: string | null;
-	public processedByUserTag: string | null;
-	public referencedBy: Array<CaseWithIncludes>;
-	public targetUserId: string;
-	public targetUserTag: string;
-	public type: ReportType;
+	public anonymous!: boolean;
+	public authorUserId!: string;
+	public authorUserTag!: string;
+	public comment!: string;
+	public createdAt!: Date;
+	public guildId!: string;
+	public guildRelativeId!: number;
+	public id!: number;
+	public logChannelId!: string | null;
+	public logMessageId!: string | null;
+	public processedAt!: Date | null;
+	public processedByUserId!: string | null;
+	public processedByUserTag!: string | null;
+	public referencedBy!: Array<CaseWithIncludes>;
+	public targetUserId!: string;
+	public targetUserTag!: string;
+	public type!: ReportType;
 
 	public constructor(manager: ReportManager, data: ReportWithIncludes) {
-		this.client = manager.guild.client;
-		this.data = data;
-		this.guild = manager.guild;
-		this.manager = manager;
-
-		if (manager.guild.id !== data.guildId) {
-			throw new TypeError(
-				`Value 'manager.guild.id' (${manager.guild.id}) does not match 'data.guildId' (${data.guildId}).`
-			);
-		}
-
-		this.anonymous = data.anonymous;
-		this.authorUserId = data.authorUserId;
-		this.authorUserTag = data.authorUserTag;
-		this.comment = data.comment;
-		this.createdAt = data.createdAt;
-		this.guildId = data.guildId;
-		this.guildRelativeId = data.guildRelativeId;
-		this.id = data.id;
-		this.logChannelId = data.logChannelId;
-		this.logMessageId = data.logMessageId;
-		this.processedAt = data.processedAt;
-		this.processedByUserId = data.processedByUserId;
-		this.processedByUserTag = data.processedByUserTag;
-		this.referencedBy = data.referencedBy;
-		this.targetUserId = data.targetUserId;
-		this.targetUserTag = data.targetUserTag;
-		this.type = data.type;
+		this._constructor(manager, data);
 	}
 
 	public isMessageReport(): this is MessageReportModule {
@@ -94,7 +67,14 @@ export class UserReportModule
 	}
 
 	public async edit(data: Prisma.ReportUpdateInput) {
-		return await this.manager.edit({ data, where: { id: this.id } });
+		const res = await this.manager.editRaw({
+			data,
+			where: { id: this.id }
+		});
+
+		this._constructor(this.manager, res);
+
+		return this;
 	}
 
 	public async editLog() {
@@ -103,6 +83,7 @@ export class UserReportModule
 		}
 
 		const body = await this.generatePost();
+
 		const fullRoute = Routes.channelMessage(
 			this.logChannelId,
 			this.logMessageId
@@ -174,7 +155,7 @@ export class UserReportModule
 
 		const authorMention = this.anonymous
 			? "Anonymous user"
-			: this.authorMentionString();
+			: getTag({ tag: this.authorUserTag, id: this.authorUserId });
 
 		const ifProcessed =
 			this.processedAt &&
@@ -189,18 +170,49 @@ export class UserReportModule
 		const emoji = this.processedAt ? Emojis.Check : Emojis.Cross;
 		const content = squash(source`
 			# [${emoji}] Report #${this.guildRelativeId}
-			### ${this.type} report by ${authorMention}.
+			### ${this.type} report by ${authorMention}
 			* Created ${longstamp(this.createdAt, { extraLong: true })}
-			* Target user: ${this.targetMentionString()}
+			* Report targets user: ${this.targetMentionString()}
 			* Processed: ${this.processedAt ? `${Emojis.Check} Yes` : `${Emojis.Cross} No`}
-			${ifProcessed}
-			* Author-provided comment:
+			 ${ifProcessed}
+			### Author-provided comment:
 			> ${this.comment}
 
 			${typeSpecificInformation ?? ""}
 		`).trim();
 
 		return { components: rows, content };
+	}
+
+	protected _constructor(manager: ReportManager, data: ReportWithIncludes) {
+		this.client = manager.guild.client;
+		this.data = data;
+		this.guild = manager.guild;
+		this.manager = manager;
+
+		if (manager.guild.id !== data.guildId) {
+			throw new TypeError(
+				`Value 'manager.guild.id' (${manager.guild.id}) does not match 'data.guildId' (${data.guildId}).`
+			);
+		}
+
+		this.anonymous = data.anonymous;
+		this.authorUserId = data.authorUserId;
+		this.authorUserTag = data.authorUserTag;
+		this.comment = data.comment;
+		this.createdAt = data.createdAt;
+		this.guildId = data.guildId;
+		this.guildRelativeId = data.guildRelativeId;
+		this.id = data.id;
+		this.logChannelId = data.logChannelId;
+		this.logMessageId = data.logMessageId;
+		this.processedAt = data.processedAt;
+		this.processedByUserId = data.processedByUserId;
+		this.processedByUserTag = data.processedByUserTag;
+		this.referencedBy = data.referencedBy;
+		this.targetUserId = data.targetUserId;
+		this.targetUserTag = data.targetUserTag;
+		this.type = data.type;
 	}
 }
 
@@ -268,16 +280,17 @@ export class MessageReportModule extends UserReportModule {
 		if (!message) {
 			return this.generateBasePost(
 				stripIndent`
-					## Message
+					### Message
 					* Message author: ${this.targetMentionString()}
-					* URL: ${this.targetMessageURL}
+					* [Message URL](<${this.targetMessageURL}>)
+					${Emojis.Warn} Could not fetch and preview the message.
 				`
 			);
 		}
 
 		const base = this.generateBasePost(
 			stripIndent`
-				## Message
+				### Message
 				* Author: ${this.targetMentionString()}
 				* [Message URL](<${this.targetMessageURL}>)
 				* Preview:
