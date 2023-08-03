@@ -54,7 +54,7 @@ export default class GiveawayManager {
 			where: {
 				guildId: this.guild.id,
 				hostUserId: host,
-				entriesUserIds: entry ? { hasSome: entry } : undefined,
+				entriesUserIds: entry ? { has: entry } : undefined,
 				prizes: winner
 					? { some: { winners: { some: { userId: winner } } } }
 					: undefined
