@@ -40,7 +40,7 @@ export default async function (
 		const { id } = await giveawayManager.create({
 			guildRelativeId: nextGuildRelativeId,
 			winnerQuantity,
-			hostUserTag: interaction.user.tag,
+			hostUsername: interaction.user.tag,
 			hostUserId: interaction.user.id,
 			description,
 			guildId: interaction.guildId,

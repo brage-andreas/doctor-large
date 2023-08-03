@@ -36,7 +36,7 @@ export default async function markReportUnprocessed(
 		.edit({
 			processedAt: null,
 			processedByUserId: null,
-			processedByUserTag: null,
+			processedByUsername: null,
 			referencedBy: { set: [] }
 		})
 		.then(() => true)

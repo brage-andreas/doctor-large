@@ -151,14 +151,14 @@ const handleMessage = async (
 	const report = await reportManager.createMessageReport({
 		anonymous,
 		authorUserId: interaction.user.id,
-		authorUserTag: interaction.user.tag,
+		authorUsername: interaction.user.tag,
 		comment,
 		guildId: message.guildId,
 		guildRelativeId,
 		targetMessageChannelId: message.channelId,
 		targetMessageId: message.id,
 		targetUserId: message.author.id,
-		targetUserTag: message.author.tag
+		targetUsername: message.author.tag
 	});
 
 	await config.postReport(report);
@@ -227,12 +227,12 @@ const handleMember = async (
 	const report = await reportManager.createUserReport({
 		anonymous,
 		authorUserId: interaction.user.id,
-		authorUserTag: interaction.user.tag,
+		authorUsername: interaction.user.tag,
 		comment,
 		guildId: member.guild.id,
 		guildRelativeId,
 		targetUserId: member.id,
-		targetUserTag: member.user.tag
+		targetUsername: member.user.tag
 	});
 
 	await config.postReport(report);
