@@ -203,13 +203,20 @@ export default class ConfigModule
 		if (!this.reportChannel.isTextBased()) {
 			const thread = await this.reportChannel.threads
 				.create({
-					message,
-					name: `Report #${report.guildRelativeId} by ${report.authorUserTag}`
+					message: {
+						...message,
+						content: message.content?.replace("* Preview:", "")
+					},
+					name: `Report #${report.guildRelativeId} - ${report.target}`
 				})
 				.catch(() => null);
 
 			if (!thread) {
 				return false;
+			}
+
+			if (message.embeds?.length) {
+				await thread.send({ embeds: message.embeds });
 			}
 
 			report.manager.edit({
@@ -225,7 +232,9 @@ export default class ConfigModule
 			return true;
 		}
 
-		const msg = await this.reportChannel.send(message).catch(() => null);
+		const msg = await this.reportChannel
+			.send({ ...message, embeds: [] })
+			.catch(() => null);
 
 		if (!msg) {
 			return false;
