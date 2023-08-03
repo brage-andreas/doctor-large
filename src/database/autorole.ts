@@ -13,7 +13,6 @@ export default class AutoroleManager {
 	}
 
 	public async initialize() {
-		// guildId is primary key, so `count` will only be 0 or 1
 		const count = await this.prisma.count({
 			where: { guildId: this.guild.id }
 		});
