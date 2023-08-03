@@ -129,7 +129,7 @@ export default class ReportManager {
 		return Boolean(res);
 	}
 
-	public async edit(args: Prisma.ReportUpdateArgs) {
+	public async editRaw(args: Prisma.ReportUpdateArgs) {
 		const data_ = await this.prisma.update({
 			...args,
 			include: {
@@ -143,6 +143,12 @@ export default class ReportManager {
 				}
 			}
 		});
+
+		return data_;
+	}
+
+	public async edit(args: Prisma.ReportUpdateArgs) {
+		const data_ = await this.editRaw(args);
 
 		return this.toModule(data_);
 	}
