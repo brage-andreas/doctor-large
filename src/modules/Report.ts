@@ -58,6 +58,31 @@ export class UserReportModule
 		this._constructor(manager, data);
 	}
 
+	public get author() {
+		return getTag({
+			id: this.authorUserId,
+			tag: this.authorUserTag
+		});
+	}
+
+	public get target() {
+		return getTag({
+			id: this.targetUserId,
+			tag: this.targetUserTag
+		});
+	}
+
+	public get processedBy() {
+		if (!this.processedByUserId || !this.processedByUserTag) {
+			return null;
+		}
+
+		return getTag({
+			id: this.processedByUserId,
+			tag: this.processedByUserTag
+		});
+	}
+
 	public isMessageReport(): this is MessageReportModule {
 		return isMessageReport(this.data);
 	}
@@ -109,23 +134,6 @@ export class UserReportModule
 			.catch(() => null);
 	}
 
-	public authorMentionString() {
-		const split = this.authorUserTag.split("#");
-
-		return getTag({
-			id: this.authorUserId,
-			username: split[0],
-			discriminator: split[1]
-		});
-	}
-
-	public targetMentionString() {
-		return getTag({
-			id: this.targetUserId,
-			tag: this.targetUserTag
-		});
-	}
-
 	// Message module requires async
 	// eslint-disable-next-line @typescript-eslint/require-await
 	public async generatePost(): Promise<MessageCreateOptions> {
@@ -153,17 +161,13 @@ export class UserReportModule
 				: components.buttons.markReportProcessed(this.id)
 		);
 
-		const authorMention = this.anonymous
-			? "Anonymous user"
-			: getTag({ tag: this.authorUserTag, id: this.authorUserId });
+		const authorMention = this.anonymous ? "Anonymous user" : this.author;
 
 		const ifProcessed =
-			this.processedAt &&
-			this.processedByUserId &&
-			this.processedByUserTag
+			this.processedAt && this.processedBy
 				? stripIndents`
 					* At: ${longstamp(this.processedAt, { extraLong: true })}
-					* By: ${getTag({ id: this.processedByUserId, tag: this.processedByUserTag })}
+					* By: ${this.processedBy}
 				`
 				: "";
 
@@ -172,7 +176,7 @@ export class UserReportModule
 			# [${emoji}] Report #${this.guildRelativeId}
 			### ${this.type} report by ${authorMention}
 			* Created ${longstamp(this.createdAt, { extraLong: true })}
-			* Report targets user: ${this.targetMentionString()}
+			* User reported: ${this.target}
 			* Processed: ${this.processedAt ? `${Emojis.Check} Yes` : `${Emojis.Cross} No`}
 			 ${ifProcessed}
 			### Author-provided comment:
@@ -280,8 +284,8 @@ export class MessageReportModule extends UserReportModule {
 		if (!message) {
 			return this.generateBasePost(
 				stripIndent`
-					### Message
-					* Message author: ${this.targetMentionString()}
+					### Reported message
+					* Message author: ${this.target}
 					* [Message URL](<${this.targetMessageURL}>)
 					${Emojis.Warn} Could not fetch and preview the message.
 				`
@@ -290,8 +294,8 @@ export class MessageReportModule extends UserReportModule {
 
 		const base = this.generateBasePost(
 			stripIndent`
-				### Message
-				* Author: ${this.targetMentionString()}
+				### Reported message
+				* Author: ${this.target}
 				* [Message URL](<${this.targetMessageURL}>)
 				* Preview:
 			`

@@ -1,4 +1,5 @@
 import { DEFAULT_LOGGER_COLOR, DEFAULT_LOGGER_PREFIX } from "#constants";
+import { getTag } from "#helpers";
 import { type Color } from "#typings";
 import {
 	type ContextMenuCommandInteraction,
@@ -91,7 +92,9 @@ export default class Logger {
 		const { channel, guild: interactionGuild, user } = this.interaction;
 		const guild = this.guild ?? interactionGuild;
 
-		const prefixArr = [`${grey("User:")} ${user.tag} ${grey(user.id)}`];
+		const prefixArr = [
+			`${grey("User:")} ${getTag(user)} ${grey(`(${user.id})`)}`
+		];
 
 		if (channel) {
 			prefixArr.push(
