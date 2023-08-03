@@ -1,11 +1,7 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import ConfigManager from "#database/config.js";
-import {
-	messageFromURL,
-	messageToEmbed,
-	parseMessageURL
-} from "#helpers/messageHelpers.js";
+import { messageFromURL, messageToEmbed, parseMessageURL } from "#helpers";
 import Logger from "#logger";
 import { type CommandData, type CommandExport } from "#typings";
 import { stripIndents } from "common-tags";
@@ -13,6 +9,7 @@ import {
 	ApplicationCommandOptionType,
 	ApplicationCommandType,
 	PermissionFlagsBits,
+	inlineCode,
 	type ChatInputCommandInteraction,
 	type Message,
 	type MessageContextMenuCommandInteraction
@@ -35,7 +32,7 @@ const data: CommandData = {
 		]
 	},
 	contextMenu: {
-		name: "Repost message",
+		name: "Repost",
 		dm_permission: false,
 		default_member_permissions:
 			PermissionFlagsBits.ManageMessages.toString(),
@@ -60,7 +57,7 @@ const handle = async (
 
 	const row = components.createRows(urlButton);
 
-	new Logger({ interaction, prefix: "REPOST" }).log(
+	new Logger({ interaction, label: "REPOST" }).log(
 		`Reposted message (${message.id}) by ${message.author.tag}`
 	);
 
@@ -84,21 +81,21 @@ const chatInput = async (
 
 	const urlInput = interaction.options.getString("message_link", true);
 
-	const data = parseMessageURL(urlInput);
+	const parsedURL = parseMessageURL(urlInput);
 
-	if (!data) {
+	if (!parsedURL) {
 		await interaction.reply({
 			ephemeral: true,
 			content: stripIndents`
-				${Emojis.Error} Could not parse message URL. Double-check it and try again.
-				\`${urlInput}\`
+				${Emojis.Error} Could not parse the message URL. Double-check it and try again.
+				${inlineCode(urlInput)}
 			`
 		});
 
 		return;
 	}
 
-	if (data.guildId !== interaction.guildId) {
+	if (parsedURL.guildId !== interaction.guildId) {
 		await interaction.reply({
 			ephemeral: true,
 			content: `${Emojis.Error} The message is not from this server.`
@@ -107,12 +104,14 @@ const chatInput = async (
 		return;
 	}
 
-	const channel = interaction.guild.channels.cache.get(data.channelId);
+	const channel = interaction.guild.channels.cache.get(parsedURL.channelId);
 
 	if (!channel?.isTextBased()) {
 		await interaction.reply({
 			ephemeral: true,
-			content: `${Emojis.Error} The channel from the URL is invalid: \`${urlInput}\``
+			content: `${
+				Emojis.Error
+			} The channel from the URL is invalid: ${inlineCode(urlInput)}`
 		});
 
 		return;
@@ -133,12 +132,14 @@ const chatInput = async (
 		return;
 	}
 
-	const message = await messageFromURL(interaction.client, data);
+	const message = await messageFromURL(interaction.client, parsedURL);
 
 	if (!message) {
 		await interaction.reply({
 			ephemeral: true,
-			content: `${Emojis.Error} I could not find a message with the URL: \`${urlInput}\``
+			content: `${
+				Emojis.Error
+			} I could not find a message with the URL: ${inlineCode(urlInput)}`
 		});
 
 		return;
@@ -157,7 +158,7 @@ const contextMenu = async (
 	handle(interaction, interaction.targetMessage);
 };
 
-export const getCommand: () => CommandExport = () => ({
+export const getCommand: CommandExport = () => ({
 	data,
 	handle: {
 		chatInput,

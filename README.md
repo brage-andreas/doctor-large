@@ -1,6 +1,6 @@
 ## Quick start
 
-1. Create a `.env` file and populate it. Use `.env.example` as a reference.
+1. Create a `.env` file and populate it. Use `.env.template` as a reference.
 2. Install `PostgreSQL` and `Node.js`.
 3. Create a server with name `postgres` and password `admin`.
 4. Create a database called `doctor-large`.
@@ -10,7 +10,7 @@
 
 ## Put or clear commands
  
-1. Populate the `CLIENT_ID` key in your `.env` file with your bot's user id.
+1. Populate the `APPLICATION_ID` key in your `.env` file with your application id (the bot's user id).
 2. (Optional) Populate the `GUILD_ID` key in your `.env` file with your desired guild's ID.
 3. Run `npm run commands:put` or `npm run commands:clear` to put or clear commands.
 

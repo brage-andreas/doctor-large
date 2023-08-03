@@ -66,7 +66,7 @@ const chatInput = async (
 				break;
 			}
 
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			new Logger({ label: "GIVEAWAY", interaction }).log(
 				`Opened dashboard of giveaway with ID #${id}`
 			);
 
@@ -85,7 +85,7 @@ const autocomplete = async (interaction: AutocompleteInteraction<"cached">) => {
 	await sendToAutocompleteGiveaway(interaction);
 };
 
-export const getCommand: () => CommandExport = () => ({
+export const getCommand: CommandExport = () => ({
 	data,
 	handle: {
 		chatInput,

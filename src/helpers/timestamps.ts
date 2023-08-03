@@ -1,38 +1,52 @@
-import { type TimestampStylesString } from "discord.js";
+import { time } from "discord.js";
 
-const _getSeconds = (dateOrTimestamp: Date | number | string) => {
-	let ms: number;
-
-	if (dateOrTimestamp instanceof Date) {
-		ms = dateOrTimestamp.getTime();
-	} else {
-		ms = Number(dateOrTimestamp) || 0;
-	}
+const seconds = (dateOrTimestamp: Date | number | string) => {
+	const ms =
+		typeof dateOrTimestamp === "object"
+			? dateOrTimestamp.getTime()
+			: Number(dateOrTimestamp) || 0;
 
 	return Math.floor(ms / 1000);
 };
 
-export const timestamp = (
+// Default
+export default function longstamp(
 	dateOrTimestamp: Date | number | string,
-	style: TimestampStylesString
-) => {
-	const seconds = _getSeconds(dateOrTimestamp);
+	options?: { extraLong?: undefined; reverse?: undefined }
+): `<t:${number}:${"d"}> (<t:${number}:R>)`;
 
-	return `<t:${seconds}:${style}>`;
-};
+// Extra long
+export default function longstamp(
+	dateOrTimestamp: Date | number | string,
+	options: { extraLong: true }
+): `<t:${number}:${"F"}> (<t:${number}:R>)`;
 
-export const longstamp = (
+// Reverse
+export default function longstamp(
+	dateOrTimestamp: Date | number | string,
+	options: { reverse: true }
+): `<t:${number}:R> (<t:${number}:${"d"}>)`;
+
+// Extra long + reverse
+export default function longstamp(
+	dateOrTimestamp: Date | number | string,
+	options: { extraLong: true; reverse: true }
+): `<t:${number}:R> (<t:${number}:${"F"}>)`;
+
+export default function longstamp(
 	dateOrTimestamp: Date | number | string,
 	options?: { extraLong?: true; reverse?: true }
-) => {
+):
+	| `<t:${number}:${"d" | "F"}> (<t:${number}:R>)`
+	| `<t:${number}:R> (<t:${number}:${"d" | "F"}>)` {
 	const style = options?.extraLong ? "F" : "d";
 
-	const main = timestamp(dateOrTimestamp, style);
-	const rel = timestamp(dateOrTimestamp, "R");
+	const main = time(seconds(dateOrTimestamp), style);
+	const rel = time(seconds(dateOrTimestamp), "R");
 
 	if (options?.reverse) {
-		return `${rel} (${main})`;
+		return `${rel} (${main})` as const;
 	}
 
-	return `${main} (${rel})`;
-};
+	return `${main} (${rel})` as const;
+}

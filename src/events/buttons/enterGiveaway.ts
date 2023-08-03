@@ -1,15 +1,14 @@
-import { Emojis, RegExp } from "#constants";
+import { Emojis, Regex } from "#constants";
 import GiveawayManager from "#database/giveaway.js";
-import { listify } from "#helpers/listify.js";
-import { timestamp } from "#helpers/timestamps.js";
+import { listify } from "#helpers";
 import Logger from "#logger";
 import { oneLine, stripIndents } from "common-tags";
-import { bold, type ButtonInteraction } from "discord.js";
+import { bold, time, type ButtonInteraction } from "discord.js";
 
 export default async function enterGiveaway(
 	interaction: ButtonInteraction<"cached">
 ) {
-	const id = interaction.customId.match(RegExp.EnterGiveawayCustomId)?.groups
+	const id = interaction.customId.match(Regex.EnterGiveawayCustomId)?.groups
 		?.id;
 
 	if (!id) {
@@ -63,7 +62,7 @@ export default async function enterGiveaway(
 
 		const accountAge = Date.now() - interaction.user.createdTimestamp;
 
-		const whenTheyWillBeOldEnough = timestamp(
+		const whenTheyWillBeOldEnough = time(
 			Date.now() + minimumAccountAge - accountAge,
 			"R"
 		);
@@ -97,7 +96,7 @@ export default async function enterGiveaway(
 
 		new Logger({
 			color: "grey",
-			prefix: "GIVEAWAY"
+			label: "GIVEAWAY"
 		}).log(
 			oneLine`
 				User ${interaction.user.tag} (${interaction.user.id})
@@ -122,7 +121,7 @@ export default async function enterGiveaway(
 
 		new Logger({
 			color: "grey",
-			prefix: "GIVEAWAY"
+			label: "GIVEAWAY"
 		}).log(
 			oneLine`
 				User ${interaction.user.tag} (${interaction.user.id})

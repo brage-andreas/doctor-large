@@ -1,7 +1,7 @@
 import components from "#components";
 import { Emojis, Prize } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
-import { ModalCollector } from "#helpers/ModalCollector.js";
+import { ModalCollector } from "#helpers";
 import Logger from "#logger";
 import type PrizeModule from "#modules/Prize.js";
 import { oneLine } from "common-tags";
@@ -56,7 +56,7 @@ export default async function toEditPrize(
 			}
 		});
 
-		new Logger({ prefix: "GIVEAWAY", interaction }).log(
+		new Logger({ label: "GIVEAWAY", interaction }).log(
 			`Edited prize #${prize.id} in giveaway #${giveawayId}`
 		);
 

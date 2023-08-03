@@ -7,12 +7,13 @@ import {
 	MY_GIVEAWAYS_MAX_PRIZES
 } from "#constants";
 import GiveawayManager from "#database/giveaway.js";
+import { getTag } from "#helpers";
 import Logger from "#logger";
 import {
 	type CommandData,
 	type CommandExport,
-	type GiveawayId,
-	type PrizesOfMapObj
+	type CountPrizeWinner,
+	type GiveawayId
 } from "#typings";
 import { oneLine, source, stripIndents } from "common-tags";
 import {
@@ -21,7 +22,7 @@ import {
 	ComponentType,
 	EmbedBuilder,
 	PermissionFlagsBits,
-	type ButtonBuilder,
+	type APIButtonComponentWithCustomId,
 	type ButtonInteraction,
 	type ChatInputCommandInteraction,
 	type EmbedField,
@@ -52,9 +53,9 @@ const run = async (
 	target: User
 ) => {
 	const isAuthor = target.id === interaction.user.id;
-	const tag = target.tag;
+	const tag = getTag(target);
 
-	const logger = new Logger({ prefix: "MY GIVEAWAYS", interaction });
+	const logger = new Logger({ label: "MY GIVEAWAYS", interaction });
 
 	const giveawayManager = new GiveawayManager(interaction.guild);
 
@@ -99,8 +100,8 @@ const run = async (
 			};
 
 			map.set(g.guildRelativeId, {
-				claimed: old.claimed.concat([...prizes.claimed.values()]),
-				unclaimed: old.unclaimed.concat([...prizes.unclaimed.values()])
+				claimed: [...old.claimed, ...prizes.claimed.values()],
+				unclaimed: [...old.unclaimed, ...prizes.unclaimed.values()]
 			});
 
 			const claimedSize = [...prizes.claimed.values()].reduce(
@@ -124,8 +125,8 @@ const run = async (
 		new Map<
 			GiveawayId,
 			{
-				claimed: Array<PrizesOfMapObj>;
-				unclaimed: Array<PrizesOfMapObj>;
+				claimed: Array<CountPrizeWinner>;
+				unclaimed: Array<CountPrizeWinner>;
 			}
 		>()
 	);
@@ -154,7 +155,7 @@ const run = async (
 			viewAllHostedButton
 		].filter(
 			(buttonOrNull) => buttonOrNull !== null
-		) as Array<ButtonBuilder>;
+		) as Array<APIButtonComponentWithCustomId>;
 
 	const getRows = () => {
 		const buttons = getButtonArray();
@@ -173,12 +174,12 @@ const run = async (
 
 				n += p.count;
 
-				return `→ ${p.count}x ${name}${!claim ? " (UNCLAIMED)" : ""}`;
+				return `* ${p.count}x ${name}${!claim ? " (UNCLAIMED)" : ""}`;
 			});
 
 			if (noLimits) {
 				return {
-					name: `Giveaway #${id} (${n})`,
+					name: `Prizes of giveaway #${id} (${n})`,
 					value: arr.join("\n"),
 					inline: true
 				};
@@ -194,7 +195,7 @@ const run = async (
 			};
 		});
 
-	const MAX_LEN = 3900; // arbitrary - must be 4096 or under but there are also fields;
+	const MAX_TOTAL_FIELD_LEN = 3900; // arbitrary - must be 4096 or under;
 	const fields: Array<EmbedField> = [];
 
 	for (const field of prizesArr()) {
@@ -203,7 +204,10 @@ const run = async (
 			0
 		);
 
-		if (MAX_LEN <= fieldTotalLen + field.name.length + field.value.length) {
+		if (
+			MAX_TOTAL_FIELD_LEN <=
+			fieldTotalLen + field.name.length + field.value.length
+		) {
 			break;
 		}
 
@@ -212,17 +216,18 @@ const run = async (
 
 	const embed = new EmbedBuilder()
 		.setColor(prizeCount.unclaimed ? Colors.Yellow : Colors.Green)
-		.setTitle(isAuthor ? "My Giveaways" : `${tag}'s Giveaways`)
+		.setTitle(`${tag}'s giveaways`)
 		.setFields(
 			{
 				name: "Stats",
-				value: source`
+				value: stripIndents`
 					Entered: ${entered.length}
-					​    └─ Won: ${winCount}
-					Hosted: ${hosted.length}
-					Prizes: ${prizeCount.all}
-					​	 ├─ Claimed: ${prizeCount.claimed}
-					​	 └─ Unclaimed: ${prizeCount.unclaimed}
+					Won: ${winCount}${hosted.length ? `\nHosted: ${hosted.length}` : ""}
+					Prizes: ${prizeCount.all} ${
+					prizeCount.unclaimed
+						? `(${prizeCount.unclaimed} unclaimed!)`
+						: ""
+				}
 				`
 			},
 			...fields
@@ -236,7 +241,7 @@ const run = async (
 		embeds: [embed]
 	});
 
-	logger.log(`Sent overview${isAuthor ? `of ${tag} (${target.id})` : ""}`);
+	logger.log(`Sent overview of ${tag} (${target.id})`);
 
 	if (!rows.length) {
 		return;
@@ -273,7 +278,8 @@ const run = async (
 
 		if (buttonInteraction.customId === acceptAllPrizes.customId) {
 			if (!isAuthor) {
-				acceptAllPrizesButton?.setDisabled(true);
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				acceptAllPrizesButton!.disabled = true;
 
 				await interaction.followUp({
 					ephemeral: true,
@@ -305,8 +311,10 @@ const run = async (
 					.join(", ")}`
 			);
 
-			acceptAllPrizesButton?.setDisabled(true);
-			viewAllPrizesButton?.setDisabled(false);
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			acceptAllPrizesButton!.disabled = true;
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			viewAllPrizesButton!.disabled = false;
 
 			await buttonInteraction.followUp({
 				ephemeral: true,
@@ -354,7 +362,8 @@ const run = async (
 				files: [getAttachment(string)]
 			});
 
-			viewAllEnteredButton?.setDisabled(true);
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			viewAllEnteredButton!.disabled = true;
 
 			await interaction.editReply({
 				components: getRows()
@@ -392,7 +401,8 @@ const run = async (
 				files: [getAttachment(string)]
 			});
 
-			viewAllPrizesButton?.setDisabled(true);
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			viewAllPrizesButton!.disabled = true;
 
 			await interaction.editReply({
 				components: getRows()
@@ -416,7 +426,8 @@ const run = async (
 				files: [getAttachment(string)]
 			});
 
-			viewAllHostedButton?.setDisabled(true);
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			viewAllHostedButton!.disabled = true;
 
 			await interaction.editReply({
 				components: getRows()
@@ -443,7 +454,7 @@ const contextMenu = async (
 	await run(interaction, interaction.targetUser);
 };
 
-export const getCommand: () => CommandExport = () => ({
+export const getCommand: CommandExport = () => ({
 	data,
 	handle: {
 		chatInput,

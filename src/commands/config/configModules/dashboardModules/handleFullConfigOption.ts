@@ -4,6 +4,7 @@ import type ConfigModule from "#modules/Config.js";
 import { stripIndent } from "common-tags";
 import {
 	EmbedBuilder,
+	inlineCode,
 	type ButtonInteraction,
 	type ChannelSelectMenuInteraction,
 	type ChannelType,
@@ -27,7 +28,9 @@ const createEmbed = (
 				channel
 					? `${channel} - #${channel.name} (${channel.id})`
 					: channelId
-					? `${Emojis.Warn} Channel \`${channelId}\` not found`
+					? `${Emojis.Warn} Channel ${inlineCode(
+							channelId
+					  )} not found`
 					: `Not set${comment ? `. ${comment}` : ""}`
 			}
 			Enabled: ${enabled ? `${Emojis.On} Yes` : `${Emojis.Off} No`}
@@ -38,19 +41,19 @@ export default async function handleFullConfigOption(
 		| ButtonInteraction<"cached">
 		| ChannelSelectMenuInteraction<"cached">,
 	config: ConfigModule,
-	options: {
-		type: "caseLog" | "memberLog" | "messageLog" | "report";
-		channelTypes: Array<ChannelType>;
-	}
+	type: "caseLog" | "memberLog" | "messageLog" | "report",
+	channelTypes: Array<ChannelType>
 ): Promise<{
 	channelId?: string | null;
 	enabled?: boolean;
 }> {
-	const channel = config[`${options.type}Channel`];
-	const channelId = config[`${options.type}ChannelId`];
-	const enabled = config[`${options.type}Enabled`];
+	const channel = config[`${type}Channel`];
+	const channelId = config[`${type}ChannelId`];
+	const enabled = config[`${type}Enabled`];
 
-	const nameString = options.type.split(/(?=[A-Z])/).join(" ");
+	const currentlyEmpty = !channelId;
+
+	const nameString = type.split(/(?=[A-Z])/).join(" ");
 	const name = nameString.charAt(0).toUpperCase() + nameString.slice(1);
 
 	const embed = createEmbed(
@@ -58,15 +61,13 @@ export default async function handleFullConfigOption(
 		channelId,
 		enabled,
 		name,
-		options.type === "report" ? "Thread channel is recommended." : undefined
+		type === "report" ? "Thread channel is recommended." : undefined
 	);
 
 	const rows = components.createRows(
-		components.selects.channelSelect.component({
-			channelTypes: options.channelTypes
-		}),
+		components.selectMenus.channel.component({ channelTypes }),
 		enabled ? components.buttons.disable : components.buttons.enable,
-		components.buttons.clear.component().setDisabled(!channelId),
+		components.set.disabled(components.buttons.clear, !channelId),
 		components.buttons.back
 	);
 
@@ -106,21 +107,22 @@ export default async function handleFullConfigOption(
 					break;
 				}
 
-				case components.selects.channelSelect.customId: {
+				case components.selectMenus.channel.customId: {
 					if (!interaction.isChannelSelectMenu()) {
-						throw new Error(
+						throw new TypeError(
 							"Channel select menu component is not of type ChannelSelectMenu"
 						);
 					}
 
-					resolve({ channelId: interaction.values[0] });
+					const enabled = currentlyEmpty ? true : undefined;
+					resolve({ channelId: interaction.values[0], enabled });
 
 					break;
 				}
 
 				case components.buttons.enable.customId: {
 					if (!interaction.isButton()) {
-						throw new Error(
+						throw new TypeError(
 							"Button component is not of type Button"
 						);
 					}
@@ -132,7 +134,7 @@ export default async function handleFullConfigOption(
 
 				case components.buttons.disable.customId: {
 					if (!interaction.isButton()) {
-						throw new Error(
+						throw new TypeError(
 							"Button component is not of type Button"
 						);
 					}
@@ -144,12 +146,12 @@ export default async function handleFullConfigOption(
 
 				case components.buttons.clear.customId: {
 					if (!interaction.isButton()) {
-						throw new Error(
+						throw new TypeError(
 							"Button component is not of type Button"
 						);
 					}
 
-					resolve({ channelId: null });
+					resolve({ channelId: null, enabled: false });
 
 					break;
 				}

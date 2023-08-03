@@ -15,7 +15,7 @@ export default async function toNoConfigDashboard(
 	configManager: ConfigManager
 ) {
 	const rows = components.createRows(
-		components.buttons.create.component().setLabel("Create config")
+		components.buttons.create.component("config")
 	);
 
 	const msg = await interaction.editReply({

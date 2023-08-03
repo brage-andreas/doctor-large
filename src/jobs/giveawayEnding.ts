@@ -1,7 +1,7 @@
 import components from "#components";
 import { Emojis, Giveaway } from "#constants";
 import prisma from "#database/prisma.js";
-import { longstamp } from "#helpers/timestamps.js";
+import { longstamp, messageURL } from "#helpers";
 import GiveawayModule from "#modules/Giveaway.js";
 import { type GiveawayWithIncludes, type WinnerId } from "#typings";
 import { oneLine, source } from "common-tags";
@@ -97,14 +97,14 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 
 		const url =
 			channelId && announcementMessageId
-				? `https://discord.com/channels/${guildId}/${channelId}/${announcementMessageId}`
+				? messageURL(guildId, channelId, announcementMessageId)
 				: null;
 
 		const timeLeft = longstamp(endDate);
 
 		const string = source`
 			${bold("A giveaway you are hosting is about to end!")} ${Emojis.Sparks}
-			  → ${title} • #${guildRelativeId} • ${guildName}
+			* ${title} • #${guildRelativeId} • ${guildName}
 
 			It will end ${timeLeft}.
 
@@ -161,26 +161,26 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 
 		const url =
 			channelId && announcementMessageId
-				? `https://discord.com/channels/${guildId}/${channelId}/${announcementMessageId}`
+				? messageURL(guildId, channelId, announcementMessageId)
 				: null;
 
 		const string = source`
 			${bold("A giveaway you are hosting just ended!")} ${Emojis.Sparks}.
-			  → ${title} • #${guildRelativeId} • ${guildName}.
+			* ${title} • #${guildRelativeId} • ${guildName}.
 
 			End automation was set to: ${bold(endAutomation)}.
 
 			How to see winners:
-			  1. Go to ${guildName}.
-			  2. Open the dashboard of giveaway #${guildRelativeId}.
-			  3. Click the "Show all winners" button.
+			1. Go to ${guildName}.
+			2. Open the dashboard of giveaway #${guildRelativeId}.
+			3. Click the "Show all winners" button.
 
 			The winners have to manually claim their prizes.
 			If a winner does not respond, you can re-roll unclaimed prizes.
 
 			The winners can claim their prizes using:
-			  a) The /my-giveaways command.
-			  b) The "${Emojis.StarEyes} Accept Prize" button in the announcement.
+			* The /my-giveaways command.
+			* The "${Emojis.StarEyes} Accept Prize" button in the announcement.
 
 			GG!
 		`;

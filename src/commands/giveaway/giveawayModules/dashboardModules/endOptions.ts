@@ -1,15 +1,15 @@
 import components from "#components";
 import { Colors, Emojis, Giveaway } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
-import { longstamp } from "#helpers/timestamps.js";
-import { type EndAutomation } from "@prisma/client";
-import { oneLine, source, stripIndents } from "common-tags";
+import { longstamp } from "#helpers";
+import { EndAutomation } from "@prisma/client";
+import { oneLine, stripIndents } from "common-tags";
 import {
-	bold,
 	ButtonStyle,
 	ComponentType,
 	EmbedBuilder,
-	type ButtonBuilder,
+	bold,
+	type APIButtonComponent,
 	type ButtonInteraction
 } from "discord.js";
 import ms from "ms";
@@ -41,23 +41,13 @@ export default async function toEndOptions(
 
 	const minTime = () => Date.now() + Giveaway.MinimumEndDateBuffer;
 
-	const {
-		adjustDate,
-		back,
-		clearDate,
-		endGiveaway,
-		endLevelEnd,
-		endLevelNone,
-		endLevelAnnounce,
-		endLevelRoll,
-		roundDateToNearestHour,
-		setDate
-	} = components.buttons;
-
 	const adjustments = ["15 minutes", "1 hour", "1 day", "1 week", "30 days"];
 
 	const plusButtons = adjustments.map((time) =>
-		adjustDate({ label: `+${time}`, customId: `+${ms(time)}` })
+		components.buttons.adjustDate({
+			label: `+${time}`,
+			customId: `+${ms(time)}`
+		})
 	);
 
 	const minusButtons = adjustments.map((time) => {
@@ -70,7 +60,7 @@ export default async function toEndOptions(
 			disabled = true;
 		}
 
-		return adjustDate({
+		return components.buttons.adjustDate({
 			label: `-${time}`,
 			customId: `-${milliseconds}`,
 			disabled
@@ -78,38 +68,41 @@ export default async function toEndOptions(
 	});
 
 	const endLevelButtons = () => {
-		const none = endLevelNone.component();
-		const end = endLevelEnd.component();
-		const roll = endLevelRoll.component();
-		const announce = endLevelAnnounce.component();
+		const none = components.buttons.endLevelNone.component();
+		const end = components.buttons.endLevelEnd.component();
+		const roll = components.buttons.endLevelRoll.component();
+		const announce = components.buttons.endLevelAnnounce.component();
 
-		const setSuccess = (...buttons: Array<ButtonBuilder>) =>
-			buttons.forEach((b) => b.setStyle(ButtonStyle.Success));
+		const setSuccess = (...buttons: Array<APIButtonComponent>) =>
+			buttons.forEach((b) => {
+				b.style = ButtonStyle.Success;
+			});
 
 		switch (endAutomationLevel) {
-			case "Announce": {
-				announce.setDisabled();
+			case EndAutomation.Announce: {
+				announce.disabled = true;
 				setSuccess(end, roll, announce);
 
 				break;
 			}
 
-			case "Roll": {
-				roll.setDisabled();
+			case EndAutomation.Roll: {
+				roll.disabled = true;
 				setSuccess(end, roll);
 
 				break;
 			}
 
-			case "End": {
-				end.setDisabled();
+			case EndAutomation.End: {
+				end.disabled = true;
 				setSuccess(end);
 
 				break;
 			}
 
-			case "None": {
-				none.setStyle(ButtonStyle.Success).setDisabled();
+			case EndAutomation.None: {
+				none.style = ButtonStyle.Success;
+				none.disabled = true;
 
 				break;
 			}
@@ -173,29 +166,32 @@ export default async function toEndOptions(
 	const missingParts: Array<string> = [];
 
 	if (!giveaway.prizesQuantity()) {
-		missingParts.push("→ Add one or more prizes");
+		missingParts.push("* Add one or more prizes");
 	}
 
 	if (!giveaway.channelId) {
-		missingParts.push("→ Announce the giveaway");
+		missingParts.push("* Announce the giveaway");
 	}
 
 	const cannotEnd =
 		!giveaway.prizesQuantity() || !giveaway.channelId
-			? source`
+			? stripIndents`
 				${Emojis.Error} The giveaway cannot be ended:
-				  ${missingParts.join("\n")}
+				${missingParts.join("\n")}
 			`
 			: undefined;
 
 	const rows = components.createRows(
-		setDate.component().setDisabled(true),
-		clearDate.component().setDisabled(!endDate),
-		roundDateToNearestHour.component().setDisabled(Boolean(isRounded)),
-		endGiveaway,
+		components.set.disabled(components.buttons.setDate, true),
+		components.set.disabled(components.buttons.clearDate, !endDate),
+		components.set.disabled(
+			components.buttons.roundDateToNearestHour,
+			isRounded
+		),
+		components.buttons.endGiveaway,
 		...plusButtons,
 		...minusButtons,
-		back,
+		components.buttons.back,
 		...endLevelButtons()
 	);
 
@@ -223,7 +219,9 @@ export default async function toEndOptions(
 	collector.on("collect", async (buttonInteraction) => {
 		const adjustDateRegExp = /^(?<prefix>\+|-)(?<time>\d+)$/;
 
-		if (buttonInteraction.customId !== setDate.customId) {
+		if (
+			buttonInteraction.customId !== components.buttons.setDate.customId
+		) {
 			await buttonInteraction.deferUpdate();
 		}
 
@@ -239,17 +237,17 @@ export default async function toEndOptions(
 		};
 
 		switch (buttonInteraction.customId) {
-			case back.customId: {
+			case components.buttons.back.customId: {
 				return toDashboard(buttonInteraction, id);
 			}
 
-			case setDate.customId: {
+			case components.buttons.setDate.customId: {
 				//
 
 				return toEndOptions(buttonInteraction, id, giveawayManager);
 			}
 
-			case clearDate.customId: {
+			case components.buttons.clearDate.customId: {
 				await giveaway.edit({
 					endDate: null,
 					nowOutdated: {
@@ -260,7 +258,7 @@ export default async function toEndOptions(
 				return toEndOptions(buttonInteraction, id, giveawayManager);
 			}
 
-			case roundDateToNearestHour.customId: {
+			case components.buttons.roundDateToNearestHour.customId: {
 				await giveaway.edit({
 					endDate: roundedDate,
 					nowOutdated: {
@@ -271,30 +269,30 @@ export default async function toEndOptions(
 				return toEndOptions(buttonInteraction, id, giveawayManager);
 			}
 
-			case endGiveaway.customId: {
+			case components.buttons.endGiveaway.customId: {
 				return toEndGiveaway(buttonInteraction, id, giveawayManager);
 			}
 
-			case endLevelNone.customId: {
-				await endLevel("None");
+			case components.buttons.endLevelNone.customId: {
+				await endLevel(EndAutomation.None);
 
 				break;
 			}
 
-			case endLevelEnd.customId: {
-				await endLevel("End");
+			case components.buttons.endLevelEnd.customId: {
+				await endLevel(EndAutomation.End);
 
 				break;
 			}
 
-			case endLevelRoll.customId: {
-				await endLevel("Roll");
+			case components.buttons.endLevelRoll.customId: {
+				await endLevel(EndAutomation.Roll);
 
 				break;
 			}
 
-			case endLevelAnnounce.customId: {
-				await endLevel("Announce");
+			case components.buttons.endLevelAnnounce.customId: {
+				await endLevel(EndAutomation.Announce);
 
 				break;
 			}

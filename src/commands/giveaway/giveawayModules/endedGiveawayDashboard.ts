@@ -1,14 +1,14 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
-import s from "#helpers/s.js";
+import { s } from "#helpers";
 import type GiveawayModule from "#modules/Giveaway.js";
 import { source, stripIndents } from "common-tags";
 import {
 	AttachmentBuilder,
 	ComponentType,
+	type APIButtonComponentWithCustomId,
 	type AutocompleteInteraction,
-	type ButtonBuilder,
 	type Interaction
 } from "discord.js";
 import toDashboard from "./dashboard.js";
@@ -40,22 +40,8 @@ export default async function toEndedDashboard(
 		return;
 	}
 
-	const {
-		reannounceWinners,
-		unannounceWinners,
-		announceWinners,
-		showAllWinners,
-		rerollWinners,
-		rerollAllWinners,
-		deleteUnclaimedWinners,
-		deleteAllWinners,
-		reactivateGiveaway,
-		rollWinners,
-		deleteGiveaway
-	} = components.buttons;
-
-	const announceWinnersButtons: Array<ButtonBuilder> = [];
-	const rollWinnersButtons: Array<ButtonBuilder> = [];
+	const announceWinnersButtons: Array<APIButtonComponentWithCustomId> = [];
+	const rollWinnersButtons: Array<APIButtonComponentWithCustomId> = [];
 
 	const unclaimedN = giveaway.winners.filter(
 		({ claimed }) => !claimed
@@ -66,42 +52,49 @@ export default async function toEndedDashboard(
 
 	if (giveaway.winnersAreAnnounced()) {
 		announceWinnersButtons.push(
-			reannounceWinners.component(),
-			unannounceWinners.component()
+			components.buttons.reannounceWinners.component(),
+			components.buttons.unannounceWinners.component()
 		);
 	} else {
-		announceWinnersButtons.push(announceWinners.component());
+		announceWinnersButtons.push(
+			components.buttons.announceWinners.component()
+		);
 	}
 
 	if (noWinners) {
-		rollWinnersButtons.push(rollWinners.component());
+		rollWinnersButtons.push(components.buttons.rollWinners.component());
 	} else {
 		rollWinnersButtons.push(
-			rerollWinners.component(unclaimedN).setDisabled(noUnclaimed),
-			rerollAllWinners
-				.component(giveaway.winners.length)
-				.setDisabled(noWinners)
+			components.set.disabled(
+				components.buttons.rerollWinners.component(unclaimedN),
+				noUnclaimed
+			),
+			components.buttons.rerollAllWinners.component(
+				giveaway.winners.length
+			)
 		);
 	}
 
-	const rows = [
-		...components.createRows(
-			showAllWinners.component(),
-			...announceWinnersButtons
+	const rows = components.createRows.specific(
+		announceWinnersButtons.length + 1,
+		rollWinnersButtons.length,
+		2,
+		2
+	)(
+		components.buttons.showAllWinners,
+		...announceWinnersButtons,
+		// ---
+		...rollWinnersButtons,
+		// ---
+		components.set.disabled(
+			components.buttons.deleteUnclaimedWinners,
+			noUnclaimed
 		),
-
-		...components.createRows(...rollWinnersButtons),
-
-		...components.createRows(
-			deleteUnclaimedWinners.component().setDisabled(noUnclaimed),
-			deleteAllWinners.component().setDisabled(noWinners)
-		),
-
-		...components.createRows(
-			reactivateGiveaway.component(),
-			deleteGiveaway.component()
-		)
-	];
+		components.set.disabled(components.buttons.deleteAllWinners, noWinners),
+		// ---
+		components.buttons.reactivateGiveaway,
+		components.buttons.deleteGiveaway
+	);
 
 	const msg = await interaction.editReply({
 		components: rows,
@@ -127,7 +120,7 @@ export default async function toEndedDashboard(
 		await buttonInteraction.deferUpdate();
 
 		switch (buttonInteraction.customId) {
-			case reactivateGiveaway.customId: {
+			case components.buttons.reactivateGiveaway.customId: {
 				await giveaway.edit({
 					ended: false,
 					nowOutdated: {
@@ -140,19 +133,19 @@ export default async function toEndedDashboard(
 				break;
 			}
 
-			case announceWinners.customId: {
+			case components.buttons.announceWinners.customId: {
 				toAnnounceWinners(buttonInteraction, giveaway.id);
 
 				break;
 			}
 
-			case reannounceWinners.customId: {
+			case components.buttons.reannounceWinners.customId: {
 				toAnnounceWinners(buttonInteraction, giveaway.id);
 
 				break;
 			}
 
-			case unannounceWinners.customId: {
+			case components.buttons.unannounceWinners.customId: {
 				const channel = giveaway.channel;
 
 				if (!channel) {
@@ -181,7 +174,7 @@ export default async function toEndedDashboard(
 
 				await interaction.editReply({
 					content: stripIndents`
-							${Emojis.V} The winners are no longer announced. 
+							${Emojis.Check} The winners are no longer announced. 
 						`,
 					components: [],
 					embeds: []
@@ -192,7 +185,7 @@ export default async function toEndedDashboard(
 				break;
 			}
 
-			case deleteGiveaway.customId: {
+			case components.buttons.deleteGiveaway.customId: {
 				toDeleteGiveaway(
 					buttonInteraction,
 					giveaway.id,
@@ -202,7 +195,7 @@ export default async function toEndedDashboard(
 				break;
 			}
 
-			case showAllWinners.customId: {
+			case components.buttons.showAllWinners.customId: {
 				const members = await interaction.guild.members.fetch();
 
 				const string = giveaway.prizes
@@ -234,7 +227,7 @@ export default async function toEndedDashboard(
 									}
 								);
 
-								return `→ ${wI} ${userTag} - ${claimedStr}. Won at ${time} UTC`;
+								return `* ${wI} ${userTag} - ${claimedStr}. Won at ${time} UTC`;
 							}
 						);
 
@@ -262,8 +255,8 @@ export default async function toEndedDashboard(
 				break;
 			}
 
-			case rollWinners.customId:
-			case rerollWinners.customId: {
+			case components.buttons.rollWinners.customId:
+			case components.buttons.rerollWinners.customId: {
 				const prizes = await giveawayManager.getPrizes({
 					giveawayId: giveaway.id,
 					claimed: false
@@ -291,7 +284,7 @@ export default async function toEndedDashboard(
 				break;
 			}
 
-			case rerollAllWinners.customId: {
+			case components.buttons.rerollAllWinners.customId: {
 				const entries = [...giveaway.entriesUserIds];
 				const prizesQuantity = giveaway.prizesQuantity();
 				const { winnerQuantity, prizes } = giveaway;
@@ -311,7 +304,7 @@ export default async function toEndedDashboard(
 				break;
 			}
 
-			case deleteUnclaimedWinners.customId: {
+			case components.buttons.deleteUnclaimedWinners.customId: {
 				await giveawayManager.deleteWinners(giveaway.data, {
 					onlyDeleteUnclaimed: true
 				});
@@ -321,7 +314,7 @@ export default async function toEndedDashboard(
 				break;
 			}
 
-			case deleteAllWinners.customId: {
+			case components.buttons.deleteAllWinners.customId: {
 				await giveawayManager.deleteWinners(giveaway.data);
 
 				toEndedDashboard(interaction, giveawayManager, giveaway);

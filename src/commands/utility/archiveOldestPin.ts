@@ -1,24 +1,27 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import ConfigManager from "#database/config.js";
-import getMissingPermissions from "#helpers/getMissingPermissions.js";
-import { listify } from "#helpers/listify.js";
-import { messageToEmbed } from "#helpers/messageHelpers.js";
-import yesNo from "#helpers/yesNo.js";
+import {
+	getMissingPermissions,
+	listify,
+	messageToEmbed,
+	yesNo
+} from "#helpers";
+
 import Logger from "#logger";
 import { type CommandData, type CommandExport } from "#typings";
 import { oneLine, stripIndent, stripIndents } from "common-tags";
 import {
 	ChannelType,
+	PermissionFlagsBits,
 	hideLinkEmbed,
 	hyperlink,
-	PermissionFlagsBits,
+	inlineCode,
 	underscore,
 	type ChatInputCommandInteraction,
 	type GuildTextBasedChannel,
 	type TextChannel
 } from "discord.js";
-
 const data: CommandData = {
 	chatInput: {
 		name: "archive-oldest-pin",
@@ -50,7 +53,7 @@ const chatInput = async (
 		await interaction.editReply({
 			content: oneLine`
 				${Emojis.Error} I am missing permissions to unpin messages in
-				this channel. Permissions needed: \`Manage Messages\`.
+				this channel. Permissions needed: ${inlineCode("Manage Messages")}.
 			`
 		});
 
@@ -102,7 +105,7 @@ const chatInput = async (
 	if (!res) {
 		interaction.editReply({
 			components: [],
-			content: `${Emojis.Sparks} Alright! Cancelled archiving pins.`,
+			content: `${Emojis.Sparks} Alright! Canceled archiving pins.`,
 			embeds: []
 		});
 
@@ -130,7 +133,7 @@ const chatInput = async (
 
 	if (!uncertainChannel) {
 		const rows = components.createRows(
-			components.selects.channelSelect.component({
+			components.selectMenus.channel.component({
 				channelTypes: [
 					ChannelType.GuildText,
 					ChannelType.GuildAnnouncement,
@@ -157,7 +160,7 @@ const chatInput = async (
 		if (!component) {
 			await interaction.editReply({
 				components: [],
-				content: `${Emojis.Sparks} Alright! Cancelled archiving pins.`,
+				content: `${Emojis.Sparks} Alright! Canceled archiving pins.`,
 				embeds: []
 			});
 
@@ -167,7 +170,7 @@ const chatInput = async (
 		if (!component.isChannelSelectMenu()) {
 			await component.update({
 				components: [],
-				content: `${Emojis.Sparks} Alright! Cancelled archiving pins.`,
+				content: `${Emojis.Sparks} Alright! Canceled archiving pins.`,
 				embeds: []
 			});
 
@@ -184,7 +187,9 @@ const chatInput = async (
 		if (!selectedChannel) {
 			await component.editReply({
 				components: [],
-				content: `${Emojis.Error} I could not find channel \`${channelId}\`. Please try again later.`,
+				content: `${Emojis.Error} I could not find channel ${inlineCode(
+					channelId
+				)}. Please try again later.`,
 				embeds: []
 			});
 
@@ -234,7 +239,7 @@ const chatInput = async (
 		.catch(() => false);
 
 	if (unpinned) {
-		new Logger({ interaction, prefix: "ARCHIVE PINS" }).log(
+		new Logger({ interaction, label: "ARCHIVE PINS" }).log(
 			`Archived pin ${message.id} by ${message.author.tag} (${message.author.id})`,
 			`in archive channel #${channel.name} (${channel.id})`
 		);
@@ -260,7 +265,7 @@ const chatInput = async (
 		await interaction.editReply({
 			components: urlButtonRows,
 			content: stripIndent`
-				${Emojis.V} Done! Successfully archive the pin.
+				${Emojis.Check} Done! Successfully archive the pin.
 			`,
 			embeds: []
 		});
@@ -273,19 +278,19 @@ const chatInput = async (
 		await interaction.editReply({
 			components: [],
 			content: stripIndent`
-				${Emojis.Error} Failed to unpin ${link}. Archive was cancelled.
+				${Emojis.Error} Failed to unpin ${link}. Archive was canceled.
 				
 				Causes of failure ${underscore("could")} be:
 				  a) message was unpinned since the command was used
 				  b) message was deleted since the command was used
-				  c) I am missing \`Manage Messages\` permission
+				  c) I am missing ${inlineCode("Manage Messages")} permission
 			`,
 			embeds: []
 		});
 	}
 };
 
-export const getCommand: () => CommandExport = () => ({
+export const getCommand: CommandExport = () => ({
 	data,
 	handle: {
 		chatInput

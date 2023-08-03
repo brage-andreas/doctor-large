@@ -1,7 +1,7 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
-import getMissingPermissions from "#helpers/getMissingPermissions.js";
+import { getMissingPermissions } from "#helpers";
 import Logger from "#logger";
 import { oneLine, stripIndents } from "common-tags";
 import {
@@ -44,14 +44,14 @@ export default async function toAnnouncementOptions(
 	`;
 
 	const rows = components.createRows(
-		components.selects.channelSelect,
+		components.selectMenus.channel,
 		components.buttons.back,
 		components.buttons.lastChannel,
 		components.buttons.editCurrentMessage,
 		components.buttons.recallCurrentMessage
 	);
 
-	const logger = new Logger({ prefix: "GIVEAWAY", interaction });
+	const logger = new Logger({ label: "GIVEAWAY", interaction });
 
 	const retry = async (message?: string) => {
 		if (message) {
@@ -82,7 +82,7 @@ export default async function toAnnouncementOptions(
 
 		if (
 			componentInteraction.customId ===
-				components.selects.channelSelect.customId ||
+				components.selectMenus.channel.customId ||
 			componentInteraction.customId ===
 				components.buttons.lastChannel.customId
 		) {

@@ -1,6 +1,6 @@
 import components from "#components";
 import type GiveawayManager from "#database/giveaway.js";
-import { listify } from "#helpers/listify.js";
+import { listify } from "#helpers";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
 import { type ButtonInteraction } from "discord.js";
@@ -27,14 +27,11 @@ export default async function toSetPingRoles(
 			}
 		`;
 
-	const { back, clear, setPingRolesToAtEveryone } = components.buttons;
-	const { roleSelect } = components.selects;
-
 	const rows = components.createRows(
-		roleSelect,
-		back,
-		clear,
-		setPingRolesToAtEveryone
+		components.selectMenus.role,
+		components.buttons.back,
+		components.buttons.clear,
+		components.buttons.setPingRolesToAtEveryone
 	);
 
 	const updateMsg = await interaction.editReply({
@@ -47,14 +44,14 @@ export default async function toSetPingRoles(
 	});
 
 	switch (component.customId) {
-		case back.customId: {
+		case components.buttons.back.customId: {
 			break;
 		}
 
-		case setPingRolesToAtEveryone.customId: {
+		case components.buttons.setPingRolesToAtEveryone.customId: {
 			await component.deferUpdate();
 
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			new Logger({ label: "GIVEAWAY", interaction }).log(
 				`Set ping roles of giveaway #${giveaway.id} to @everyone`
 			);
 
@@ -68,10 +65,10 @@ export default async function toSetPingRoles(
 			break;
 		}
 
-		case clear.customId: {
+		case components.buttons.clear.customId: {
 			await component.deferUpdate();
 
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			new Logger({ label: "GIVEAWAY", interaction }).log(
 				`Cleared ping roles of giveaway #${giveaway.id}`
 			);
 
@@ -85,14 +82,14 @@ export default async function toSetPingRoles(
 			break;
 		}
 
-		case roleSelect.customId: {
+		case components.selectMenus.role.customId: {
 			if (!component.isRoleSelectMenu()) {
 				return;
 			}
 
 			await component.deferUpdate();
 
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			new Logger({ label: "GIVEAWAY", interaction }).log(
 				`Edited ping roles of giveaway #${giveaway.id}`
 			);
 

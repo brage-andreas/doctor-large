@@ -1,15 +1,15 @@
 import components from "#components";
-import { Colors, Emojis, RegExp } from "#constants";
+import { Colors, Emojis, Regex } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
-import s from "#helpers/s.js";
-import yesNo from "#helpers/yesNo.js";
+import { s, yesNo } from "#helpers";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
 import {
-	ButtonBuilder,
 	ButtonStyle,
 	ComponentType,
 	EmbedBuilder,
+	inlineCode,
+	type APIButtonComponentWithCustomId,
 	type ButtonInteraction,
 	type ModalSubmitInteraction
 } from "discord.js";
@@ -38,25 +38,23 @@ export default async function toManagePrizes(
 		return;
 	}
 
-	const prizesButtons = giveaway.prizes.map(({ id }, index) =>
-		new ButtonBuilder()
-			.setCustomId(`dashboard-prize-${id}`)
-			.setStyle(ButtonStyle.Primary)
-			.setLabel(`Prize ${index + 1}`)
-	);
-
-	const prizeButtonsRow = components.createRows(...prizesButtons);
+	const prizesButtons: Array<APIButtonComponentWithCustomId> =
+		giveaway.prizes.map(({ id }, index) => ({
+			custom_id: `dashboard-prize-${id}`,
+			label: `Prize ${index + 1}`,
+			style: ButtonStyle.Primary,
+			type: ComponentType.Button
+		}));
 
 	const disableCreate = giveaway.prizes.length >= 10;
 
-	const rows = [
-		...prizeButtonsRow,
-		...components.createRows(
-			components.buttons.back,
-			components.buttons.create.component().setDisabled(disableCreate),
-			components.buttons.clear
-		)
-	];
+	const rows = components.createRows.specific(prizesButtons.length, 3)(
+		...prizesButtons,
+		// ---
+		components.buttons.back,
+		components.set.disabled(components.buttons.create, disableCreate),
+		components.buttons.clear
+	);
 
 	const getPrizesKey = (start: number, end: number) =>
 		giveaway.prizes.length
@@ -64,7 +62,7 @@ export default async function toManagePrizes(
 					.slice(start, end)
 					.map(
 						(prize, index) =>
-							`\` Prize ${start + index + 1} \` - ${
+							`${inlineCode(`Prize ${start + index + 1}`)} - ${
 								prize.quantity
 							}x ${prize.name}`
 					)
@@ -92,7 +90,7 @@ export default async function toManagePrizes(
 		embed.setColor(Colors.Red).setDescription("There are no prizes yet.");
 	}
 
-	new Logger({ prefix: "GIVEAWAY", interaction }).log(
+	new Logger({ label: "GIVEAWAY", interaction }).log(
 		`Opened prizes manager for giveaway #${giveaway.id}`
 	);
 
@@ -171,7 +169,7 @@ export default async function toManagePrizes(
 		await buttonInteraction.deferUpdate();
 
 		const match = buttonInteraction.customId.match(
-			RegExp.DashboardPrizeCustomId
+			Regex.DashboardPrizeCustomId
 		);
 
 		const prizeIdString = match?.groups?.id;

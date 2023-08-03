@@ -1,14 +1,14 @@
 import { COMMAND_DIR } from "#constants";
-import { type CommandExport, type CommandImport } from "#typings";
-import { existsSync, lstatSync, readdirSync } from "fs";
+import { type CommandExportData, type CommandImport } from "#typings";
 import console from "node:console";
+import { existsSync, lstatSync, readdirSync } from "node:fs";
 import { grey } from "../logger/color.js";
 
-const commands: Map<string, CommandExport> = new Map();
+const commands: Map<string, CommandExportData> = new Map();
 
 const importAndSetCommandIntoMap = async (relativePath: string) => {
 	const err = (string: string) => {
-		throw new Error(`File '/commands/${relativePath}' ${string}`);
+		throw new TypeError(`File '/commands/${relativePath}' ${string}`);
 	};
 
 	const rawCommandImport = await import(`../commands/${relativePath}`);
@@ -61,35 +61,79 @@ const importAndSetCommandIntoMap = async (relativePath: string) => {
 
 	if (cmd.data.chatInput && !cmd.handle.chatInput) {
 		err(
-			"exported property 'getCommand' property 'data' has 'chatInput' present, but is missing 'chatInput' handle"
+			"exported property 'getCommand' property 'handle' has 'chatInput' present, but is missing 'chatInput'"
 		);
 	}
 
 	if (cmd.data.contextMenu && !cmd.handle.contextMenu) {
 		err(
-			"exported property 'getCommand' property 'data' has 'contextMenu' present, but is missing 'contextMenu' handle"
+			"exported property 'getCommand' property 'handle' has 'contextMenu' present, but is missing 'contextMenu'"
 		);
 	}
 
 	if (!cmd.handle.chatInput && cmd.handle.autocomplete) {
 		err(
-			"exported property 'getCommand' property 'data' has 'autocomple' handle present, but is missing 'chatInput' handle"
+			"exported property 'getCommand' property 'handle' has 'autocomple' handle present, but is missing 'chatInput'"
 		);
 	}
 
-	if (cmd.data.chatInput) {
-		commands.set(cmd.data.chatInput.name, cmd);
+	if (!cmd.data.messageContextMenu && cmd.data.userContextMenu) {
+		err(
+			"exported property 'getCommand' property 'data' has 'messageContextMenu' data present, but is missing 'userContextMenu' data"
+		);
+	}
+
+	if (cmd.data.messageContextMenu && !cmd.data.userContextMenu) {
+		err(
+			"exported property 'getCommand' property 'data' has 'userContextMenu' data present, but is missing 'messageContextMenu' data"
+		);
+	}
+
+	if (
+		cmd.data.contextMenu &&
+		(cmd.data.messageContextMenu || cmd.data.userContextMenu)
+	) {
+		err(
+			"exported property 'getCommand' property 'data' has 'contextMenu' data present, but also has 'messageContextMenu' or 'userContexMenu'"
+		);
+	}
+
+	if (
+		(cmd.data.messageContextMenu || cmd.data.userContextMenu) &&
+		!cmd.handle.contextMenu
+	) {
+		err(
+			"exported property 'getCommand' property 'data' has 'contextMenu' data present, but is missing 'contextMenu' handle"
+		);
+	}
+
+	let name = `/commands/${relativePath}`;
+
+	if (cmd.data.userContextMenu) {
+		commands.set(cmd.data.userContextMenu.name, cmd);
+
+		name = cmd.data.userContextMenu.name;
+	}
+
+	if (cmd.data.messageContextMenu) {
+		commands.set(cmd.data.messageContextMenu.name, cmd);
+
+		name = cmd.data.messageContextMenu.name;
 	}
 
 	if (cmd.data.contextMenu) {
 		commands.set(cmd.data.contextMenu.name, cmd);
+
+		name = cmd.data.contextMenu.name;
 	}
 
-	console.log(
-		grey`Loaded command '${
-			cmd.data.chatInput?.name ?? cmd.data.contextMenu?.name
-		}'`
-	);
+	if (cmd.data.chatInput) {
+		commands.set(cmd.data.chatInput.name, cmd);
+
+		name = cmd.data.chatInput.name;
+	}
+
+	console.log(grey(`Loaded command '${name}'`));
 };
 
 const isFolder = (url: URL) => existsSync(url) && lstatSync(url).isDirectory();

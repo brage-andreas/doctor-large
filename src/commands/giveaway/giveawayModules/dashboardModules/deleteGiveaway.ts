@@ -1,10 +1,9 @@
 import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
-import commandMention from "#helpers/commandMention.js";
-import yesNo from "#helpers/yesNo.js";
+import { commandMention, yesNo } from "#helpers";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
-import { bold, ButtonStyle, type ButtonInteraction } from "discord.js";
+import { ButtonStyle, bold, type ButtonInteraction } from "discord.js";
 import toDashboard from "../dashboard.js";
 
 export default async function toDeleteGiveaway(
@@ -53,7 +52,7 @@ export default async function toDeleteGiveaway(
 	if (!accept) {
 		interaction.followUp({
 			ephemeral: true,
-			content: `Alright! Cancelled deleting giveaway ${giveaway.asRelId}`
+			content: `Alright! Canceled deleting giveaway ${giveaway.asRelId}`
 		});
 
 		toDashboard(interaction, id);
@@ -84,7 +83,7 @@ export default async function toDeleteGiveaway(
 		if (!accept2) {
 			interaction.followUp({
 				ephemeral: true,
-				content: `Alright! Cancelled deleting giveaway ${giveaway.asRelId}`
+				content: `Alright! Canceled deleting giveaway ${giveaway.asRelId}`
 			});
 
 			toDashboard(interaction, id);
@@ -95,13 +94,13 @@ export default async function toDeleteGiveaway(
 
 	await giveaway.delete({ withAnnouncementMessages: true });
 
-	new Logger({ prefix: "GIVEAWAY", interaction }).log(
+	new Logger({ label: "GIVEAWAY", interaction }).log(
 		`Deleted giveaway #${giveaway.id}`
 	);
 
 	interaction.editReply({
 		components: [],
-		content: `${Emojis.V} Successfully deleted giveaway ${giveaway.asRelId}.`,
+		content: `${Emojis.Check} Successfully deleted giveaway ${giveaway.asRelId}.`,
 		embeds: []
 	});
 }

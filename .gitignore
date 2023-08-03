@@ -1,19 +1,21 @@
 # Logs
-npm-debug.log*
 logs/
 *.log
+npm-debug.log*
 
 # Node
-node_modules/
 dist/
+node_modules/
 .npm
 
 # Windows
 desktop.ini
 
-# Env
-.env.test
+# ENV
 .env
 
-# VScode
-/.vscode
+# VSCode
+.vscode/
+
+# Prisma migrations
+prisma/migrations/

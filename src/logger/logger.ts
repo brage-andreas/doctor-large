@@ -1,8 +1,4 @@
-import {
-	DEFAULT_LOGGER_COLOR,
-	DEFAULT_LOGGER_PREFIX,
-	MAX_LOGGER_PREFIX_PAD as MAX_LOGGER_PREFIX_PAD_LENGTH
-} from "#constants";
+import { DEFAULT_LOGGER_COLOR, DEFAULT_LOGGER_PREFIX } from "#constants";
 import { type Color } from "#typings";
 import {
 	type ContextMenuCommandInteraction,
@@ -25,13 +21,13 @@ export default class Logger {
 	public color: Color = DEFAULT_LOGGER_COLOR;
 	public guild?: Guild;
 	public interaction?: AnyInteraction;
-	public prefix: string = DEFAULT_LOGGER_PREFIX;
+	public label: string = DEFAULT_LOGGER_PREFIX;
 
 	public constructor(options?: {
 		color?: Color;
 		guild?: Guild;
 		interaction?: AnyInteraction;
-		prefix?: string;
+		label?: string;
 	}) {
 		if (options) {
 			this.setOptions(options);
@@ -45,7 +41,7 @@ export default class Logger {
 			| ContextMenuCommandInteraction<"cached">
 			| Interaction<"cached">
 			| undefined;
-		prefix?: string | undefined;
+		label?: string | undefined;
 	}) {
 		if (options.color) {
 			this.color = options.color;
@@ -59,8 +55,8 @@ export default class Logger {
 			this.interaction = options.interaction;
 		}
 
-		if (options.prefix) {
-			this.prefix = formatType(options.prefix);
+		if (options.label) {
+			this.label = formatType(options.label);
 		}
 
 		return this;
@@ -77,7 +73,7 @@ export default class Logger {
 
 		if (this.guild) {
 			const { name, id } = this.guild;
-			const guildString = `${grey`Guild:`} ${name} ${grey`(${id})`}`;
+			const guildString = `${grey("Guild:")} ${name} ${grey(`(${id})`)}`;
 
 			toLog.push(guildString);
 		}
@@ -89,27 +85,31 @@ export default class Logger {
 
 	private _logInteraction(...messages: Array<unknown>) {
 		if (!this.interaction) {
-			throw new Error("`this.interaction` is not set");
+			throw new TypeError("`this.interaction` is not set");
 		}
 
 		const { channel, guild: interactionGuild, user } = this.interaction;
 		const guild = this.guild ?? interactionGuild;
 
-		const prefixArr = [`${grey`User:`} ${user.tag} ${grey(user.id)}`];
+		const prefixArr = [`${grey("User:")} ${user.tag} ${grey(user.id)}`];
 
 		if (channel) {
 			prefixArr.push(
-				`${grey`Channel:`} #${channel.name} ${grey`(${channel.id})`}`
+				`${grey("Channel:")} #${channel.name} ${grey(
+					`(${channel.id})`
+				)}`
 			);
 		}
 
-		prefixArr.push(`${grey`Guild:`} ${guild.name} ${grey`(${guild.id})`}`);
+		prefixArr.push(
+			`${grey("Guild:")} ${guild.name} ${grey(`(${guild.id})`)}`
+		);
 
-		const toLog = [prefixArr.join(grey` | `)];
+		const toLog = [prefixArr.join(grey(" | "))];
 
 		const commandString =
 			this.interaction.isChatInputCommand() &&
-			grey`>> ${this.interaction}`;
+			grey(`>> ${this.interaction}`);
 
 		if (commandString) {
 			toLog.push(commandString);
@@ -126,34 +126,25 @@ export default class Logger {
 			timeZone: "UTC"
 		});
 
-		const maxLength = Math.max(
-			this.prefix.length,
-			MAX_LOGGER_PREFIX_PAD_LENGTH
-		);
-
-		const prefix = grey("::").padStart(maxLength, " ");
+		const prefix = grey("::");
 
 		const color = getColorFn(this.color);
 
-		console.log(`${color(this.prefix)} ${grey(date)}`);
+		console.log(`${color(this.label)} ${grey(date)}`);
 
 		for (const item of itemsToLog) {
-			const isFunction = typeof item === "function";
-			const isObject = typeof item === "object";
-			const isError = item instanceof Error;
-
 			let string: string;
 
-			if (isError) {
+			if (item instanceof Error) {
 				string = item.stack ?? `${item.name}: ${item.message}`;
-			} else if (isObject || isFunction) {
+			} else if (typeof item === "object" || typeof item === "function") {
 				string = JSON.stringify(item, replacer, 2);
 			} else {
 				string = String(item);
 			}
 
 			for (const line of string.split("\n")) {
-				console.log(`${prefix} ${line}`);
+				console.log(`  ${prefix} ${line}`);
 			}
 		}
 

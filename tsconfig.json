@@ -15,10 +15,10 @@
 		"target": "ESNext",
 
 		"paths": {
-			"#components": ["./src/components.ts"],
+			"#components": ["./src/components/index.ts"],
 			"#constants": ["./src/constants.ts"],
 			"#database/*": ["./src/database/*"],
-			"#helpers/*": ["./src/helpers/*"],
+			"#helpers": ["./src/helpers/index.ts"],
 			"#logger": ["./src/logger/logger.ts"],
 			"#modules/*": ["./src/modules/*"],
 			"#scripts/*": ["./src/scripts/*"],

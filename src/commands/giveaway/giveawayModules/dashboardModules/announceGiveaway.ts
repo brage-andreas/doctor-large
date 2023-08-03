@@ -1,7 +1,7 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
-import getMissingPermissions from "#helpers/getMissingPermissions.js";
+import { getMissingPermissions } from "#helpers";
 import Logger from "#logger";
 import { oneLine, stripIndents } from "common-tags";
 import {
@@ -61,7 +61,7 @@ export default async function toAnnounceGiveaway(
 	`;
 
 	const rows = components.createRows(
-		components.selects.channelSelect,
+		components.selectMenus.channel,
 		components.buttons.back,
 		giveaway.channelId ? components.buttons.lastChannel : null
 	);
@@ -93,7 +93,7 @@ export default async function toAnnounceGiveaway(
 
 		if (
 			componentInteraction.customId ===
-				components.selects.channelSelect.customId ||
+				components.selectMenus.channel.customId ||
 			componentInteraction.customId ===
 				components.buttons.lastChannel.customId
 		) {
@@ -160,7 +160,7 @@ export default async function toAnnounceGiveaway(
 				}
 			});
 
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
+			new Logger({ label: "GIVEAWAY", interaction }).log(
 				`Announced giveaway #${id} in ${channel.name} (${channel.id})`
 			);
 

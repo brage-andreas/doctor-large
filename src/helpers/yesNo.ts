@@ -1,5 +1,6 @@
 import components from "#components";
 import { Emojis } from "#constants";
+import { type CustomIdCompatibleButtonStyle } from "#typings";
 import {
 	ButtonStyle,
 	ComponentType,
@@ -25,8 +26,8 @@ import {
 export default async function yesNo(options: {
 	respondToIgnore?: boolean;
 	timeActive?: number;
-	yesStyle?: ButtonStyle;
-	noStyle?: ButtonStyle;
+	yesStyle?: CustomIdCompatibleButtonStyle;
+	noStyle?: CustomIdCompatibleButtonStyle;
 	medium:
 		| ContextMenuCommandInteraction<"cached">
 		| Exclude<Interaction<"cached">, AutocompleteInteraction>
@@ -45,11 +46,9 @@ export default async function yesNo(options: {
 	const filter = options.filter ?? defaultFilter;
 	const time = options.timeActive ?? 60_000;
 
-	const { yes, no } = components.buttons;
-
 	const rows = components.createRows(
-		yes.component(yesStyle),
-		no.component(noStyle)
+		components.buttons.yes.component(yesStyle),
+		components.buttons.no.component(noStyle)
 	);
 
 	let message: Message<true>;
@@ -79,10 +78,10 @@ export default async function yesNo(options: {
 			});
 		}
 
-		collector.on("collect", async (collectedInteraction) => {
-			await collectedInteraction.deferUpdate().catch(() => null);
+		collector.on("collect", async (interaction) => {
+			await interaction.deferUpdate().catch(() => null);
 
-			if (collectedInteraction.customId === yes.customId) {
+			if (interaction.customId === components.buttons.yes.customId) {
 				resolve(undefined);
 			} else {
 				reject();

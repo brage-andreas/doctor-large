@@ -1,4 +1,5 @@
 import {
+	inlineCode,
 	type GuildTextBasedChannel,
 	type PermissionFlagsBits
 } from "discord.js";
@@ -27,7 +28,9 @@ export default function getMissingPermissions(
 		}
 
 		if (!permissions.has(permission)) {
-			missing.push(`\`${permission.split(/(?=[A-Z])/).join(" ")}\``);
+			missing.push(
+				inlineCode(`${permission.split(/(?=[A-Z])/).join(" ")}`)
+			);
 		}
 	}
 

@@ -1,7 +1,7 @@
 import components from "#components";
 import { Emojis, Prize } from "#constants";
 import type GiveawayManager from "#database/giveaway.js";
-import { ModalCollector } from "#helpers/ModalCollector.js";
+import { ModalCollector } from "#helpers";
 import Logger from "#logger";
 import { oneLine } from "common-tags";
 import { bold, type ButtonInteraction } from "discord.js";
@@ -45,7 +45,7 @@ export default async function toCreatePrize(
 			quantity
 		});
 
-		new Logger({ prefix: "GIVEAWAY", interaction }).log(
+		new Logger({ label: "GIVEAWAY", interaction }).log(
 			`Created prize #${id} in giveaway #${giveawayId}`
 		);
 

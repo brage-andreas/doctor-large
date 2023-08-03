@@ -1,11 +1,13 @@
 import { Colors, Emojis } from "#constants";
 import type ConfigManager from "#database/config.js";
+import ReportManager from "#database/report.js";
 import { type Config } from "@prisma/client";
 import { source } from "common-tags";
 import {
-	bold,
 	ChannelType,
 	EmbedBuilder,
+	bold,
+	inlineCode,
 	type Channel,
 	type ChannelResolvable,
 	type Client,
@@ -15,6 +17,7 @@ import {
 	type GuildTextBasedChannel,
 	type Role
 } from "discord.js";
+import { type MessageReportModule, type UserReportModule } from "./Report.js";
 
 function channel(
 	guild: Guild,
@@ -149,7 +152,7 @@ export default class ConfigModule
 		return this.protectedChannelsIds.has(id);
 	}
 
-	public createCaseLog() {
+	public postCaseLog() {
 		// TODO
 	}
 
@@ -165,12 +168,80 @@ export default class ConfigModule
 		// TODO
 	}
 
-	public createMessageLog() {
+	public postMessageLog() {
 		// TODO
 	}
 
-	public createReport() {
-		// TODO
+	public async postReport(
+		reportOrReportId: MessageReportModule | UserReportModule | number
+	) {
+		if (!this.reportEnabled) {
+			return false;
+		}
+
+		if (!this.reportChannel) {
+			return false;
+		}
+
+		let report: MessageReportModule | UserReportModule;
+
+		if (typeof reportOrReportId === "object") {
+			report = reportOrReportId;
+		} else {
+			const reportManager = new ReportManager(this.guild);
+			const res = await reportManager.get(reportOrReportId);
+
+			if (!res) {
+				return false;
+			}
+
+			report = res;
+		}
+
+		const message = await report.generatePost();
+
+		if (!this.reportChannel.isTextBased()) {
+			const thread = await this.reportChannel.threads
+				.create({
+					message,
+					name: `Report #${report.guildRelativeId} by ${report.authorUserTag}`
+				})
+				.catch(() => null);
+
+			if (!thread) {
+				return false;
+			}
+
+			report.manager.edit({
+				where: {
+					id: report.id
+				},
+				data: {
+					logChannelId: thread.id,
+					logMessageId: thread.id
+				}
+			});
+
+			return true;
+		}
+
+		const msg = await this.reportChannel.send(message).catch(() => null);
+
+		if (!msg) {
+			return false;
+		}
+
+		report.manager.edit({
+			where: {
+				id: report.id
+			},
+			data: {
+				logChannelId: this.reportChannelId,
+				logMessageId: msg.id
+			}
+		});
+
+		return true;
 	}
 
 	public setProtectedChannels() {
@@ -199,7 +270,9 @@ export default class ConfigModule
 				return `${Emojis.On} • ${Emojis.Error} Channel not found.`;
 			}
 
-			return `${Emojis.On} • ${channel} (\`#${channel.name}\`, \`${channelId}\`)`;
+			return `${Emojis.On} • ${channel} (${inlineCode(
+				`#${channel.name}`
+			)}), ${inlineCode(channelId)})`;
 		};
 
 		const pinArchiveStr = this.pinArchiveChannel
@@ -220,8 +293,10 @@ export default class ConfigModule
 						const type = ConfigModule.getTypeFromChannel(channel);
 
 						return channel
-							? `→ ${channel} (${type})`
-							: `→ ${Emojis.Warn} Unknown channel \`${id}\``;
+							? `* ${channel} (${type})`
+							: `* ${Emojis.Warn} Unknown channel ${inlineCode(
+									id
+							  )}`;
 					})
 					.slice(0, 5)}
 				${
@@ -242,8 +317,8 @@ export default class ConfigModule
 						const role = this.guild.roles.cache.get(id);
 
 						return role
-							? `→ ${role}`
-							: `→ ${Emojis.Warn} Unknown role ${id}`;
+							? `* ${role}`
+							: `* ${Emojis.Warn} Unknown role ${id}`;
 					})
 					.slice(0, 5)}
 				${restrictRoles_.length > 5 ? `and ${restrictRoles_.length - 5} more...` : ""}

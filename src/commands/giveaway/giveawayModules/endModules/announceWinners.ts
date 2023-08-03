@@ -1,7 +1,7 @@
 import components from "#components";
 import { Emojis } from "#constants";
 import GiveawayManager from "#database/giveaway.js";
-import getMissingPermissions from "#helpers/getMissingPermissions.js";
+import { getMissingPermissions } from "#helpers";
 import Logger from "#logger";
 import type GiveawayModule from "#modules/Giveaway.js";
 import { oneLine, stripIndents } from "common-tags";
@@ -122,7 +122,7 @@ export async function toAnnounceWinners(
 	}
 
 	new Logger({
-		prefix: "GIVEAWAY"
+		label: "GIVEAWAY"
 	}).log(
 		`Announced winners of giveaway #${id} in #${channel.name} (${channel.id})`
 	);
@@ -250,7 +250,7 @@ export async function reannounceWinners(
 	});
 
 	new Logger({
-		prefix: "GIVEAWAY"
+		label: "GIVEAWAY"
 	}).log(
 		`Reannounced winners of giveaway #${giveaway.id} in #${channel.name} (${channel.id})`
 	);
@@ -303,7 +303,7 @@ export async function autoAnnounceWinners(
 
 	new Logger({
 		color: "grey",
-		prefix: "GIVEAWAY",
+		label: "GIVEAWAY",
 		guild: giveaway.guild
 	}).log(
 		`Automatically announced winners of giveaway #${giveaway.id}. Sent DMs to winners`

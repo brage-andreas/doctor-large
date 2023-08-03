@@ -1,6 +1,6 @@
 import components from "#components";
 import GiveawayManager from "#database/giveaway.js";
-import { ModalCollector } from "#helpers/ModalCollector.js";
+import { ModalCollector } from "#helpers";
 import Logger from "#logger";
 import { type ChatInputCommandInteraction } from "discord.js";
 import toDashboard from "./dashboard.js";
@@ -47,7 +47,7 @@ export default async function (
 			title
 		});
 
-		new Logger({ prefix: "GIVEAWAY", interaction }).log(
+		new Logger({ label: "GIVEAWAY", interaction }).log(
 			`Created giveaway with ID #${id}`
 		);
 

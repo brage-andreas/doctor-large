@@ -1,6 +1,6 @@
 import components from "#components";
 import type GiveawayManager from "#database/giveaway.js";
-import { listify } from "#helpers/listify.js";
+import { listify } from "#helpers";
 import Logger from "#logger";
 import { stripIndents } from "common-tags";
 import { type ButtonInteraction } from "discord.js";
@@ -27,10 +27,11 @@ export default async function toSetRequiredRoles(
 			}
 		`;
 
-	const { back, clear } = components.buttons;
-	const { roleSelect } = components.selects;
-
-	const rows = components.createRows(roleSelect, back, clear);
+	const rows = components.createRows(
+		components.selectMenus.role,
+		components.buttons.back,
+		components.buttons.clear
+	);
 
 	const updateMsg = await interaction.editReply({
 		content: chooseRequiredRoleStr,
@@ -44,21 +45,17 @@ export default async function toSetRequiredRoles(
 	await component.deferUpdate();
 
 	switch (component.customId) {
-		case back.customId: {
+		case components.buttons.back.customId: {
 			break;
 		}
 
-		case roleSelect.customId: {
-			if (!component.isRoleSelectMenu()) {
-				return;
-			}
-
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
-				`Edited required roles of giveaway #${giveaway.id}`
+		case components.buttons.clear.customId: {
+			new Logger({ label: "GIVEAWAY", interaction }).log(
+				`Cleared required roles of giveaway #${giveaway.id}`
 			);
 
 			await giveaway.edit({
-				requiredRolesIds: component.values,
+				requiredRolesIds: [],
 				nowOutdated: {
 					announcementMessage: true
 				}
@@ -67,13 +64,17 @@ export default async function toSetRequiredRoles(
 			break;
 		}
 
-		case clear.customId: {
-			new Logger({ prefix: "GIVEAWAY", interaction }).log(
-				`Cleared required roles of giveaway #${giveaway.id}`
+		case components.selectMenus.role.customId: {
+			if (!component.isRoleSelectMenu()) {
+				return;
+			}
+
+			new Logger({ label: "GIVEAWAY", interaction }).log(
+				`Edited required roles of giveaway #${giveaway.id}`
 			);
 
 			await giveaway.edit({
-				requiredRolesIds: [],
+				requiredRolesIds: component.values,
 				nowOutdated: {
 					announcementMessage: true
 				}

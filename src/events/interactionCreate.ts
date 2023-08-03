@@ -1,10 +1,13 @@
-import { RegExp } from "#constants";
+import { Regex } from "#constants";
 import commands from "#scripts/loadCommands.js";
 import { type EventExport } from "#typings";
 import { stripIndents } from "common-tags";
 import { Events, type Interaction } from "discord.js";
-import acceptPrize from "./giveawayListeners/acceptPrize.js";
-import enterGiveaway from "./giveawayListeners/enterGiveaway.js";
+import acceptPrize from "./buttons/acceptPrize.js";
+import enterGiveaway from "./buttons/enterGiveaway.js";
+import markReportProcessed from "./buttons/markReportProcessed.js";
+import markReportUnprocessed from "./buttons/markReportUnprocessed.js";
+import memberInfo from "./buttons/memberInfo.js";
 
 const execute = async (interaction: Interaction) => {
 	if (!interaction.inGuild()) {
@@ -33,16 +36,32 @@ const execute = async (interaction: Interaction) => {
 	}
 
 	if (interaction.isButton()) {
-		const { AcceptPrizeCustomId, EnterGiveawayCustomId } = RegExp;
+		if (Regex.AcceptPrizeCustomId.test(interaction.customId)) {
+			await acceptPrize(interaction);
 
-		if (EnterGiveawayCustomId.test(interaction.customId)) {
+			return;
+		}
+
+		if (Regex.EnterGiveawayCustomId.test(interaction.customId)) {
 			await enterGiveaway(interaction);
 
 			return;
 		}
 
-		if (AcceptPrizeCustomId.test(interaction.customId)) {
-			await acceptPrize(interaction);
+		if (Regex.MarkReportProcessed.test(interaction.customId)) {
+			await markReportProcessed(interaction);
+
+			return;
+		}
+
+		if (Regex.MarkReportUnprocessed.test(interaction.customId)) {
+			await markReportUnprocessed(interaction);
+
+			return;
+		}
+
+		if (Regex.MemberInfoCustomId.test(interaction.customId)) {
+			await memberInfo(interaction);
 
 			return;
 		}
@@ -69,7 +88,7 @@ const execute = async (interaction: Interaction) => {
 
 	if (interaction.isChatInputCommand()) {
 		if (!command.handle.chatInput) {
-			throw new Error(
+			throw new TypeError(
 				`Command '${interaction.commandName}' called as type 'chatInput' is missing handle of same type`
 			);
 		}
@@ -77,7 +96,7 @@ const execute = async (interaction: Interaction) => {
 		await command.handle.chatInput(interaction);
 	} else if (interaction.isAutocomplete()) {
 		if (!command.handle.autocomplete) {
-			throw new Error(
+			throw new TypeError(
 				`Command '${interaction.commandName}' called as type 'autocomplete' is missing handle of same type`
 			);
 		}
@@ -85,7 +104,7 @@ const execute = async (interaction: Interaction) => {
 		await command.handle.autocomplete(interaction);
 	} else if (interaction.isContextMenuCommand()) {
 		if (!command.handle.contextMenu) {
-			throw new Error(
+			throw new TypeError(
 				`Command '${interaction.commandName}' called as type 'contextMenu' is missing handle of same type`
 			);
 		}
@@ -94,7 +113,7 @@ const execute = async (interaction: Interaction) => {
 	}
 };
 
-export const getEvent: () => EventExport = () => ({
+export const getEvent: EventExport = () => ({
 	event: Events.InteractionCreate,
 	execute
 });

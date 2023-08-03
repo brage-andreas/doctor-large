@@ -1,18 +1,28 @@
-import { Colors, RegExp } from "#constants";
+import { ColorsHex, Regex } from "#constants";
 import {
-	EmbedBuilder,
 	hideLinkEmbed,
 	hyperlink,
 	italic,
+	type APIEmbed,
 	type Attachment,
 	type Client,
 	type Message
 } from "discord.js";
 
-export function parseMessageURL(url: string) {
-	const match = url.match(RegExp.MessageURL)?.groups;
+export function messageURL<
+	G extends string,
+	C extends string,
+	M extends string
+>(guildId: G, channelId: C, messageId: M) {
+	return `https://discord.com/channels/${guildId}/${channelId}/${messageId}` as const;
+}
 
-	if (!match) {
+export function parseMessageURL(
+	url: string
+): { guildId: string; channelId: string; messageId: string } | null {
+	const match = url.match(Regex.MessageURL)?.groups;
+
+	if (!match?.guildId || !match.channelId || !match.channelId) {
 		return null;
 	}
 
@@ -21,15 +31,18 @@ export function parseMessageURL(url: string) {
 
 export async function messageFromURL(
 	client: Client<true>,
-	data: string | { guildId: string; channelId: string; messageId: string }
-) {
-	const data_ = typeof data === "string" ? parseMessageURL(data) : data;
+	dataOrURL:
+		| string
+		| { guildId: string; channelId: string; messageId: string }
+): Promise<Message<true> | null> {
+	const data =
+		typeof dataOrURL === "string" ? parseMessageURL(dataOrURL) : dataOrURL;
 
-	if (!data_) {
-		return false;
+	if (!data) {
+		return null;
 	}
 
-	const { guildId, channelId, messageId } = data_;
+	const { guildId, channelId, messageId } = data;
 
 	const guild = client.guilds.cache.get(guildId);
 
@@ -99,20 +112,27 @@ const isValidAttachment = (attachment: Attachment) =>
 		attachment.contentType ?? ""
 	) &&
 	[".jpg", ".png", ".gif"].some((e) =>
-		(attachment.name ?? "").toLowerCase().endsWith(e)
+		attachment.name.toLowerCase().endsWith(e)
 	);
 
-export const messageToEmbed = (message: Message<true>) => {
-	const embed = new EmbedBuilder()
-		.setAuthor({
-			iconURL: message.author.displayAvatarURL(),
-			name: `${message.author.tag} (${message.author.id})`
-		})
-		.setColor(Colors.EmbedInvisible)
-		.setFooter({ text: `#${message.channel.name}` })
-		.setTimestamp(message.createdAt);
+export const messageToEmbed = (
+	message: Message<true>,
+	options?: { withIds?: boolean }
+) => {
+	const footerText = options?.withIds
+		? `${message.id} • #${message.channel.name} (${message.channelId})`
+		: `#${message.channel.name}`;
 
-	const content: Array<string> = [];
+	const embed: APIEmbed = {
+		author: {
+			icon_url: message.author.displayAvatarURL(),
+			name: `${message.author.tag} (${message.author.id})`,
+			url: message.url
+		},
+		color: ColorsHex.EmbedInvisible,
+		footer: { text: footerText },
+		timestamp: message.createdAt.toISOString()
+	};
 
 	if (message.embeds.length) {
 		const emb = message.embeds.find(
@@ -122,13 +142,15 @@ export const messageToEmbed = (message: Message<true>) => {
 		const url = emb?.image?.url ?? emb?.thumbnail?.url;
 
 		if (url) {
-			embed.setImage(url);
+			embed.image = { url };
 		}
 	}
 
+	const content: Array<string> = [];
+
 	if (message.attachments.size) {
-		const attachment = message.attachments.find((a) =>
-			isValidAttachment(a)
+		const attachment = message.attachments.find((attachment) =>
+			isValidAttachment(attachment)
 		);
 
 		if (message.attachments.size > 1) {
@@ -145,7 +167,7 @@ export const messageToEmbed = (message: Message<true>) => {
 		}
 
 		if (attachment) {
-			embed.setImage(attachment.url);
+			embed.image = { url: attachment.url };
 		}
 	}
 
@@ -155,7 +177,7 @@ export const messageToEmbed = (message: Message<true>) => {
 		content.push(italic("No content."));
 	}
 
-	embed.setDescription(content.join("\n\n") || null);
+	embed.description = content.join("\n\n") || undefined;
 
 	return embed;
 };

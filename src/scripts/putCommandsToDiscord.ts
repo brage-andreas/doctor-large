@@ -1,4 +1,4 @@
-import { RegExp } from "#constants";
+import { Regex } from "#constants";
 import { REST } from "@discordjs/rest";
 import {
 	Routes,
@@ -12,52 +12,67 @@ function getCommandData() {
 	const rawCommandData = [...new Set(commands.values())];
 
 	return rawCommandData.flatMap(({ data }) =>
-		[data.chatInput, data.contextMenu].filter(Boolean)
+		[
+			data.chatInput,
+			data.contextMenu,
+			data.messageContextMenu,
+			data.userContextMenu
+		].filter(Boolean)
 	) as Array<RESTPostAPIApplicationCommandsJSONBody>;
 }
 
 export default async function putCommandsToDiscord(
 	{ clear }: { clear: boolean } = { clear: false }
 ) {
-	if (!process.env.BOT_TOKEN) {
-		throw new Error("'BOT_TOKEN' option is not defined in .env");
+	if (!process.env.DISCORD_APPLICATION_ID) {
+		throw new TypeError("'DISCORD_APPLICATION_ID' not defined in .env");
 	}
 
-	if (!process.env.CLIENT_ID) {
-		throw new Error("'CLIENT_ID' option not defined in .env");
+	if (!process.env.DISCORD_APPLICATION_TOKEN) {
+		throw new TypeError(
+			"'DISCORD_APPLICATION_TOKEN' is not defined in .env"
+		);
+	}
+
+	if (
+		!Regex.DiscordApplicationToken.test(
+			process.env.DISCORD_APPLICATION_TOKEN
+		)
+	) {
+		throw new TypeError(
+			"'DISCORD_APPLICATION_TOKEN' defined in .env is faulty"
+		);
 	}
 
 	const {
-		BOT_TOKEN: token,
-		CLIENT_ID: clientId,
+		DISCORD_APPLICATION_ID: applicationId,
+		DISCORD_APPLICATION_TOKEN: token,
 		GUILD_ID: guildId
 	} = process.env;
 
-	if (!RegExp.Id.test(clientId)) {
-		throw new Error(
-			`'CLIENT_ID' option defined in .env is faulty: ${clientId}`
+	if (!Regex.Snowflake.test(applicationId)) {
+		throw new TypeError(
+			`'DISCORD_APPLICATION_ID' defined in .env is faulty: ${applicationId}`
 		);
 	}
 
-	if (guildId && !RegExp.Id.test(guildId)) {
-		throw new Error(
-			`'GUILD_ID' option defined in .env is faulty: ${guildId}`
-		);
+	if (guildId && !Regex.Snowflake.test(guildId)) {
+		throw new TypeError(`'GUILD_ID' defined in .env is faulty: ${guildId}`);
 	}
-
-	const commandData = !clear ? getCommandData() : [];
 
 	const rest = new REST().setToken(token);
 
-	const route = guildId
-		? Routes.applicationGuildCommands(clientId, guildId)
-		: Routes.applicationCommands(clientId);
+	const body = clear ? [] : getCommandData();
 
-	await rest
-		.put(route, { body: commandData })
-		.then(() => {
-			const suffix = guildId ? `in guild: ${guildId}` : "globally";
-			console.log(`Put ${commandData.length} commands ${suffix}`);
-		})
-		.catch(console.log);
+	const route = guildId
+		? Routes.applicationGuildCommands(applicationId, guildId)
+		: Routes.applicationCommands(applicationId);
+
+	await rest.put(route, { body });
+
+	console.log(
+		`Put ${body.length} commands ${
+			guildId ? `in guild: ${guildId}` : "globally"
+		}`
+	);
 }

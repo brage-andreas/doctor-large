@@ -1,9 +1,10 @@
 import components from "#components";
 import { Colors, Emojis } from "#constants";
 import ConfigModule from "#modules/Config.js";
-import { source } from "common-tags";
+import { stripIndents } from "common-tags";
 import {
 	EmbedBuilder,
+	inlineCode,
 	type ButtonInteraction,
 	type ChannelSelectMenuInteraction,
 	type ChannelType
@@ -26,8 +27,8 @@ async function roles(
 		const role = interaction.guild.roles.cache.get(id);
 
 		return role
-			? `→ \`${role.id}\` ${role} (\`@${role.name}\`)`
-			: `→ ${Emojis.Error} Role \`${id}\` not found.`;
+			? `* \`${role.id}\` ${role} (@${role.name})`
+			: `* ${Emojis.Error} Role ${inlineCode(id)} not found.`;
 	});
 
 	const nameString = options.type.split(/(?=[A-Z])/).join(" ");
@@ -36,14 +37,14 @@ async function roles(
 	const embed = new EmbedBuilder()
 		.setTitle(name)
 		.setColor(roleIds.size ? Colors.Green : Colors.Yellow)
-		.setDescription(source`
+		.setDescription(stripIndents`
 			Roles:
-			  ${rolesStringArray}
+			${rolesStringArray}
 		`);
 
 	const rows = components.createRows(
-		components.selects.roleSelect.component(),
-		components.buttons.clear.component().setDisabled(!roleIds.size),
+		components.selectMenus.role,
+		components.set.disabled(components.buttons.clear, !roleIds.size),
 		components.buttons.back
 	);
 
@@ -83,9 +84,9 @@ async function roles(
 					break;
 				}
 
-				case components.selects.roleSelect.customId: {
+				case components.selectMenus.role.customId: {
 					if (!interaction.isRoleSelectMenu()) {
-						throw new Error(
+						throw new TypeError(
 							"Role select menu component is not of type RoleSelectMenu"
 						);
 					}
@@ -97,7 +98,7 @@ async function roles(
 
 				case components.buttons.clear.customId: {
 					if (!interaction.isButton()) {
-						throw new Error(
+						throw new TypeError(
 							"Button component is not of type Button"
 						);
 					}
@@ -151,8 +152,8 @@ async function channels(
 			const type = ConfigModule.getTypeFromChannel(channel);
 
 			return channel
-				? `→ \`${channel.id}\` ${channel} (${type})`
-				: `→ ${Emojis.Warn} Unknown channel \`${id}\``;
+				? `* \`${channel.id}\` ${channel} (${type})`
+				: `* ${Emojis.Warn} Unknown channel \`${id}\``;
 		});
 
 	const embed = new EmbedBuilder()
@@ -169,15 +170,12 @@ async function channels(
 	if (!channelIdsArray) {
 		embed.setDescription(`${channelOrChannels}: None`);
 	} else {
-		embed.setDescription(source`
-			${channelOrChannels}
-			  ${channelStringArray}
-		`);
+		embed.setDescription(`${channelOrChannels}:\n${channelStringArray}`);
 	}
 
 	const rows = components.createRows(
-		components.selects.channelSelect.component(options),
-		components.buttons.clear.component().setDisabled(isEmpty),
+		components.selectMenus.channel.component(options),
+		components.set.disabled(components.buttons.clear, isEmpty),
 		components.buttons.back
 	);
 
@@ -217,9 +215,9 @@ async function channels(
 					break;
 				}
 
-				case components.selects.channelSelect.customId: {
+				case components.selectMenus.channel.customId: {
 					if (!interaction.isChannelSelectMenu()) {
-						throw new Error(
+						throw new TypeError(
 							"Channel select menu component is not of type ChannelSelectMenu"
 						);
 					}
@@ -231,7 +229,7 @@ async function channels(
 
 				case components.buttons.clear.customId: {
 					if (!interaction.isButton()) {
-						throw new Error(
+						throw new TypeError(
 							"Button component is not of type Button"
 						);
 					}
