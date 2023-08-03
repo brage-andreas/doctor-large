@@ -1,7 +1,14 @@
 import components from "#components";
 import { Colors, Emojis } from "#constants";
 import { default as GiveawayManager } from "#database/giveaway.js";
-import { commandMention, listify, longstamp, messageURL, s } from "#helpers";
+import {
+	commandMention,
+	getTag,
+	listify,
+	longstamp,
+	messageURL,
+	s
+} from "#helpers";
 import {
 	type CountPrizeWinner,
 	type GiveawayId,
@@ -56,7 +63,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 	public guildRelativeId: number;
 	public hostNotified: HostNotified;
 	public hostUserId: string;
-	public hostUserTag: string;
+	public hostUsername: string;
 	public id: GiveawayId;
 	public lastEditedAt: Date;
 	public minimumAccountAge: string | null;
@@ -78,6 +85,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 	// -- Props --
 	public asRelId: `#${number}`;
+	public host: string;
 	// -----------
 
 	// -- Cache --
@@ -106,8 +114,8 @@ export default class GiveawayModule implements ModifiedGiveaway {
 		this.entriesLocked = data.entriesLocked;
 		this.hostNotified = data.hostNotified;
 		this.lastEditedAt = data.lastEditedAt;
+		this.hostUsername = data.hostUsername;
 		this.description = data.description;
-		this.hostUserTag = data.hostUserTag;
 		this.hostUserId = data.hostUserId;
 		this.channelId = data.channelId;
 		this.createdAt = data.createdAt;
@@ -150,6 +158,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 		// -- Props --
 		this.asRelId = `#${this.guildRelativeId}`;
+		this.host = getTag({ tag: this.hostUsername, id: this.hostUserId });
 		// -----------
 	}
 
@@ -648,7 +657,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 		const createdStr = `* Created: ${longstamp(this.createdAt)}`;
 		const entriesStr = `* Entries: ${this.entriesUserIds.size}`;
-		const hostStr = `* Host: ${this.hostUserTag} (${this.hostUserId})`;
+		const hostStr = `* Host: ${this.host} (${this.hostUserId})`;
 		const numberOfWinnersStr = `* Number of winners: ${this.winnerQuantity}`;
 
 		const endedStr = `* Ended: ${
@@ -777,7 +786,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			.setDescription(this.description)
 			.setColor(Colors.Green)
 			.setFooter({
-				text: `Giveaway ${this.asRelId} • Hosted by ${this.hostUserTag}`
+				text: `Giveaway ${this.asRelId} • Hosted by ${this.host}`
 			})
 			.setFields(
 				{
@@ -809,7 +818,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			.setColor(Colors.Green)
 			.setTitle(`${Emojis.Tada} Giveaway ${this.asRelId} has ended!`)
 			.setFooter({
-				text: `Giveaway ${this.asRelId} • Hosted by ${this.hostUserTag}`
+				text: `Giveaway ${this.asRelId} • Hosted by ${this.host}`
 			}).setDescription(stripIndents`
 			${Emojis.StarEyes} The winners have been notified in DMs.
 			If you have DMs turned off, use ${myGiveawaysMention}.

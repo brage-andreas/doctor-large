@@ -38,7 +38,7 @@ export class UserReportModule
 
 	public anonymous!: boolean;
 	public authorUserId!: string;
-	public authorUserTag!: string;
+	public authorUsername!: string;
 	public comment!: string;
 	public createdAt!: Date;
 	public guildId!: string;
@@ -48,10 +48,10 @@ export class UserReportModule
 	public logMessageId!: string | null;
 	public processedAt!: Date | null;
 	public processedByUserId!: string | null;
-	public processedByUserTag!: string | null;
+	public processedByUsername!: string | null;
 	public referencedBy!: Array<CaseWithIncludes>;
 	public targetUserId!: string;
-	public targetUserTag!: string;
+	public targetUsername!: string;
 	public type!: ReportType;
 
 	public constructor(manager: ReportManager, data: ReportWithIncludes) {
@@ -61,25 +61,25 @@ export class UserReportModule
 	public get author() {
 		return getTag({
 			id: this.authorUserId,
-			tag: this.authorUserTag
+			tag: this.authorUsername
 		});
 	}
 
 	public get target() {
 		return getTag({
 			id: this.targetUserId,
-			tag: this.targetUserTag
+			tag: this.targetUsername
 		});
 	}
 
 	public get processedBy() {
-		if (!this.processedByUserId || !this.processedByUserTag) {
+		if (!this.processedByUserId || !this.processedByUsername) {
 			return null;
 		}
 
 		return getTag({
 			id: this.processedByUserId,
-			tag: this.processedByUserTag
+			tag: this.processedByUsername
 		});
 	}
 
@@ -202,7 +202,7 @@ export class UserReportModule
 
 		this.anonymous = data.anonymous;
 		this.authorUserId = data.authorUserId;
-		this.authorUserTag = data.authorUserTag;
+		this.authorUsername = data.authorUsername;
 		this.comment = data.comment;
 		this.createdAt = data.createdAt;
 		this.guildId = data.guildId;
@@ -212,10 +212,10 @@ export class UserReportModule
 		this.logMessageId = data.logMessageId;
 		this.processedAt = data.processedAt;
 		this.processedByUserId = data.processedByUserId;
-		this.processedByUserTag = data.processedByUserTag;
+		this.processedByUsername = data.processedByUsername;
 		this.referencedBy = data.referencedBy;
 		this.targetUserId = data.targetUserId;
-		this.targetUserTag = data.targetUserTag;
+		this.targetUsername = data.targetUsername;
 		this.type = data.type;
 	}
 }
@@ -268,7 +268,7 @@ export class MessageReportModule extends UserReportModule {
 
 		const author: APIEmbedAuthor = this.anonymous
 			? { name: "Anonymous user" }
-			: { name: `${this.authorUserTag} (${this.authorUserId})` };
+			: { name: `${this.author} (${this.authorUserId})` };
 
 		return {
 			author,

@@ -36,7 +36,7 @@ export default async function markReportProcessed(
 		.edit({
 			processedAt: interaction.createdAt,
 			processedByUserId: interaction.user.id,
-			processedByUserTag: interaction.user.tag
+			processedByUsername: interaction.user.tag
 		})
 		.then(() => true)
 		.catch(() => false);
