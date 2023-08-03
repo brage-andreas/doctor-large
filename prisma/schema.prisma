@@ -86,12 +86,12 @@ model Giveaway {
 }
 
 model Note {
-    id                  Int      @id @default(autoincrement())
-    guildId             String
-    createdAt           DateTime @default(now())
-    guildUserRelativeId Int
+    id              Int      @id @default(autoincrement())
+    guildId         String
+    createdAt       DateTime @default(now())
+    guildRelativeId Int
 
-    authorId       String
+    authorUserId   String
     authorUsername String
     content        String
     referencedBy   Case[] @relation("noteReference")
