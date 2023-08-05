@@ -64,7 +64,7 @@ const DynamicRegex = {
 		`^member-info-(?<id>${getFlat("Snowflake")})-(?<prefix>.+)$`
 	),
 	/**
-	 * https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/(?<guildId>{Snowflake})\/(?<channelId>{Snowflake})\/(?<messageId>{Snowflake})
+	 * `https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/(?<guildId>{Snowflake})\/(?<channelId>{Snowflake})\/(?<messageId>{Snowflake})`
 	 */
 	MessageURL: new RegExp(
 		oneLineTrim`
@@ -72,6 +72,16 @@ const DynamicRegex = {
 			(?<guildId>${getFlat("Snowflake")})\\/
 			(?<channelId>${getFlat("Snowflake")})\\/
 			(?<messageId>${getFlat("Snowflake")})
+		`
+	),
+	/**
+	 * `/preview-message-(?<channelId>{Snowflake})-(?<messageId>{Snowflake})/`
+	 */
+	PreviewMessage: new RegExp(
+		oneLineTrim`
+			^preview-message-
+			(?<channelId>${getFlat("Snowflake")})-
+			(?<messageId>${getFlat("Snowflake")})$
 		`
 	)
 } as const;
