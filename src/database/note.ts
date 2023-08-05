@@ -1,8 +1,5 @@
-import {
-	type MessageReportModule,
-	type UserReportModule
-} from "#modules/Report.js";
-import { type ReportWithIncludes } from "#typings";
+import { NoteModule } from "#modules/Note.js";
+import { type NoteWithIncludes } from "#typings";
 import { type Prisma } from "@prisma/client";
 import { type Guild } from "discord.js";
 import prisma from "./prisma.js";
@@ -16,19 +13,13 @@ export default class NoteManager {
 	}
 
 	public toModule(
-		data: ReportWithIncludes
-	): MessageReportModule | UserReportModule;
-	public toModule(
-		data: ReportWithIncludes | null | undefined
-	): MessageReportModule | UserReportModule | null | undefined;
-	public toModule(
-		data: ReportWithIncludes | null | undefined
-	): MessageReportModule | UserReportModule | null | undefined {
+		data: NoteWithIncludes | null | undefined
+	): NoteModule | null | undefined {
 		if (!data) {
 			return null;
 		}
 
-		//return note
+		return new NoteModule(this, data);
 	}
 
 	public async get(noteId: number) {
@@ -82,9 +73,30 @@ export default class NoteManager {
 		return data.map((data) => this.toModule(data));
 	}
 
-	public async edit(args: Prisma.ReportUpdateArgs) {
-		const data_ = await this.edit(args);
+	public async edit(args: Prisma.NoteUpdateArgs) {
+		const data_ = await this.prisma.update({
+			...args,
+			include: {
+				referencedBy: {
+					include: {
+						note: true,
+						reference: true,
+						referencedBy: true,
+						report: true
+					}
+				}
+			}
+		});
 
 		return this.toModule(data_);
+	}
+
+	public async delete(noteId: number) {
+		return await this.prisma
+			.delete({
+				where: { id: noteId }
+			})
+			.then(() => true)
+			.catch(() => false);
 	}
 }

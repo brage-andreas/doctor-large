@@ -1,17 +1,9 @@
-import type NoteManager from "#database/note.js";
-
 import { ColorsHex } from "#constants";
+import type NoteManager from "#database/note.js";
 import { s } from "#helpers";
 import { type CaseWithIncludes, type NoteWithIncludes } from "#typings";
-import { type Report } from "@prisma/client";
 import { type Client, type EmbedData, type Guild } from "discord.js";
 import getTag from "../helpers/getTag.js";
-export const isMessageReport = (
-	data: Report
-): data is Report & {
-	targetMessageChannelId: string;
-	targetMessageId: string;
-} => Boolean(data.targetMessageChannelId) && Boolean(data.targetMessageId);
 
 export class NoteModule implements NoteWithIncludes {
 	public client: Client<true>;
