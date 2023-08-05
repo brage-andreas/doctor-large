@@ -8,6 +8,7 @@ import enterGiveaway from "./buttons/enterGiveaway.js";
 import markReportProcessed from "./buttons/markReportProcessed.js";
 import markReportUnprocessed from "./buttons/markReportUnprocessed.js";
 import memberInfo from "./buttons/memberInfo.js";
+import previewMessage from "./buttons/previewMessage.js";
 
 const execute = async (interaction: Interaction) => {
 	if (!interaction.inGuild()) {
@@ -62,6 +63,12 @@ const execute = async (interaction: Interaction) => {
 
 		if (Regex.MemberInfoCustomId.test(interaction.customId)) {
 			await memberInfo(interaction);
+
+			return;
+		}
+
+		if (Regex.PreviewMessage.test(interaction.customId)) {
+			await previewMessage(interaction);
 
 			return;
 		}
