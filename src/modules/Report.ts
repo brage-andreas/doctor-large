@@ -102,7 +102,7 @@ export class UserReportModule
 		return this;
 	}
 
-	public async editLog() {
+	public async editLog(): Promise<boolean> {
 		if (!this.logChannelId || !this.logMessageId) {
 			return false;
 		}
@@ -304,6 +304,7 @@ export class MessageReportModule extends UserReportModule {
 		const messageEmbed = messageToEmbed(message, { withIds: true });
 
 		const messageButtonRow = components.createRows(
+			components.buttons.previewMessage(message.channelId, message.id),
 			components.buttons.url({ label: "Go to message", url: message.url })
 		);
 
