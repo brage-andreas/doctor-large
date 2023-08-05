@@ -64,7 +64,7 @@ const DynamicRegex = {
 		`^member-info-(?<id>${getFlat("Snowflake")})-(?<prefix>.+)$`
 	),
 	/**
-	 * https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/(?<guildId>{Snowflake})\/(?<channelId>{Snowflake})\/(?<messageId>{Snowflake})
+	 * `https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/(?<guildId>{Snowflake})\/(?<channelId>{Snowflake})\/(?<messageId>{Snowflake})`
 	 */
 	MessageURL: new RegExp(
 		oneLineTrim`
@@ -72,6 +72,16 @@ const DynamicRegex = {
 			(?<guildId>${getFlat("Snowflake")})\\/
 			(?<channelId>${getFlat("Snowflake")})\\/
 			(?<messageId>${getFlat("Snowflake")})
+		`
+	),
+	/**
+	 * `/preview-message-(?<channelId>{Snowflake})-(?<messageId>{Snowflake})/`
+	 */
+	PreviewMessage: new RegExp(
+		oneLineTrim`
+			^preview-message-
+			(?<channelId>${getFlat("Snowflake")})-
+			(?<messageId>${getFlat("Snowflake")})$
 		`
 	)
 } as const;
@@ -83,21 +93,21 @@ export const Regex = {
 
 export const ACTIVITIES: Array<ActivitiesOptions> = [
 	{ type: ActivityType.Listening, name: "Rocket Jump Waltz (12 hours)" },
-	{ type: ActivityType.Playing, name: "bowling!" },
-	{ type: ActivityType.Playing, name: "Enlargening®️ 2023™️" },
+	{ type: ActivityType.Playing, name: "bowling" },
 	{ type: ActivityType.Playing, name: "in the Bean Cave" },
 	{ type: ActivityType.Playing, name: "in the Wine Cellar" },
 	{ type: ActivityType.Playing, name: "melee sniper" },
 	{ type: ActivityType.Playing, name: "Team Fortress 3" },
-	{ type: ActivityType.Watching, name: "27 Sep 2022" },
+	{ type: ActivityType.Playing, name: "Overwatch®️ 2" },
 	{ type: ActivityType.Watching, name: "BEST FREE INTROS 2012" },
 	{ type: ActivityType.Watching, name: "Boss Baby 2" },
-	{ type: ActivityType.Watching, name: "Fatmagic lose again :(" },
 	{ type: ActivityType.Watching, name: "grapes ferment" },
 	{ type: ActivityType.Watching, name: "hey waltuh - YouTube" },
 	{ type: ActivityType.Watching, name: "How to escape a basement - YouTube" },
 	{ type: ActivityType.Watching, name: "QUANTUM GAMING" },
-	{ type: ActivityType.Watching, name: "[TF2] Top 10 Medic Tips - YouTube" }
+	{ type: ActivityType.Watching, name: "[TF2] Top 10 Medic Tips - YouTube" },
+	{ type: ActivityType.Watching, name: "How to play Sniper [TF2] - YouTube" },
+	{ type: ActivityType.Watching, name: "TF2 SEAL GAMING - YouTube" }
 ];
 
 export const COMMAND_DIR = new URL("./commands", import.meta.url);

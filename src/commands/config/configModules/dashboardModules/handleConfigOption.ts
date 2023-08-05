@@ -1,10 +1,10 @@
 import components from "#components";
 import { Colors, Emojis } from "#constants";
+import { getMissingPermissions, listify } from "#helpers";
 import ConfigModule from "#modules/Config.js";
-import { stripIndents } from "common-tags";
 import {
 	EmbedBuilder,
-	inlineCode,
+	PermissionFlagsBits,
 	type ButtonInteraction,
 	type ChannelSelectMenuInteraction,
 	type ChannelType
@@ -27,20 +27,37 @@ async function roles(
 		const role = interaction.guild.roles.cache.get(id);
 
 		return role
-			? `* \`${role.id}\` ${role} (@${role.name})`
-			: `* ${Emojis.Error} Role ${inlineCode(id)} not found.`;
+			? `1. ${role} \`${role.id}\``
+			: `1. ${Emojis.Error} Role \`${id}\` not found`;
 	});
 
 	const nameString = options.type.split(/(?=[A-Z])/).join(" ");
 	const name = nameString.charAt(0).toUpperCase() + nameString.slice(1);
 
+	const me = await interaction.guild.members.fetchMe().catch(() => null);
+	const hasManagesRoles = me?.permissions.has(
+		PermissionFlagsBits.ManageRoles
+	);
+
+	let missingPermissionsStr = "";
+
+	if (hasManagesRoles === undefined) {
+		missingPermissionsStr += `${Emojis.Warn} Unable to check for \`Manage Roles\` permission`;
+	} else if (!hasManagesRoles) {
+		missingPermissionsStr += `${Emojis.Error} Missing \`Manage Roles\` permission`;
+	}
+
 	const embed = new EmbedBuilder()
 		.setTitle(name)
-		.setColor(roleIds.size ? Colors.Green : Colors.Yellow)
-		.setDescription(stripIndents`
-			Roles:
-			${rolesStringArray}
-		`);
+		.setColor(roleIds.size ? Colors.Green : Colors.Yellow);
+
+	if (rolesStringArray.length) {
+		embed.setDescription(
+			`Roles:\n${rolesStringArray.join("\n")}\n\n${missingPermissionsStr}`
+		);
+	} else {
+		embed.setDescription(`Roles: None\n\n${missingPermissionsStr}`);
+	}
 
 	const rows = components.createRows(
 		components.selectMenus.role,
@@ -126,11 +143,12 @@ async function channels(
 		| ChannelSelectMenuInteraction<"cached">,
 	config: ConfigModule,
 	options: {
-		name: string;
-		id: "pinArchiveChannelId" | "protectedChannelsIds";
 		channelTypes: Array<ChannelType>;
-		min: number;
+		checkPermissions?: boolean;
+		id: "pinArchiveChannelId" | "protectedChannelsIds";
 		max: number;
+		min: number;
+		name: string;
 	}
 ): Promise<{
 	channelIds: Array<string>;
@@ -145,32 +163,46 @@ async function channels(
 
 	const isEmpty = !channelIdsArray?.length;
 
-	const channelStringArray =
-		channelIdsArray?.length &&
-		channelIdsArray.map((id) => {
-			const channel = interaction.guild.channels.cache.get(id);
-			const type = ConfigModule.getTypeFromChannel(channel);
+	const channelStringArray = channelIdsArray?.length
+		? channelIdsArray.map((id) => {
+				const channel = interaction.guild.channels.cache.get(id);
+				const type = ConfigModule.getTypeFromChannel(channel);
 
-			return channel
-				? `* \`${channel.id}\` ${channel} (${type})`
-				: `* ${Emojis.Warn} Unknown channel \`${id}\``;
-		});
+				if (!channel) {
+					return `1. ${Emojis.Warn} Channel \`${id}\` not found`;
+				}
+
+				if (!options.checkPermissions || !channel.isTextBased()) {
+					return `1. ${channel} \`${channel.id}\` (${type})`;
+				}
+
+				const missingPermissions = getMissingPermissions(
+					channel,
+					"ViewChannel",
+					"SendMessages",
+					"EmbedLinks"
+				);
+
+				let string = `1. ${channel} \`${channel.id}\` (${type})`;
+
+				if (missingPermissions.length) {
+					const list = listify(missingPermissions, { length: 3 });
+
+					string += `\n * ${Emojis.Error} Missing permissions: ${list}`;
+				}
+
+				return string;
+		  })
+		: false;
 
 	const embed = new EmbedBuilder()
 		.setColor(isEmpty ? Colors.Yellow : Colors.Green)
 		.setTitle(options.name);
 
-	const channelOrChannels =
-		typeof channelIdsOrId === "string"
-			? "Channel"
-			: channelIdsOrId?.size
-			? `Channels (${channelIdsOrId.size})`
-			: "Channels";
-
-	if (!channelIdsArray) {
-		embed.setDescription(`${channelOrChannels}: None`);
+	if (channelStringArray) {
+		embed.setDescription(`Channels:\n${channelStringArray.join("\n")}`);
 	} else {
-		embed.setDescription(`${channelOrChannels}:\n${channelStringArray}`);
+		embed.setDescription("Channels: None");
 	}
 
 	const rows = components.createRows(

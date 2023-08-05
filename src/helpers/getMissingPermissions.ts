@@ -1,15 +1,20 @@
 import {
 	inlineCode,
+	type ForumChannel,
 	type GuildTextBasedChannel,
 	type PermissionFlagsBits
 } from "discord.js";
 
 /**
- * Returns an array of missing permissions formatted like: "SendMessages" -> "`Send Messages`".
+ * Returns an array of missing permissions formatted as:
+ * ```
+ * ["`View Channel`", "`Send Messages`"]
+ * ```
+ *
  * If there are no missing permissions the array will be empty.
  */
 export default function getMissingPermissions(
-	channel: GuildTextBasedChannel,
+	channel: GuildTextBasedChannel | ForumChannel,
 	...toCheck: Array<keyof typeof PermissionFlagsBits | null | undefined>
 ) {
 	const permissions =

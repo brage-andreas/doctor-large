@@ -568,7 +568,7 @@ export const adjustDate = ({
 			disabled,
 			type: ComponentType.Button
 		})
-	} as const);
+	}) as const;
 
 export const url = ({ label, url }: { label: string; url: string }) => ({
 	component: (): APIButtonComponentWithURL => ({
@@ -679,7 +679,7 @@ export const attachToLatestCase = (reportId: number) =>
 			style: ButtonStyle.Primary,
 			type: ComponentType.Button
 		})
-	} as const);
+	}) as const;
 
 export const unattachReportFromCases = (reportId: number) =>
 	({
@@ -690,7 +690,7 @@ export const unattachReportFromCases = (reportId: number) =>
 			style: ButtonStyle.Primary,
 			type: ComponentType.Button
 		})
-	} as const);
+	}) as const;
 
 export const markReportProcessed = (reportId: number) =>
 	({
@@ -701,7 +701,7 @@ export const markReportProcessed = (reportId: number) =>
 			style: ButtonStyle.Secondary,
 			type: ComponentType.Button
 		})
-	} as const);
+	}) as const;
 
 export const markReportUnprocessed = (reportId: number) =>
 	({
@@ -712,7 +712,7 @@ export const markReportUnprocessed = (reportId: number) =>
 			style: ButtonStyle.Danger,
 			type: ComponentType.Button
 		})
-	} as const);
+	}) as const;
 
 export const memberInfo = (userId: string, prefix = "Member") =>
 	({
@@ -723,4 +723,15 @@ export const memberInfo = (userId: string, prefix = "Member") =>
 			style: ButtonStyle.Secondary,
 			type: ComponentType.Button
 		})
-	} as const);
+	}) as const;
+
+export const previewMessage = (channelId: string, messageId: string) =>
+	({
+		customId: `preview-message-${channelId}-${messageId}`,
+		component: (): APIButtonComponentWithCustomId => ({
+			custom_id: `preview-message-${channelId}-${messageId}`,
+			label: "Preview message",
+			style: ButtonStyle.Secondary,
+			type: ComponentType.Button
+		})
+	}) as const;

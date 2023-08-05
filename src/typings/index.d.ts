@@ -112,6 +112,10 @@ export type ReportWithIncludes = Report & {
 	referencedBy: Array<CaseWithIncludes>;
 };
 
+export type NoteWithIncludes = Note & {
+	referencedBy: Array<CaseWithIncludes>;
+};
+
 export type CreateRowsCompatibleAPIComponent =
 	| APIButtonComponent
 	| APIChannelSelectComponent
@@ -129,14 +133,16 @@ export type CreateRowsCompatibleRow =
 	| APIActionRowComponent<APIUserSelectComponent>;
 
 export interface ComponentObject<
-	T extends CreateRowsCompatibleAPIComponent = CreateRowsCompatibleAPIComponent
+	T extends
+		CreateRowsCompatibleAPIComponent = CreateRowsCompatibleAPIComponent
 > {
 	readonly customId?: string;
 	component(...params: Array<unknown>): T;
 }
 
 export interface ComponentObjectWithNoParams<
-	T extends CreateRowsCompatibleAPIComponent = CreateRowsCompatibleAPIComponent
+	T extends
+		CreateRowsCompatibleAPIComponent = CreateRowsCompatibleAPIComponent
 > extends ComponentObject<T> {
 	component(): T;
 }

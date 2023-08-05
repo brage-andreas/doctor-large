@@ -32,16 +32,17 @@ export default async function toConfigDashboard(
 
 	const embed = config.toEmbed();
 
-	const rows = components.createRows.specific(4, 3, 1)(
+	const rows = components.createRows.uniform(2)(
 		components.buttons.caseLogOptions,
-		components.buttons.memberLogOptions,
-		components.buttons.reportChannelOptions,
-		components.buttons.messageLogOptions,
-		// ---
-		components.buttons.pinArchiveOptions,
-		components.buttons.protectedChannelsOptions,
 		components.buttons.restrictRolesOptions,
-		// ---
+
+		components.buttons.memberLogOptions,
+		components.buttons.pinArchiveOptions,
+
+		components.buttons.messageLogOptions,
+		components.buttons.protectedChannelsOptions,
+
+		components.buttons.reportChannelOptions,
 		components.buttons.reset.component("config")
 	);
 
@@ -177,6 +178,7 @@ export default async function toConfigDashboard(
 					handleConfigOption
 						.channels(buttonInteraction, config, {
 							channelTypes,
+							checkPermissions: true,
 							id: "pinArchiveChannelId",
 							max: 1,
 							min: 1,
