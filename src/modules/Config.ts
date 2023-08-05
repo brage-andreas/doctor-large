@@ -2,12 +2,10 @@ import { Colors, Emojis } from "#constants";
 import type ConfigManager from "#database/config.js";
 import ReportManager from "#database/report.js";
 import { type Config } from "@prisma/client";
-import { source } from "common-tags";
 import {
 	ChannelType,
 	EmbedBuilder,
-	bold,
-	inlineCode,
+	PermissionFlagsBits,
 	type Channel,
 	type ChannelResolvable,
 	type Client,
@@ -203,20 +201,13 @@ export default class ConfigModule
 		if (!this.reportChannel.isTextBased()) {
 			const thread = await this.reportChannel.threads
 				.create({
-					message: {
-						...message,
-						content: message.content?.replace("* Preview:", "")
-					},
+					message,
 					name: `Report #${report.guildRelativeId} - ${report.target}`
 				})
 				.catch(() => null);
 
 			if (!thread) {
 				return false;
-			}
-
-			if (message.embeds?.length) {
-				await thread.send({ embeds: message.embeds });
 			}
 
 			report.manager.edit({
@@ -262,97 +253,119 @@ export default class ConfigModule
 	}
 
 	public toEmbed() {
+		const me = this.guild.members.me;
+
+		const isMissingPermissions = (
+			channel: ForumChannel | GuildTextBasedChannel | undefined
+		) => {
+			if (!channel) {
+				return false;
+			}
+
+			if (!me) {
+				return `\n${Emojis.Warn} Unable to check permissions`;
+			}
+
+			if (
+				!channel
+					.permissionsFor(me)
+					.has([
+						PermissionFlagsBits.ViewChannel,
+						PermissionFlagsBits.SendMessages,
+						PermissionFlagsBits.EmbedLinks
+					])
+			) {
+				return `\n${Emojis.Error} Missing permissions`;
+			}
+
+			return "";
+		};
+
 		const channelStr = (
 			enabled: boolean,
 			channel: ForumChannel | GuildTextBasedChannel | undefined,
-			channelId: string | null
+			channelId: string | null,
+			recommendForum?: boolean
 		) => {
 			if (!enabled) {
-				return `${Emojis.Off} Disabled.`;
+				return `${Emojis.Off} Disabled`;
 			}
 
 			if (!channelId) {
-				return `${Emojis.On} • ${Emojis.Warn} Channel not set.`;
+				return `${Emojis.On} • ${Emojis.Warn} Channel not set`;
 			}
 
 			if (!channel) {
-				return `${Emojis.On} • ${Emojis.Error} Channel not found.`;
+				return `${Emojis.On} • ${Emojis.Error} Channel not found`;
 			}
 
-			return `${Emojis.On} • ${channel} (${inlineCode(
-				`#${channel.name}`
-			)}), ${inlineCode(channelId)})`;
+			let string = `${Emojis.On} ${channel}`;
+
+			if (recommendForum && channel.type !== ChannelType.GuildForum) {
+				string += "\nForum channel is recommended.\n";
+			}
+
+			return `${string}${isMissingPermissions(channel)}`;
 		};
 
-		const pinArchiveStr = this.pinArchiveChannel
-			? `${this.pinArchiveChannel} (${this.pinArchiveChannel.id})`
-			: "None";
+		const protectedChannels = this.data.protectedChannelsIds.length || "No";
+		const restrictRoles = this.data.restrictRolesIds.length || "No";
 
-		const threadRecommended =
-			!this.reportChannel?.isThread() && this.reportEnabled
-				? "\n(Thread channel is recommended)"
-				: "";
+		const hasManagesRoles =
+			me?.permissions.has(PermissionFlagsBits.ManageRoles) ?? null;
 
-		const protectedChs = this.data.protectedChannelsIds;
-		const protectedChannels = protectedChs.length
-			? source`
-				${protectedChs
-					.map((id) => {
-						const channel = this.guild.channels.cache.get(id);
-						const type = ConfigModule.getTypeFromChannel(channel);
+		let hasManagesRolesStr = "";
 
-						return channel
-							? `* ${channel} (${type})`
-							: `* ${Emojis.Warn} Unknown channel ${inlineCode(
-									id
-							  )}`;
-					})
-					.slice(0, 5)}
-				${
-					protectedChs.length > 5
-						? `and ${bold(
-								(protectedChs.length - 5).toString()
-						  )} more...`
-						: ""
-				}
-			  `
-			: "None";
-
-		const restrictRoles_ = this.data.restrictRolesIds;
-		const restrictRoles = restrictRoles_.length
-			? source`
-				${restrictRoles_
-					.map((id) => {
-						const role = this.guild.roles.cache.get(id);
-
-						return role
-							? `* ${role}`
-							: `* ${Emojis.Warn} Unknown role ${id}`;
-					})
-					.slice(0, 5)}
-				${restrictRoles_.length > 5 ? `and ${restrictRoles_.length - 5} more...` : ""}
-			  `
-			: "None";
+		if (hasManagesRoles === null) {
+			hasManagesRolesStr += `\n${Emojis.Warn} Unable to check permissions`;
+		} else if (!hasManagesRoles) {
+			hasManagesRolesStr += `\n${Emojis.Error} Missing permissions`;
+		}
 
 		const fields: Array<EmbedField> = [
 			{
 				name: "Case log",
-				value: `${channelStr(
+				value: channelStr(
 					this.caseLogEnabled,
 					this.caseLogChannel,
 					this.data.caseLogChannelId
-				)}`,
-				inline: false
+				),
+				inline: true
+			},
+			{
+				name: "Restriction roles",
+				value: `${restrictRoles} roles${hasManagesRolesStr}`,
+				inline: true
+			},
+			{
+				name: "឵឵",
+				value: "឵឵",
+				inline: true
 			},
 			{
 				name: "Member log",
-				value: `${channelStr(
+				value: channelStr(
 					this.memberLogEnabled,
 					this.memberLogChannel,
 					this.data.memberLogChannelId
-				)}`,
-				inline: false
+				),
+				inline: true
 			},
+			{
+				name: "Pin archive channel",
+				value: this.pinArchiveChannel
+					? `${this.pinArchiveChannel}${isMissingPermissions(
+							this.pinArchiveChannel
+					  )}`
+					: "None",
+				inline: true
+			},
+			{
+				name: "឵឵",
+				value: "឵឵",
+				inline: true
+			},
+
 			{
 				name: "Message log",
 				value: channelStr(
@@ -360,32 +373,28 @@ export default class ConfigModule
 					this.messageLogChannel,
 					this.data.messageLogChannelId
 				),
-				inline: false
+				inline: true
 			},
 			{
-				name: "Report",
-				value: `${channelStr(
-					this.reportEnabled,
-					this.reportChannel,
-					this.data.reportChannelId
-				)}${threadRecommended}`,
-				inline: false
+				name: "Protected channels",
+				value: `${protectedChannels} channels`,
+				inline: true
+			},
+			{
+				name: "឵឵",
+				value: "឵឵",
+				inline: true
 			},
 
 			{
-				name: "Pin archive channel",
-				value: pinArchiveStr,
-				inline: false
-			},
-			{
-				name: `Protected channels (${protectedChs.length})`,
-				value: protectedChannels,
-				inline: false
-			},
-			{
-				name: `Restriction roles (${restrictRoles_.length})`,
-				value: restrictRoles,
-				inline: false
+				name: "Report",
+				value: channelStr(
+					this.reportEnabled,
+					this.reportChannel,
+					this.data.reportChannelId,
+					true
+				),
+				inline: true
 			}
 		];
 

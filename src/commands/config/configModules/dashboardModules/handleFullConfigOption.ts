@@ -1,10 +1,10 @@
 import components from "#components";
 import { Colors, Emojis } from "#constants";
+import { getMissingPermissions } from "#helpers";
 import type ConfigModule from "#modules/Config.js";
-import { stripIndent } from "common-tags";
+import { stripIndents } from "common-tags";
 import {
 	EmbedBuilder,
-	inlineCode,
 	type ButtonInteraction,
 	type ChannelSelectMenuInteraction,
 	type ChannelType,
@@ -19,22 +19,48 @@ const createEmbed = (
 	enabled: boolean,
 	name: string,
 	comment?: string
-) =>
-	new EmbedBuilder()
+) => {
+	const embed = new EmbedBuilder()
 		.setTitle(name)
-		.setColor(enabled ? Colors.Green : Colors.Red)
-		.setDescription(stripIndent`
-			Channel: ${
-				channel
-					? `${channel} - #${channel.name} (${channel.id})`
-					: channelId
-					? `${Emojis.Warn} Channel ${inlineCode(
-							channelId
-					  )} not found`
-					: `Not set${comment ? `. ${comment}` : ""}`
-			}
+		.setColor(enabled ? Colors.Green : Colors.Red);
+
+	if (!channel) {
+		embed.setDescription(stripIndents`
 			Enabled: ${enabled ? `${Emojis.On} Yes` : `${Emojis.Off} No`}
+			Channel: ${
+				channelId
+					? `${Emojis.Warn} Channel \`${channelId}\` not found`
+					: "Not set"
+			}
+			${comment ?? ""}
 		`);
+
+		return embed;
+	}
+
+	let missingPermissions = getMissingPermissions(
+		channel,
+		"ViewChannel",
+		"SendMessages",
+		"EmbedLinks"
+	).map((e) => `* ${e}`);
+
+	if (missingPermissions.length) {
+		missingPermissions = [
+			`${Emojis.Error} Missing permissions:`,
+			...missingPermissions
+		];
+	}
+
+	embed.setDescription(stripIndents`
+		Enabled: ${enabled ? `${Emojis.On} Yes` : `${Emojis.Off} No`}
+		Channel: ${channel} \`${channel.id}\`${comment ? `\n${comment}` : ""}
+
+		${missingPermissions.join("\n")}
+	`);
+
+	return embed;
+};
 
 export default async function handleFullConfigOption(
 	interaction:
@@ -61,7 +87,9 @@ export default async function handleFullConfigOption(
 		channelId,
 		enabled,
 		name,
-		type === "report" ? "Thread channel is recommended." : undefined
+		type === "report" && channel && !channel.isTextBased()
+			? "Forum channel is recommended."
+			: undefined
 	);
 
 	const rows = components.createRows(
