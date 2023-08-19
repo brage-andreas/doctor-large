@@ -93,21 +93,39 @@ export const Regex = {
 
 export const ACTIVITIES: Array<ActivitiesOptions> = [
 	{ type: ActivityType.Listening, name: "Rocket Jump Waltz (12 hours)" },
-	{ type: ActivityType.Playing, name: "bowling" },
-	{ type: ActivityType.Playing, name: "in the Bean Cave" },
-	{ type: ActivityType.Playing, name: "in the Wine Cellar" },
-	{ type: ActivityType.Playing, name: "melee sniper" },
-	{ type: ActivityType.Playing, name: "Team Fortress 3" },
-	{ type: ActivityType.Playing, name: "Overwatch®️ 2" },
+	{ type: ActivityType.Playing, name: "Team Fortress 2" },
 	{ type: ActivityType.Watching, name: "BEST FREE INTROS 2012" },
 	{ type: ActivityType.Watching, name: "Boss Baby 2" },
-	{ type: ActivityType.Watching, name: "grapes ferment" },
-	{ type: ActivityType.Watching, name: "hey waltuh - YouTube" },
-	{ type: ActivityType.Watching, name: "How to escape a basement - YouTube" },
-	{ type: ActivityType.Watching, name: "QUANTUM GAMING" },
-	{ type: ActivityType.Watching, name: "[TF2] Top 10 Medic Tips - YouTube" },
-	{ type: ActivityType.Watching, name: "How to play Sniper [TF2] - YouTube" },
-	{ type: ActivityType.Watching, name: "TF2 SEAL GAMING - YouTube" }
+	{ type: ActivityType.Custom, name: "large", state: "bowling" },
+	{ type: ActivityType.Custom, name: "large", state: "melee sniper" },
+	{ type: ActivityType.Custom, name: "large", state: "grapes will ferment" },
+	{ type: ActivityType.Custom, name: "large", state: "hey waltuh - YouTube" },
+	{
+		type: ActivityType.Custom,
+		name: "large",
+		state: "waiting for heavy update"
+	},
+	{
+		type: ActivityType.Custom,
+		name: "large",
+		state: "How to escape a basement - YouTube"
+	},
+	{ type: ActivityType.Custom, name: "large", state: "QUANTUM GAMING" },
+	{
+		type: ActivityType.Custom,
+		name: "large",
+		state: "[TF2] Top 10 Medic Tips - YouTube"
+	},
+	{
+		type: ActivityType.Custom,
+		name: "large",
+		state: "How to play Sniper [TF2] - YouTube"
+	},
+	{
+		type: ActivityType.Custom,
+		name: "large",
+		state: "TF2 SEAL GAMING - YouTube"
+	}
 ];
 
 export const COMMAND_DIR = new URL("./commands", import.meta.url);
