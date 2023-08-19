@@ -287,7 +287,7 @@ export class MessageReportModule extends UserReportModule {
 					### Reported message
 					* Message author: ${this.target}
 					* [Message URL](<${this.targetMessageURL}>)
-					${Emojis.Warn} Could not fetch and preview the message.
+					(${Emojis.Warn} Could not update the preview of the message)
 				`
 			);
 		}
