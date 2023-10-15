@@ -1,12 +1,8 @@
 import type CaseManager from "#database/case.js";
 import { type CaseWithIncludes } from "#typings";
-import {
-	type Case,
-	type CaseType,
-	type Note,
-	type Report
-} from "@prisma/client";
+import { CaseType, type Case, type Note, type Report } from "@prisma/client";
 import { type Client, type Guild } from "discord.js";
+import type BanCaseModule from "./CaseModules/BanCaseModule.js";
 
 export class CaseModule implements CaseWithIncludes {
 	public client: Client<true>;
@@ -77,5 +73,21 @@ export class CaseModule implements CaseWithIncludes {
 		this.targetUsername = data.targetUsername;
 		this.temporary = data.temporary;
 		this.newSlowmode = data.newSlowmode;
+	}
+
+	public isBan(): this is BanCaseModule {
+		return this.type === CaseType.Ban;
+	}
+
+	public isBan(): this is BanCaseModule {
+		return this.type === CaseType.Ban;
+	}
+
+	public isBan(): this is BanCaseModule {
+		return this.type === CaseType.Ban;
+	}
+
+	public isBan(): this is BanCaseModule {
+		return this.type === CaseType.Ban;
 	}
 }
