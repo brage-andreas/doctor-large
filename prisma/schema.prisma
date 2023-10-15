@@ -46,9 +46,9 @@ model Case {
     reportId            Int?
     // If type is Restrict; roles added. If type is Unrestrict; roles removed.
     roles               String[]
-    // First element may be: User, Channel. Only multiple elements if type is MultiBan.
+    // For multiban: User (multiple). For Slowmode and Lockdown: Channel. Rest: User. Only multiple elements if type is MultiBan
     targetIds           String[]
-    // Present for: Warn, Mute, Unmute, Kick, Softban, Ban, Unban
+    // Present for: Warn, Restrict, Unrestrict, Mute, Unmute, Kick, Softban, Ban, Unban
     targetUsername      String?
     // Present for: Mute
     temporary           Boolean?
