@@ -83,7 +83,7 @@
 				"prev": "import"
 			}
 		],
-		"@typescript-eslint/prefer-nullish-coalescing": ["error", { "ignoreMixedLogicalExpressions": true }],
+		"@typescript-eslint/prefer-nullish-coalescing": "off",
 
 		"arrow-body-style": ["error", "as-needed"],
 		"consistent-return": "error",
