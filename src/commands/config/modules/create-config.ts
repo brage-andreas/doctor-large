@@ -1,10 +1,10 @@
 import { type ButtonInteraction, type ChatInputCommandInteraction, ComponentType } from "discord.js";
-import toConfigDashboard from "./config-dashboard.js";
+import toConfigDashboard from "./dashboard/dashboard.js";
 import type ConfigManager from "#database/config.js";
 import components from "#components";
 import { Emojis } from "#constants";
 
-export default async function toNoConfigDashboard(
+export default async function toCreateConfig(
 	interaction: ButtonInteraction<"cached"> | ChatInputCommandInteraction<"cached">,
 	configManager: ConfigManager
 ) {

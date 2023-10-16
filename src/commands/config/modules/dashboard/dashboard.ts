@@ -1,13 +1,14 @@
 import { type ButtonInteraction, ChannelType, type ChatInputCommandInteraction, ComponentType } from "discord.js";
-import handlePartialConfigOption from "./dashboard-modules/partial-config-option-handle.js";
-import handleFullConfigOption from "./dashboard-modules/full-config-option-handle.js";
-import toNoConfigDashboard from "./no-config-dashboard.js";
+import handlePartialConfigOption from "./modules/partial-config-option-handle.js";
+import handleFullConfigOption from "./modules/full-config-option-handle.js";
+import toCreateConfig from "../create-config.js";
 import ConfigManager from "#database/config.js";
 import prisma from "#database/prisma.js";
 import components from "#components";
 import { Emojis } from "#constants";
 import { yesNo } from "#helpers";
 import Logger from "#logger";
+
 const channelTypes = [
 	ChannelType.GuildText,
 	ChannelType.GuildAnnouncement,
@@ -258,7 +259,7 @@ export default async function toConfigDashboard(
 					await newConfigManager
 						.validate()
 						.then(async () => toConfigDashboard(interaction, newConfigManager))
-						.catch(async () => toNoConfigDashboard(interaction, newConfigManager));
+						.catch(async () => toCreateConfig(interaction, newConfigManager));
 
 					return;
 				}

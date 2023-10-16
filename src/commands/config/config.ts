@@ -1,7 +1,7 @@
 import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
-import toNoConfigDashboard from "./config-modules/no-config-dashboard.js";
-import toConfigDashboard from "./config-modules/config-dashboard.js";
+import toConfigDashboard from "./modules/dashboard/dashboard.js";
 import { type CommandData, type CommandExport } from "#typings";
+import toCreateConfig from "./modules/create-config.js";
 import ConfigManager from "#database/config.js";
 import { HIDE_OPTION } from "#constants";
 import Logger from "#logger";
@@ -35,7 +35,7 @@ const chatInput = async (interaction: ChatInputCommandInteraction<"cached">) => 
 		.catch(() => {
 			logger.log("Opened no config dashboard");
 
-			void toNoConfigDashboard(interaction, configManager);
+			void toCreateConfig(interaction, configManager);
 		});
 };
 
