@@ -7,13 +7,13 @@ import {
 	type ModalSubmitInteraction,
 	inlineCode,
 } from "discord.js";
-import toPrizeDashboard from "./prize-modules/prize-dashboard.js";
-import toCreatePrize from "./prize-modules/create-prize.js";
+import toPrizeDashboard from "./prize/prize-dashboard.js";
 import type GiveawayManager from "#database/giveaway.js";
+import toCreatePrize from "./prize/create-prize.js";
 import { Colors, Emojis, Regex } from "#constants";
-import toDashboard from "../giveaway-dashboard.js";
 import { stripIndents } from "common-tags";
-import components from "#components";
+import toDashboard from "../dashboard.js";
+import components from "../../../../../discord-components/index.js";
 import { s, yesNo } from "#helpers";
 import Logger from "#logger";
 

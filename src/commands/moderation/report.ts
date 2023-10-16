@@ -14,7 +14,7 @@ import type ConfigModule from "#modules/config.js";
 import ConfigManager from "#database/config.js";
 import ReportManager from "#database/report.js";
 import { stripIndents } from "common-tags";
-import components from "#components";
+import components from "../../discord-components";
 import { Emojis } from "#constants";
 import Logger from "#logger";
 

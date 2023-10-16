@@ -3,7 +3,7 @@ import { type CommandData, type CommandExport } from "#typings";
 import AutoroleManager from "#database/autorole.js";
 import { HIDE_OPTION } from "#constants";
 import { oneLine } from "common-tags";
-import components from "#components";
+import components from "../../discord-components";
 import Logger from "#logger";
 
 const data: CommandData = {

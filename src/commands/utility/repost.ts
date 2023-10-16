@@ -11,7 +11,7 @@ import { messageFromURL, messageToEmbed, parseMessageURL } from "#helpers";
 import { type CommandData, type CommandExport } from "#typings";
 import ConfigManager from "#database/config.js";
 import { stripIndents } from "common-tags";
-import components from "#components";
+import components from "../../discord-components";
 import { Emojis } from "#constants";
 import Logger from "#logger";
 

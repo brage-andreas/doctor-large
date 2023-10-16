@@ -1,8 +1,8 @@
 import { type ButtonInteraction, ComponentType, type ModalSubmitInteraction } from "discord.js";
-import type GiveawayManager from "#database/giveaway.js";
 import toManagePrizes from "../manage-prizes.js";
+import type GiveawayManager from "#database/giveaway.js";
 import toEditPrize from "./edit-prize.js";
-import components from "#components";
+import components from "../../../../../../discord-components/index.js";
 import { Emojis } from "#constants";
 import Logger from "#logger";
 

@@ -1,17 +1,17 @@
-import toAnnouncementOptions from "./dashboard-modules/announcement-options.js";
-import toSetRequiredRoles from "./dashboard-modules/set-required-roles.js";
-import toAnnounceGiveaway from "./dashboard-modules/announce-giveaway.js";
+import toAnnouncementOptions from "./modules/announcement-options.js";
 import { ComponentType, type RepliableInteraction } from "discord.js";
-import toDeleteGiveaway from "./dashboard-modules/delete-giveaway.js";
-import toSetPingRoles from "./dashboard-modules/set-ping-roles.js";
-import toEditGiveaway from "./dashboard-modules/edit-giveaway.js";
-import toManagePrizes from "./dashboard-modules/manage-prizes.js";
-import toEndOptions from "./dashboard-modules/end-options.js";
-import toEndedDashboard from "./ended-giveaway-dashboard.js";
-import toResetData from "./dashboard-modules/reset-data.js";
+import toSetRequiredRoles from "./modules/set-required-roles.js";
+import components from "../../../../discord-components/index.js";
+import toAnnounceGiveaway from "./modules/announce-giveaway.js";
+import toEndedDashboard from "../ended-giveaway-dashboard.js";
+import toDeleteGiveaway from "./modules/delete-giveaway.js";
+import toSetPingRoles from "./modules/set-ping-roles.js";
+import toEditGiveaway from "./modules/edit-giveaway.js";
+import toManagePrizes from "./modules/manage-prizes.js";
+import toEndOptions from "./modules/end-options.js";
 import GiveawayManager from "#database/giveaway.js";
+import toResetData from "./modules/reset-data.js";
 import { stripIndents } from "common-tags";
-import components from "#components";
 import { Emojis } from "#constants";
 
 export default async function toDashboard(interaction: RepliableInteraction<"cached">, giveawayId: number) {

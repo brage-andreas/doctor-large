@@ -1,24 +1,18 @@
 import { type ButtonInteraction, bold } from "discord.js";
 import type GiveawayManager from "#database/giveaway.js";
 import toPrizeDashboard from "./prize-dashboard.js";
-import type PrizeModule from "#modules/prize.js";
 import { Emojis, Prize } from "#constants";
 import { ModalCollector } from "#helpers";
 import { oneLine } from "common-tags";
-import components from "#components";
+import components from "../../../../../../discord-components/index.js";
 import Logger from "#logger";
 
-export default async function toEditPrize(
+export default async function toCreatePrize(
 	interaction: ButtonInteraction<"cached">,
-	prize: PrizeModule,
-	giveawayManager: GiveawayManager,
-	giveawayId: number
+	giveawayId: number,
+	giveawayManager: GiveawayManager
 ) {
-	const modal = components.modals.editPrize.component({
-		oldAdditionalInfo: prize.additionalInfo,
-		oldName: prize.name,
-		oldQuantity: prize.quantity,
-	});
+	const modal = components.modals.createPrize.component();
 
 	await interaction.showModal(modal);
 
@@ -33,8 +27,7 @@ export default async function toEditPrize(
 
 		const quantityString = modalInteraction.fields.getTextInputValue("quantity");
 
-		const quantityNumber = Number.parseInt(quantityString);
-		const originalQuantity = Number.isNaN(quantityNumber) ? 1 : quantityNumber;
+		const originalQuantity = Number.parseInt(quantityString) || 1;
 		let quantity = originalQuantity;
 
 		if (quantity < 1) {
@@ -43,18 +36,14 @@ export default async function toEditPrize(
 			quantity = Prize.MaxQuantity;
 		}
 
-		await giveawayManager.editPrize({
-			data: {
-				additionalInfo,
-				name,
-				quantity,
-			},
-			where: {
-				id: prize.id,
-			},
+		const { id } = await giveawayManager.createPrize({
+			additionalInfo,
+			giveawayId,
+			name,
+			quantity,
 		});
 
-		new Logger({ interaction, label: "GIVEAWAY" }).log(`Edited prize #${prize.id} in giveaway #${giveawayId}`);
+		new Logger({ interaction, label: "GIVEAWAY" }).log(`Created prize #${id} in giveaway #${giveawayId}`);
 
 		if (quantity !== originalQuantity) {
 			await interaction.followUp({
@@ -67,6 +56,6 @@ export default async function toEditPrize(
 			});
 		}
 
-		void toPrizeDashboard(modalInteraction, prize.id, giveawayManager, giveawayId);
+		void toPrizeDashboard(modalInteraction, id, giveawayManager, giveawayId);
 	});
 }

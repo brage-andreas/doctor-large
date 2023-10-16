@@ -11,7 +11,7 @@ import type ConfigModule from "#modules/config.js";
 import { getMissingPermissions } from "#helpers";
 import { Colors, Emojis } from "#constants";
 import { stripIndents } from "common-tags";
-import components from "#components";
+import components from "../../../../../discord-components";
 
 const createEmbed = (
 	channel: ForumChannel | GuildTextBasedChannel | undefined,

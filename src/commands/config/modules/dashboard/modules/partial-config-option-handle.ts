@@ -9,7 +9,7 @@ import { getMissingPermissions, listify } from "#helpers";
 import { clearTimeout, setTimeout } from "node:timers";
 import ConfigModule from "#modules/config.js";
 import { Colors, Emojis } from "#constants";
-import components from "#components";
+import components from "../../../../../discord-components";
 
 async function roles(
 	interaction: ButtonInteraction<"cached"> | ChannelSelectMenuInteraction<"cached">,

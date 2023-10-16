@@ -9,10 +9,10 @@ import {
 import type GiveawayManager from "#database/giveaway.js";
 import { Colors, Emojis, Giveaway } from "#constants";
 import { oneLine, stripIndents } from "common-tags";
-import toDashboard from "../giveaway-dashboard.js";
 import { EndAutomation } from "@prisma/client";
 import toEndGiveaway from "./end-giveaway.js";
-import components from "#components";
+import toDashboard from "../dashboard.js";
+import components from "../../../../../discord-components/index.js";
 import { longstamp } from "#helpers";
 import ms from "ms";
 

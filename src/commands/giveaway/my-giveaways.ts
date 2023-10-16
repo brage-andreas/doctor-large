@@ -16,7 +16,7 @@ import { type CommandData, type CommandExport, type CountPrizeWinner, type Givea
 import { Colors, Emojis, HIDE_OPTION, MY_GIVEAWAYS_MAX_PRIZES } from "#constants";
 import { oneLine, source, stripIndents } from "common-tags";
 import GiveawayManager from "#database/giveaway.js";
-import components from "#components";
+import components from "../../discord-components";
 import { getTag } from "#helpers";
 import Logger from "#logger";
 
