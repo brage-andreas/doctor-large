@@ -17,7 +17,10 @@
 		"prestart": "npm run build",
 		"start": "node -r dotenv/config ."
 	},
-	"author": "Drango",
+	"engines": {
+		"node": ">=16.11.0"
+	},
+	"author": "Brage",
 	"license": "MIT",
 	"dependencies": {
 		"@prisma/client": "^5.1.1",
@@ -35,6 +38,7 @@
 		"discord-api-types": "^0.37.54",
 		"eslint": "^8.47.0",
 		"eslint-config-prettier": "^9.0.0",
+		"eslint-plugin-perfectionist": "^2.2.0",
 		"eslint-plugin-import": "^2.28.1",
 		"eslint-plugin-prettier": "^5.0.0",
 		"eslint-plugin-unicorn": "^48.0.1",
