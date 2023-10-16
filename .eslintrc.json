@@ -28,7 +28,8 @@
 			"error",
 			{
 				"type": "line-length",
-				"order": "desc"
+				"order": "desc",
+				"newlines-between": "never"
 			}
 		],
 
@@ -37,6 +38,9 @@
 		"unicorn/no-null": "off",
 		"unicorn/no-useless-undefined": "off",
 		"unicorn/prefer-ternary": "off",
+
+		"import/no-duplicates": ["error", { "prefer-inline": true }],
+		"import/consistent-type-specifier-style": ["error", "prefer-inline"],
 
 		"@typescript-eslint/array-type": ["error", { "default": "generic" }],
 		"@typescript-eslint/await-thenable": "error",
@@ -90,8 +94,6 @@
 		"consistent-return": "error",
 		"curly": "error",
 		"eqeqeq": ["error", "smart"],
-		"import/no-duplicates": ["error", { "prefer-inline": true }],
-		"import/consistent-type-specifier-style": ["error", "prefer-inline"],
 		"no-constant-binary-expression": "error",
 		"no-constructor-return": "error",
 		"no-else-return": "error",
