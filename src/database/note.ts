@@ -1,5 +1,5 @@
 import { type NoteWithIncludes } from "#typings";
-import { NoteModule } from "#modules/Note.js";
+import { NoteModule } from "#modules/note.js";
 import { type Prisma } from "@prisma/client";
 import { type Guild } from "discord.js";
 import prisma from "./prisma.js";

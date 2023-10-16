@@ -26,7 +26,7 @@ import { default as GiveawayManager } from "#database/giveaway.js";
 import { oneLine, stripIndent, stripIndents } from "common-tags";
 import { Colors, Emojis } from "#constants";
 import components from "#components";
-import PrizeModule from "./Prize.js";
+import PrizeModule from "./prize.js";
 import ms from "ms";
 type ModifiedGiveaway = Omit<Giveaway, "entriesUserIds" | "pingRolesIds" | "requiredRolesIds">;
 

@@ -4,10 +4,10 @@ import {
 	type ChatInputCommandInteraction,
 	PermissionFlagsBits,
 } from "discord.js";
-import sendToAutocompleteGiveaway from "./giveawayModules/autocompleteGiveaway.js";
+import sendToAutocompleteGiveaway from "./giveaway-modules/autocomplete-giveaway.js";
+import sendToDashboard from "./giveaway-modules/giveaway-dashboard.js";
 import { type CommandData, type CommandExport } from "#typings";
-import sendToDashboard from "./giveawayModules/dashboard.js";
-import sendToCreate from "./giveawayModules/create.js";
+import sendToCreate from "./giveaway-modules/create.js";
 import { Emojis, HIDE_OPTION } from "#constants";
 import { oneLine } from "common-tags";
 import Logger from "#logger";

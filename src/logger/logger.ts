@@ -75,7 +75,7 @@ export default class Logger {
 
 		const toLog = [prefixArray.join(grey(" | "))];
 
-		const commandString = this.interaction.isChatInputCommand() && grey(`>> ${this.interaction}`);
+		const commandString = this.interaction.isChatInputCommand() && grey(`>> ${this.interaction.toString()}`);
 
 		if (commandString) {
 			toLog.push(commandString);

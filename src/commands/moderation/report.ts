@@ -10,7 +10,7 @@ import {
 } from "discord.js";
 import { ModalCollector, messageFromURL, messageToEmbed, parseMessageURL, squash, yesNo } from "#helpers";
 import { type CommandData, type CommandExport } from "#typings";
-import type ConfigModule from "#modules/Config.js";
+import type ConfigModule from "#modules/config.js";
 import ConfigManager from "#database/config.js";
 import ReportManager from "#database/report.js";
 import { stripIndents } from "common-tags";

@@ -16,7 +16,7 @@ import {
 	type RESTPostAPIContextMenuApplicationCommandsJSONBody,
 } from "discord.js";
 import { type Case, type Giveaway, type Note, type Prize, type Report, type Winner } from "@prisma/client";
-import type GiveawayModule from "#modules/Giveaway.js";
+import type GiveawayModule from "#modules/giveaway.js";
 
 declare global {
 	namespace NodeJS {

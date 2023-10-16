@@ -1,7 +1,7 @@
 import { type CaseWithIncludes, type NoteWithIncludes } from "#typings";
 import { type Client, type EmbedData, type Guild } from "discord.js";
 import type NoteManager from "#database/note.js";
-import getTag from "../helpers/getTag.js";
+import getTag from "../helpers/get-tag.js";
 import { ColorsHex } from "#constants";
 import { s } from "#helpers";
 

@@ -11,7 +11,7 @@ import {
 	PermissionFlagsBits,
 	type Role,
 } from "discord.js";
-import { type MessageReportModule, type UserReportModule } from "./Report.js";
+import { type MessageReportModule, type UserReportModule } from "./report.js";
 import type ConfigManager from "#database/config.js";
 import ReportManager from "#database/report.js";
 import { type Config } from "@prisma/client";

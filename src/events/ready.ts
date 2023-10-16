@@ -5,6 +5,8 @@ import { ACTIVITIES } from "#constants";
 import console from "node:console";
 import Logger from "#logger";
 
+const getActivity = () => [ACTIVITIES[Math.floor(Math.random() * ACTIVITIES.length)]];
+
 const execute = (client: Client<true>) => {
 	console.log();
 
@@ -13,8 +15,6 @@ const execute = (client: Client<true>) => {
 	setInterval(() => {
 		checkTimestamps({ client, jobs: { all: true } });
 	}, 60_000 /* 1 minute */);
-
-	const getActivity = () => [ACTIVITIES[Math.floor(Math.random() * ACTIVITIES.length)]];
 
 	setInterval(() => {
 		client.user.setPresence({

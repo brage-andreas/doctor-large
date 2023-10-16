@@ -1,6 +1,6 @@
 import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
-import toNoConfigDashboard from "./configModules/noConfigDashboard.js";
-import toConfigDashboard from "./configModules/configDashboard.js";
+import toNoConfigDashboard from "./config-modules/no-config-dashboard.js";
+import toConfigDashboard from "./config-modules/config-dashboard.js";
 import { type CommandData, type CommandExport } from "#typings";
 import ConfigManager from "#database/config.js";
 import { HIDE_OPTION } from "#constants";

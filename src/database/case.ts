@@ -1,6 +1,6 @@
 import { type CaseType, type Prisma } from "@prisma/client";
 import { type CaseWithIncludes } from "#typings";
-import { CaseModule } from "#modules/Case.js";
+import { CaseModule } from "#modules/case.js";
 import { type Guild } from "discord.js";
 import prisma from "./prisma.js";
 

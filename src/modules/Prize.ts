@@ -3,7 +3,7 @@ import { type PrizeId, type PrizeWithIncludes } from "#typings";
 import type GiveawayManager from "#database/giveaway.js";
 import { type Prize, type Winner } from "@prisma/client";
 import { oneLine, stripIndents } from "common-tags";
-import type GiveawayModule from "./Giveaway.js";
+import type GiveawayModule from "./giveaway.js";
 import { longstamp } from "#helpers";
 import { Colors } from "#constants";
 

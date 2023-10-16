@@ -1,5 +1,5 @@
 import { type Guild, type GuildBasedChannel } from "discord.js";
-import ConfigModule from "#modules/Config.js";
+import ConfigModule from "#modules/config.js";
 import { type Prisma } from "@prisma/client";
 import prisma from "./prisma.js";
 

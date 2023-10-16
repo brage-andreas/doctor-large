@@ -1,4 +1,4 @@
-import checkEndingGiveawaysFunction from "./giveawayEnding.js";
+import checkEndingGiveawaysFunction from "./end-giveaway.js";
 import { type Client } from "discord.js";
 
 export default function (options: {

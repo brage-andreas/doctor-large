@@ -1,5 +1,5 @@
 import { ACTIVITIES, INTENTS, Regex } from "#constants";
-import loadEvents from "#scripts/loadEvents.js";
+import loadEvents from "#scripts/load-events.js";
 import { Client } from "discord.js";
 import process from "node:process";
 import Logger from "#logger";

@@ -1,4 +1,4 @@
-import { MessageReportModule, UserReportModule, isMessageReport } from "#modules/Report.js";
+import { MessageReportModule, UserReportModule, isMessageReport } from "#modules/report.js";
 import { type Guild, type MessageCreateOptions } from "discord.js";
 import { type Prisma, ReportType } from "@prisma/client";
 import { type ReportWithIncludes } from "#typings";
