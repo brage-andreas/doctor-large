@@ -17,6 +17,7 @@ import { stripIndents } from "common-tags";
 import components from "#components";
 import { Emojis } from "#constants";
 import Logger from "#logger";
+
 const data: CommandData = {
 	chatInput: {
 		description: "Report a member or a user to the moderators.",

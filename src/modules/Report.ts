@@ -13,6 +13,7 @@ import { source, stripIndent, stripIndents } from "common-tags";
 import type ReportManager from "#database/report.js";
 import { ColorsHex, Emojis } from "#constants";
 import components from "#components";
+
 export const isMessageReport = (
 	data: Report
 ): data is Report & {

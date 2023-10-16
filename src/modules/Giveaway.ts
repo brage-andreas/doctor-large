@@ -28,6 +28,7 @@ import { Colors, Emojis } from "#constants";
 import components from "#components";
 import PrizeModule from "./prize.js";
 import ms from "ms";
+
 type ModifiedGiveaway = Omit<Giveaway, "entriesUserIds" | "pingRolesIds" | "requiredRolesIds">;
 
 export default class GiveawayModule implements ModifiedGiveaway {

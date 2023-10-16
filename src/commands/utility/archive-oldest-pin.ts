@@ -16,6 +16,7 @@ import ConfigManager from "#database/config.js";
 import components from "#components";
 import { Emojis } from "#constants";
 import Logger from "#logger";
+
 const data: CommandData = {
 	chatInput: {
 		default_member_permissions: PermissionFlagsBits.ManageMessages.toString(),
