@@ -15,10 +15,10 @@ const config = {
 			"error",
 			...builtinModules.map((moduleName) => ({
 				name: moduleName,
-				message: `Verbosely import from \`node:${moduleName}\` instead.`
-			}))
-		]
-	}
+				message: `Verbosely import from \`node:${moduleName}\` instead.`,
+			})),
+		],
+	},
 };
 
 module.exports = config;

@@ -12,26 +12,39 @@
 		"sourceType": "module"
 	},
 
-	"plugins": ["@typescript-eslint", "import", "unicorn"],
+	"plugins": ["@typescript-eslint", "import", "unicorn", "perfectionist"],
 	"extends": [
 		"eslint:recommended",
-		"plugin:@typescript-eslint/recommended",
+		"plugin:@typescript-eslint/recommended-type-checked",
+		"plugin:@typescript-eslint/strict-type-checked",
+		"plugin:@typescript-eslint/stylistic-type-checked",
+		"plugin:perfectionist/recommended-natural",
+		"plugin:unicorn/recommended",
 		"prettier"
 	],
 
 	"rules": {
+		"perfectionist/sort-imports": [
+			"error",
+			{
+				"type": "line-length",
+				"order": "desc"
+			}
+		],
+
+		"unicorn/explicit-length-check": "off",
+		"unicorn/no-array-reduce": "off",
+		"unicorn/no-null": "off",
+		"unicorn/no-useless-undefined": "off",
+		"unicorn/prefer-ternary": "off",
+
 		"@typescript-eslint/array-type": ["error", { "default": "generic" }],
 		"@typescript-eslint/await-thenable": "error",
 		"@typescript-eslint/consistent-type-definitions": "error",
-		"@typescript-eslint/consistent-type-imports": [
-			"error",
-			{
-				"fixStyle": "inline-type-imports"
-			}
-		],
+		"@typescript-eslint/consistent-type-imports": ["error", { "fixStyle": "inline-type-imports" }],
 		"@typescript-eslint/explicit-member-accessibility": "error",
-		"@typescript-eslint/member-ordering": "error",
 		"@typescript-eslint/method-signature-style": ["error", "method"],
+		"@typescript-eslint/no-base-to-string": "off",
 		"@typescript-eslint/no-import-type-side-effects": "off",
 		"@typescript-eslint/no-inferrable-types": "error",
 		"@typescript-eslint/no-meaningless-void-operator": "error",
@@ -42,10 +55,36 @@
 		"@typescript-eslint/no-unnecessary-type-arguments": "error",
 		"@typescript-eslint/no-unnecessary-type-assertion": "error",
 		"@typescript-eslint/prefer-optional-chain": "error",
-		"@typescript-eslint/promise-function-async": "error",
 		"@typescript-eslint/prefer-readonly": "error",
+		"@typescript-eslint/promise-function-async": "error",
 		"@typescript-eslint/require-await": "error",
 		"@typescript-eslint/switch-exhaustiveness-check": "error",
+		"@typescript-eslint/padding-line-between-statements": [
+			"error",
+			{
+				"blankLine": "always",
+				"next": ["class", "do", "for", "function", "if", "interface", "return", "switch", "throw", "while"],
+				"prev": "*"
+			},
+			{
+				"blankLine": "always",
+				"next": "*",
+				"prev": [
+					"directive",
+					"multiline-block-like",
+					"multiline-const",
+					"multiline-expression",
+					"multiline-let"
+				]
+			},
+			{
+				"blankLine": "never",
+				"next": "import",
+				"prev": "import"
+			}
+		],
+		"@typescript-eslint/prefer-nullish-coalescing": ["error", { "ignoreMixedLogicalExpressions": true }],
+
 		"arrow-body-style": ["error", "as-needed"],
 		"consistent-return": "error",
 		"curly": "error",
@@ -87,37 +126,11 @@
 			}
 		],
 		"object-shorthand": "error",
-		"padding-line-between-statements": [
-			"error",
-			{
-				"blankLine": "always",
-				"next": ["return", "if", "for", "while", "switch", "throw"],
-				"prev": "*"
-			},
-			{
-				"blankLine": "always",
-				"next": "*",
-				"prev": [
-					"multiline-block-like",
-					"multiline-const",
-					"multiline-expression",
-					"multiline-let"
-				]
-			}
-		],
 		"prefer-arrow-callback": "error",
 		"prefer-const": "error",
 		"prefer-template": "error",
 		"quote-props": ["error", "consistent-as-needed"],
 		"quotes": ["error", "double", { "avoidEscape": true }],
-		"unicorn/better-regex": "error",
-		"unicorn/new-for-builtins": "error",
-		"unicorn/no-instanceof-array": "error",
-		"unicorn/no-new-buffer": "error",
-		"unicorn/prefer-node-protocol": "error",
-		"unicorn/prefer-spread": "error",
-		"unicorn/prefer-string-slice": "error",
-		"unicorn/require-array-join-separator": "error",
 		"yoda": ["error", "never"]
 	}
 }
