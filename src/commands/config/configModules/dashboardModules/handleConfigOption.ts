@@ -1,20 +1,18 @@
-import components from "#components";
-import { Colors, Emojis } from "#constants";
-import { getMissingPermissions, listify } from "#helpers";
-import ConfigModule from "#modules/Config.js";
 import {
-	EmbedBuilder,
-	PermissionFlagsBits,
 	type ButtonInteraction,
 	type ChannelSelectMenuInteraction,
-	type ChannelType
+	type ChannelType,
+	EmbedBuilder,
+	PermissionFlagsBits,
 } from "discord.js";
+import { getMissingPermissions, listify } from "#helpers";
 import { clearTimeout, setTimeout } from "node:timers";
+import ConfigModule from "#modules/Config.js";
+import { Colors, Emojis } from "#constants";
+import components from "#components";
 
 async function roles(
-	interaction:
-		| ButtonInteraction<"cached">
-		| ChannelSelectMenuInteraction<"cached">,
+	interaction: ButtonInteraction<"cached"> | ChannelSelectMenuInteraction<"cached">,
 	config: ConfigModule,
 	options: {
 		type: "restrictRoles";
@@ -26,67 +24,62 @@ async function roles(
 	const rolesStringArray = [...roleIds].map((id) => {
 		const role = interaction.guild.roles.cache.get(id);
 
-		return role
-			? `1. ${role} \`${role.id}\``
-			: `1. ${Emojis.Error} Role \`${id}\` not found`;
+		return role ? `1. ${role.toString()} \`${role.id}\`` : `1. ${Emojis.Error} Role \`${id}\` not found`;
 	});
 
 	const nameString = options.type.split(/(?=[A-Z])/).join(" ");
 	const name = nameString.charAt(0).toUpperCase() + nameString.slice(1);
 
 	const me = await interaction.guild.members.fetchMe().catch(() => null);
-	const hasManagesRoles = me?.permissions.has(
-		PermissionFlagsBits.ManageRoles
-	);
+	const hasManagesRoles = me?.permissions.has(PermissionFlagsBits.ManageRoles);
 
-	let missingPermissionsStr = "";
+	let missingPermissionsString = "";
 
 	if (hasManagesRoles === undefined) {
-		missingPermissionsStr += `${Emojis.Warn} Unable to check for \`Manage Roles\` permission`;
+		missingPermissionsString += `${Emojis.Warn} Unable to check for \`Manage Roles\` permission`;
 	} else if (!hasManagesRoles) {
-		missingPermissionsStr += `${Emojis.Error} Missing \`Manage Roles\` permission`;
+		missingPermissionsString += `${Emojis.Error} Missing \`Manage Roles\` permission`;
 	}
 
-	const embed = new EmbedBuilder()
-		.setTitle(name)
-		.setColor(roleIds.size ? Colors.Green : Colors.Yellow);
+	const embed = new EmbedBuilder().setTitle(name).setColor(roleIds.size > 0 ? Colors.Green : Colors.Yellow);
 
-	if (rolesStringArray.length) {
-		embed.setDescription(
-			`Roles:\n${rolesStringArray.join("\n")}\n\n${missingPermissionsStr}`
-		);
+	if (rolesStringArray.length > 0) {
+		embed.setDescription(`Roles:\n${rolesStringArray.join("\n")}\n\n${missingPermissionsString}`);
 	} else {
-		embed.setDescription(`Roles: None\n\n${missingPermissionsStr}`);
+		embed.setDescription(`Roles: None\n\n${missingPermissionsString}`);
 	}
 
 	const rows = components.createRows(
 		components.selectMenus.role,
-		components.set.disabled(components.buttons.clear, !roleIds.size),
+		components.set.disabled(components.buttons.clear, roleIds.size === 0),
 		components.buttons.back
 	);
 
-	const msg = await interaction.editReply({
+	const message = await interaction.editReply({
 		components: rows,
 		content: null,
-		embeds: [embed]
+		embeds: [embed],
 	});
 
 	return new Promise((resolve, reject) => {
-		const collector = msg.createMessageComponentCollector({
-			filter: (componentInteraction) =>
-				componentInteraction.user.id === interaction.user.id,
+		const collector = message.createMessageComponentCollector({
+			filter: (componentInteraction) => componentInteraction.user.id === interaction.user.id,
+			max: 1,
 			time: 120_000,
-			max: 1
 		});
 
 		// safeguard
-		const timeoutId = setTimeout(() => reject(), 125_000);
+		const timeoutId = setTimeout(() => {
+			reject();
+		}, 125_000);
 
 		collector.on("ignore", (componentInteraction) => {
-			componentInteraction.reply({
-				content: `${Emojis.NoEntry} This button is not for you.`,
-				ephemeral: true
-			});
+			componentInteraction
+				.reply({
+					content: `${Emojis.NoEntry} This button is not for you.`,
+					ephemeral: true,
+				})
+				.catch(() => null);
 		});
 
 		collector.on("collect", async (interaction) => {
@@ -103,9 +96,7 @@ async function roles(
 
 				case components.selectMenus.role.customId: {
 					if (!interaction.isRoleSelectMenu()) {
-						throw new TypeError(
-							"Role select menu component is not of type RoleSelectMenu"
-						);
+						throw new TypeError("Role select menu component is not of type RoleSelectMenu");
 					}
 
 					resolve({ roleIds: interaction.values });
@@ -115,9 +106,7 @@ async function roles(
 
 				case components.buttons.clear.customId: {
 					if (!interaction.isButton()) {
-						throw new TypeError(
-							"Button component is not of type Button"
-						);
+						throw new TypeError("Button component is not of type Button");
 					}
 
 					resolve({ roleIds: [] });
@@ -138,9 +127,7 @@ async function roles(
 }
 
 async function channels(
-	interaction:
-		| ButtonInteraction<"cached">
-		| ChannelSelectMenuInteraction<"cached">,
+	interaction: ButtonInteraction<"cached"> | ChannelSelectMenuInteraction<"cached">,
 	config: ConfigModule,
 	options: {
 		channelTypes: Array<ChannelType>;
@@ -155,11 +142,7 @@ async function channels(
 }> {
 	const channelIdsOrId = config[options.id];
 	const channelIdsArray =
-		typeof channelIdsOrId === "string"
-			? [channelIdsOrId]
-			: channelIdsOrId?.size
-			? [...channelIdsOrId]
-			: null;
+		typeof channelIdsOrId === "string" ? [channelIdsOrId] : channelIdsOrId?.size ? [...channelIdsOrId] : null;
 
 	const isEmpty = !channelIdsArray?.length;
 
@@ -173,19 +156,14 @@ async function channels(
 				}
 
 				if (!options.checkPermissions || !channel.isTextBased()) {
-					return `1. ${channel} \`${channel.id}\` (${type})`;
+					return `1. ${channel.toString()} \`${channel.id}\` (${type})`;
 				}
 
-				const missingPermissions = getMissingPermissions(
-					channel,
-					"ViewChannel",
-					"SendMessages",
-					"EmbedLinks"
-				);
+				const missingPermissions = getMissingPermissions(channel, "ViewChannel", "SendMessages", "EmbedLinks");
 
-				let string = `1. ${channel} \`${channel.id}\` (${type})`;
+				let string = `1. ${channel.toString()} \`${channel.id}\` (${type})`;
 
-				if (missingPermissions.length) {
+				if (missingPermissions.length > 0) {
 					const list = listify(missingPermissions, { length: 3 });
 
 					string += `\n * ${Emojis.Error} Missing permissions: ${list}`;
@@ -195,9 +173,7 @@ async function channels(
 		  })
 		: false;
 
-	const embed = new EmbedBuilder()
-		.setColor(isEmpty ? Colors.Yellow : Colors.Green)
-		.setTitle(options.name);
+	const embed = new EmbedBuilder().setColor(isEmpty ? Colors.Yellow : Colors.Green).setTitle(options.name);
 
 	if (channelStringArray) {
 		embed.setDescription(`Channels:\n${channelStringArray.join("\n")}`);
@@ -211,28 +187,31 @@ async function channels(
 		components.buttons.back
 	);
 
-	const msg = await interaction.editReply({
+	const message = await interaction.editReply({
 		components: rows,
 		content: null,
-		embeds: [embed]
+		embeds: [embed],
 	});
 
 	return new Promise((resolve, reject) => {
-		const collector = msg.createMessageComponentCollector({
-			filter: (componentInteraction) =>
-				componentInteraction.user.id === interaction.user.id,
+		const collector = message.createMessageComponentCollector({
+			filter: (componentInteraction) => componentInteraction.user.id === interaction.user.id,
+			max: 1,
 			time: 120_000,
-			max: 1
 		});
 
 		// safeguard
-		const timeoutId = setTimeout(() => reject(), 125_000);
+		const timeoutId = setTimeout(() => {
+			reject();
+		}, 125_000);
 
 		collector.on("ignore", (componentInteraction) => {
-			componentInteraction.reply({
-				content: `${Emojis.NoEntry} This button is not for you.`,
-				ephemeral: true
-			});
+			componentInteraction
+				.reply({
+					content: `${Emojis.NoEntry} This button is not for you.`,
+					ephemeral: true,
+				})
+				.catch(() => null);
 		});
 
 		collector.on("collect", async (interaction) => {
@@ -249,9 +228,7 @@ async function channels(
 
 				case components.selectMenus.channel.customId: {
 					if (!interaction.isChannelSelectMenu()) {
-						throw new TypeError(
-							"Channel select menu component is not of type ChannelSelectMenu"
-						);
+						throw new TypeError("Channel select menu component is not of type ChannelSelectMenu");
 					}
 
 					resolve({ channelIds: interaction.values });
@@ -261,9 +238,7 @@ async function channels(
 
 				case components.buttons.clear.customId: {
 					if (!interaction.isButton()) {
-						throw new TypeError(
-							"Button component is not of type Button"
-						);
+						throw new TypeError("Button component is not of type Button");
 					}
 
 					resolve({ channelIds: [] });

@@ -1,27 +1,22 @@
-import { HIDE_OPTION } from "#constants";
-import ConfigManager from "#database/config.js";
-import Logger from "#logger";
-import { type CommandData, type CommandExport } from "#typings";
-import {
-	PermissionFlagsBits,
-	type ChatInputCommandInteraction
-} from "discord.js";
-import toConfigDashboard from "./configModules/configDashboard.js";
+import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
 import toNoConfigDashboard from "./configModules/noConfigDashboard.js";
+import toConfigDashboard from "./configModules/configDashboard.js";
+import { type CommandData, type CommandExport } from "#typings";
+import ConfigManager from "#database/config.js";
+import { HIDE_OPTION } from "#constants";
+import Logger from "#logger";
 
 const data: CommandData = {
 	chatInput: {
-		name: "config",
+		default_member_permissions: PermissionFlagsBits.ManageGuild.toString(),
 		description: "View and edit this server's config.",
 		dm_permission: false,
-		default_member_permissions: PermissionFlagsBits.ManageGuild.toString(),
-		options: [HIDE_OPTION]
-	}
+		name: "config",
+		options: [HIDE_OPTION],
+	},
 };
 
-const chatInput = async (
-	interaction: ChatInputCommandInteraction<"cached">
-) => {
+const chatInput = async (interaction: ChatInputCommandInteraction<"cached">) => {
 	const hide = interaction.options.getBoolean("hide") ?? true;
 
 	await interaction.deferReply({ ephemeral: hide });
@@ -35,18 +30,18 @@ const chatInput = async (
 		.then(() => {
 			logger.log("Opened config dashboard");
 
-			toConfigDashboard(interaction, configManager);
+			void toConfigDashboard(interaction, configManager);
 		})
 		.catch(() => {
 			logger.log("Opened no config dashboard");
 
-			toNoConfigDashboard(interaction, configManager);
+			void toNoConfigDashboard(interaction, configManager);
 		});
 };
 
 export const getCommand: CommandExport = () => ({
 	data,
 	handle: {
-		chatInput
-	}
+		chatInput,
+	},
 });

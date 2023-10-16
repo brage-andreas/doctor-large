@@ -1,15 +1,12 @@
-import { Emojis, Regex } from "#constants";
+import { type ButtonInteraction, bold, time } from "discord.js";
 import GiveawayManager from "#database/giveaway.js";
+import { oneLine, stripIndents } from "common-tags";
+import { Emojis, Regex } from "#constants";
 import { listify } from "#helpers";
 import Logger from "#logger";
-import { oneLine, stripIndents } from "common-tags";
-import { bold, time, type ButtonInteraction } from "discord.js";
 
-export default async function enterGiveaway(
-	interaction: ButtonInteraction<"cached">
-) {
-	const id = interaction.customId.match(Regex.EnterGiveawayCustomId)?.groups
-		?.id;
+export default async function enterGiveaway(interaction: ButtonInteraction<"cached">) {
+	const id = interaction.customId.match(Regex.EnterGiveawayCustomId)?.groups?.id;
 
 	if (!id) {
 		return;
@@ -26,10 +23,12 @@ export default async function enterGiveaway(
 	}
 
 	if (giveaway.entriesLocked) {
-		interaction.followUp({
-			content: `${Emojis.Lock} Sorry, but new entries are currently locked. Try again later.`,
-			ephemeral: true
-		});
+		interaction
+			.followUp({
+				content: `${Emojis.Lock} Sorry, but new entries are currently locked. Try again later.`,
+				ephemeral: true,
+			})
+			.catch(() => null);
 
 		return;
 	}
@@ -41,18 +40,21 @@ export default async function enterGiveaway(
 			.filter((roleId) => !rolesTheyHave.has(roleId))
 			.map((roleId) => `<@&${roleId}>`);
 
-		interaction.followUp({
-			content: stripIndents`
+		const numberOfRoles = rolesTheyNeed.length || "no";
+
+		interaction
+			.followUp({
+				content: stripIndents`
 				${Emojis.Lock} Sorry, but you don't have all the roles required to enter.
 
-				You are missing ${rolesTheyNeed.length || "no"} roles: ${
-				rolesTheyNeed.length
-					? listify(rolesTheyNeed, { length: 10 })
-					: "No roles... what? Try again."
-			}
+			
+				You are missing ${numberOfRoles} roles: ${
+					rolesTheyNeed.length > 0 ? listify(rolesTheyNeed, { length: 10 }) : "No roles... what? Try again."
+				}
 			`,
-			ephemeral: true
-		});
+				ephemeral: true,
+			})
+			.catch(() => null);
 
 		return;
 	}
@@ -62,19 +64,18 @@ export default async function enterGiveaway(
 
 		const accountAge = Date.now() - interaction.user.createdTimestamp;
 
-		const whenTheyWillBeOldEnough = time(
-			Date.now() + minimumAccountAge - accountAge,
-			"R"
-		);
+		const whenTheyWillBeOldEnough = time(Date.now() + minimumAccountAge - accountAge, "R");
 
-		interaction.followUp({
-			content: stripIndents`
+		interaction
+			.followUp({
+				content: stripIndents`
 					${Emojis.Lock} Sorry, your account isn't old enough to enter.
 
 					Your account will be old enough ${whenTheyWillBeOldEnough}.
 				`,
-			ephemeral: true
-		});
+				ephemeral: true,
+			})
+			.catch(() => null);
 
 		return;
 	}
@@ -84,19 +85,21 @@ export default async function enterGiveaway(
 	if (entrants.has(interaction.user.id)) {
 		entrants.delete(interaction.user.id);
 
-		interaction.followUp({
-			content: stripIndents`
+		interaction
+			.followUp({
+				content: stripIndents`
 				Done! I removed your entry.
 				
 				You are ${bold("no longer entered")} into giveaway ${giveaway.asRelId}.
 				I already miss you. ${Emojis.Pensive}
 			`,
-			ephemeral: true
-		});
+				ephemeral: true,
+			})
+			.catch(() => null);
 
 		new Logger({
 			color: "grey",
-			label: "GIVEAWAY"
+			label: "GIVEAWAY",
 		}).log(
 			oneLine`
 				User ${interaction.user.tag} (${interaction.user.id})
@@ -106,22 +109,20 @@ export default async function enterGiveaway(
 	} else {
 		entrants.add(interaction.user.id);
 
-		interaction.followUp({
-			content: stripIndents`
-				Done! Psst... I made sure the bouncer put you first in line. Don't tell anyone, OK? ${
-					Emojis.Halo
-				}
+		interaction
+			.followUp({
+				content: stripIndents`
+				Done! Psst... I made sure the bouncer put you first in line. Don't tell anyone, OK? ${Emojis.Halo}
 				
-				${Emojis.Tada} You are ${bold("now entered")} into giveaway #${
-				giveaway.guildRelativeId
-			}. Best of luck!
+				${Emojis.Tada} You are ${bold("now entered")} into giveaway #${giveaway.guildRelativeId}. Best of luck!
 				`,
-			ephemeral: true
-		});
+				ephemeral: true,
+			})
+			.catch(() => null);
 
 		new Logger({
 			color: "grey",
-			label: "GIVEAWAY"
+			label: "GIVEAWAY",
 		}).log(
 			oneLine`
 				User ${interaction.user.tag} (${interaction.user.id})
@@ -130,10 +131,10 @@ export default async function enterGiveaway(
 		);
 	}
 
-	giveaway.edit({
+	void giveaway.edit({
 		entriesUserIds: [...entrants],
 		nowOutdated: {
-			none: true
-		}
+			none: true,
+		},
 	});
 }

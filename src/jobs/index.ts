@@ -1,5 +1,5 @@
+import checkEndingGiveawaysFunction from "./giveawayEnding.js";
 import { type Client } from "discord.js";
-import checkEndingGiveawaysFn from "./giveawayEnding.js";
 
 export default function (options: {
 	client: Client<true>;
@@ -8,7 +8,7 @@ export default function (options: {
 		giveawayEnd?: boolean;
 	};
 }) {
-	if (options.jobs.all || options.jobs.giveawayEnd) {
-		checkEndingGiveawaysFn(options.client);
+	if (options.jobs.all ?? options.jobs.giveawayEnd) {
+		void checkEndingGiveawaysFunction(options.client);
 	}
 }

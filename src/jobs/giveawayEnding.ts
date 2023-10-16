@@ -1,20 +1,16 @@
-import components from "#components";
-import { Emojis, Giveaway } from "#constants";
-import prisma from "#database/prisma.js";
-import { longstamp, messageURL } from "#helpers";
-import GiveawayModule from "#modules/Giveaway.js";
-import { type GiveawayWithIncludes, type WinnerId } from "#typings";
-import { oneLine, source } from "common-tags";
-import { bold, type Client, type Message } from "discord.js";
 import { rollAndSign } from "../commands/giveaway/giveawayModules/endModules/rollWinners/rollAndSign.js";
+import { type GiveawayWithIncludes, type WinnerId } from "#typings";
+import GiveawayModule from "#modules/Giveaway.js";
+import { longstamp, messageURL } from "#helpers";
+import { type Client, bold } from "discord.js";
+import { Emojis, Giveaway } from "#constants";
+import { oneLine, source } from "common-tags";
+import prisma from "#database/prisma.js";
+import components from "#components";
 
 const DM_BUFFER = Giveaway.HostDMTimeBeforeEnd;
 
-export default async function checkEndingGiveawaysFn(client: Client<true>) {
-	/* ----------------- */
-	/* --- Giveaways --- */
-	/* ----------------- */
-
+export default async function checkEndingGiveawaysFunction(client: Client<true>) {
 	const now = Date.now();
 	const nowWithBuffer = now + DM_BUFFER;
 
@@ -22,31 +18,33 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 	const lteWithBuffer = new Date(nowWithBuffer).toISOString();
 
 	const all = await prisma.giveaway.findMany({
-		where: {
-			AND: {
-				ended: false
-			},
-			OR: [
-				{
-					hostNotified: { not: "OnEnd" },
-					endDate: { lte: lteNoBuffer }
-				},
-				{
-					hostNotified: "None",
-					endDate: { lte: lteWithBuffer }
-				}
-			]
-		},
 		include: {
 			prizes: {
 				include: {
-					winners: true
-				}
-			}
-		}
+					winners: true,
+				},
+			},
+		},
+		where: {
+			AND: {
+				ended: false,
+			},
+			OR: [
+				{
+					endDate: { lte: lteNoBuffer },
+					hostNotified: { not: "OnEnd" },
+				},
+				{
+					endDate: { lte: lteWithBuffer },
+					hostNotified: "None",
+				},
+			],
+		},
 	});
 
-	const [toEnd, toNotify] = all.reduce(
+	const [toEnd, toNotify] = all.reduce<
+		[Array<GiveawayWithIncludes & { endDate: Date }>, Array<GiveawayWithIncludes & { endDate: Date }>]
+	>(
 		([toEnd, toNotifyBefore], giveaway) => {
 			const { endDate } = giveaway;
 
@@ -74,31 +72,25 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 
 			return [toEnd, toNotifyBefore];
 		},
-		[[], []] as [
-			Array<GiveawayWithIncludes & { endDate: Date }>,
-			Array<GiveawayWithIncludes & { endDate: Date }>
-		]
+		[[], []]
 	);
 
 	for (const giveaway of toNotify) {
 		const {
+			announcementMessageId,
 			channelId,
 			endAutomation,
 			endDate,
 			guildId,
 			guildRelativeId,
 			hostUserId,
-			announcementMessageId,
-			title
+			id,
+			title,
 		} = giveaway;
 
-		const guildName =
-			client.guilds.cache.get(guildId)?.name ?? "unknown server";
+		const guildName = client.guilds.cache.get(guildId)?.name ?? "unknown server";
 
-		const url =
-			channelId && announcementMessageId
-				? messageURL(guildId, channelId, announcementMessageId)
-				: null;
+		const url = channelId && announcementMessageId ? messageURL(guildId, channelId, announcementMessageId) : null;
 
 		const timeLeft = longstamp(endDate);
 
@@ -112,28 +104,22 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 		`;
 
 		const rows = url
-			? components.createRows(
-					components.buttons
-						.url({ label: "Go to giveaway", url })
-						.component()
-			  )
+			? components.createRows(components.buttons.url({ label: "Go to giveaway", url }).component())
 			: undefined;
 
-		client.users
-			.send(hostUserId, { content: string, components: rows })
-			.catch(() => null);
+		client.users.send(hostUserId, { components: rows, content: string }).catch(() => null);
 
-		if (giveaway.endAutomation === "None") {
+		if (endAutomation === "None") {
 			return;
 		}
 
 		await prisma.giveaway.update({
-			where: {
-				id: giveaway.id
-			},
 			data: {
-				hostNotified: "BeforeEnd"
-			}
+				hostNotified: "BeforeEnd",
+			},
+			where: {
+				id,
+			},
 		});
 	}
 
@@ -141,38 +127,35 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 
 	for (const giveaway of toEnd) {
 		const {
+			announcementMessageId,
 			channelId,
 			endAutomation,
+			entriesUserIds,
 			guildId,
-			guildRelativeId,
+			guildRelativeId: giveawayRId,
 			hostUserId,
-			announcementMessageId,
-			title
+			id: giveawayId,
+			title,
 		} = giveaway;
 
 		const guild = client.guilds.cache.get(guildId);
 		const guildName = guild?.name ?? "unknown server";
 
-		const channel_ = channelId
-			? guild?.channels.cache.get(channelId)
-			: null;
+		const channel_ = channelId ? guild?.channels.cache.get(channelId) : null;
 
 		const channel = channel_?.isTextBased() ? channel_ : null;
 
-		const url =
-			channelId && announcementMessageId
-				? messageURL(guildId, channelId, announcementMessageId)
-				: null;
+		const url = channelId && announcementMessageId ? messageURL(guildId, channelId, announcementMessageId) : null;
 
 		const string = source`
 			${bold("A giveaway you are hosting just ended!")} ${Emojis.Sparks}.
-			* ${title} • #${guildRelativeId} • ${guildName}.
+			* ${title} • #${giveawayRId} • ${guildName}.
 
 			End automation was set to: ${bold(endAutomation)}.
 
 			How to see winners:
 			1. Go to ${guildName}.
-			2. Open the dashboard of giveaway #${guildRelativeId}.
+			2. Open the dashboard of giveaway #${giveawayRId}.
 			3. Click the "Show all winners" button.
 
 			The winners have to manually claim their prizes.
@@ -186,46 +169,36 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 		`;
 
 		const rows = url
-			? components.createRows(
-					components.buttons
-						.url({ label: "Go to giveaway", url })
-						.component()
-			  )
+			? components.createRows(components.buttons.url({ label: "Go to giveaway", url }).component())
 			: undefined;
 
-		client.users
-			.send(hostUserId, { content: string, components: rows })
-			.catch(() => null);
+		client.users.send(hostUserId, { components: rows, content: string }).catch(() => null);
 
-		if (giveaway.endAutomation === "None") {
+		if (endAutomation === "None") {
 			await prisma.giveaway.update({
-				where: {
-					id: giveaway.id
-				},
 				data: {
-					hostNotified: "OnEnd"
-				}
+					hostNotified: "OnEnd",
+				},
+				where: {
+					id: giveawayId,
+				},
 			});
 
 			return;
 		}
 
 		await prisma.giveaway.update({
-			where: {
-				id: giveaway.id
-			},
 			data: {
-				hostNotified: "OnEnd",
 				ended: true,
-				entriesLocked: true
-			}
+				entriesLocked: true,
+				hostNotified: "OnEnd",
+			},
+			where: {
+				id: giveawayId,
+			},
 		});
 
-		if (
-			(giveaway.endAutomation !== "Roll" &&
-				giveaway.endAutomation !== "Announce") ||
-			!guild
-		) {
+		if ((endAutomation !== "Roll" && endAutomation !== "Announce") || !guild) {
 			continue;
 		}
 
@@ -233,57 +206,51 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 
 		// TODO: set `notified` to true
 		const winnerBucket = await rollAndSign({
-			entries: giveaway.entriesUserIds,
+			entries: entriesUserIds,
 			giveaway: module,
 			ignoreRequirements: false,
 			overrideClaimed: false,
 			prizes: module.prizes,
 			prizesQuantity: module.prizesQuantity(),
-			winnerQuantity: module.winnerQuantity
+			winnerQuantity: module.winnerQuantity,
 		});
 
-		if (giveaway.endAutomation === "Announce") {
+		if (endAutomation === "Announce") {
 			await module.winnerMessage?.delete();
 
-			const rows = components.createRows(
-				components.buttons.acceptPrize(giveaway.id)
-			);
+			const rows = components.createRows(components.buttons.acceptPrize(giveawayId));
 
-			let message: Message<true> | null | undefined;
-
-			if (giveaway.announcementMessageId) {
-				message = await module.announcementMessage
-					?.reply({
-						...module.endedEmbed(),
-						components: rows
-					})
-					.catch(() => null);
-			} else {
-				message = await channel
-					?.send({
-						...module.endedEmbed(),
-						components: rows
-					})
-					.catch(() => null);
-			}
+			const message = await (announcementMessageId
+				? module.announcementMessage
+						?.reply({
+							...module.endedEmbed(),
+							components: rows,
+						})
+						.catch(() => null)
+				: channel
+						?.send({
+							...module.endedEmbed(),
+							components: rows,
+						})
+						.catch(() => null));
 
 			if (message) {
 				await prisma.giveaway.update({
-					where: {
-						id: giveaway.id
-					},
 					data: {
 						winnerMessageId: message.id,
-						winnerMessageUpdated: true
-					}
+						winnerMessageUpdated: true,
+					},
+					where: {
+						id: giveawayId,
+					},
 				});
 			} else {
-				const msg = oneLine`
+				const message_ = oneLine`
 					${Emojis.Error} Failed to automatically announce winners for
-					#${giveaway.guildRelativeId} in ${guild.name}.
+					#${giveawayRId} in ${guild.name}.
 				`;
 
-				client.users.send(hostUserId, msg).catch(() => null);
+				client.users.send(hostUserId, message_).catch(() => null);
 			}
 
 			const ids: Array<WinnerId> = [];
@@ -291,16 +258,16 @@ export default async function checkEndingGiveawaysFn(client: Client<true>) {
 			if (winnerBucket) {
 				await module.dmWinners({
 					includeNotified: false,
-					winners: winnerBucket
+					winners: winnerBucket,
 				});
 
 				await module.manager.prisma.winner.updateMany({
-					where: {
-						id: { in: ids }
-					},
 					data: {
-						notified: true
-					}
+						notified: true,
+					},
+					where: {
+						id: { in: ids },
+					},
 				});
 			}
 		}

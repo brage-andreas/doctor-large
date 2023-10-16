@@ -1,40 +1,39 @@
-import components from "#components";
-import { Emojis } from "#constants";
-import type GiveawayManager from "#database/giveaway.js";
-import { s } from "#helpers";
-import type GiveawayModule from "#modules/Giveaway.js";
-import { source, stripIndents } from "common-tags";
 import {
-	AttachmentBuilder,
-	ComponentType,
 	type APIButtonComponentWithCustomId,
+	AttachmentBuilder,
 	type AutocompleteInteraction,
-	type Interaction
+	ComponentType,
+	type Interaction,
 } from "discord.js";
-import toDashboard from "./dashboard.js";
+import { rollAndSign } from "./endModules/rollWinners/rollAndSign.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import { toAnnounceWinners } from "./endModules/announceWinners.js";
-import { rollAndSign } from "./endModules/rollWinners/rollAndSign.js";
+import type GiveawayManager from "#database/giveaway.js";
+import type GiveawayModule from "#modules/Giveaway.js";
+import { source, stripIndents } from "common-tags";
+import toDashboard from "./dashboard.js";
+import components from "#components";
+import { Emojis } from "#constants";
+import { s } from "#helpers";
 
 export default async function toEndedDashboard(
 	interaction: Exclude<Interaction<"cached">, AutocompleteInteraction>,
 	giveawayManager: GiveawayManager,
 	giveawayOrId: GiveawayModule | number
 ) {
-	const id =
-		typeof giveawayOrId === "number" ? giveawayOrId : giveawayOrId.id;
+	const id = typeof giveawayOrId === "number" ? giveawayOrId : giveawayOrId.id;
 
 	const giveaway = await giveawayManager.get(id);
 
 	if (!giveaway) {
 		await interaction.editReply({
+			components: [],
 			content: stripIndents`
 				How did we get here?
 			
 				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
-			components: [],
-			embeds: []
+			embeds: [],
 		});
 
 		return;
@@ -43,11 +42,9 @@ export default async function toEndedDashboard(
 	const announceWinnersButtons: Array<APIButtonComponentWithCustomId> = [];
 	const rollWinnersButtons: Array<APIButtonComponentWithCustomId> = [];
 
-	const unclaimedN = giveaway.winners.filter(
-		({ claimed }) => !claimed
-	).length;
+	const unclaimedN = giveaway.winners.filter(({ claimed }) => !claimed).length;
 
-	const noWinners = !giveaway.winners.length;
+	const noWinners = giveaway.winners.length === 0;
 	const noUnclaimed = !unclaimedN;
 
 	if (giveaway.winnersAreAnnounced()) {
@@ -56,64 +53,50 @@ export default async function toEndedDashboard(
 			components.buttons.unannounceWinners.component()
 		);
 	} else {
-		announceWinnersButtons.push(
-			components.buttons.announceWinners.component()
-		);
+		announceWinnersButtons.push(components.buttons.announceWinners.component());
 	}
 
 	if (noWinners) {
 		rollWinnersButtons.push(components.buttons.rollWinners.component());
 	} else {
 		rollWinnersButtons.push(
-			components.set.disabled(
-				components.buttons.rerollWinners.component(unclaimedN),
-				noUnclaimed
-			),
-			components.buttons.rerollAllWinners.component(
-				giveaway.winners.length
-			)
+			components.set.disabled(components.buttons.rerollWinners.component(unclaimedN), noUnclaimed),
+			components.buttons.rerollAllWinners.component(giveaway.winners.length)
 		);
 	}
 
-	const rows = components.createRows.specific(
-		announceWinnersButtons.length + 1,
-		rollWinnersButtons.length,
-		2,
-		2
-	)(
+	const rows = components.createRows.specific(announceWinnersButtons.length + 1, rollWinnersButtons.length, 2, 2)(
 		components.buttons.showAllWinners,
 		...announceWinnersButtons,
 		// ---
 		...rollWinnersButtons,
 		// ---
-		components.set.disabled(
-			components.buttons.deleteUnclaimedWinners,
-			noUnclaimed
-		),
+		components.set.disabled(components.buttons.deleteUnclaimedWinners, noUnclaimed),
 		components.set.disabled(components.buttons.deleteAllWinners, noWinners),
 		// ---
 		components.buttons.reactivateGiveaway,
 		components.buttons.deleteGiveaway
 	);
 
-	const msg = await interaction.editReply({
+	const message = await interaction.editReply({
 		components: rows,
-		...giveaway.toDashboardOverview()
+		...giveaway.toDashboardOverview(),
 	});
 
-	const collector = msg.createMessageComponentCollector({
-		filter: (buttonInteraction) =>
-			buttonInteraction.user.id === interaction.user.id,
+	const collector = message.createMessageComponentCollector({
 		componentType: ComponentType.Button,
+		filter: (buttonInteraction) => buttonInteraction.user.id === interaction.user.id,
+		max: 1,
 		time: 120_000,
-		max: 1
 	});
 
 	collector.on("ignore", (buttonInteraction) => {
-		buttonInteraction.reply({
-			content: `${Emojis.NoEntry} This button is not for you.`,
-			ephemeral: true
-		});
+		buttonInteraction
+			.reply({
+				content: `${Emojis.NoEntry} This button is not for you.`,
+				ephemeral: true,
+			})
+			.catch(() => null);
 	});
 
 	collector.on("collect", async (buttonInteraction) => {
@@ -124,23 +107,23 @@ export default async function toEndedDashboard(
 				await giveaway.edit({
 					ended: false,
 					nowOutdated: {
-						announcementMessage: true
-					}
+						announcementMessage: true,
+					},
 				});
 
-				toDashboard(buttonInteraction, giveaway.id);
+				void toDashboard(buttonInteraction, giveaway.id);
 
 				break;
 			}
 
 			case components.buttons.announceWinners.customId: {
-				toAnnounceWinners(buttonInteraction, giveaway.id);
+				void toAnnounceWinners(buttonInteraction, giveaway.id);
 
 				break;
 			}
 
 			case components.buttons.reannounceWinners.customId: {
-				toAnnounceWinners(buttonInteraction, giveaway.id);
+				void toAnnounceWinners(buttonInteraction, giveaway.id);
 
 				break;
 			}
@@ -150,14 +133,14 @@ export default async function toEndedDashboard(
 
 				if (!channel) {
 					await interaction.editReply({
+						components: [],
 						content: stripIndents`
 							${Emojis.Warn} The channel the giveaway was announced in does not exist, or is not a valid channel.
 							Try again or reannounce the giveaway in a new channel.
 
 							Current channel: <#${giveaway.channelId}> (${giveaway.channelId}).
 						`,
-						components: [],
-						embeds: []
+						embeds: [],
 					});
 
 					break;
@@ -166,31 +149,27 @@ export default async function toEndedDashboard(
 				await giveaway.winnerMessage?.delete();
 
 				await giveaway.edit({
-					winnerMessageId: null,
 					nowOutdated: {
-						winnerMessage: false
-					}
+						winnerMessage: false,
+					},
+					winnerMessageId: null,
 				});
 
 				await interaction.editReply({
+					components: [],
 					content: stripIndents`
 							${Emojis.Check} The winners are no longer announced. 
 						`,
-					components: [],
-					embeds: []
+					embeds: [],
 				});
 
-				toEndedDashboard(interaction, giveawayManager, giveaway);
+				void toEndedDashboard(interaction, giveawayManager, giveaway);
 
 				break;
 			}
 
 			case components.buttons.deleteGiveaway.customId: {
-				toDeleteGiveaway(
-					buttonInteraction,
-					giveaway.id,
-					giveawayManager
-				);
+				void toDeleteGiveaway(buttonInteraction, giveaway.id, giveawayManager);
 
 				break;
 			}
@@ -199,37 +178,25 @@ export default async function toEndedDashboard(
 				const members = await interaction.guild.members.fetch();
 
 				const string = giveaway.prizes
-					.map((prize, i, { length }) => {
-						const pI = (i + 1)
-							.toString()
-							.padStart(length.toString().length, "0");
+					.map((prize, index, { length }) => {
+						const pI = (index + 1).toString().padStart(length.toString().length, "0");
 
-						const winners = prize.winners.map(
-							(data, i, { length }) => {
-								const member = members.get(data.userId);
-								const userTag =
-									member?.user.tag ?? "Unknown user";
+						const winners = prize.winners.map((data, index, { length }) => {
+							const member = members.get(data.userId);
+							const userTag = member?.user.tag ?? "Unknown user";
 
-								const wI = (i + 1)
-									.toString()
-									.padStart(length.toString().length, "0");
+							const wI = (index + 1).toString().padStart(length.toString().length, "0");
 
-								const claimedStr = data.claimed
-									? "Claimed"
-									: "Not claimed";
+							const claimedString = data.claimed ? "Claimed" : "Not claimed";
 
-								const time = data.createdAt.toLocaleString(
-									"en-GB",
-									{
-										dateStyle: "medium",
-										timeStyle: "medium",
-										timeZone: "UTC"
-									}
-								);
+							const time = data.createdAt.toLocaleString("en-GB", {
+								dateStyle: "medium",
+								timeStyle: "medium",
+								timeZone: "UTC",
+							});
 
-								return `* ${wI} ${userTag} - ${claimedStr}. Won at ${time} UTC`;
-							}
-						);
+							return `* ${wI} ${userTag} - ${claimedString}. Won at ${time} UTC`;
+						});
 
 						const wN = winners.length;
 
@@ -241,16 +208,14 @@ export default async function toEndedDashboard(
 					.join("\n\n");
 
 				const data = Buffer.from(string);
-				const attachment = new AttachmentBuilder(data).setName(
-					`giveaway-${giveaway.asRelId}-winners.txt`
-				);
+				const attachment = new AttachmentBuilder(data).setName(`giveaway-${giveaway.asRelId}-winners.txt`);
 
 				await interaction.followUp({
 					ephemeral: true,
-					files: [attachment]
+					files: [attachment],
 				});
 
-				toEndedDashboard(interaction, giveawayManager, giveaway);
+				void toEndedDashboard(interaction, giveawayManager, giveaway);
 
 				break;
 			}
@@ -258,28 +223,25 @@ export default async function toEndedDashboard(
 			case components.buttons.rollWinners.customId:
 			case components.buttons.rerollWinners.customId: {
 				const prizes = await giveawayManager.getPrizes({
+					claimed: false,
 					giveawayId: giveaway.id,
-					claimed: false
 				});
 
 				const entries = [...giveaway.entriesUserIds];
 				const winnerQuantity = giveaway.winnerQuantity;
-				const prizesQuantity = prizes.reduce(
-					(acc, prize) => acc + prize.quantity,
-					0
-				);
+				const prizesQuantity = prizes.reduce((accumulator, prize) => accumulator + prize.quantity, 0);
 
 				await rollAndSign({
 					entries,
 					giveaway,
-					overrideClaimed: false,
 					ignoreRequirements: false,
+					overrideClaimed: false,
 					prizes,
 					prizesQuantity,
-					winnerQuantity
+					winnerQuantity,
 				});
 
-				toEndedDashboard(interaction, giveawayManager, giveaway);
+				void toEndedDashboard(interaction, giveawayManager, giveaway);
 
 				break;
 			}
@@ -287,29 +249,29 @@ export default async function toEndedDashboard(
 			case components.buttons.rerollAllWinners.customId: {
 				const entries = [...giveaway.entriesUserIds];
 				const prizesQuantity = giveaway.prizesQuantity();
-				const { winnerQuantity, prizes } = giveaway;
+				const { prizes, winnerQuantity } = giveaway;
 
 				await rollAndSign({
 					entries,
 					giveaway,
-					overrideClaimed: true,
 					ignoreRequirements: false,
+					overrideClaimed: true,
 					prizes,
 					prizesQuantity,
-					winnerQuantity
+					winnerQuantity,
 				});
 
-				toEndedDashboard(interaction, giveawayManager, giveaway);
+				void toEndedDashboard(interaction, giveawayManager, giveaway);
 
 				break;
 			}
 
 			case components.buttons.deleteUnclaimedWinners.customId: {
 				await giveawayManager.deleteWinners(giveaway.data, {
-					onlyDeleteUnclaimed: true
+					onlyDeleteUnclaimed: true,
 				});
 
-				toEndedDashboard(interaction, giveawayManager, giveaway);
+				void toEndedDashboard(interaction, giveawayManager, giveaway);
 
 				break;
 			}
@@ -317,7 +279,7 @@ export default async function toEndedDashboard(
 			case components.buttons.deleteAllWinners.customId: {
 				await giveawayManager.deleteWinners(giveaway.data);
 
-				toEndedDashboard(interaction, giveawayManager, giveaway);
+				void toEndedDashboard(interaction, giveawayManager, giveaway);
 
 				break;
 			}
@@ -329,6 +291,6 @@ export default async function toEndedDashboard(
 			return;
 		}
 
-		msg.edit({ components: [] }).catch(() => null);
+		message.edit({ components: [] }).catch(() => null);
 	});
 }

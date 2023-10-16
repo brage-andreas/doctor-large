@@ -1,29 +1,22 @@
-import components from "#components";
-import { Emojis } from "#constants";
+import { type ButtonInteraction, ChannelType, type ChatInputCommandInteraction, ComponentType } from "discord.js";
+import handleFullConfigOption from "./dashboardModules/handleFullConfigOption.js";
+import handleConfigOption from "./dashboardModules/handleConfigOption.js";
+import toNoConfigDashboard from "./noConfigDashboard.js";
 import ConfigManager from "#database/config.js";
 import prisma from "#database/prisma.js";
+import components from "#components";
+import { Emojis } from "#constants";
 import { yesNo } from "#helpers";
 import Logger from "#logger";
-import {
-	ChannelType,
-	ComponentType,
-	type ButtonInteraction,
-	type ChatInputCommandInteraction
-} from "discord.js";
-import handleConfigOption from "./dashboardModules/handleConfigOption.js";
-import handleFullConfigOption from "./dashboardModules/handleFullConfigOption.js";
-import toNoConfigDashboard from "./noConfigDashboard.js";
 const channelTypes = [
 	ChannelType.GuildText,
 	ChannelType.GuildAnnouncement,
 	ChannelType.PrivateThread,
-	ChannelType.PublicThread
+	ChannelType.PublicThread,
 ];
 
 export default async function toConfigDashboard(
-	interaction:
-		| ButtonInteraction<"cached">
-		| ChatInputCommandInteraction<"cached">,
+	interaction: ButtonInteraction<"cached"> | ChatInputCommandInteraction<"cached">,
 	configManager: ConfigManager
 ) {
 	let config = await configManager.get();
@@ -46,25 +39,26 @@ export default async function toConfigDashboard(
 		components.buttons.reset.component("config")
 	);
 
-	const msg = await interaction.editReply({
+	const message = await interaction.editReply({
 		components: rows,
 		content: null,
-		embeds: [embed]
+		embeds: [embed],
 	});
 
-	const collector = msg.createMessageComponentCollector({
-		filter: (buttonInteraction) =>
-			buttonInteraction.user.id === interaction.user.id,
+	const collector = message.createMessageComponentCollector({
 		componentType: ComponentType.Button,
+		filter: (buttonInteraction) => buttonInteraction.user.id === interaction.user.id,
+		max: 1,
 		time: 120_000,
-		max: 1
 	});
 
 	collector.on("ignore", (buttonInteraction) => {
-		buttonInteraction.reply({
-			content: `${Emojis.NoEntry} This button is not for you.`,
-			ephemeral: true
-		});
+		buttonInteraction
+			.reply({
+				content: `${Emojis.NoEntry} This button is not for you.`,
+				ephemeral: true,
+			})
+			.catch(() => null);
 	});
 
 	collector.on("collect", async (buttonInteraction) => {
@@ -73,39 +67,32 @@ export default async function toConfigDashboard(
 		const retry = async () => {
 			switch (buttonInteraction.customId) {
 				case components.buttons.caseLogOptions.customId: {
-					handleFullConfigOption(
-						buttonInteraction,
-						config,
-						"caseLog",
-						channelTypes
-					)
-						.then(async (res) => {
+					handleFullConfigOption(buttonInteraction, config, "caseLog", channelTypes)
+						.then(async (option) => {
 							logger.log("Edited case log");
 
 							config = await config.edit({
-								caseLogChannelId: res.channelId,
-								caseLogEnabled: res.enabled
+								caseLogChannelId: option.channelId,
+								caseLogEnabled: option.enabled,
 							});
 
-							retry();
+							void retry();
 						})
-						.catch(async () =>
-							toConfigDashboard(buttonInteraction, configManager)
-						);
+						.catch(async () => toConfigDashboard(buttonInteraction, configManager));
 
 					break;
 				}
 
 				case components.buttons.memberLogOptions.customId: {
-					const res = await handleFullConfigOption(
+					const option = await handleFullConfigOption(
 						buttonInteraction,
 						config,
 						"memberLog",
 						channelTypes
 					).catch(() => null);
 
-					if (!res) {
-						toConfigDashboard(buttonInteraction, configManager);
+					if (!option) {
+						void toConfigDashboard(buttonInteraction, configManager);
 
 						return;
 					}
@@ -113,25 +100,25 @@ export default async function toConfigDashboard(
 					logger.log("Edited member log");
 
 					config = await config.edit({
-						memberLogChannelId: res.channelId,
-						memberLogEnabled: res.enabled
+						memberLogChannelId: option.channelId,
+						memberLogEnabled: option.enabled,
 					});
 
-					retry();
+					void retry();
 
 					break;
 				}
 
 				case components.buttons.messageLogOptions.customId: {
-					const res = await handleFullConfigOption(
+					const option = await handleFullConfigOption(
 						buttonInteraction,
 						config,
 						"messageLog",
 						channelTypes
 					).catch(() => null);
 
-					if (!res) {
-						toConfigDashboard(buttonInteraction, configManager);
+					if (!option) {
+						void toConfigDashboard(buttonInteraction, configManager);
 
 						return;
 					}
@@ -139,25 +126,23 @@ export default async function toConfigDashboard(
 					logger.log("Edited message log");
 
 					config = await config.edit({
-						messageLogChannelId: res.channelId,
-						messageLogEnabled: res.enabled
+						messageLogChannelId: option.channelId,
+						messageLogEnabled: option.enabled,
 					});
 
-					retry();
+					void retry();
 
 					break;
 				}
 
 				case components.buttons.reportChannelOptions.customId: {
-					const res = await handleFullConfigOption(
-						buttonInteraction,
-						config,
-						"report",
-						[...channelTypes, ChannelType.GuildForum]
-					).catch(() => null);
+					const option = await handleFullConfigOption(buttonInteraction, config, "report", [
+						...channelTypes,
+						ChannelType.GuildForum,
+					]).catch(() => null);
 
-					if (!res) {
-						toConfigDashboard(buttonInteraction, configManager);
+					if (!option) {
+						void toConfigDashboard(buttonInteraction, configManager);
 
 						return;
 					}
@@ -165,11 +150,11 @@ export default async function toConfigDashboard(
 					logger.log("Edited report option");
 
 					config = await config.edit({
-						reportChannelId: res.channelId,
-						reportEnabled: res.enabled
+						reportChannelId: option.channelId,
+						reportEnabled: option.enabled,
 					});
 
-					retry();
+					void retry();
 
 					break;
 				}
@@ -182,21 +167,18 @@ export default async function toConfigDashboard(
 							id: "pinArchiveChannelId",
 							max: 1,
 							min: 1,
-							name: "Pin archive"
+							name: "Pin archive",
 						})
-						.then(async (res) => {
+						.then(async (option) => {
 							logger.log("Edited pin archive option");
 
 							config = await config.edit({
-								pinArchiveChannelId:
-									res.channelIds.at(0) || null
+								pinArchiveChannelId: option.channelIds.at(0) ?? null,
 							});
 
-							retry();
+							void retry();
 						})
-						.catch(async () =>
-							toConfigDashboard(buttonInteraction, configManager)
-						);
+						.catch(async () => toConfigDashboard(buttonInteraction, configManager));
 
 					break;
 				}
@@ -204,85 +186,79 @@ export default async function toConfigDashboard(
 				case components.buttons.protectedChannelsOptions.customId: {
 					handleConfigOption
 						.channels(buttonInteraction, config, {
-							id: "protectedChannelsIds",
-							name: "Protected channels",
 							channelTypes: [
 								...channelTypes,
 								ChannelType.GuildCategory,
 								ChannelType.GuildForum,
 								ChannelType.AnnouncementThread,
 								ChannelType.GuildVoice,
-								ChannelType.GuildStageVoice
+								ChannelType.GuildStageVoice,
 							],
+							id: "protectedChannelsIds",
+							max: 25,
 							min: 1,
-							max: 25
+							name: "Protected channels",
 						})
-						.then(async (res) => {
+						.then(async (option) => {
 							logger.log("Edited protected channels option");
 
 							config = await config.edit({
-								protectedChannelsIds: res.channelIds
+								protectedChannelsIds: option.channelIds,
 							});
 
-							retry();
+							void retry();
 						})
-						.catch(async () =>
-							toConfigDashboard(buttonInteraction, configManager)
-						);
+						.catch(async () => toConfigDashboard(buttonInteraction, configManager));
 
 					break;
 				}
 
 				case components.buttons.reset.customId: {
 					const confirmation = await yesNo({
-						medium: buttonInteraction,
 						data: {
+							content: `${Emojis.Warn} Are you sure you want to reset the config?`,
 							embeds: [],
-							content: `${Emojis.Warn} Are you sure you want to reset the config?`
-						}
+						},
+						medium: buttonInteraction,
 					})
 						.then(() => true)
 						.catch(() => false);
 
 					if (!confirmation) {
 						await buttonInteraction.followUp({
+							content: `${Emojis.Check} Canceled resetting the config.`,
 							ephemeral: true,
-							content: `${Emojis.Check} Canceled resetting the config.`
 						});
 
-						toConfigDashboard(buttonInteraction, configManager);
+						void toConfigDashboard(buttonInteraction, configManager);
 
 						return;
 					}
 
 					await prisma.$transaction([
 						prisma.config.delete({
-							where: { guildId: interaction.guildId }
+							where: { guildId: interaction.guildId },
 						}),
 						prisma.config.create({
-							data: { guildId: interaction.guildId }
-						})
+							data: { guildId: interaction.guildId },
+						}),
 					]);
 
 					logger.log("Reset config");
 
-					buttonInteraction.followUp({
-						ephemeral: true,
-						content: `${Emojis.Sparks} Successfully reset the config.`
-					});
+					buttonInteraction
+						.followUp({
+							content: `${Emojis.Sparks} Successfully reset the config.`,
+							ephemeral: true,
+						})
+						.catch(() => null);
 
-					const newConfigManager = new ConfigManager(
-						interaction.guild
-					);
+					const newConfigManager = new ConfigManager(interaction.guild);
 
 					await newConfigManager
 						.validate()
-						.then(async () =>
-							toConfigDashboard(interaction, newConfigManager)
-						)
-						.catch(async () =>
-							toNoConfigDashboard(interaction, newConfigManager)
-						);
+						.then(async () => toConfigDashboard(interaction, newConfigManager))
+						.catch(async () => toNoConfigDashboard(interaction, newConfigManager));
 
 					return;
 				}
@@ -290,27 +266,25 @@ export default async function toConfigDashboard(
 				case components.buttons.restrictRolesOptions.customId: {
 					handleConfigOption
 						.roles(buttonInteraction, config, {
-							type: "restrictRoles"
+							type: "restrictRoles",
 						})
-						.then(async (res) => {
+						.then(async (option) => {
 							logger.log("Edited restrict roles option");
 
 							config = await config.edit({
-								restrictRolesIds: res.roleIds
+								restrictRolesIds: option.roleIds,
 							});
 
-							retry();
+							void retry();
 						})
-						.catch(async () =>
-							toConfigDashboard(buttonInteraction, configManager)
-						);
+						.catch(async () => toConfigDashboard(buttonInteraction, configManager));
 
 					break;
 				}
 			}
 		};
 
-		retry();
+		void retry();
 	});
 
 	collector.on("end", (_, reason) => {

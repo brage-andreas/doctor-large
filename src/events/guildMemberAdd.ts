@@ -1,14 +1,14 @@
-import AutoroleManager from "#database/autorole.js";
-import Logger from "#logger";
-import { type EventExport } from "#typings";
 import { Events, type GuildMember } from "discord.js";
+import AutoroleManager from "#database/autorole.js";
+import { type EventExport } from "#typings";
+import Logger from "#logger";
 
 const execute = async (member: GuildMember) => {
 	if (member.user.bot) {
 		return;
 	}
 
-	const logger = new Logger({ label: "AUTOROLE", guild: member.guild });
+	const logger = new Logger({ guild: member.guild, label: "AUTOROLE" });
 
 	const autoroleManager = new AutoroleManager(member.guild);
 	await autoroleManager.initialize();
@@ -25,17 +25,13 @@ const execute = async (member: GuildMember) => {
 		.catch(() => false);
 
 	if (success) {
-		logger.log(
-			`Gave ${autorole.validRoles.length} role(s) to ${member.user.tag} (${member.id})`
-		);
+		logger.log(`Gave ${autorole.validRoles.length} role(s) to ${member.user.tag} (${member.id})`);
 	} else {
-		logger
-			.setOptions({ color: "red" })
-			.log(`Failed to give roles to ${member.user.tag} (${member.id})`);
+		logger.setOptions({ color: "red" }).log(`Failed to give roles to ${member.user.tag} (${member.id})`);
 	}
 };
 
 export const getEvent: EventExport = () => ({
 	event: Events.GuildMemberAdd,
-	execute
+	execute,
 });

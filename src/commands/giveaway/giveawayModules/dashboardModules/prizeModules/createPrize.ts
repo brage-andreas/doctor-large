@@ -1,11 +1,11 @@
-import components from "#components";
-import { Emojis, Prize } from "#constants";
+import { type ButtonInteraction, bold } from "discord.js";
 import type GiveawayManager from "#database/giveaway.js";
-import { ModalCollector } from "#helpers";
-import Logger from "#logger";
-import { oneLine } from "common-tags";
-import { bold, type ButtonInteraction } from "discord.js";
 import toPrizeDashboard from "./prizeDashboard.js";
+import { Emojis, Prize } from "#constants";
+import { ModalCollector } from "#helpers";
+import { oneLine } from "common-tags";
+import components from "#components";
+import Logger from "#logger";
 
 export default async function toCreatePrize(
 	interaction: ButtonInteraction<"cached">,
@@ -23,13 +23,11 @@ export default async function toCreatePrize(
 
 		const name = modalInteraction.fields.getTextInputValue("name");
 
-		const additionalInfo =
-			modalInteraction.fields.getTextInputValue("additionalInfo") || null;
+		const additionalInfo = modalInteraction.fields.getTextInputValue("additionalInfo") || null;
 
-		const quantityString =
-			modalInteraction.fields.getTextInputValue("quantity");
+		const quantityString = modalInteraction.fields.getTextInputValue("quantity");
 
-		const originalQuantity = parseInt(quantityString) || 1;
+		const originalQuantity = Number.parseInt(quantityString) || 1;
 		let quantity = originalQuantity;
 
 		if (quantity < 1) {
@@ -39,27 +37,25 @@ export default async function toCreatePrize(
 		}
 
 		const { id } = await giveawayManager.createPrize({
+			additionalInfo,
 			giveawayId,
 			name,
-			additionalInfo,
-			quantity
+			quantity,
 		});
 
-		new Logger({ label: "GIVEAWAY", interaction }).log(
-			`Created prize #${id} in giveaway #${giveawayId}`
-		);
+		new Logger({ interaction, label: "GIVEAWAY" }).log(`Created prize #${id} in giveaway #${giveawayId}`);
 
 		if (quantity !== originalQuantity) {
 			await interaction.followUp({
-				ephemeral: true,
 				content: oneLine`
 					${Emojis.Warn} The quantity must be between 1 and ${Prize.MaxQuantity}.
 					Therefore, the quantity was set to
 					${bold(quantity.toString())}, instead of ${originalQuantity}.
-				`
+				`,
+				ephemeral: true,
 			});
 		}
 
-		toPrizeDashboard(modalInteraction, id, giveawayManager, giveawayId);
+		void toPrizeDashboard(modalInteraction, id, giveawayManager, giveawayId);
 	});
 }

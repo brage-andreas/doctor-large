@@ -1,20 +1,20 @@
-import components from "#components";
-import { Colors, Emojis, Giveaway } from "#constants";
-import type GiveawayManager from "#database/giveaway.js";
-import { longstamp } from "#helpers";
-import { EndAutomation } from "@prisma/client";
-import { oneLine, stripIndents } from "common-tags";
 import {
+	type APIButtonComponent,
+	type ButtonInteraction,
 	ButtonStyle,
 	ComponentType,
 	EmbedBuilder,
 	bold,
-	type APIButtonComponent,
-	type ButtonInteraction
 } from "discord.js";
-import ms from "ms";
-import toDashboard from "../dashboard.js";
+import type GiveawayManager from "#database/giveaway.js";
+import { Colors, Emojis, Giveaway } from "#constants";
+import { oneLine, stripIndents } from "common-tags";
+import { EndAutomation } from "@prisma/client";
 import toEndGiveaway from "./endGiveaway.js";
+import toDashboard from "../dashboard.js";
+import components from "#components";
+import { longstamp } from "#helpers";
+import ms from "ms";
 
 export default async function toEndOptions(
 	interaction: ButtonInteraction<"cached">,
@@ -31,13 +31,13 @@ export default async function toEndOptions(
 			
 				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
-			embeds: []
+			embeds: [],
 		});
 
 		return;
 	}
 
-	const { endDate, endAutomation: endAutomationLevel } = giveaway;
+	const { channelId, endAutomation, endDate } = giveaway;
 
 	const minTime = () => Date.now() + Giveaway.MinimumEndDateBuffer;
 
@@ -45,8 +45,8 @@ export default async function toEndOptions(
 
 	const plusButtons = adjustments.map((time) =>
 		components.buttons.adjustDate({
+			customId: `+${ms(time)}`,
 			label: `+${time}`,
-			customId: `+${ms(time)}`
 		})
 	);
 
@@ -61,11 +61,17 @@ export default async function toEndOptions(
 		}
 
 		return components.buttons.adjustDate({
-			label: `-${time}`,
 			customId: `-${milliseconds}`,
-			disabled
+			disabled,
+			label: `-${time}`,
 		});
 	});
+
+	const setSuccess = (...buttons: Array<APIButtonComponent>) => {
+		for (const b of buttons) {
+			b.style = ButtonStyle.Success;
+		}
+	};
 
 	const endLevelButtons = () => {
 		const none = components.buttons.endLevelNone.component();
@@ -73,12 +79,7 @@ export default async function toEndOptions(
 		const roll = components.buttons.endLevelRoll.component();
 		const announce = components.buttons.endLevelAnnounce.component();
 
-		const setSuccess = (...buttons: Array<APIButtonComponent>) =>
-			buttons.forEach((b) => {
-				b.style = ButtonStyle.Success;
-			});
-
-		switch (endAutomationLevel) {
+		switch (endAutomation) {
 			case EndAutomation.Announce: {
 				announce.disabled = true;
 				setSuccess(end, roll, announce);
@@ -116,28 +117,25 @@ export default async function toEndOptions(
 	const roundedDate = endDate && !isRounded ? new Date(endDate) : null;
 
 	if (roundedDate) {
-		if (
-			roundedDate.getMinutes() < 30 &&
-			minTime() <= roundedDate.getTime()
-		) {
+		if (roundedDate.getMinutes() < 30 && minTime() <= roundedDate.getTime()) {
 			roundedDate.setMinutes(0, 0, 0);
 		} else {
 			roundedDate.setHours(roundedDate.getHours() + 1, 0, 0, 0);
 		}
 	}
 
-	const bufferStr = ms(Giveaway.MinimumEndDateBuffer, { long: true });
-	const hostDMStr = ms(Giveaway.HostDMTimeBeforeEnd, { long: true });
+	const bufferString = ms(Giveaway.MinimumEndDateBuffer, { long: true });
+	const hostDMString = ms(Giveaway.HostDMTimeBeforeEnd, { long: true });
 
 	const endOptionsEmbed = new EmbedBuilder()
 		.setTitle("End options")
-		.setColor(giveaway.endDate ? Colors.Green : Colors.Red)
+		.setColor(endDate ? Colors.Green : Colors.Red)
 		.addFields({
 			name: "End automation level",
 			value: stripIndents`
 				Define what should happen when the giveaway ends.
 				You can always end the giveaway manually.
-				The host will be notified ${hostDMStr} before, and on end.
+				The host will be notified ${hostDMString} before, and on end.
 
 				Levels:
 				1. ${bold("None")}: No automation. (The host will be notified as normal.)
@@ -145,11 +143,11 @@ export default async function toEndOptions(
 				3. ${bold("Roll")}: Roll the winners. This will also End.
 				4. ${bold("Announce")}: Announce and notify the winners. This will also Roll.
 
-				Currently set to: ${bold(endAutomationLevel)}
-			`
+				Currently set to: ${bold(endAutomation)}
+			`,
 		})
 		.setFooter({
-			text: `The date must be at least ${bufferStr} in the future.`
+			text: `The date must be at least ${bufferString} in the future.`,
 		});
 
 	if (endDate) {
@@ -169,12 +167,12 @@ export default async function toEndOptions(
 		missingParts.push("* Add one or more prizes");
 	}
 
-	if (!giveaway.channelId) {
+	if (!channelId) {
 		missingParts.push("* Announce the giveaway");
 	}
 
 	const cannotEnd =
-		!giveaway.prizesQuantity() || !giveaway.channelId
+		!giveaway.prizesQuantity() || !channelId
 			? stripIndents`
 				${Emojis.Error} The giveaway cannot be ended:
 				${missingParts.join("\n")}
@@ -184,10 +182,7 @@ export default async function toEndOptions(
 	const rows = components.createRows(
 		components.set.disabled(components.buttons.setDate, true),
 		components.set.disabled(components.buttons.clearDate, !endDate),
-		components.set.disabled(
-			components.buttons.roundDateToNearestHour,
-			isRounded
-		),
+		components.set.disabled(components.buttons.roundDateToNearestHour, isRounded),
 		components.buttons.endGiveaway,
 		...plusButtons,
 		...minusButtons,
@@ -195,33 +190,32 @@ export default async function toEndOptions(
 		...endLevelButtons()
 	);
 
-	const msg = await interaction.editReply({
-		content: cannotEnd,
+	const message = await interaction.editReply({
 		components: rows,
-		embeds: [endOptionsEmbed]
+		content: cannotEnd,
+		embeds: [endOptionsEmbed],
 	});
 
-	const collector = msg.createMessageComponentCollector({
-		filter: (buttonInteraction) =>
-			buttonInteraction.user.id === interaction.user.id,
+	const collector = message.createMessageComponentCollector({
 		componentType: ComponentType.Button,
+		filter: (buttonInteraction) => buttonInteraction.user.id === interaction.user.id,
+		max: 1,
 		time: 120_000,
-		max: 1
 	});
 
 	collector.on("ignore", (buttonInteraction) => {
-		buttonInteraction.reply({
-			content: `${Emojis.NoEntry} This button is not for you.`,
-			ephemeral: true
-		});
+		buttonInteraction
+			.reply({
+				content: `${Emojis.NoEntry} This button is not for you.`,
+				ephemeral: true,
+			})
+			.catch(() => null);
 	});
 
 	collector.on("collect", async (buttonInteraction) => {
 		const adjustDateRegExp = /^(?<prefix>\+|-)(?<time>\d+)$/;
 
-		if (
-			buttonInteraction.customId !== components.buttons.setDate.customId
-		) {
+		if (buttonInteraction.customId !== components.buttons.setDate.customId) {
 			await buttonInteraction.deferUpdate();
 		}
 
@@ -229,8 +223,8 @@ export default async function toEndOptions(
 			await giveaway.edit({
 				endAutomation: newLevel,
 				nowOutdated: {
-					announcementMessage: true
-				}
+					announcementMessage: true,
+				},
 			});
 
 			return toEndOptions(buttonInteraction, id, giveawayManager);
@@ -251,8 +245,8 @@ export default async function toEndOptions(
 				await giveaway.edit({
 					endDate: null,
 					nowOutdated: {
-						announcementMessage: true
-					}
+						announcementMessage: true,
+					},
 				});
 
 				return toEndOptions(buttonInteraction, id, giveawayManager);
@@ -262,8 +256,8 @@ export default async function toEndOptions(
 				await giveaway.edit({
 					endDate: roundedDate,
 					nowOutdated: {
-						announcementMessage: true
-					}
+						announcementMessage: true,
+					},
 				});
 
 				return toEndOptions(buttonInteraction, id, giveawayManager);
@@ -298,24 +292,21 @@ export default async function toEndOptions(
 			}
 		}
 
-		const groups =
-			buttonInteraction.customId.match(adjustDateRegExp)?.groups;
+		const groups = buttonInteraction.customId.match(adjustDateRegExp)?.groups;
 
 		const operator = groups?.prefix;
 		const milliseconds = groups?.time;
 
-		if (operator || milliseconds) {
-			const newTimestamp = eval(
-				`${endDate?.getTime() || Date.now()}${operator}${milliseconds}`
-			);
+		if (operator && milliseconds) {
+			const newTimestamp = eval(`${endDate?.getTime() ?? Date.now()}${operator}${milliseconds}`) as number;
 
 			const newEndDate = new Date(newTimestamp);
 
 			await giveaway.edit({
 				endDate: newEndDate,
 				nowOutdated: {
-					announcementMessage: true
-				}
+					announcementMessage: true,
+				},
 			});
 		}
 

@@ -1,15 +1,14 @@
-import { EVENT_DIR } from "#constants";
 import { type EventExportData, type EventImport } from "#typings";
-import { type Client } from "discord.js";
-import console from "node:console";
 import { readdirSync, statSync } from "node:fs";
 import { grey } from "../logger/color.js";
+import { type Client } from "discord.js";
+import { EVENT_DIR } from "#constants";
+import console from "node:console";
 
-const isFolder = (url: URL) =>
-	statSync(url, { throwIfNoEntry: false })?.isDirectory();
+const isFolder = (url: URL) => statSync(url, { throwIfNoEntry: false })?.isDirectory();
 
 export default async function loadEvents(client: Client) {
-	const events: Set<EventExportData> = new Set();
+	const events = new Set<EventExportData>();
 
 	for (const fileName of readdirSync(EVENT_DIR)) {
 		const url = new URL(`../events/${fileName}`, import.meta.url);
@@ -18,70 +17,62 @@ export default async function loadEvents(client: Client) {
 			continue;
 		}
 
-		const err = (string: string) => {
+		const error = (string: string) => {
 			throw new TypeError(`File '/events/${fileName}' ${string}`);
 		};
 
 		const rawEventImport = (await import(url.toString())) as EventImport;
 
 		if (typeof rawEventImport !== "object") {
-			err("does not export an object");
+			error("does not export an object");
 		}
 
 		if (!("getEvent" in rawEventImport)) {
-			err("does not contain property 'getEvent'");
+			error("does not contain property 'getEvent'");
 		}
 
 		if (typeof rawEventImport.getEvent !== "function") {
-			err("exported property 'getEvent' is not of type function");
+			error("exported property 'getEvent' is not of type function");
 		}
 
 		const rawEvent = rawEventImport.getEvent();
 
 		if (typeof rawEvent !== "object") {
-			err("exported property 'getEvent' does not export an object");
+			error("exported property 'getEvent' does not export an object");
 		}
 
 		if (!("event" in rawEvent)) {
-			err(
-				"exported property 'getEvent' does not contain property 'event'"
-			);
+			error("exported property 'getEvent' does not contain property 'event'");
 		}
 
 		if (typeof rawEvent.event !== "string") {
-			err(
-				"exported property 'getEvent' property 'event' is not of type string"
-			);
+			error("exported property 'getEvent' property 'event' is not of type string");
 		}
 
 		if (!("execute" in rawEvent)) {
-			err(
-				"exported property 'getEvent' does not contain property 'execute'"
-			);
+			error("exported property 'getEvent' does not contain property 'execute'");
 		}
 
 		if (typeof rawEvent.execute !== "function") {
-			err(
-				"exported property 'getEvent' property 'execute' is not of type function"
-			);
+			error("exported property 'getEvent' property 'execute' is not of type function");
 		}
 
 		events.add(rawEvent);
 	}
 
-	events.forEach(({ event, execute }) => {
+	for (const { event, execute } of events) {
 		console.log(grey(`Loaded event '${event}'`));
 
 		if (event === "ready") {
-			client.on(event, (...args: Array<unknown>) => {
-				execute(client, ...args);
+			client.on(event, (...arguments_: Array<unknown>) => {
+				execute(client, ...arguments_);
 			});
 
-			return;
+			continue;
 		}
 
-		client.on(event, (...args: Array<unknown>) => {
-			execute(...args);
+		client.on(event, (...arguments_: Array<unknown>) => {
+			execute(...arguments_);
 		});
-	});
+	}
 }

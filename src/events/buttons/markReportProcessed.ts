@@ -1,19 +1,17 @@
-import { Emojis, Regex } from "#constants";
-import ReportManager from "#database/report.js";
-import Logger from "#logger";
-import { oneLine } from "common-tags";
 import { type ButtonInteraction } from "discord.js";
+import ReportManager from "#database/report.js";
+import { Emojis, Regex } from "#constants";
+import { oneLine } from "common-tags";
+import Logger from "#logger";
 
-export default async function markReportProcessed(
-	interaction: ButtonInteraction<"cached">
-) {
+export default async function markReportProcessed(interaction: ButtonInteraction<"cached">) {
 	const match = interaction.customId.match(Regex.MarkReportProcessed);
 	const reportId = match?.groups?.id ? Number(match.groups.id) : undefined;
 
 	if (!reportId) {
 		await interaction.reply({
 			content: `${Emojis.Error} This button is faulty.`,
-			ephemeral: true
+			ephemeral: true,
 		});
 
 		return;
@@ -26,7 +24,7 @@ export default async function markReportProcessed(
 
 	if (!report) {
 		await interaction.editReply({
-			content: `${Emojis.Error} This report no longer exists.`
+			content: `${Emojis.Error} This report no longer exists.`,
 		});
 
 		return;
@@ -36,7 +34,7 @@ export default async function markReportProcessed(
 		.edit({
 			processedAt: interaction.createdAt,
 			processedByUserId: interaction.user.id,
-			processedByUsername: interaction.user.tag
+			processedByUsername: interaction.user.tag,
 		})
 		.then(() => true)
 		.catch(() => false);
@@ -46,7 +44,7 @@ export default async function markReportProcessed(
 			content: oneLine`
 				${Emojis.Error} Something went wrong marking this report processed.
 				Check if the report still exists and try again.
-			`
+			`,
 		});
 
 		return;
@@ -54,19 +52,17 @@ export default async function markReportProcessed(
 
 	const logEditedSuccess = await report.editLog();
 
-	new Logger({ color: "grey", label: "REPORT", interaction }).log(
-		`Marked report #${report.id} processed`
-	);
+	new Logger({ color: "grey", interaction, label: "REPORT" }).log(`Marked report #${report.id} processed`);
 
 	if (!logEditedSuccess) {
 		await interaction.editReply({
-			content: `${Emojis.Warn} Could not update the report log, but the report has been marked processed.`
+			content: `${Emojis.Warn} Could not update the report log, but the report has been marked processed.`,
 		});
 
 		return;
 	}
 
 	await interaction.editReply({
-		content: `${Emojis.Check} Marked report processed.`
+		content: `${Emojis.Check} Marked report processed.`,
 	});
 }

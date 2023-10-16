@@ -1,10 +1,10 @@
-import { Emojis } from "#constants";
+import { type ButtonInteraction, ButtonStyle, bold } from "discord.js";
 import type GiveawayManager from "#database/giveaway.js";
 import { commandMention, yesNo } from "#helpers";
-import Logger from "#logger";
 import { stripIndents } from "common-tags";
-import { ButtonStyle, bold, type ButtonInteraction } from "discord.js";
 import toDashboard from "../dashboard.js";
+import { Emojis } from "#constants";
+import Logger from "#logger";
 
 export default async function toDeleteGiveaway(
 	interaction: ButtonInteraction<"cached">,
@@ -21,7 +21,7 @@ export default async function toDeleteGiveaway(
 			
 				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
-			embeds: []
+			embeds: [],
 		});
 
 		return;
@@ -34,10 +34,6 @@ export default async function toDeleteGiveaway(
 		: "";
 
 	const accept = await yesNo({
-		yesStyle: ButtonStyle.Danger,
-		noStyle: ButtonStyle.Secondary,
-		medium: interaction,
-		filter: () => true,
 		data: {
 			content: stripIndents`
 				${Emojis.Warn} You are about to delete giveaway ${giveaway.asRelId}.
@@ -45,30 +41,31 @@ export default async function toDeleteGiveaway(
 
 				Are you sure? Absolutely sure? This action will be ${bold("irreversible")}.
 			`,
-			embeds: []
-		}
+			embeds: [],
+		},
+		filter: () => true,
+		medium: interaction,
+		noStyle: ButtonStyle.Secondary,
+		yesStyle: ButtonStyle.Danger,
 	});
 
 	if (!accept) {
-		interaction.followUp({
-			ephemeral: true,
-			content: `Alright! Canceled deleting giveaway ${giveaway.asRelId}`
-		});
+		interaction
+			.followUp({
+				content: `Alright! Canceled deleting giveaway ${giveaway.asRelId}`,
+				ephemeral: true,
+			})
+			.catch(() => null);
 
-		toDashboard(interaction, id);
+		void toDashboard(interaction, id);
 
 		return;
 	}
 
-	const createdWithinFifteenMinutes =
-		Date.now() - giveaway.createdAt.getTime() <= 900_000; // 900 000 ms = 15 min
+	const createdWithinFifteenMinutes = Date.now() - giveaway.createdAt.getTime() <= 900_000; // 900 000 ms = 15 min
 
 	if (!createdWithinFifteenMinutes) {
 		const accept2 = await yesNo({
-			yesStyle: ButtonStyle.Danger,
-			noStyle: ButtonStyle.Secondary,
-			medium: interaction,
-			filter: () => true,
 			data: {
 				content: stripIndents`
 						${Emojis.Error} You are about to delete giveaway ${giveaway.asRelId}.
@@ -76,17 +73,23 @@ export default async function toDeleteGiveaway(
 	
 					ARE YOU ABSOLUTELY CERTAIN?
 				`,
-				embeds: []
-			}
+				embeds: [],
+			},
+			filter: () => true,
+			medium: interaction,
+			noStyle: ButtonStyle.Secondary,
+			yesStyle: ButtonStyle.Danger,
 		});
 
 		if (!accept2) {
-			interaction.followUp({
-				ephemeral: true,
-				content: `Alright! Canceled deleting giveaway ${giveaway.asRelId}`
-			});
+			interaction
+				.followUp({
+					content: `Alright! Canceled deleting giveaway ${giveaway.asRelId}`,
+					ephemeral: true,
+				})
+				.catch(() => null);
 
-			toDashboard(interaction, id);
+			void toDashboard(interaction, id);
 
 			return;
 		}
@@ -94,13 +97,13 @@ export default async function toDeleteGiveaway(
 
 	await giveaway.delete({ withAnnouncementMessages: true });
 
-	new Logger({ label: "GIVEAWAY", interaction }).log(
-		`Deleted giveaway #${giveaway.id}`
-	);
+	new Logger({ interaction, label: "GIVEAWAY" }).log(`Deleted giveaway #${giveaway.id}`);
 
-	interaction.editReply({
-		components: [],
-		content: `${Emojis.Check} Successfully deleted giveaway ${giveaway.asRelId}.`,
-		embeds: []
-	});
+	interaction
+		.editReply({
+			components: [],
+			content: `${Emojis.Check} Successfully deleted giveaway ${giveaway.asRelId}.`,
+			embeds: [],
+		})
+		.catch(() => null);
 }

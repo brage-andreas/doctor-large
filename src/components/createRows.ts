@@ -2,13 +2,9 @@ import {
 	type CreateRows,
 	type CreateRowsCompatibleAPIComponent,
 	type CreateRowsCompatibleRow,
-	type CreateRowsInput
+	type CreateRowsInput,
 } from "#typings";
-import {
-	ComponentType,
-	type APIActionRowComponent,
-	type APIButtonComponent
-} from "discord.js";
+import { type APIActionRowComponent, type APIButtonComponent, ComponentType } from "discord.js";
 
 // Gloriously over-engineered
 
@@ -29,7 +25,7 @@ const splitToFives = (number: number) => {
 	const array: Array<number> = [];
 	let n = number;
 
-	for (let i = 0; i < Math.ceil(number / 5); i++) {
+	for (let index = 0; index < Math.ceil(number / 5); index++) {
 		if (n >= 5) {
 			array.push(5);
 			n -= 5;
@@ -44,24 +40,16 @@ const splitToFives = (number: number) => {
 };
 
 const getCreateRows =
-	(
-		lengthRow1: number,
-		lengthRow2: number,
-		lengthRow3: number,
-		lengthRow4: number,
-		lengthRow5: number
-	) =>
+	(lengthRow1: number, lengthRow2: number, lengthRow3: number, lengthRow4: number, lengthRow5: number) =>
 	(...components: CreateRowsInput): Array<CreateRowsCompatibleRow> => {
-		const rows: Array<
-			APIActionRowComponent<CreateRowsCompatibleAPIComponent>
-		> = [];
+		const rows: Array<APIActionRowComponent<CreateRowsCompatibleAPIComponent>> = [];
 
 		const maxes = [
 			...splitToFives(lengthRow1),
 			...splitToFives(lengthRow2),
 			...splitToFives(lengthRow3),
 			...splitToFives(lengthRow4),
-			...splitToFives(lengthRow5)
+			...splitToFives(lengthRow5),
 		].slice(0, 5);
 
 		for (const componentOrObject of components.slice(0, 25)) {
@@ -72,37 +60,28 @@ const getCreateRows =
 			const index = rows.length - 1;
 			const max = maxes[index];
 
-			const component =
-				"component" in componentOrObject
-					? componentOrObject.component()
-					: componentOrObject;
+			const component = "component" in componentOrObject ? componentOrObject.component() : componentOrObject;
 
 			const lastRow = rows.at(-1) ?? {
 				components: [],
-				type: ComponentType.ActionRow
+				type: ComponentType.ActionRow,
 			};
 
 			const lastRowIsFullOf = {
 				buttons: max <= lastRow.components.length,
-				others: lastRow.components.some(
-					(c) => c.type !== ComponentType.Button
-				)
+				others: lastRow.components.some((c) => c.type !== ComponentType.Button),
 			};
 
-			if (
-				lastRowIsFullOf.buttons ||
-				lastRowIsFullOf.others ||
-				component.type !== ComponentType.Button
-			) {
+			if (lastRowIsFullOf.buttons || lastRowIsFullOf.others || component.type !== ComponentType.Button) {
 				rows.push({
 					components: [component],
-					type: ComponentType.ActionRow
+					type: ComponentType.ActionRow,
 				});
 
 				continue;
 			}
 
-			if (lastRow.components.length) {
+			if (lastRow.components.length > 0) {
 				rows.pop();
 			}
 
@@ -118,8 +97,7 @@ const getCreateRows =
 
 const createRows = getCreateRows(5, 5, 5, 5, 5) as CreateRows;
 
-createRows.uniform = (length: number | undefined = 5) =>
-	getCreateRows(length, length, length, length, length);
+createRows.uniform = (length: number | undefined = 5) => getCreateRows(length, length, length, length, length);
 
 createRows.specific = (
 	lengthRow1: number | undefined = 5,

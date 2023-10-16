@@ -1,11 +1,9 @@
+import { type APIEmbed, type ButtonInteraction } from "discord.js";
 import { ColorsHex, Emojis, Regex } from "#constants";
 import { getMemberInfo } from "#helpers";
 import Logger from "#logger";
-import { type APIEmbed, type ButtonInteraction } from "discord.js";
 
-export default async function memberInfo(
-	interaction: ButtonInteraction<"cached">
-) {
+export default async function memberInfo(interaction: ButtonInteraction<"cached">) {
 	await interaction.deferReply({ ephemeral: true });
 
 	const match = interaction.customId.match(Regex.MemberInfoCustomId);
@@ -14,7 +12,7 @@ export default async function memberInfo(
 
 	if (!memberId || !prefix) {
 		await interaction.editReply({
-			content: `${Emojis.Error} This button is faulty.`
+			content: `${Emojis.Error} This button is faulty.`,
 		});
 
 		return;
@@ -22,19 +20,14 @@ export default async function memberInfo(
 
 	const memberOrUser = await interaction.guild.members
 		.fetch({
+			force: true,
 			user: memberId,
-			force: true
 		})
-		.catch(
-			async () =>
-				await interaction.client.users
-					.fetch(memberId, { force: true })
-					.catch(() => null)
-		);
+		.catch(async () => await interaction.client.users.fetch(memberId, { force: true }).catch(() => null));
 
 	if (!memberOrUser) {
 		await interaction.editReply({
-			content: `${Emojis.Error} This button is faulty, as the user no longer exist.\nID: \`${memberId}\``
+			content: `${Emojis.Error} This button is faulty, as the user no longer exist.\nID: \`${memberId}\``,
 		});
 
 		return;
@@ -44,15 +37,13 @@ export default async function memberInfo(
 		color: ColorsHex.Yellow,
 		fields: getMemberInfo(memberOrUser, prefix),
 		thumbnail: { url: memberOrUser.displayAvatarURL({ size: 1024 }) },
-		timestamp: new Date().toISOString()
+		timestamp: new Date().toISOString(),
 	};
 
-	new Logger({ color: "grey", label: "BUTTON", interaction }).log(
-		`Opened member info of ${memberId}`
-	);
+	new Logger({ color: "grey", interaction, label: "BUTTON" }).log(`Opened member info of ${memberId}`);
 
 	await interaction.editReply({
 		content: null,
-		embeds: [embed]
+		embeds: [embed],
 	});
 }

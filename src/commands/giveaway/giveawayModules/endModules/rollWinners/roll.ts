@@ -7,10 +7,9 @@ export default function roll(options: {
 	prizesQuantity: number;
 	winnerQuantity: number;
 }) {
-	const { entries, overrideClaimed, prizes, prizesQuantity, winnerQuantity } =
-		options;
+	const { entries, overrideClaimed, prizes, prizesQuantity, winnerQuantity } = options;
 
-	if (!entries.length || !prizesQuantity || !winnerQuantity) {
+	if (entries.length === 0 || !prizesQuantity || !winnerQuantity) {
 		return null;
 	}
 
@@ -22,10 +21,7 @@ export default function roll(options: {
 
 		if (!overrideClaimed) {
 			const winnerArray = [...prize.winners.values()];
-			const newLength = winnerArray.reduce(
-				(n, { claimed }) => (claimed ? n - 1 : n),
-				prize.quantity
-			);
+			const newLength = winnerArray.reduce((n, { claimed }) => (claimed ? n - 1 : n), prize.quantity);
 
 			length = newLength;
 		}
@@ -40,7 +36,7 @@ export default function roll(options: {
 	};
 
 	const getRandomUserId = () => {
-		if (!oneTimeBucket.size) {
+		if (oneTimeBucket.size === 0) {
 			return random(alwaysFullBucket);
 		}
 
@@ -53,8 +49,8 @@ export default function roll(options: {
 	let delegatedPrizes = 0;
 	const winners: Array<{ prizeId: number; userId: string }> = [];
 
-	for (let i = 0; i < prizeIdsToRoll.length; i++) {
-		const currentPrizeId = prizeIdsToRoll.at(i);
+	for (let index = 0; index < prizeIdsToRoll.length; index++) {
+		const currentPrizeId = prizeIdsToRoll.at(index);
 
 		if (!currentPrizeId) {
 			continue;
@@ -69,9 +65,7 @@ export default function roll(options: {
 		winnersFilledButNotPrizes;
 
 		if (winnersFilledButNotPrizes) {
-			randomWinnerUserId = random(
-				winners.map(({ userId: winnerUserId }) => winnerUserId)
-			);
+			randomWinnerUserId = random(winners.map(({ userId: winnerUserId }) => winnerUserId));
 
 			delegatedPrizes--;
 		} else {
@@ -80,7 +74,7 @@ export default function roll(options: {
 
 		winners.push({
 			prizeId: currentPrizeId,
-			userId: randomWinnerUserId
+			userId: randomWinnerUserId,
 		});
 
 		delegatedPrizes++;

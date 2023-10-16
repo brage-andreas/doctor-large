@@ -1,35 +1,31 @@
-import { Colors, Emojis } from "#constants";
-import type AutoroleManager from "#database/autorole.js";
-import { type Autorole } from "@prisma/client";
-import { stripIndents } from "common-tags";
 import {
-	bold,
-	EmbedBuilder,
-	PermissionFlagsBits,
 	type Client,
+	EmbedBuilder,
 	type Guild,
 	type GuildMember,
-	type Role
+	PermissionFlagsBits,
+	type Role,
+	bold,
 } from "discord.js";
+import type AutoroleManager from "#database/autorole.js";
+import { type Autorole } from "@prisma/client";
+import { Colors, Emojis } from "#constants";
+import { stripIndents } from "common-tags";
 
 export default class AutoroleModule {
-	public readonly manager: AutoroleManager;
-	public readonly client: Client<true>;
-	public readonly guild: Guild;
-	public data: Autorole;
-
 	public activated: boolean;
+	public readonly client: Client<true>;
+	public data: Autorole;
+	public readonly guild: Guild;
+
 	public lastEditedAt: Date | null;
+	public readonly manager: AutoroleManager;
 	public roleIds: Set<string>;
 
 	public roles: Array<Role | string>;
 	public validRoles: Array<Role>;
 
-	public constructor(
-		data: Autorole,
-		guild: Guild,
-		autoroleManager: AutoroleManager
-	) {
+	public constructor(data: Autorole, guild: Guild, autoroleManager: AutoroleManager) {
 		this.manager = autoroleManager;
 		this.client = guild.client;
 		this.guild = guild;
@@ -53,29 +49,8 @@ export default class AutoroleModule {
 		});
 	}
 
-	public get hasPerms() {
-		return (
-			this.guild.members.me?.permissions.has(
-				PermissionFlagsBits.ManageRoles
-			) ?? false
-		);
-	}
-
 	public async giveRolesTo(member: GuildMember) {
-		return await member.roles
-			.add(this.validRoles, "Autorole")
-			.catch(() => null);
-	}
-
-	public async toggle() {
-		const activated = !this.activated;
-
-		await this.manager.update({ activated });
-
-		this.data.activated = activated;
-		this.activated = activated;
-
-		return activated;
+		return await member.roles.add(this.validRoles, "Autorole").catch(() => null);
 	}
 
 	public async setRoles(roles: Array<Role | string>) {
@@ -89,17 +64,18 @@ export default class AutoroleModule {
 			? `${Emojis.On} Currently toggled ${bold("on")}`
 			: `${Emojis.Off} Currently toggled ${bold("off")}`;
 
-		const roles = this.roleIds.size
-			? this.roles
-					.map((role, i) => {
-						if (typeof role === "string") {
-							return `${Emojis.Warn} Could not find role <@${role}> (${role})`;
-						}
+		const roles =
+			this.roleIds.size > 0
+				? this.roles
+						.map((role, index) => {
+							if (typeof role === "string") {
+								return `${Emojis.Warn} Could not find role <@${role}> (${role})`;
+							}
 
-						return `${i + 1}. ${role} (${role.id})`;
-					})
-					.join("\n")
-			: "No roles";
+							return `${index + 1}. ${role.toString()} (${role.id})`;
+						})
+						.join("\n")
+				: "No roles";
 
 		const embed = new EmbedBuilder()
 			.setTimestamp(this.lastEditedAt)
@@ -109,18 +85,33 @@ export default class AutoroleModule {
 				stripIndents`
 					${description}
 
-					${!this.hasPerms ? `${Emojis.Error} Missing Manage Roles permission` : ""}
+					${this.hasPerms ? "" : `${Emojis.Error} Missing Manage Roles permission`}
 				`
 			);
 
 		if (this.activated) {
 			embed.addFields({
+				inline: true,
 				name: `Current roles (${this.roleIds.size})`,
 				value: roles,
-				inline: true
 			});
 		}
 
 		return embed;
+	}
+
+	public async toggle() {
+		const activated = !this.activated;
+
+		await this.manager.update({ activated });
+
+		this.data.activated = activated;
+		this.activated = activated;
+
+		return activated;
+	}
+
+	public get hasPerms() {
+		return this.guild.members.me?.permissions.has(PermissionFlagsBits.ManageRoles) ?? false;
 	}
 }

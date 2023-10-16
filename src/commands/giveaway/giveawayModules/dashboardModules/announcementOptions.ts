@@ -1,16 +1,11 @@
+import { type ButtonInteraction, type ComponentType, type NewsChannel, type TextChannel } from "discord.js";
+import type GiveawayManager from "#database/giveaway.js";
+import { oneLine, stripIndents } from "common-tags";
+import { getMissingPermissions } from "#helpers";
+import toDashboard from "../dashboard.js";
 import components from "#components";
 import { Emojis } from "#constants";
-import type GiveawayManager from "#database/giveaway.js";
-import { getMissingPermissions } from "#helpers";
 import Logger from "#logger";
-import { oneLine, stripIndents } from "common-tags";
-import {
-	type ButtonInteraction,
-	type ComponentType,
-	type NewsChannel,
-	type TextChannel
-} from "discord.js";
-import toDashboard from "../dashboard.js";
 
 export default async function toAnnouncementOptions(
 	interaction: ButtonInteraction<"cached">,
@@ -27,20 +22,16 @@ export default async function toAnnouncementOptions(
 			
 				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
-			embeds: []
+			embeds: [],
 		});
 
 		return;
 	}
 
-	const chooseChannelStr = stripIndents`
+	const chooseChannelString = stripIndents`
 		Select the channel you would like to announce the giveaway in.
 
-		${
-			giveaway.channel
-				? `Previous channel: ${giveaway.channel} (${giveaway.channel.id})`
-				: ""
-		}
+		${giveaway.channel ? `Previous channel: ${giveaway.channel.toString()} (${giveaway.channel.id})` : ""}
 	`;
 
 	const rows = components.createRows(
@@ -51,76 +42,67 @@ export default async function toAnnouncementOptions(
 		components.buttons.recallCurrentMessage
 	);
 
-	const logger = new Logger({ label: "GIVEAWAY", interaction });
+	const logger = new Logger({ interaction, label: "GIVEAWAY" });
 
 	const retry = async (message?: string) => {
 		if (message) {
-			interaction.followUp({ content: message, ephemeral: true });
+			interaction.followUp({ content: message, ephemeral: true }).catch(() => null);
 		}
 
-		const updateMsg = await interaction.editReply({
-			content: chooseChannelStr,
+		const updateMessage = await interaction.editReply({
 			components: rows,
-			embeds: [giveaway.toEmbed()]
+			content: chooseChannelString,
+			embeds: [giveaway.toEmbed()],
 		});
 
-		const componentInteraction = await updateMsg.awaitMessageComponent<
+		const componentInteraction = await updateMessage.awaitMessageComponent<
 			ComponentType.Button | ComponentType.ChannelSelect
 		>({
-			filter: (i) => i.user.id === interaction.user.id
+			filter: (index) => index.user.id === interaction.user.id,
 		});
 
-		if (
-			componentInteraction.customId === components.buttons.back.customId
-		) {
+		if (componentInteraction.customId === components.buttons.back.customId) {
 			await componentInteraction.deferUpdate();
 
-			toDashboard(interaction, id);
+			void toDashboard(interaction, id);
 
 			return;
 		}
 
 		if (
-			componentInteraction.customId ===
-				components.selectMenus.channel.customId ||
-			componentInteraction.customId ===
-				components.buttons.lastChannel.customId
+			componentInteraction.customId === components.selectMenus.channel.customId ||
+			componentInteraction.customId === components.buttons.lastChannel.customId
 		) {
 			await componentInteraction.deferUpdate();
 
-			const channelId = !componentInteraction.isChannelSelectMenu()
-				? giveaway.channelId
-				: componentInteraction.values[0];
+			const channelId = componentInteraction.isChannelSelectMenu()
+				? componentInteraction.values[0]
+				: giveaway.channelId;
 
 			if (!channelId) {
-				interaction.editReply({
-					content: `${Emojis.Error} Something went wrong. Try again.`,
-					components: [],
-					embeds: []
-				});
+				interaction
+					.editReply({
+						components: [],
+						content: `${Emojis.Error} Something went wrong. Try again.`,
+						embeds: [],
+					})
+					.catch(() => null);
 
 				return;
 			}
 
-			const channel = interaction.guild.channels.cache.get(channelId) as
-				| NewsChannel
-				| TextChannel
-				| undefined;
+			const channel = interaction.guild.channels.cache.get(channelId) as NewsChannel | TextChannel | undefined;
 
 			if (!channel) {
-				retry(`${Emojis.Error} This channel does not exist.`);
+				void retry(`${Emojis.Error} This channel does not exist.`);
 
 				return;
 			}
 
-			const missingPermissions = getMissingPermissions(
-				channel,
-				"SendMessages",
-				"EmbedLinks"
-			);
+			const missingPermissions = getMissingPermissions(channel, "SendMessages", "EmbedLinks");
 
-			if (missingPermissions.length) {
-				retry(
+			if (missingPermissions.length > 0) {
+				void retry(
 					oneLine`
 						${Emojis.Error} I am missing permissions in
 						${channel}. Permissions needed: ${missingPermissions.join(", ")}
@@ -132,11 +114,9 @@ export default async function toAnnouncementOptions(
 
 			const message = await channel.send({
 				allowedMentions: { parse: ["everyone", "roles"] },
-				components: components.createRows(
-					components.buttons.enterGiveaway.component(id)
-				),
+				components: components.createRows(components.buttons.enterGiveaway.component(id)),
 				content: giveaway.pingRolesMentions?.join(" "),
-				embeds: [giveaway.toEmbed()]
+				embeds: [giveaway.toEmbed()],
 			});
 
 			await giveaway.announcementMessage?.delete();
@@ -144,53 +124,51 @@ export default async function toAnnouncementOptions(
 			const urlButtonRows = components.createRows(
 				components.buttons.url({
 					label: "Go to announcement",
-					url: message.url
+					url: message.url,
 				})
 			);
 
-			interaction.followUp({
-				components: urlButtonRows,
-				ephemeral: true,
-				content: `${Emojis.Sparks} Done! Reannounced the giveaway in ${channel}.`,
-				embeds: []
-			});
+			interaction
+				.followUp({
+					components: urlButtonRows,
+					content: `${Emojis.Sparks} Done! Reannounced the giveaway in ${channel.toString()}.`,
+					embeds: [],
+					ephemeral: true,
+				})
+				.catch(() => null);
 
-			logger.log(
-				`Reannounced giveaway #${giveaway.id} in ${channel.name} (${channelId})`
-			);
+			logger.log(`Reannounced giveaway #${giveaway.id} in ${channel.name} (${channelId})`);
 
-			giveaway.edit({
+			void giveaway.edit({
 				announcementMessageId: message.id,
 				channelId,
 				nowOutdated: {
-					announcementMessage: false
-				}
+					announcementMessage: false,
+				},
 			});
 		}
 
 		if (
-			componentInteraction.customId ===
-				components.buttons.editCurrentMessage.customId ||
-			componentInteraction.customId ===
-				components.buttons.recallCurrentMessage.customId
+			componentInteraction.customId === components.buttons.editCurrentMessage.customId ||
+			componentInteraction.customId === components.buttons.recallCurrentMessage.customId
 		) {
 			await componentInteraction.deferUpdate();
 
 			if (!giveaway.channelId || !giveaway.announcementMessageId) {
-				componentInteraction.followUp({
-					content: `${Emojis.Warn} The giveaway is not announced.`,
-					ephemeral: true
-				});
+				componentInteraction
+					.followUp({
+						content: `${Emojis.Warn} The giveaway is not announced.`,
+						ephemeral: true,
+					})
+					.catch(() => null);
 
 				return;
 			}
 
-			const channel = interaction.guild.channels.cache.get(
-				giveaway.channelId
-			);
+			const channel = interaction.guild.channels.cache.get(giveaway.channelId);
 
 			if (!channel) {
-				retry(
+				void retry(
 					stripIndents`
 						${Emojis.Warn} I cannot find channel: ${giveaway.channelId} (${giveaway.channelId}).
 						It may have been deleted.
@@ -203,16 +181,14 @@ export default async function toAnnouncementOptions(
 			if (!channel.isTextBased()) {
 				await componentInteraction.deferUpdate();
 
-				retry(
+				void retry(
 					`${Emojis.Warn} The channel is not a text channel: ${giveaway.channelId} (${giveaway.channelId}).`
 				);
 
 				return;
 			}
 
-			const isEdit =
-				componentInteraction.customId ===
-				components.buttons.editCurrentMessage.customId;
+			const isEdit = componentInteraction.customId === components.buttons.editCurrentMessage.customId;
 
 			const content = giveaway.pingRolesMentions?.join(" ");
 
@@ -222,15 +198,13 @@ export default async function toAnnouncementOptions(
 				? await channel.messages
 						.edit(giveaway.announcementMessageId, {
 							allowedMentions: {
-								roles: [...giveaway.pingRolesIds]
+								roles: [...giveaway.pingRolesIds],
 							},
-							components: components.createRows(
-								components.buttons.enterGiveaway.component(id)
-							),
+							components: components.createRows(components.buttons.enterGiveaway.component(id)),
 							content,
-							embeds
+							embeds,
 						})
-						.then((msg) => msg.url)
+						.then((message_) => message_.url)
 						.catch(() => false)
 				: await channel.messages
 						.delete(giveaway.announcementMessageId)
@@ -242,20 +216,22 @@ export default async function toAnnouncementOptions(
 					typeof urlOrNull === "string"
 						? components.buttons.url({
 								label: "Go to announcement",
-								url: urlOrNull
+								url: urlOrNull,
 						  })
 						: null
 				);
 
-				interaction.followUp({
-					components: urlButtonRows,
-					ephemeral: true,
-					content:
-						typeof urlOrNull === "string"
-							? `${Emojis.Sparks} Done! The announcement has been updated in ${channel}.`
-							: `${Emojis.Warn} I could not update the announcement. The message may have been deleted.`,
-					embeds: []
-				});
+				interaction
+					.followUp({
+						components: urlButtonRows,
+						content:
+							typeof urlOrNull === "string"
+								? `${Emojis.Sparks} Done! The announcement has been updated in ${channel.toString()}.`
+								: `${Emojis.Warn} I could not update the announcement. The message may have been deleted.`,
+						embeds: [],
+						ephemeral: true,
+					})
+					.catch(() => null);
 
 				if (urlOrNull) {
 					logger.log(
@@ -263,14 +239,18 @@ export default async function toAnnouncementOptions(
 					);
 				}
 			} else {
-				interaction.followUp({
-					components: [],
-					ephemeral: true,
-					content: urlOrNull
-						? `${Emojis.Sparks} Done! The announcement has been recalled from ${channel}. All data remain intact.`
-						: `${Emojis.Warn} I could not recall the announcement. The message may have been deleted.`,
-					embeds: []
-				});
+				interaction
+					.followUp({
+						components: [],
+						content: urlOrNull
+							? `${
+									Emojis.Sparks
+							  } Done! The announcement has been recalled from ${channel.toString()}. All data remain intact.`
+							: `${Emojis.Warn} I could not recall the announcement. The message may have been deleted.`,
+						embeds: [],
+						ephemeral: true,
+					})
+					.catch(() => null);
 
 				if (urlOrNull) {
 					logger.log(
@@ -281,18 +261,16 @@ export default async function toAnnouncementOptions(
 
 			if (urlOrNull) {
 				await giveaway.edit({
-					announcementMessageId: isEdit
-						? giveaway.announcementMessageId
-						: null,
+					announcementMessageId: isEdit ? giveaway.announcementMessageId : null,
 					nowOutdated: {
-						announcementMessage: false
-					}
+						announcementMessage: false,
+					},
 				});
 
-				toDashboard(componentInteraction, id);
+				void toDashboard(componentInteraction, id);
 			}
 		}
 	};
 
-	retry();
+	void retry();
 }

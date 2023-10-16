@@ -1,25 +1,18 @@
-import components from "#components";
-import { ColorsHex, Emojis } from "#constants";
-import type ReportManager from "#database/report.js";
 import {
-	getMemberInfo,
-	getTag,
-	longstamp,
-	messageToEmbed,
-	messageURL,
-	squash
-} from "#helpers";
-import { type CaseWithIncludes, type ReportWithIncludes } from "#typings";
-import { type Prisma, type Report, type ReportType } from "@prisma/client";
-import { source, stripIndent, stripIndents } from "common-tags";
-import {
-	Routes,
 	type APIEmbed,
 	type APIEmbedAuthor,
 	type Client,
 	type Guild,
-	type MessageCreateOptions
+	type MessageCreateOptions,
+	Routes,
 } from "discord.js";
+import { getMemberInfo, getTag, longstamp, messageToEmbed, messageURL, squash } from "#helpers";
+import { type Prisma, type Report, type ReportType } from "@prisma/client";
+import { type CaseWithIncludes, type ReportWithIncludes } from "#typings";
+import { source, stripIndent, stripIndents } from "common-tags";
+import type ReportManager from "#database/report.js";
+import { ColorsHex, Emojis } from "#constants";
+import components from "#components";
 export const isMessageReport = (
 	data: Report
 ): data is Report & {
@@ -27,28 +20,25 @@ export const isMessageReport = (
 	targetMessageId: string;
 } => Boolean(data.targetMessageChannelId) && Boolean(data.targetMessageId);
 
-export class UserReportModule
-	implements
-		Omit<ReportWithIncludes, "targetMessageChannelId" | "targetMessageId">
-{
-	public client!: Client<true>;
-	public data!: ReportWithIncludes;
-	public guild!: Guild;
-	public manager!: ReportManager;
-
+export class UserReportModule implements Omit<ReportWithIncludes, "targetMessageChannelId" | "targetMessageId"> {
 	public anonymous!: boolean;
 	public authorUserId!: string;
 	public authorUsername!: string;
+	public client!: Client<true>;
+
 	public comment!: string;
 	public createdAt!: Date;
+	public data!: ReportWithIncludes;
+	public guild!: Guild;
 	public guildId!: string;
 	public guildRelativeId!: number;
 	public id!: number;
-	public logChannelId!: string | null;
-	public logMessageId!: string | null;
+	public logChannelId!: null | string;
+	public logMessageId!: null | string;
+	public manager!: ReportManager;
 	public processedAt!: Date | null;
-	public processedByUserId!: string | null;
-	public processedByUsername!: string | null;
+	public processedByUserId!: null | string;
+	public processedByUsername!: null | string;
 	public referencedBy!: Array<CaseWithIncludes>;
 	public targetUserId!: string;
 	public targetUsername!: string;
@@ -58,46 +48,44 @@ export class UserReportModule
 		this._constructor(manager, data);
 	}
 
-	public get author() {
-		return getTag({
-			id: this.authorUserId,
-			tag: this.authorUsername
-		});
-	}
+	protected _constructor(manager: ReportManager, data: ReportWithIncludes) {
+		this.client = manager.guild.client;
+		this.data = data;
+		this.guild = manager.guild;
+		this.manager = manager;
 
-	public get target() {
-		return getTag({
-			id: this.targetUserId,
-			tag: this.targetUsername
-		});
-	}
-
-	public get processedBy() {
-		if (!this.processedByUserId || !this.processedByUsername) {
-			return null;
+		if (manager.guild.id !== data.guildId) {
+			throw new TypeError(
+				`Value 'manager.guild.id' (${manager.guild.id}) does not match 'data.guildId' (${data.guildId}).`
+			);
 		}
 
-		return getTag({
-			id: this.processedByUserId,
-			tag: this.processedByUsername
-		});
-	}
-
-	public isMessageReport(): this is MessageReportModule {
-		return isMessageReport(this.data);
-	}
-
-	public isUserReport(): this is UserReportModule {
-		return !this.isMessageReport();
+		this.anonymous = data.anonymous;
+		this.authorUserId = data.authorUserId;
+		this.authorUsername = data.authorUsername;
+		this.comment = data.comment;
+		this.createdAt = data.createdAt;
+		this.guildId = data.guildId;
+		this.guildRelativeId = data.guildRelativeId;
+		this.id = data.id;
+		this.logChannelId = data.logChannelId;
+		this.logMessageId = data.logMessageId;
+		this.processedAt = data.processedAt;
+		this.processedByUserId = data.processedByUserId;
+		this.processedByUsername = data.processedByUsername;
+		this.referencedBy = data.referencedBy;
+		this.targetUserId = data.targetUserId;
+		this.targetUsername = data.targetUsername;
+		this.type = data.type;
 	}
 
 	public async edit(data: Prisma.ReportUpdateInput) {
-		const res = await this.manager.editRaw({
+		const result = await this.manager.editRaw({
 			data,
-			where: { id: this.id }
+			where: { id: this.id },
 		});
 
-		this._constructor(this.manager, res);
+		this._constructor(this.manager, result);
 
 		return this;
 	}
@@ -109,10 +97,7 @@ export class UserReportModule
 
 		const body = await this.generatePost();
 
-		const fullRoute = Routes.channelMessage(
-			this.logChannelId,
-			this.logMessageId
-		);
+		const fullRoute = Routes.channelMessage(this.logChannelId, this.logMessageId);
 
 		return await this.client.rest
 			.patch(fullRoute, { body })
@@ -121,40 +106,22 @@ export class UserReportModule
 	}
 
 	public async fetchTarget() {
-		const member = await this.guild.members
-			.fetch({ user: this.targetUserId, force: true })
-			.catch(() => null);
+		const member = await this.guild.members.fetch({ force: true, user: this.targetUserId }).catch(() => null);
 
 		if (member) {
 			return member;
 		}
 
-		return await this.client.users
-			.fetch(this.targetUserId, { force: true })
-			.catch(() => null);
+		return await this.client.users.fetch(this.targetUserId, { force: true }).catch(() => null);
 	}
 
-	// Message module requires async
-	// eslint-disable-next-line @typescript-eslint/require-await
-	public async generatePost(): Promise<MessageCreateOptions> {
-		return this.generateBasePost();
-	}
-
-	protected generateBasePost(
-		typeSpecificInformation?: string | null | undefined
-	) {
+	protected generateBasePost(typeSpecificInformation?: null | string | undefined) {
 		const rows = components.createRows.specific(2, 3)(
-			components.buttons
-				.memberInfo(this.targetUserId, "Target")
-				.component(),
-			components.buttons
-				.memberInfo(this.authorUserId, "Author")
-				.component(),
+			components.buttons.memberInfo(this.targetUserId, "Target").component(),
+			components.buttons.memberInfo(this.authorUserId, "Author").component(),
 			// ---
 			components.buttons.attachToLatestCase(this.id),
-			this.referencedBy.length
-				? components.buttons.unattachReportFromCases(this.id)
-				: null,
+			this.referencedBy.length > 0 ? components.buttons.unattachReportFromCases(this.id) : null,
 			// ---
 			this.processedAt
 				? components.buttons.markReportUnprocessed(this.id)
@@ -188,35 +155,43 @@ export class UserReportModule
 		return { components: rows, content };
 	}
 
-	protected _constructor(manager: ReportManager, data: ReportWithIncludes) {
-		this.client = manager.guild.client;
-		this.data = data;
-		this.guild = manager.guild;
-		this.manager = manager;
+	// eslint-disable-next-line @typescript-eslint/require-await
+	public async generatePost(): Promise<MessageCreateOptions> {
+		return this.generateBasePost();
+	}
 
-		if (manager.guild.id !== data.guildId) {
-			throw new TypeError(
-				`Value 'manager.guild.id' (${manager.guild.id}) does not match 'data.guildId' (${data.guildId}).`
-			);
+	public isMessageReport(): this is MessageReportModule {
+		return isMessageReport(this.data);
+	}
+
+	public isUserReport(): this is UserReportModule {
+		return !this.isMessageReport();
+	}
+
+	// Message module requires async
+	public get author() {
+		return getTag({
+			id: this.authorUserId,
+			tag: this.authorUsername,
+		});
+	}
+
+	public get processedBy() {
+		if (!this.processedByUserId || !this.processedByUsername) {
+			return null;
 		}
 
-		this.anonymous = data.anonymous;
-		this.authorUserId = data.authorUserId;
-		this.authorUsername = data.authorUsername;
-		this.comment = data.comment;
-		this.createdAt = data.createdAt;
-		this.guildId = data.guildId;
-		this.guildRelativeId = data.guildRelativeId;
-		this.id = data.id;
-		this.logChannelId = data.logChannelId;
-		this.logMessageId = data.logMessageId;
-		this.processedAt = data.processedAt;
-		this.processedByUserId = data.processedByUserId;
-		this.processedByUsername = data.processedByUsername;
-		this.referencedBy = data.referencedBy;
-		this.targetUserId = data.targetUserId;
-		this.targetUsername = data.targetUsername;
-		this.type = data.type;
+		return getTag({
+			id: this.processedByUserId,
+			tag: this.processedByUsername,
+		});
+	}
+
+	public get target() {
+		return getTag({
+			id: this.targetUserId,
+			tag: this.targetUsername,
+		});
 	}
 }
 
@@ -228,54 +203,25 @@ export class MessageReportModule extends UserReportModule {
 	public constructor(
 		manager: ReportManager,
 		data: ReportWithIncludes & {
-			targetMessageId: string;
 			targetMessageChannelId: string;
+			targetMessageId: string;
 		}
 	) {
 		super(manager, data);
 
 		this.targetMessageChannelId = data.targetMessageChannelId;
 		this.targetMessageId = data.targetMessageId;
-		this.targetMessageURL = messageURL(
-			data.guildId,
-			data.targetMessageChannelId,
-			data.targetMessageId
-		);
+		this.targetMessageURL = messageURL(data.guildId, data.targetMessageChannelId, data.targetMessageId);
 	}
 
 	public async fetchTargetMessage() {
-		const channel = this.guild.channels.cache.get(
-			this.targetMessageChannelId
-		);
+		const channel = this.guild.channels.cache.get(this.targetMessageChannelId);
 
 		if (!channel?.isTextBased()) {
 			return null;
 		}
 
 		return channel.messages.fetch(this.targetMessageId).catch(() => null);
-	}
-
-	public async toEmbed(): Promise<APIEmbed> {
-		const target =
-			(await this.guild.members
-				.fetch(this.targetUserId)
-				.catch(() => null)) ??
-			(await this.client.users
-				.fetch(this.targetUserId)
-				.catch(() => null));
-
-		const fields = target ? getMemberInfo(target, "Target") : [];
-
-		const author: APIEmbedAuthor = this.anonymous
-			? { name: "Anonymous user" }
-			: { name: `${this.author} (${this.authorUserId})` };
-
-		return {
-			author,
-			color: this.processedAt ? ColorsHex.Green : ColorsHex.Red,
-			fields,
-			footer: { text: `Report #${this.guildRelativeId}` }
-		};
 	}
 
 	public async generatePost(): Promise<MessageCreateOptions> {
@@ -311,7 +257,26 @@ export class MessageReportModule extends UserReportModule {
 		return {
 			...base,
 			components: [...messageButtonRow, ...base.components],
-			embeds: [messageEmbed]
+			embeds: [messageEmbed],
+		};
+	}
+
+	public async toEmbed(): Promise<APIEmbed> {
+		const target =
+			(await this.guild.members.fetch(this.targetUserId).catch(() => null)) ??
+			(await this.client.users.fetch(this.targetUserId).catch(() => null));
+
+		const fields = target ? getMemberInfo(target, "Target") : [];
+
+		const author: APIEmbedAuthor = this.anonymous
+			? { name: "Anonymous user" }
+			: { name: `${this.author} (${this.authorUserId})` };
+
+		return {
+			author,
+			color: this.processedAt ? ColorsHex.Green : ColorsHex.Red,
+			fields,
+			footer: { text: `Report #${this.guildRelativeId}` },
 		};
 	}
 }

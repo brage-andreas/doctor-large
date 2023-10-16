@@ -1,108 +1,94 @@
-import { COMMAND_DIR } from "#constants";
 import { type CommandExportData, type CommandImport } from "#typings";
-import console from "node:console";
 import { existsSync, lstatSync, readdirSync } from "node:fs";
 import { grey } from "../logger/color.js";
+import { COMMAND_DIR } from "#constants";
+import console from "node:console";
 
-const commands: Map<string, CommandExportData> = new Map();
+const commands = new Map<string, CommandExportData>();
 
 const importAndSetCommandIntoMap = async (relativePath: string) => {
-	const err = (string: string) => {
+	const error = (string: string) => {
 		throw new TypeError(`File '/commands/${relativePath}' ${string}`);
 	};
 
-	const rawCommandImport = await import(`../commands/${relativePath}`);
+	const rawCommandImport = (await import(`../commands/${relativePath}`)) as unknown;
 
 	if (typeof rawCommandImport !== "object") {
-		err("does not export an object");
+		error("does not export an object");
 	}
 
-	if (!("getCommand" in rawCommandImport)) {
-		err("does not contain property 'getCommand'");
+	if (!("getCommand" in (rawCommandImport as object))) {
+		error("does not contain property 'getCommand'");
 	}
 
-	if (typeof rawCommandImport.getCommand !== "function") {
-		err("exported property 'getCommand' is not of type function");
+	if (typeof (rawCommandImport as { getCommand: unknown }).getCommand !== "function") {
+		error("exported property 'getCommand' is not of type function");
 	}
 
 	const cmd = (rawCommandImport as CommandImport).getCommand();
 
 	if (typeof cmd !== "object") {
-		err("exported property 'getCommand' does not export an object");
+		error("exported property 'getCommand' does not export an object");
 	}
 
 	if (!("data" in cmd)) {
-		err("exported property 'getCommand' does not contain property 'data'");
+		error("exported property 'getCommand' does not contain property 'data'");
 	}
 
 	if (typeof cmd.data !== "object") {
-		err(
-			"exported property 'getCommand' property 'data' is not of type object"
-		);
+		error("exported property 'getCommand' property 'data' is not of type object");
 	}
 
 	if (!("handle" in cmd)) {
-		err(
-			"exported property 'getCommand' does not contain property 'handle'"
-		);
+		error("exported property 'getCommand' does not contain property 'handle'");
 	}
 
 	if (typeof cmd.handle !== "object") {
-		err(
-			"exported property 'getCommand' property 'handle' is not of type object"
-		);
+		error("exported property 'getCommand' property 'handle' is not of type object");
 	}
 
 	if (!cmd.data.chatInput && !cmd.data.contextMenu) {
-		err(
+		error(
 			"exported property 'getCommand' property 'data' missing 'chatInput' and 'contextMenu'. At least one is required"
 		);
 	}
 
 	if (cmd.data.chatInput && !cmd.handle.chatInput) {
-		err(
-			"exported property 'getCommand' property 'handle' has 'chatInput' present, but is missing 'chatInput'"
-		);
+		error("exported property 'getCommand' property 'handle' has 'chatInput' present, but is missing 'chatInput'");
 	}
 
 	if (cmd.data.contextMenu && !cmd.handle.contextMenu) {
-		err(
+		error(
 			"exported property 'getCommand' property 'handle' has 'contextMenu' present, but is missing 'contextMenu'"
 		);
 	}
 
 	if (!cmd.handle.chatInput && cmd.handle.autocomplete) {
-		err(
+		error(
 			"exported property 'getCommand' property 'handle' has 'autocomple' handle present, but is missing 'chatInput'"
 		);
 	}
 
 	if (!cmd.data.messageContextMenu && cmd.data.userContextMenu) {
-		err(
+		error(
 			"exported property 'getCommand' property 'data' has 'messageContextMenu' data present, but is missing 'userContextMenu' data"
 		);
 	}
 
 	if (cmd.data.messageContextMenu && !cmd.data.userContextMenu) {
-		err(
+		error(
 			"exported property 'getCommand' property 'data' has 'userContextMenu' data present, but is missing 'messageContextMenu' data"
 		);
 	}
 
-	if (
-		cmd.data.contextMenu &&
-		(cmd.data.messageContextMenu || cmd.data.userContextMenu)
-	) {
-		err(
+	if (cmd.data.contextMenu && (cmd.data.messageContextMenu || cmd.data.userContextMenu)) {
+		error(
 			"exported property 'getCommand' property 'data' has 'contextMenu' data present, but also has 'messageContextMenu' or 'userContexMenu'"
 		);
 	}
 
-	if (
-		(cmd.data.messageContextMenu || cmd.data.userContextMenu) &&
-		!cmd.handle.contextMenu
-	) {
-		err(
+	if ((cmd.data.messageContextMenu || cmd.data.userContextMenu) && !cmd.handle.contextMenu) {
+		error(
 			"exported property 'getCommand' property 'data' has 'contextMenu' data present, but is missing 'contextMenu' handle"
 		);
 	}
@@ -148,18 +134,13 @@ for (const fileOrFolderName of readdirSync(COMMAND_DIR)) {
 				continue;
 			}
 
-			const nestedPath = new URL(
-				`../commands/${fileOrFolderName}/${nestedFileOrFolderName}`,
-				import.meta.url
-			);
+			const nestedPath = new URL(`../commands/${fileOrFolderName}/${nestedFileOrFolderName}`, import.meta.url);
 
 			if (isFolder(nestedPath)) {
 				continue;
 			}
 
-			await importAndSetCommandIntoMap(
-				`${fileOrFolderName}/${nestedFileOrFolderName}`
-			);
+			await importAndSetCommandIntoMap(`${fileOrFolderName}/${nestedFileOrFolderName}`);
 		}
 	} else {
 		if (fileOrFolderName.toLowerCase().startsWith("mod.")) {

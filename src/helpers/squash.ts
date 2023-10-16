@@ -16,7 +16,7 @@ import { createTag } from "common-tags";
  * a big hole`
  */
 const squash = createTag({
-	onEndResult: (string) => string.replaceAll(/^\s*\n\s*$/gm, "")
+	onEndResult: (string) => string.replaceAll(/^\s*\n\s*$/gm, ""),
 });
 
 export default squash;

@@ -1,14 +1,10 @@
-import components from "#components";
-import { Emojis } from "#constants";
+import { type ButtonInteraction, ComponentType, type ModalSubmitInteraction } from "discord.js";
 import type GiveawayManager from "#database/giveaway.js";
-import Logger from "#logger";
-import {
-	ComponentType,
-	type ButtonInteraction,
-	type ModalSubmitInteraction
-} from "discord.js";
 import toManagePrizes from "../managePrizes.js";
 import toEditPrize from "./editPrize.js";
+import components from "#components";
+import { Emojis } from "#constants";
+import Logger from "#logger";
 
 export default async function toPrizeDashboard(
 	interaction: ButtonInteraction<"cached"> | ModalSubmitInteraction<"cached">,
@@ -19,41 +15,40 @@ export default async function toPrizeDashboard(
 	const prize = await giveawayManager.getPrize(prizeId);
 
 	if (!prize) {
-		interaction.followUp({
-			ephemeral: true,
-			content: `${Emojis.Error} This prize does not exist. Try again.`
-		});
+		interaction
+			.followUp({
+				content: `${Emojis.Error} This prize does not exist. Try again.`,
+				ephemeral: true,
+			})
+			.catch(() => null);
 
-		toManagePrizes(interaction, giveawayId, giveawayManager);
+		void toManagePrizes(interaction, giveawayId, giveawayManager);
 
 		return;
 	}
 
-	const rows = components.createRows(
-		components.buttons.back,
-		components.buttons.edit,
-		components.buttons.delete_
-	);
+	const rows = components.createRows(components.buttons.back, components.buttons.edit, components.buttons.delete_);
 
-	const msg = await interaction.editReply({
+	const message = await interaction.editReply({
 		components: rows,
 		content: null,
-		embeds: [prize.toEmbed()]
+		embeds: [prize.toEmbed()],
 	});
 
-	const collector = msg.createMessageComponentCollector({
-		filter: (buttonInteraction) =>
-			buttonInteraction.user.id === interaction.user.id,
+	const collector = message.createMessageComponentCollector({
 		componentType: ComponentType.Button,
+		filter: (buttonInteraction) => buttonInteraction.user.id === interaction.user.id,
+		max: 1,
 		time: 120_000,
-		max: 1
 	});
 
 	collector.on("ignore", (buttonInteraction) => {
-		buttonInteraction.reply({
-			content: `${Emojis.NoEntry} This button is not for you.`,
-			ephemeral: true
-		});
+		buttonInteraction
+			.reply({
+				content: `${Emojis.NoEntry} This button is not for you.`,
+				ephemeral: true,
+			})
+			.catch(() => null);
 	});
 
 	collector.on("collect", async (buttonInteraction) => {
@@ -61,18 +56,13 @@ export default async function toPrizeDashboard(
 			case components.buttons.back.customId: {
 				await buttonInteraction.deferUpdate();
 
-				toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
+				void toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
 			case components.buttons.edit.customId: {
-				toEditPrize(
-					buttonInteraction,
-					prize,
-					giveawayManager,
-					giveawayId
-				);
+				void toEditPrize(buttonInteraction, prize, giveawayManager, giveawayId);
 
 				break;
 			}
@@ -82,11 +72,11 @@ export default async function toPrizeDashboard(
 
 				await giveawayManager.deletePrize(prize.id);
 
-				new Logger({ label: "GIVEAWAY", interaction }).log(
+				new Logger({ interaction, label: "GIVEAWAY" }).log(
 					`Deleted prize ${prize.id} in giveaway #${giveawayId}`
 				);
 
-				toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
+				void toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}

@@ -1,9 +1,4 @@
-import {
-	inlineCode,
-	type ForumChannel,
-	type GuildTextBasedChannel,
-	type PermissionFlagsBits
-} from "discord.js";
+import { type ForumChannel, type GuildTextBasedChannel, type PermissionFlagsBits, inlineCode } from "discord.js";
 
 /**
  * Returns an array of missing permissions formatted as:
@@ -14,12 +9,10 @@ import {
  * If there are no missing permissions the array will be empty.
  */
 export default function getMissingPermissions(
-	channel: GuildTextBasedChannel | ForumChannel,
+	channel: ForumChannel | GuildTextBasedChannel,
 	...toCheck: Array<keyof typeof PermissionFlagsBits | null | undefined>
 ) {
-	const permissions =
-		channel.guild.members.me &&
-		channel.permissionsFor(channel.guild.members.me);
+	const permissions = channel.guild.members.me && channel.permissionsFor(channel.guild.members.me);
 
 	if (!permissions) {
 		return [];
@@ -33,9 +26,7 @@ export default function getMissingPermissions(
 		}
 
 		if (!permissions.has(permission)) {
-			missing.push(
-				inlineCode(`${permission.split(/(?=[A-Z])/).join(" ")}`)
-			);
+			missing.push(inlineCode(`${permission.split(/(?=[A-Z])/).join(" ")}`));
 		}
 	}
 

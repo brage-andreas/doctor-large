@@ -1,16 +1,11 @@
+import { type ButtonInteraction, type GuildTextBasedChannel, type NewsChannel, type TextChannel } from "discord.js";
+import type GiveawayManager from "#database/giveaway.js";
+import { oneLine, stripIndents } from "common-tags";
+import { getMissingPermissions } from "#helpers";
+import toDashboard from "../dashboard.js";
 import components from "#components";
 import { Emojis } from "#constants";
-import type GiveawayManager from "#database/giveaway.js";
-import { getMissingPermissions } from "#helpers";
 import Logger from "#logger";
-import { oneLine, stripIndents } from "common-tags";
-import {
-	type ButtonInteraction,
-	type GuildTextBasedChannel,
-	type NewsChannel,
-	type TextChannel
-} from "discord.js";
-import toDashboard from "../dashboard.js";
 
 export default async function toAnnounceGiveaway(
 	interaction: ButtonInteraction<"cached">,
@@ -27,7 +22,7 @@ export default async function toAnnounceGiveaway(
 			
 				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
-			embeds: []
+			embeds: [],
 		});
 
 		return;
@@ -36,28 +31,24 @@ export default async function toAnnounceGiveaway(
 	if (!giveaway.prizesQuantity()) {
 		await interaction
 			.followUp({
-				ephemeral: true,
 				content: stripIndents`
 					${Emojis.Error} This giveaway has no prizes. Add some prizes, and try again.
 					
 					If the prize(s) are a secret, you can for example name the prize "Secret"
-				`
+				`,
+				ephemeral: true,
 			})
 			.catch(() => null);
 
-		toDashboard(interaction, id);
+		void toDashboard(interaction, id);
 
 		return;
 	}
 
-	const chooseChannelStr = stripIndents`
+	const chooseChannelString = stripIndents`
 		Select the channel you would like to announce the giveaway in.
 
-		${
-			giveaway.channelId
-				? `Previous channel: <#${giveaway.channelId}> (${giveaway.channelId})`
-				: ""
-		}
+		${giveaway.channelId ? `Previous channel: <#${giveaway.channelId}> (${giveaway.channelId})` : ""}
 	`;
 
 	const rows = components.createRows(
@@ -68,45 +59,42 @@ export default async function toAnnounceGiveaway(
 
 	const retry = async (message?: string) => {
 		if (message) {
-			interaction.followUp({ content: message, ephemeral: true });
+			interaction.followUp({ content: message, ephemeral: true }).catch(() => null);
 		}
 
-		const updateMsg = await interaction.editReply({
-			content: chooseChannelStr,
+		const updateMessage = await interaction.editReply({
 			components: rows,
-			embeds: [giveaway.toEmbed()]
+			content: chooseChannelString,
+			embeds: [giveaway.toEmbed()],
 		});
 
-		const componentInteraction = await updateMsg.awaitMessageComponent({
-			filter: (i) => i.user.id === interaction.user.id
+		const componentInteraction = await updateMessage.awaitMessageComponent({
+			filter: (index) => index.user.id === interaction.user.id,
 		});
 
 		await componentInteraction.deferUpdate();
 
-		if (
-			componentInteraction.customId === components.buttons.back.customId
-		) {
-			toDashboard(interaction, id);
+		if (componentInteraction.customId === components.buttons.back.customId) {
+			void toDashboard(interaction, id);
 
 			return;
 		}
 
 		if (
-			componentInteraction.customId ===
-				components.selectMenus.channel.customId ||
-			componentInteraction.customId ===
-				components.buttons.lastChannel.customId
+			componentInteraction.customId === components.selectMenus.channel.customId ||
+			componentInteraction.customId === components.buttons.lastChannel.customId
 		) {
 			let channel: GuildTextBasedChannel;
 
 			if (componentInteraction.isChannelSelectMenu()) {
 				const channelId = componentInteraction.values[0];
-				const channel_ = interaction.guild.channels.cache.get(
-					channelId
-				) as NewsChannel | TextChannel | undefined;
+				const channel_ = interaction.guild.channels.cache.get(channelId) as
+					| NewsChannel
+					| TextChannel
+					| undefined;
 
 				if (!channel_) {
-					retry(`${Emojis.Warn} This channel does not exist.`);
+					void retry(`${Emojis.Warn} This channel does not exist.`);
 
 					return;
 				}
@@ -116,7 +104,7 @@ export default async function toAnnounceGiveaway(
 				const channel_ = giveaway.channel;
 
 				if (!channel_) {
-					retry(`${Emojis.Warn} This channel does not exist.`);
+					void retry(`${Emojis.Warn} This channel does not exist.`);
 
 					return;
 				}
@@ -124,14 +112,10 @@ export default async function toAnnounceGiveaway(
 				channel = channel_;
 			}
 
-			const missingPerms = getMissingPermissions(
-				channel,
-				"SendMessages",
-				"EmbedLinks"
-			);
+			const missingPerms = getMissingPermissions(channel, "SendMessages", "EmbedLinks");
 
-			if (missingPerms.length) {
-				retry(
+			if (missingPerms.length > 0) {
+				void retry(
 					oneLine`
 						${Emojis.Error} I am missing permissions
 						in ${channel}. Permissions needed: ${missingPerms.join(", ")}
@@ -141,46 +125,44 @@ export default async function toAnnounceGiveaway(
 				return;
 			}
 
-			const msg = await channel.send({
+			const message_ = await channel.send({
 				allowedMentions: {
-					parse: ["roles", "everyone"]
+					parse: ["roles", "everyone"],
 				},
-				components: components.createRows(
-					components.buttons.enterGiveaway.component(id)
-				),
+				components: components.createRows(components.buttons.enterGiveaway.component(id)),
 				content: giveaway.pingRolesMentions?.join(" "),
-				embeds: [giveaway.toEmbed()]
+				embeds: [giveaway.toEmbed()],
 			});
 
 			await giveaway.edit({
-				announcementMessageId: msg.id,
+				announcementMessageId: message_.id,
 				channelId: channel.id,
 				nowOutdated: {
-					announcementMessage: false
-				}
+					announcementMessage: false,
+				},
 			});
 
-			new Logger({ label: "GIVEAWAY", interaction }).log(
+			new Logger({ interaction, label: "GIVEAWAY" }).log(
 				`Announced giveaway #${id} in ${channel.name} (${channel.id})`
 			);
 
 			const urlButtonRows = components.createRows(
 				components.buttons.url({
 					label: "Go to announcement",
-					url: msg.url
+					url: message_.url,
 				})
 			);
 
 			await interaction.followUp({
 				components: urlButtonRows,
+				content: `${Emojis.Sparks} Done! Giveaway announced in ${channel.toString()}.`,
+				embeds: [],
 				ephemeral: true,
-				content: `${Emojis.Sparks} Done! Giveaway announced in ${channel}.`,
-				embeds: []
 			});
 
-			toDashboard(interaction, id);
+			void toDashboard(interaction, id);
 		}
 	};
 
-	retry();
+	void retry();
 }

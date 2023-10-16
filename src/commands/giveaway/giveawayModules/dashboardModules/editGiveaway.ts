@@ -1,15 +1,11 @@
+import { type ButtonInteraction, type RepliableInteraction, time } from "discord.js";
+import type GiveawayManager from "#database/giveaway.js";
+import { stripIndents } from "common-tags";
+import { ModalCollector } from "#helpers";
+import toDashboard from "../dashboard.js";
 import components from "#components";
 import { Emojis } from "#constants";
-import type GiveawayManager from "#database/giveaway.js";
-import { ModalCollector } from "#helpers";
 import Logger from "#logger";
-import { stripIndents } from "common-tags";
-import {
-	time,
-	type ButtonInteraction,
-	type RepliableInteraction
-} from "discord.js";
-import toDashboard from "../dashboard.js";
 
 export default async function toEditGiveaway(
 	interaction: ButtonInteraction<"cached">,
@@ -22,13 +18,13 @@ export default async function toEditGiveaway(
 	if (!giveaway) {
 		await interaction.reply({
 			components: [],
-			ephemeral: true,
 			content: stripIndents`
 				How did we get here?
 			
 				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
-			embeds: []
+			embeds: [],
+			ephemeral: true,
 		});
 
 		return;
@@ -36,19 +32,16 @@ export default async function toEditGiveaway(
 
 	const editGiveawayModal = components.modals.editGiveaway.component({
 		guildRelativeId: giveaway.guildRelativeId,
-		oldTitle: giveaway.title,
 		oldDescription: giveaway.description,
-		oldWinnerQuantity: giveaway.winnerQuantity
+		oldTitle: giveaway.title,
+		oldWinnerQuantity: giveaway.winnerQuantity,
 	});
 
 	const success = await interaction
 		.showModal(editGiveawayModal)
 		.then(() => true)
 		.catch((error) => {
-			new Logger({ interaction, label: "EDIT GIVEAWAY" }).log(
-				"Failed to show edit modal:",
-				error
-			);
+			new Logger({ interaction, label: "EDIT GIVEAWAY" }).log("Failed to show edit modal:", error);
 
 			return false;
 		});
@@ -56,7 +49,7 @@ export default async function toEditGiveaway(
 	if (!success) {
 		await interaction.reply({
 			content: `${Emojis.Error} Something went wrong trying to edit the giveaway. Try again.`,
-			ephemeral: true
+			ephemeral: true,
 		});
 
 		return;
@@ -64,30 +57,27 @@ export default async function toEditGiveaway(
 
 	const cancel = components.createRows(components.buttons.cancel.component());
 
-	const msg = await originalInteraction.editReply({
+	const message = await originalInteraction.editReply({
 		components: cancel,
-		content: `Editing the giveaway... (time limit ${time(
-			Date.now() + 300_000,
-			"R"
-		)})`,
-		embeds: []
+		content: `Editing the giveaway... (time limit ${time(Date.now() + 300_000, "R")})`,
+		embeds: [],
 	});
 
 	const collector = ModalCollector(interaction, editGiveawayModal, {
-		time: 300_000
+		time: 300_000,
 	});
 
-	const cancelCollector = msg.createMessageComponentCollector({
-		filter: (i) => i.user.id === interaction.user.id,
+	const cancelCollector = message.createMessageComponentCollector({
+		filter: (index) => index.user.id === interaction.user.id,
 		max: 1,
-		time: 290_000
+		time: 290_000,
 	});
 
-	cancelCollector.on("collect", async (i) => {
-		await i.deferUpdate();
+	cancelCollector.on("collect", async (index) => {
+		await index.deferUpdate();
 		collector.stop("manual");
 
-		await toDashboard(i, id);
+		await toDashboard(index, id);
 	});
 
 	collector.on("collect", async (modalInteraction) => {
@@ -95,36 +85,27 @@ export default async function toEditGiveaway(
 
 		const title = modalInteraction.fields.getTextInputValue("newTitle");
 
-		const rawGiveawayDescription =
-			modalInteraction.fields.getTextInputValue("newDescription");
+		const rawGiveawayDescription = modalInteraction.fields.getTextInputValue("newDescription");
 
-		const description = rawGiveawayDescription
-			.split("\n")
-			.slice(0, 20)
-			.join("\n");
+		const description = rawGiveawayDescription.split("\n").slice(0, 20).join("\n");
 
-		const winnerQuantity =
-			Number(
-				modalInteraction.fields.getTextInputValue("newWinnerQuantity")
-			) || 1;
+		const winnerQuantity = Number(modalInteraction.fields.getTextInputValue("newWinnerQuantity")) || 1;
 
 		if (
 			title !== giveaway.title ||
 			description !== giveaway.description ||
 			winnerQuantity !== giveaway.winnerQuantity
 		) {
-			new Logger({ label: "GIVEAWAY", interaction }).log(
-				`Edited giveaway #${id}`
-			);
+			new Logger({ interaction, label: "GIVEAWAY" }).log(`Edited giveaway #${id}`);
 
 			await giveaway.edit({
-				title,
 				description,
-				winnerQuantity,
 				nowOutdated: {
 					announcementMessage: true,
-					winnerMessage: true
-				}
+					winnerMessage: true,
+				},
+				title,
+				winnerQuantity,
 			});
 		}
 

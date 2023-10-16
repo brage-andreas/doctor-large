@@ -1,8 +1,9 @@
-export default function listify(
-	elements: Array<string>,
-	options: { length: number; give?: number }
-) {
-	const { length, give } = options;
+/**
+ * @param options.give - How much lenience to give the length of the list. Default: `1`
+ * @param options.length - The desired length of the list.
+ */
+export default function listify(elements: Array<string>, options: { give?: number; length: number }) {
+	const { give, length } = options;
 	const elements_ = structuredClone(elements);
 
 	if (elements_.length === 0 || elements_.length === 1) {

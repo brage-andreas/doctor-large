@@ -1,17 +1,11 @@
+import { type ButtonInteraction, ButtonStyle, ComponentType, bold, underscore } from "discord.js";
+import type GiveawayManager from "#database/giveaway.js";
+import { stripIndent, stripIndents } from "common-tags";
+import toDashboard from "../dashboard.js";
 import components from "#components";
 import { Emojis } from "#constants";
-import type GiveawayManager from "#database/giveaway.js";
 import { yesNo } from "#helpers";
 import Logger from "#logger";
-import { stripIndent, stripIndents } from "common-tags";
-import {
-	ButtonStyle,
-	ComponentType,
-	bold,
-	underscore,
-	type ButtonInteraction
-} from "discord.js";
-import toDashboard from "../dashboard.js";
 
 export default async function toResetData(
 	interaction: ButtonInteraction<"cached">,
@@ -28,7 +22,7 @@ export default async function toResetData(
 			
 				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
-			embeds: []
+			embeds: [],
 		});
 
 		return;
@@ -42,22 +36,18 @@ export default async function toResetData(
 		components.buttons.resetLevel1
 	);
 
-	const msg = await interaction.editReply({
+	const message = await interaction.editReply({
 		components: rows,
 		content: stripIndent`
 			Select a reset level.
 
 			## Level 4 - Wipe everything
 			* Resets most of the options you can edit in the dashboard (excluding title, description, and winner quantity).
-			* Resets entries, winners, and prizes. ${
-				Emojis.Warn
-			} Users will not be notified.
+			* Resets entries, winners, and prizes. ${Emojis.Warn} Users will not be notified.
 			* Unannounces the giveaway and any winners.
 				 
 			## Level 3 - Reset entries, winners, and prizes
-			* Resets entries, winners, and prizes. ${
-				Emojis.Warn
-			} Users will not be notified.
+			* Resets entries, winners, and prizes. ${Emojis.Warn} Users will not be notified.
 			* Unannounces the giveaway and the winners.
 				 
 			## Level 2 - Reset entries and winners
@@ -69,22 +59,23 @@ export default async function toResetData(
 			* Does ${underscore("not")} reset winners, entries, or prizes.
 			* Unannounces the giveaway and the winners.
 		`,
-		embeds: []
+		embeds: [],
 	});
 
-	const collector = msg.createMessageComponentCollector({
-		filter: (buttonInteraction) =>
-			buttonInteraction.user.id === interaction.user.id,
+	const collector = message.createMessageComponentCollector({
 		componentType: ComponentType.Button,
+		filter: (buttonInteraction) => buttonInteraction.user.id === interaction.user.id,
+		max: 2,
 		time: 120_000,
-		max: 2
 	});
 
 	collector.on("ignore", (buttonInteraction) => {
-		buttonInteraction.reply({
-			content: `${Emojis.NoEntry} This button is not for you.`,
-			ephemeral: true
-		});
+		buttonInteraction
+			.reply({
+				content: `${Emojis.NoEntry} This button is not for you.`,
+				ephemeral: true,
+			})
+			.catch(() => null);
 	});
 
 	collector.on("collect", async (buttonInteraction) => {
@@ -99,41 +90,39 @@ export default async function toResetData(
 
 			case components.buttons.resetLevel4.customId: {
 				const accept = await yesNo({
-					yesStyle: ButtonStyle.Danger,
-					noStyle: ButtonStyle.Secondary,
-					medium: interaction,
-					filter: (i) => i.user.id === interaction.user.id,
 					data: {
 						content: stripIndents`
 							${Emojis.Warn} You are about to wipe everything in giveaway ${giveaway.asRelId}.
 							
 							Are you sure? Absolutely sure? This action will be ${bold("irreversible")}.
-						`
-					}
+						`,
+					},
+					filter: (index) => index.user.id === interaction.user.id,
+					medium: interaction,
+					noStyle: ButtonStyle.Secondary,
+					yesStyle: ButtonStyle.Danger,
 				});
 
 				if (!accept) {
 					await interaction.followUp({
+						content: `Alright! Canceled resetting giveaway ${giveaway.asRelId}`,
 						ephemeral: true,
-						content: `Alright! Canceled resetting giveaway ${giveaway.asRelId}`
 					});
 
-					toDashboard(interaction, id);
+					void toDashboard(interaction, id);
 
 					break;
 				}
 
 				await giveaway.reset({
-					all: true
+					all: true,
 				});
 
-				new Logger({ label: "GIVEAWAY", interaction }).log(
-					`Level 4 reset giveaway #${giveaway.id}`
-				);
+				new Logger({ interaction, label: "GIVEAWAY" }).log(`Level 4 reset giveaway #${giveaway.id}`);
 
 				await interaction.followUp({
+					content: `${Emojis.Sparks} Done! Successfully wiped giveaway ${giveaway.asRelId}.`,
 					ephemeral: true,
-					content: `${Emojis.Sparks} Done! Successfully wiped giveaway ${giveaway.asRelId}.`
 				});
 
 				collector.stop();
@@ -143,46 +132,40 @@ export default async function toResetData(
 
 			case components.buttons.resetLevel3.customId: {
 				const accept = await yesNo({
-					yesStyle: ButtonStyle.Danger,
-					noStyle: ButtonStyle.Secondary,
-					medium: interaction,
-					filter: (i) => i.user.id === interaction.user.id,
 					data: {
 						content: stripIndents`
-							${
-								Emojis.Warn
-							} You are about to reset entries, winners, and prizes in giveaway ${
-							giveaway.asRelId
-						}.
+							${Emojis.Warn} You are about to reset entries, winners, and prizes in giveaway ${giveaway.asRelId}.
 							
 							Are you sure? Absolutely sure? This action will be ${bold("irreversible")}.
-						`
-					}
+						`,
+					},
+					filter: (index) => index.user.id === interaction.user.id,
+					medium: interaction,
+					noStyle: ButtonStyle.Secondary,
+					yesStyle: ButtonStyle.Danger,
 				});
 
 				if (!accept) {
 					await interaction.followUp({
+						content: `Alright! Canceled resetting giveaway ${giveaway.asRelId}`,
 						ephemeral: true,
-						content: `Alright! Canceled resetting giveaway ${giveaway.asRelId}`
 					});
 
-					toDashboard(interaction, id);
+					void toDashboard(interaction, id);
 
 					break;
 				}
 
 				await giveaway.reset({
 					entriesAndWinners: true,
-					prizesAndWinners: true
+					prizesAndWinners: true,
 				});
 
-				new Logger({ label: "GIVEAWAY", interaction }).log(
-					`Level 3 reset giveaway #${giveaway.id}`
-				);
+				new Logger({ interaction, label: "GIVEAWAY" }).log(`Level 3 reset giveaway #${giveaway.id}`);
 
 				await interaction.followUp({
+					content: `${Emojis.Sparks} Done! Successfully reset entries, winners, and prizes in giveaway ${giveaway.asRelId}.`,
 					ephemeral: true,
-					content: `${Emojis.Sparks} Done! Successfully reset entries, winners, and prizes in giveaway ${giveaway.asRelId}.`
 				});
 
 				collector.stop();
@@ -192,41 +175,37 @@ export default async function toResetData(
 
 			case components.buttons.resetLevel2.customId: {
 				const accept = await yesNo({
-					yesStyle: ButtonStyle.Danger,
-					noStyle: ButtonStyle.Secondary,
-					medium: interaction,
-					filter: (i) => i.user.id === interaction.user.id,
 					data: {
 						content: stripIndents`
-							${Emojis.Warn} You are about to reset entries and winners in giveaway ${
-							giveaway.asRelId
-						}.
+							${Emojis.Warn} You are about to reset entries and winners in giveaway ${giveaway.asRelId}.
 							
 							Are you sure? Absolutely sure? This action will be ${bold("irreversible")}.
-						`
-					}
+						`,
+					},
+					filter: (index) => index.user.id === interaction.user.id,
+					medium: interaction,
+					noStyle: ButtonStyle.Secondary,
+					yesStyle: ButtonStyle.Danger,
 				});
 
 				if (!accept) {
 					await interaction.followUp({
+						content: `Alright! Canceled resetting giveaway ${giveaway.asRelId}`,
 						ephemeral: true,
-						content: `Alright! Canceled resetting giveaway ${giveaway.asRelId}`
 					});
 
-					toDashboard(interaction, id);
+					void toDashboard(interaction, id);
 
 					break;
 				}
 
 				await giveaway.reset({ entriesAndWinners: true });
 
-				new Logger({ label: "GIVEAWAY", interaction }).log(
-					`Level 2 reset giveaway #${giveaway.id}`
-				);
+				new Logger({ interaction, label: "GIVEAWAY" }).log(`Level 2 reset giveaway #${giveaway.id}`);
 
 				await interaction.followUp({
+					content: `${Emojis.Sparks} Done! Successfully reset entries and winners in giveaway ${giveaway.asRelId}.`,
 					ephemeral: true,
-					content: `${Emojis.Sparks} Done! Successfully reset entries and winners in giveaway ${giveaway.asRelId}.`
 				});
 
 				collector.stop();
@@ -236,41 +215,37 @@ export default async function toResetData(
 
 			case components.buttons.resetLevel1.customId: {
 				const accept = await yesNo({
-					yesStyle: ButtonStyle.Danger,
-					noStyle: ButtonStyle.Secondary,
-					medium: interaction,
-					filter: (i) => i.user.id === interaction.user.id,
 					data: {
 						content: stripIndents`
-							${Emojis.Warn} You are about to reset most options in giveaway ${
-							giveaway.asRelId
-						}.
+							${Emojis.Warn} You are about to reset most options in giveaway ${giveaway.asRelId}.
 							
 							Are you sure? Absolutely sure? This action will be ${bold("irreversible")}.
-						`
-					}
+						`,
+					},
+					filter: (index) => index.user.id === interaction.user.id,
+					medium: interaction,
+					noStyle: ButtonStyle.Secondary,
+					yesStyle: ButtonStyle.Danger,
 				});
 
 				if (!accept) {
 					await interaction.followUp({
+						content: `Alright! Canceled resetting giveaway ${giveaway.asRelId}`,
 						ephemeral: true,
-						content: `Alright! Canceled resetting giveaway ${giveaway.asRelId}`
 					});
 
-					toDashboard(interaction, id);
+					void toDashboard(interaction, id);
 
 					break;
 				}
 
 				await giveaway.reset({ options: true });
 
-				new Logger({ label: "GIVEAWAY", interaction }).log(
-					`Level 1 reset giveaway #${giveaway.id}`
-				);
+				new Logger({ interaction, label: "GIVEAWAY" }).log(`Level 1 reset giveaway #${giveaway.id}`);
 
 				await interaction.followUp({
+					content: `${Emojis.Sparks} Done! Successfully reset most options in giveaway ${giveaway.asRelId}.`,
 					ephemeral: true,
-					content: `${Emojis.Sparks} Done! Successfully reset most options in giveaway ${giveaway.asRelId}.`
 				});
 
 				collector.stop();

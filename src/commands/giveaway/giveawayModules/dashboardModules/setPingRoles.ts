@@ -1,10 +1,10 @@
-import components from "#components";
 import type GiveawayManager from "#database/giveaway.js";
+import { type ButtonInteraction } from "discord.js";
+import { stripIndents } from "common-tags";
+import toDashboard from "../dashboard.js";
+import components from "#components";
 import { listify } from "#helpers";
 import Logger from "#logger";
-import { stripIndents } from "common-tags";
-import { type ButtonInteraction } from "discord.js";
-import toDashboard from "../dashboard.js";
 
 export default async function toSetPingRoles(
 	interaction: ButtonInteraction<"cached">,
@@ -17,13 +17,11 @@ export default async function toSetPingRoles(
 		return;
 	}
 
-	const choosePingRoleStr = stripIndents`
+	const choosePingRoleString = stripIndents`
 			Select the roles you want to ping when announcing the giveaway.
 			
 			Currently set to: ${
-				giveaway.pingRolesMentions?.length
-					? listify(giveaway.pingRolesMentions, { length: 5 })
-					: "No roles"
+				giveaway.pingRolesMentions?.length ? listify(giveaway.pingRolesMentions, { length: 5 }) : "No roles"
 			}
 		`;
 
@@ -34,13 +32,13 @@ export default async function toSetPingRoles(
 		components.buttons.setPingRolesToAtEveryone
 	);
 
-	const updateMsg = await interaction.editReply({
-		content: choosePingRoleStr,
-		components: rows
+	const updateMessage = await interaction.editReply({
+		components: rows,
+		content: choosePingRoleString,
 	});
 
-	const component = await updateMsg.awaitMessageComponent({
-		filter: (i) => i.user.id === interaction.user.id
+	const component = await updateMessage.awaitMessageComponent({
+		filter: (index) => index.user.id === interaction.user.id,
 	});
 
 	switch (component.customId) {
@@ -51,15 +49,15 @@ export default async function toSetPingRoles(
 		case components.buttons.setPingRolesToAtEveryone.customId: {
 			await component.deferUpdate();
 
-			new Logger({ label: "GIVEAWAY", interaction }).log(
+			new Logger({ interaction, label: "GIVEAWAY" }).log(
 				`Set ping roles of giveaway #${giveaway.id} to @everyone`
 			);
 
 			await giveaway.edit({
-				pingRolesIds: [interaction.guild.roles.everyone.id],
 				nowOutdated: {
-					announcementMessage: true
-				}
+					announcementMessage: true,
+				},
+				pingRolesIds: [interaction.guild.roles.everyone.id],
 			});
 
 			break;
@@ -68,15 +66,13 @@ export default async function toSetPingRoles(
 		case components.buttons.clear.customId: {
 			await component.deferUpdate();
 
-			new Logger({ label: "GIVEAWAY", interaction }).log(
-				`Cleared ping roles of giveaway #${giveaway.id}`
-			);
+			new Logger({ interaction, label: "GIVEAWAY" }).log(`Cleared ping roles of giveaway #${giveaway.id}`);
 
 			await giveaway.edit({
-				pingRolesIds: [],
 				nowOutdated: {
-					announcementMessage: true
-				}
+					announcementMessage: true,
+				},
+				pingRolesIds: [],
 			});
 
 			break;
@@ -89,15 +85,13 @@ export default async function toSetPingRoles(
 
 			await component.deferUpdate();
 
-			new Logger({ label: "GIVEAWAY", interaction }).log(
-				`Edited ping roles of giveaway #${giveaway.id}`
-			);
+			new Logger({ interaction, label: "GIVEAWAY" }).log(`Edited ping roles of giveaway #${giveaway.id}`);
 
 			await giveaway.edit({
-				pingRolesIds: component.values,
 				nowOutdated: {
-					announcementMessage: true
-				}
+					announcementMessage: true,
+				},
+				pingRolesIds: component.values,
 			});
 
 			break;

@@ -1,35 +1,32 @@
-import components from "#components";
-import { Emojis } from "#constants";
-import GiveawayManager from "#database/giveaway.js";
-import { stripIndents } from "common-tags";
-import { ComponentType, type RepliableInteraction } from "discord.js";
-import toAnnounceGiveaway from "./dashboardModules/announceGiveaway.js";
 import toAnnouncementOptions from "./dashboardModules/announcementOptions.js";
+import toAnnounceGiveaway from "./dashboardModules/announceGiveaway.js";
+import toSetRequiredRoles from "./dashboardModules/setRequiredRoles.js";
+import { ComponentType, type RepliableInteraction } from "discord.js";
 import toDeleteGiveaway from "./dashboardModules/deleteGiveaway.js";
 import toEditGiveaway from "./dashboardModules/editGiveaway.js";
-import toEndOptions from "./dashboardModules/endOptions.js";
 import toManagePrizes from "./dashboardModules/managePrizes.js";
-import toResetData from "./dashboardModules/resetData.js";
 import toSetPingRoles from "./dashboardModules/setPingRoles.js";
-import toSetRequiredRoles from "./dashboardModules/setRequiredRoles.js";
+import toEndOptions from "./dashboardModules/endOptions.js";
 import toEndedDashboard from "./endedGiveawayDashboard.js";
+import toResetData from "./dashboardModules/resetData.js";
+import GiveawayManager from "#database/giveaway.js";
+import { stripIndents } from "common-tags";
+import components from "#components";
+import { Emojis } from "#constants";
 
-export default async function toDashboard(
-	interaction: RepliableInteraction<"cached">,
-	giveawayId: number
-) {
+export default async function toDashboard(interaction: RepliableInteraction<"cached">, giveawayId: number) {
 	const giveawayManager = new GiveawayManager(interaction.guild);
 	const giveaway = await giveawayManager.get(giveawayId);
 
 	if (!giveaway) {
 		await interaction.editReply({
+			components: [],
 			content: stripIndents`
 				How did we get here?
 			
 				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
-			components: [],
-			embeds: []
+			embeds: [],
 		});
 
 		return;
@@ -61,24 +58,25 @@ export default async function toDashboard(
 		components.buttons.deleteGiveaway
 	);
 
-	const msg = await interaction.editReply({
+	const message = await interaction.editReply({
 		components: rows,
-		...giveaway.toDashboardOverview()
+		...giveaway.toDashboardOverview(),
 	});
 
-	const collector = msg.createMessageComponentCollector({
-		filter: (buttonInteraction) =>
-			buttonInteraction.user.id === interaction.user.id,
+	const collector = message.createMessageComponentCollector({
 		componentType: ComponentType.Button,
+		filter: (buttonInteraction) => buttonInteraction.user.id === interaction.user.id,
+		max: 1,
 		time: 120_000,
-		max: 1
 	});
 
 	collector.on("ignore", (buttonInteraction) => {
-		buttonInteraction.reply({
-			content: `${Emojis.NoEntry} This button is not for you.`,
-			ephemeral: true
-		});
+		buttonInteraction
+			.reply({
+				content: `${Emojis.NoEntry} This button is not for you.`,
+				ephemeral: true,
+			})
+			.catch(() => null);
 	});
 
 	collector.on("collect", async (buttonInteraction) => {
@@ -88,32 +86,19 @@ export default async function toDashboard(
 
 		switch (buttonInteraction.customId) {
 			case components.buttons.edit.customId: {
-				toEditGiveaway(
-					buttonInteraction,
-					interaction,
-					giveawayId,
-					giveawayManager
-				);
+				void toEditGiveaway(buttonInteraction, interaction, giveawayId, giveawayManager);
 
 				break;
 			}
 
 			case components.buttons.announceGiveaway.customId: {
-				toAnnounceGiveaway(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
+				void toAnnounceGiveaway(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
 			case components.buttons.announcementOptions.customId: {
-				toAnnouncementOptions(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
+				void toAnnouncementOptions(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
@@ -122,11 +107,11 @@ export default async function toDashboard(
 				await giveaway.edit({
 					entriesLocked: true,
 					nowOutdated: {
-						announcementMessage: true
-					}
+						announcementMessage: true,
+					},
 				});
 
-				toDashboard(buttonInteraction, giveawayId);
+				void toDashboard(buttonInteraction, giveawayId);
 
 				break;
 			}
@@ -135,55 +120,47 @@ export default async function toDashboard(
 				await giveaway.edit({
 					entriesLocked: false,
 					nowOutdated: {
-						announcementMessage: true
-					}
+						announcementMessage: true,
+					},
 				});
 
-				toDashboard(buttonInteraction, giveawayId);
+				void toDashboard(buttonInteraction, giveawayId);
 
 				break;
 			}
 
 			case components.buttons.endOptions.customId: {
-				toEndOptions(buttonInteraction, giveawayId, giveawayManager);
+				void toEndOptions(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
 			case components.buttons.setRequiredRoles.customId: {
-				toSetRequiredRoles(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
+				void toSetRequiredRoles(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
 			case components.buttons.setPingRoles.customId: {
-				toSetPingRoles(buttonInteraction, giveawayId, giveawayManager);
+				void toSetPingRoles(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
 			case components.buttons.managePrizes.customId: {
-				toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
+				void toManagePrizes(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
 			case components.buttons.reset.customId: {
-				toResetData(buttonInteraction, giveawayId, giveawayManager);
+				void toResetData(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
 
 			case components.buttons.deleteGiveaway.customId: {
-				toDeleteGiveaway(
-					buttonInteraction,
-					giveawayId,
-					giveawayManager
-				);
+				void toDeleteGiveaway(buttonInteraction, giveawayId, giveawayManager);
 
 				break;
 			}
@@ -195,6 +172,6 @@ export default async function toDashboard(
 			return;
 		}
 
-		msg.edit({ components: [] }).catch(() => null);
+		message.edit({ components: [] }).catch(() => null);
 	});
 }

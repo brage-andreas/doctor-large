@@ -1,48 +1,43 @@
-import { ColorsHex, Regex } from "#constants";
 import {
-	hideLinkEmbed,
-	hyperlink,
-	italic,
 	type APIEmbed,
 	type Attachment,
 	type Client,
-	type Message
+	type Message,
+	hideLinkEmbed,
+	hyperlink,
+	italic,
 } from "discord.js";
+import { ColorsHex, Regex } from "#constants";
 
-export function messageURL<
-	G extends string,
-	C extends string,
-	M extends string
->(guildId: G, channelId: C, messageId: M) {
+export function messageURL<G extends string, C extends string, M extends string>(
+	guildId: G,
+	channelId: C,
+	messageId: M
+) {
 	return `https://discord.com/channels/${guildId}/${channelId}/${messageId}` as const;
 }
 
-export function parseMessageURL(
-	url: string
-): { guildId: string; channelId: string; messageId: string } | null {
+export function parseMessageURL(url: string): { channelId: string; guildId: string; messageId: string } | null {
 	const match = url.match(Regex.MessageURL)?.groups;
 
 	if (!match?.guildId || !match.channelId || !match.channelId) {
 		return null;
 	}
 
-	return match as { guildId: string; channelId: string; messageId: string };
+	return match as { channelId: string; guildId: string; messageId: string };
 }
 
 export async function messageFromURL(
 	client: Client<true>,
-	dataOrURL:
-		| string
-		| { guildId: string; channelId: string; messageId: string }
+	dataOrURL: { channelId: string; guildId: string; messageId: string } | string
 ): Promise<Message<true> | null> {
-	const data =
-		typeof dataOrURL === "string" ? parseMessageURL(dataOrURL) : dataOrURL;
+	const data = typeof dataOrURL === "string" ? parseMessageURL(dataOrURL) : dataOrURL;
 
 	if (!data) {
 		return null;
 	}
 
-	const { guildId, channelId, messageId } = data;
+	const { channelId, guildId, messageId } = data;
 
 	const guild = client.guilds.cache.get(guildId);
 
@@ -56,51 +51,29 @@ export async function messageFromURL(
 		return null;
 	}
 
-	return channel.messages
-		.fetch({ message: messageId, force: true })
-		.catch(() => null);
+	return channel.messages.fetch({ force: true, message: messageId }).catch(() => null);
 }
 
 const attachmentsToURL = (...attachments: Array<Attachment>) => {
-	const { image, video, audio, other } = attachments.reduce(
-		(obj, attachment) => {
+	const { audio, image, other, video } = attachments.reduce(
+		(object, attachment) => {
 			if (attachment.contentType?.startsWith("image")) {
-				obj.image.push(
-					hyperlink(
-						`Image ${obj.image.length + 1}`,
-						hideLinkEmbed(attachment.url)
-					)
-				);
+				object.image.push(hyperlink(`Image ${object.image.length + 1}`, hideLinkEmbed(attachment.url)));
 			} else if (attachment.contentType?.startsWith("video")) {
-				obj.video.push(
-					hyperlink(
-						`Video ${obj.video.length + 1}`,
-						hideLinkEmbed(attachment.url)
-					)
-				);
+				object.video.push(hyperlink(`Video ${object.video.length + 1}`, hideLinkEmbed(attachment.url)));
 			} else if (attachment.contentType?.startsWith("audio")) {
-				obj.audio.push(
-					hyperlink(
-						`Audio ${obj.audio.length + 1}`,
-						hideLinkEmbed(attachment.url)
-					)
-				);
+				object.audio.push(hyperlink(`Audio ${object.audio.length + 1}`, hideLinkEmbed(attachment.url)));
 			} else {
-				obj.other.push(
-					hyperlink(
-						`Attachment ${obj.other.length + 1}`,
-						hideLinkEmbed(attachment.url)
-					)
-				);
+				object.other.push(hyperlink(`Attachment ${object.other.length + 1}`, hideLinkEmbed(attachment.url)));
 			}
 
-			return obj;
+			return object;
 		},
 		{
-			image: [] as Array<string>,
-			video: [] as Array<string>,
 			audio: [] as Array<string>,
-			other: [] as Array<string>
+			image: [] as Array<string>,
+			other: [] as Array<string>,
+			video: [] as Array<string>,
 		}
 	);
 
@@ -108,17 +81,10 @@ const attachmentsToURL = (...attachments: Array<Attachment>) => {
 };
 
 const isValidAttachment = (attachment: Attachment) =>
-	["image/jpeg", "image/png", "image/gif"].includes(
-		attachment.contentType ?? ""
-	) &&
-	[".jpg", ".png", ".gif"].some((e) =>
-		attachment.name.toLowerCase().endsWith(e)
-	);
+	["image/gif", "image/jpeg", "image/png"].includes(attachment.contentType ?? "") &&
+	[".jpg", ".png", ".gif"].some((extension) => attachment.name.toLowerCase().endsWith(extension));
 
-export const messageToEmbed = (
-	message: Message<true>,
-	options?: { withIds?: boolean }
-) => {
+export const messageToEmbed = (message: Message<true>, options?: { withIds?: boolean }) => {
 	const footerText = options?.withIds
 		? `${message.id} • #${message.channel.name} (${message.channelId})`
 		: `#${message.channel.name}`;
@@ -127,17 +93,15 @@ export const messageToEmbed = (
 		author: {
 			icon_url: message.author.displayAvatarURL(),
 			name: `${message.author.tag} (${message.author.id})`,
-			url: message.url
+			url: message.url,
 		},
 		color: ColorsHex.EmbedInvisible,
 		footer: { text: footerText },
-		timestamp: message.createdAt.toISOString()
+		timestamp: message.createdAt.toISOString(),
 	};
 
-	if (message.embeds.length) {
-		const emb = message.embeds.find(
-			(embed) => embed.image || embed.thumbnail
-		);
+	if (message.embeds.length > 0) {
+		const emb = message.embeds.find((embed) => embed.image ?? embed.thumbnail);
 
 		const url = emb?.image?.url ?? emb?.thumbnail?.url;
 
@@ -148,15 +112,11 @@ export const messageToEmbed = (
 
 	const content: Array<string> = [];
 
-	if (message.attachments.size) {
-		const attachment = message.attachments.find((attachment) =>
-			isValidAttachment(attachment)
-		);
+	if (message.attachments.size > 0) {
+		const attachment = message.attachments.find((attachment) => isValidAttachment(attachment));
 
 		if (message.attachments.size > 1) {
-			content.push(
-				attachmentsToURL(...[...message.attachments.values()])
-			);
+			content.push(attachmentsToURL(...message.attachments.values()));
 		} else if (!attachment) {
 			const firstAttachment = message.attachments.first();
 
@@ -173,7 +133,7 @@ export const messageToEmbed = (
 
 	if (message.content) {
 		content.push(message.content);
-	} else if (!message.embeds.length && !message.attachments.size) {
+	} else if (message.embeds.length === 0 && message.attachments.size === 0) {
 		content.push(italic("No content."));
 	}
 

@@ -1,35 +1,28 @@
-import { Colors, Emojis } from "#constants";
-import type ConfigManager from "#database/config.js";
-import ReportManager from "#database/report.js";
-import { type Config } from "@prisma/client";
 import {
-	ChannelType,
-	EmbedBuilder,
-	PermissionFlagsBits,
 	type Channel,
 	type ChannelResolvable,
+	ChannelType,
 	type Client,
+	EmbedBuilder,
 	type EmbedField,
 	type ForumChannel,
 	type Guild,
 	type GuildTextBasedChannel,
-	type Role
+	PermissionFlagsBits,
+	type Role,
 } from "discord.js";
 import { type MessageReportModule, type UserReportModule } from "./Report.js";
+import type ConfigManager from "#database/config.js";
+import ReportManager from "#database/report.js";
+import { type Config } from "@prisma/client";
+import { Colors, Emojis } from "#constants";
+
+function channel(guild: Guild, id: null | string, allowForum?: false | undefined): GuildTextBasedChannel | undefined;
+function channel(guild: Guild, id: null | string, allowForum: true): ForumChannel | GuildTextBasedChannel | undefined;
 
 function channel(
 	guild: Guild,
-	id: string | null,
-	allowForum?: false | undefined
-): GuildTextBasedChannel | undefined;
-function channel(
-	guild: Guild,
-	id: string | null,
-	allowForum: true
-): ForumChannel | GuildTextBasedChannel | undefined;
-function channel(
-	guild: Guild,
-	id: string | null,
+	id: null | string,
 	allowForum?: boolean | undefined
 ): ForumChannel | GuildTextBasedChannel | undefined {
 	if (!id) {
@@ -38,37 +31,40 @@ function channel(
 
 	const ch = guild.channels.cache.get(id);
 
-	return (!ch?.isDMBased() && ch?.isTextBased()) ||
-		(allowForum && ch?.type === ChannelType.GuildForum)
-		? ch
-		: undefined;
+	if (!ch?.isDMBased() && ch?.isTextBased()) {
+		return ch;
+	}
+
+	if (allowForum && ch?.type === ChannelType.GuildForum) {
+		return ch;
+	}
+
+	return undefined;
 }
 
-export default class ConfigModule
-	implements Omit<Config, "protectedChannelsIds" | "restrictRolesIds">
-{
-	public readonly manager: ConfigManager;
-	public readonly client: Client<true>;
-	public readonly guild: Guild;
-	public data: Config;
-
+export default class ConfigModule implements Omit<Config, "protectedChannelsIds" | "restrictRolesIds"> {
 	public caseLogChannel?: GuildTextBasedChannel;
-	public caseLogChannelId: string | null;
+	public caseLogChannelId: null | string;
 	public caseLogEnabled: boolean;
+	public readonly client: Client<true>;
+
+	public data: Config;
+	public readonly guild: Guild;
 	public guildId: string;
 	public lastEditedAt: Date;
+	public readonly manager: ConfigManager;
 	public memberLogChannel?: GuildTextBasedChannel;
-	public memberLogChannelId: string | null;
+	public memberLogChannelId: null | string;
 	public memberLogEnabled: boolean;
 	public messageLogChannel?: GuildTextBasedChannel;
-	public messageLogChannelId: string | null;
+	public messageLogChannelId: null | string;
 	public messageLogEnabled: boolean;
 	public pinArchiveChannel?: GuildTextBasedChannel;
-	public pinArchiveChannelId: string | null;
+	public pinArchiveChannelId: null | string;
 	public protectedChannels: Array<GuildTextBasedChannel>;
 	public protectedChannelsIds: Set<string>;
 	public reportChannel?: ForumChannel | GuildTextBasedChannel;
-	public reportChannelId: string | null;
+	public reportChannelId: null | string;
 	public reportEnabled: boolean;
 	public restrictRoles: Array<Role>;
 	public restrictRolesIds: Set<string>;
@@ -100,38 +96,31 @@ export default class ConfigModule
 		this.reportChannel = channel(guild, data.reportChannelId, true);
 
 		this.protectedChannelsIds = new Set(data.protectedChannelsIds);
-		this.protectedChannels = data.protectedChannelsIds.reduce(
-			(arr, channelId) => {
-				const ch = channel(guild, channelId);
+		this.protectedChannels = data.protectedChannelsIds.reduce<Array<GuildTextBasedChannel>>((array, channelId) => {
+			const ch = channel(guild, channelId);
 
-				if (ch) {
-					arr.push(ch);
-				}
+			if (ch) {
+				array.push(ch);
+			}
 
-				return arr;
-			},
-			[] as Array<GuildTextBasedChannel>
-		);
+			return array;
+		}, []);
 
 		this.restrictRolesIds = new Set(data.restrictRolesIds);
-		this.restrictRoles = data.restrictRolesIds.reduce((arr, roleId) => {
+		this.restrictRoles = data.restrictRolesIds.reduce<Array<Role>>((array, roleId) => {
 			const role = guild.roles.cache.get(roleId);
 
 			if (role) {
-				arr.push(role);
+				array.push(role);
 			}
 
-			return arr;
-		}, [] as Array<Role>);
+			return array;
+		}, []);
 	}
 
 	public static getTypeFromChannel(channel: Channel): string;
-	public static getTypeFromChannel(
-		channel: Channel | null | undefined
-	): string | null;
-	public static getTypeFromChannel(
-		channel: Channel | null | undefined
-	): string | null {
+	public static getTypeFromChannel(channel: Channel | null | undefined): null | string;
+	public static getTypeFromChannel(channel: Channel | null | undefined): null | string {
 		const typeString =
 			channel &&
 			ChannelType[channel.type]
@@ -139,9 +128,19 @@ export default class ConfigModule
 				.split(/(?=[A-Z])/)
 				.join(" ");
 
-		return typeString
-			? typeString.charAt(0).toUpperCase() + typeString.slice(1)
-			: null;
+		return typeString ? typeString.charAt(0).toUpperCase() + typeString.slice(1) : null;
+	}
+
+	public createMemberLog() {
+		// TODO
+	}
+
+	public async edit(...data: Parameters<ConfigManager["update"]>) {
+		return await this.manager.update(data[0]);
+	}
+
+	public editCaseLog() {
+		// TODO
 	}
 
 	public isProtectedChannel(channel: ChannelResolvable) {
@@ -154,25 +153,11 @@ export default class ConfigModule
 		// TODO
 	}
 
-	public editCaseLog() {
-		// TODO
-	}
-
-	public removeCaseLog() {
-		// TODO
-	}
-
-	public createMemberLog() {
-		// TODO
-	}
-
 	public postMessageLog() {
 		// TODO
 	}
 
-	public async postReport(
-		reportOrReportId: MessageReportModule | UserReportModule | number
-	) {
+	public async postReport(reportOrReportId: MessageReportModule | UserReportModule | number) {
 		if (!this.reportEnabled) {
 			return false;
 		}
@@ -187,13 +172,13 @@ export default class ConfigModule
 			report = reportOrReportId;
 		} else {
 			const reportManager = new ReportManager(this.guild);
-			const res = await reportManager.get(reportOrReportId);
+			const reportOrNullish = await reportManager.get(reportOrReportId);
 
-			if (!res) {
+			if (!reportOrNullish) {
 				return false;
 			}
 
-			report = res;
+			report = reportOrNullish;
 		}
 
 		const message = await report.generatePost();
@@ -202,7 +187,7 @@ export default class ConfigModule
 			const thread = await this.reportChannel.threads
 				.create({
 					message,
-					name: `Report #${report.guildRelativeId} - ${report.target}`
+					name: `Report #${report.guildRelativeId} - ${report.target}`,
 				})
 				.catch(() => null);
 
@@ -210,54 +195,50 @@ export default class ConfigModule
 				return false;
 			}
 
-			report.manager.edit({
-				where: {
-					id: report.id
-				},
+			await report.manager.edit({
 				data: {
 					logChannelId: thread.id,
-					logMessageId: thread.id
-				}
+					logMessageId: thread.id,
+				},
+				where: {
+					id: report.id,
+				},
 			});
 
 			return true;
 		}
 
-		const msg = await this.reportChannel
-			.send({ ...message, embeds: [] })
-			.catch(() => null);
+		const message_ = await this.reportChannel.send({ ...message, embeds: [] }).catch(() => null);
 
-		if (!msg) {
+		if (!message_) {
 			return false;
 		}
 
-		report.manager.edit({
-			where: {
-				id: report.id
-			},
+		await report.manager.edit({
 			data: {
 				logChannelId: this.reportChannelId,
-				logMessageId: msg.id
-			}
+				logMessageId: message_.id,
+			},
+			where: {
+				id: report.id,
+			},
 		});
 
 		return true;
+	}
+
+	public removeCaseLog() {
+		// TODO
 	}
 
 	public setProtectedChannels() {
 		// TODO
 	}
 
-	public async edit(...data: Parameters<ConfigManager["update"]>) {
-		return await this.manager.update(data[0]);
-	}
-
 	public toEmbed() {
 		const me = this.guild.members.me;
 
-		const isMissingPermissions = (
-			channel: ForumChannel | GuildTextBasedChannel | undefined
-		) => {
+		const isMissingPermissions = (channel: ForumChannel | GuildTextBasedChannel | undefined) => {
 			if (!channel) {
 				return false;
 			}
@@ -272,7 +253,7 @@ export default class ConfigModule
 					.has([
 						PermissionFlagsBits.ViewChannel,
 						PermissionFlagsBits.SendMessages,
-						PermissionFlagsBits.EmbedLinks
+						PermissionFlagsBits.EmbedLinks,
 					])
 			) {
 				return `\n${Emojis.Error} Missing permissions`;
@@ -281,10 +262,10 @@ export default class ConfigModule
 			return "";
 		};
 
-		const channelStr = (
+		const channelString = (
 			enabled: boolean,
 			channel: ForumChannel | GuildTextBasedChannel | undefined,
-			channelId: string | null,
+			channelId: null | string,
 			recommendForum?: boolean
 		) => {
 			if (!enabled) {
@@ -299,7 +280,7 @@ export default class ConfigModule
 				return `${Emojis.On} • ${Emojis.Error} Channel not found`;
 			}
 
-			let string = `${Emojis.On} ${channel}`;
+			let string = `${Emojis.On} ${channel.toString()}`;
 
 			if (recommendForum && channel.type !== ChannelType.GuildForum) {
 				string += "\nForum channel is recommended.\n";
@@ -311,91 +292,71 @@ export default class ConfigModule
 		const protectedChannels = this.data.protectedChannelsIds.length || "No";
 		const restrictRoles = this.data.restrictRolesIds.length || "No";
 
-		const hasManagesRoles =
-			me?.permissions.has(PermissionFlagsBits.ManageRoles) ?? null;
+		const hasManagesRoles = me?.permissions.has(PermissionFlagsBits.ManageRoles) ?? null;
 
-		let hasManagesRolesStr = "";
+		let hasManagesRolesString = "";
 
 		if (hasManagesRoles === null) {
-			hasManagesRolesStr += `\n${Emojis.Warn} Unable to check permissions`;
+			hasManagesRolesString += `\n${Emojis.Warn} Unable to check permissions`;
 		} else if (!hasManagesRoles) {
-			hasManagesRolesStr += `\n${Emojis.Error} Missing permissions`;
+			hasManagesRolesString += `\n${Emojis.Error} Missing permissions`;
 		}
 
 		const fields: Array<EmbedField> = [
 			{
+				inline: true,
 				name: "Case log",
-				value: channelStr(
-					this.caseLogEnabled,
-					this.caseLogChannel,
-					this.data.caseLogChannelId
-				),
-				inline: true
+				value: channelString(this.caseLogEnabled, this.caseLogChannel, this.data.caseLogChannelId),
 			},
 			{
+				inline: true,
 				name: "Restriction roles",
-				value: `${restrictRoles} roles${hasManagesRolesStr}`,
-				inline: true
+				value: `${restrictRoles} roles${hasManagesRolesString}`,
 			},
 			{
+				inline: true,
 				name: "឵឵",
 				value: "឵឵",
-				inline: true
 			},
 			{
+				inline: true,
 				name: "Member log",
-				value: channelStr(
-					this.memberLogEnabled,
-					this.memberLogChannel,
-					this.data.memberLogChannelId
-				),
-				inline: true
+				value: channelString(this.memberLogEnabled, this.memberLogChannel, this.data.memberLogChannelId),
 			},
 			{
+				inline: true,
 				name: "Pin archive channel",
 				value: this.pinArchiveChannel
-					? `${this.pinArchiveChannel}${isMissingPermissions(
-							this.pinArchiveChannel
-					  )}`
+					? `${this.pinArchiveChannel.toString()}${isMissingPermissions(this.pinArchiveChannel)}`
 					: "None",
-				inline: true
 			},
 			{
+				inline: true,
 				name: "឵឵",
 				value: "឵឵",
-				inline: true
 			},
 
 			{
+				inline: true,
 				name: "Message log",
-				value: channelStr(
-					this.messageLogEnabled,
-					this.messageLogChannel,
-					this.data.messageLogChannelId
-				),
-				inline: true
+				value: channelString(this.messageLogEnabled, this.messageLogChannel, this.data.messageLogChannelId),
 			},
 			{
+				inline: true,
 				name: "Protected channels",
 				value: `${protectedChannels} channels`,
-				inline: true
 			},
 			{
+				inline: true,
 				name: "឵឵",
 				value: "឵឵",
-				inline: true
 			},
 
 			{
+				inline: true,
 				name: "Report",
-				value: channelStr(
-					this.reportEnabled,
-					this.reportChannel,
-					this.data.reportChannelId,
-					true
-				),
-				inline: true
-			}
+				value: channelString(this.reportEnabled, this.reportChannel, this.data.reportChannelId, true),
+			},
 		];
 
 		return new EmbedBuilder()

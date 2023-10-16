@@ -1,41 +1,34 @@
+import { type ButtonInteraction, type ChatInputCommandInteraction, ComponentType } from "discord.js";
+import type ConfigManager from "#database/config.js";
+import toConfigDashboard from "./configDashboard.js";
 import components from "#components";
 import { Emojis } from "#constants";
-import type ConfigManager from "#database/config.js";
-import {
-	ComponentType,
-	type ButtonInteraction,
-	type ChatInputCommandInteraction
-} from "discord.js";
-import toConfigDashboard from "./configDashboard.js";
 
 export default async function toNoConfigDashboard(
-	interaction:
-		| ButtonInteraction<"cached">
-		| ChatInputCommandInteraction<"cached">,
+	interaction: ButtonInteraction<"cached"> | ChatInputCommandInteraction<"cached">,
 	configManager: ConfigManager
 ) {
-	const rows = components.createRows(
-		components.buttons.create.component("config")
-	);
+	const rows = components.createRows(components.buttons.create.component("config"));
 
-	const msg = await interaction.editReply({
+	const message = await interaction.editReply({
+		components: rows,
 		content: "This server does not have a config.",
-		components: rows
 	});
 
-	const collector = msg.createMessageComponentCollector({
-		filter: (buttonInteraction) =>
-			buttonInteraction.user.id === interaction.user.id,
+	const collector = message.createMessageComponentCollector({
 		componentType: ComponentType.Button,
+		filter: (buttonInteraction) => buttonInteraction.user.id === interaction.user.id,
+		max: 1,
 		time: 120_000,
-		max: 1
 	});
 
 	collector.on("ignore", (buttonInteraction) => {
-		buttonInteraction.reply({
-			content: `${Emojis.NoEntry} This button is not for you.`,
-			ephemeral: true
-		});
+		buttonInteraction
+			.reply({
+				content: `${Emojis.NoEntry} This button is not for you.`,
+				ephemeral: true,
+			})
+			.catch(() => null);
 	});
 
 	collector.on("collect", async (buttonInteraction) => {
@@ -43,12 +36,12 @@ export default async function toNoConfigDashboard(
 
 		await configManager.create();
 
-		toConfigDashboard(buttonInteraction, configManager);
+		void toConfigDashboard(buttonInteraction, configManager);
 	});
 
 	collector.on("end", (_, reason) => {
 		if (reason === "time") {
-			interaction.editReply({ components: [] });
+			interaction.editReply({ components: [] }).catch(() => null);
 		}
 	});
 }

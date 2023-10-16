@@ -1,21 +1,21 @@
-import components from "#components";
-import { Colors, Emojis, Regex } from "#constants";
-import type GiveawayManager from "#database/giveaway.js";
-import { s, yesNo } from "#helpers";
-import Logger from "#logger";
-import { stripIndents } from "common-tags";
 import {
+	type APIButtonComponentWithCustomId,
+	type ButtonInteraction,
 	ButtonStyle,
 	ComponentType,
 	EmbedBuilder,
+	type ModalSubmitInteraction,
 	inlineCode,
-	type APIButtonComponentWithCustomId,
-	type ButtonInteraction,
-	type ModalSubmitInteraction
 } from "discord.js";
-import toDashboard from "../dashboard.js";
-import toCreatePrize from "./prizeModules/createPrize.js";
 import toPrizeDashboard from "./prizeModules/prizeDashboard.js";
+import toCreatePrize from "./prizeModules/createPrize.js";
+import type GiveawayManager from "#database/giveaway.js";
+import { Colors, Emojis, Regex } from "#constants";
+import { stripIndents } from "common-tags";
+import toDashboard from "../dashboard.js";
+import components from "#components";
+import { s, yesNo } from "#helpers";
+import Logger from "#logger";
 
 export default async function toManagePrizes(
 	interaction: ButtonInteraction<"cached"> | ModalSubmitInteraction<"cached">,
@@ -32,19 +32,18 @@ export default async function toManagePrizes(
 			
 				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
-			embeds: []
+			embeds: [],
 		});
 
 		return;
 	}
 
-	const prizesButtons: Array<APIButtonComponentWithCustomId> =
-		giveaway.prizes.map(({ id }, index) => ({
-			custom_id: `dashboard-prize-${id}`,
-			label: `Prize ${index + 1}`,
-			style: ButtonStyle.Primary,
-			type: ComponentType.Button
-		}));
+	const prizesButtons: Array<APIButtonComponentWithCustomId> = giveaway.prizes.map(({ id }, index) => ({
+		custom_id: `dashboard-prize-${id}`,
+		label: `Prize ${index + 1}`,
+		style: ButtonStyle.Primary,
+		type: ComponentType.Button,
+	}));
 
 	const disableCreate = giveaway.prizes.length >= 10;
 
@@ -57,14 +56,12 @@ export default async function toManagePrizes(
 	);
 
 	const getPrizesKey = (start: number, end: number) =>
-		giveaway.prizes.length
+		giveaway.prizes.length > 0
 			? giveaway.prizes
 					.slice(start, end)
 					.map(
 						(prize, index) =>
-							`${inlineCode(`Prize ${start + index + 1}`)} - ${
-								prize.quantity
-							}x ${prize.name}`
+							`${inlineCode(`Prize ${start + index + 1}`)} - ${prize.quantity}x ${prize.name}`
 					)
 					.join("\n")
 			: "None";
@@ -75,13 +72,13 @@ export default async function toManagePrizes(
 		embed.setColor(Colors.Green).setFields(
 			{
 				inline: true,
+				name: "Row 1",
 				value: getPrizesKey(0, 5),
-				name: "Row 1"
 			},
 			{
 				inline: true,
+				name: "Row 2",
 				value: getPrizesKey(5, 10),
-				name: "Row 2"
 			}
 		);
 	} else if (prizesButtons.length === 1) {
@@ -90,29 +87,28 @@ export default async function toManagePrizes(
 		embed.setColor(Colors.Red).setDescription("There are no prizes yet.");
 	}
 
-	new Logger({ label: "GIVEAWAY", interaction }).log(
-		`Opened prizes manager for giveaway #${giveaway.id}`
-	);
+	new Logger({ interaction, label: "GIVEAWAY" }).log(`Opened prizes manager for giveaway #${giveaway.id}`);
 
-	const msg = await interaction.editReply({
+	const message = await interaction.editReply({
 		components: rows,
 		content: null,
-		embeds: [embed]
+		embeds: [embed],
 	});
 
-	const collector = msg.createMessageComponentCollector({
-		filter: (buttonInteraction) =>
-			buttonInteraction.user.id === interaction.user.id,
+	const collector = message.createMessageComponentCollector({
 		componentType: ComponentType.Button,
+		filter: (buttonInteraction) => buttonInteraction.user.id === interaction.user.id,
+		max: 1,
 		time: 120_000,
-		max: 1
 	});
 
 	collector.on("ignore", (buttonInteraction) => {
-		buttonInteraction.reply({
-			content: `${Emojis.NoEntry} This button is not for you.`,
-			ephemeral: true
-		});
+		buttonInteraction
+			.reply({
+				content: `${Emojis.NoEntry} This button is not for you.`,
+				ephemeral: true,
+			})
+			.catch(() => null);
 	});
 
 	collector.on("collect", async (buttonInteraction) => {
@@ -120,13 +116,13 @@ export default async function toManagePrizes(
 			case components.buttons.back.customId: {
 				await buttonInteraction.deferUpdate();
 
-				toDashboard(buttonInteraction, id);
+				void toDashboard(buttonInteraction, id);
 
 				return;
 			}
 
 			case components.buttons.create.customId: {
-				toCreatePrize(buttonInteraction, id, giveawayManager);
+				void toCreatePrize(buttonInteraction, id, giveawayManager);
 
 				return;
 			}
@@ -134,25 +130,25 @@ export default async function toManagePrizes(
 			case components.buttons.clear.customId: {
 				await buttonInteraction.deferUpdate();
 
-				if (giveaway.winnersUserIds().size) {
+				if (giveaway.winnersUserIds().size > 0) {
 					const n = giveaway.winnersUserIds().size;
 
 					const proceed = await yesNo({
-						yesStyle: ButtonStyle.Danger,
-						noStyle: ButtonStyle.Secondary,
-						filter: (i) => i.user.id === interaction.user.id,
-						medium: buttonInteraction,
 						data: {
 							content: stripIndents`
 								${Emojis.Warn} Are you sure you want to clear the prizes?
 								This will wipe the prizes of ${n} ${s("winner", n)}, and the winners themselves!
 							`,
-							embeds: []
-						}
+							embeds: [],
+						},
+						filter: (index) => index.user.id === interaction.user.id,
+						medium: buttonInteraction,
+						noStyle: ButtonStyle.Secondary,
+						yesStyle: ButtonStyle.Danger,
 					});
 
 					if (!proceed) {
-						toManagePrizes(buttonInteraction, id, giveawayManager);
+						void toManagePrizes(buttonInteraction, id, giveawayManager);
 
 						return;
 					}
@@ -160,7 +156,7 @@ export default async function toManagePrizes(
 
 				await giveaway.reset({ prizesAndWinners: true });
 
-				toManagePrizes(buttonInteraction, id, giveawayManager);
+				void toManagePrizes(buttonInteraction, id, giveawayManager);
 
 				return;
 			}
@@ -168,17 +164,15 @@ export default async function toManagePrizes(
 
 		await buttonInteraction.deferUpdate();
 
-		const match = buttonInteraction.customId.match(
-			Regex.DashboardPrizeCustomId
-		);
+		const match = buttonInteraction.customId.match(Regex.DashboardPrizeCustomId);
 
 		const prizeIdString = match?.groups?.id;
-		const prizeId = prizeIdString ? parseInt(prizeIdString) : undefined;
+		const prizeId = prizeIdString ? Number.parseInt(prizeIdString) : undefined;
 
 		if (!prizeId && prizeId !== 0) {
 			return;
 		}
 
-		toPrizeDashboard(buttonInteraction, prizeId, giveawayManager, id);
+		void toPrizeDashboard(buttonInteraction, prizeId, giveawayManager, id);
 	});
 }

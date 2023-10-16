@@ -1,19 +1,17 @@
-import { Emojis, Regex } from "#constants";
-import ReportManager from "#database/report.js";
-import Logger from "#logger";
-import { oneLine } from "common-tags";
 import { type ButtonInteraction } from "discord.js";
+import ReportManager from "#database/report.js";
+import { Emojis, Regex } from "#constants";
+import { oneLine } from "common-tags";
+import Logger from "#logger";
 
-export default async function markReportUnprocessed(
-	interaction: ButtonInteraction<"cached">
-) {
+export default async function markReportUnprocessed(interaction: ButtonInteraction<"cached">) {
 	const match = interaction.customId.match(Regex.MarkReportUnprocessed);
 	const reportId = match?.groups?.id ? Number(match.groups.id) : undefined;
 
 	if (!reportId) {
 		await interaction.reply({
 			content: `${Emojis.Error} This button is faulty.`,
-			ephemeral: true
+			ephemeral: true,
 		});
 
 		return;
@@ -26,7 +24,7 @@ export default async function markReportUnprocessed(
 
 	if (!report) {
 		await interaction.editReply({
-			content: `${Emojis.Error} This report no longer exists.`
+			content: `${Emojis.Error} This report no longer exists.`,
 		});
 
 		return;
@@ -37,7 +35,7 @@ export default async function markReportUnprocessed(
 			processedAt: null,
 			processedByUserId: null,
 			processedByUsername: null,
-			referencedBy: { set: [] }
+			referencedBy: { set: [] },
 		})
 		.then(() => true)
 		.catch(() => false);
@@ -47,7 +45,7 @@ export default async function markReportUnprocessed(
 			content: oneLine`
 				${Emojis.Error} Something went wrong marking this report unprocessed.
 				Check if it still exists and try again.
-			`
+			`,
 		});
 
 		return;
@@ -55,19 +53,17 @@ export default async function markReportUnprocessed(
 
 	const logEditedSuccess = await report.editLog();
 
-	new Logger({ color: "grey", label: "REPORT", interaction }).log(
-		`Marked report #${report.id} unprocessed`
-	);
+	new Logger({ color: "grey", interaction, label: "REPORT" }).log(`Marked report #${report.id} unprocessed`);
 
 	if (!logEditedSuccess) {
 		await interaction.editReply({
-			content: `${Emojis.Warn} Could not update the report log, but the report has been marked unprocessed.`
+			content: `${Emojis.Warn} Could not update the report log, but the report has been marked unprocessed.`,
 		});
 
 		return;
 	}
 
 	await interaction.editReply({
-		content: `${Emojis.Check} Marked report unprocessed.`
+		content: `${Emojis.Check} Marked report unprocessed.`,
 	});
 }

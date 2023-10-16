@@ -1,11 +1,11 @@
+import { type ButtonInteraction, ButtonStyle, bold, time } from "discord.js";
+import { oneLine, stripIndent, stripIndents } from "common-tags";
+import type GiveawayManager from "#database/giveaway.js";
+import toDashboard from "../dashboard.js";
 import components from "#components";
 import { Emojis } from "#constants";
-import type GiveawayManager from "#database/giveaway.js";
 import { s, yesNo } from "#helpers";
 import Logger from "#logger";
-import { oneLine, stripIndent, stripIndents } from "common-tags";
-import { ButtonStyle, bold, time, type ButtonInteraction } from "discord.js";
-import toDashboard from "../dashboard.js";
 
 export default async function toEndGiveaway(
 	interaction: ButtonInteraction<"cached">,
@@ -23,7 +23,7 @@ export default async function toEndGiveaway(
 			
 				${Emojis.Error} This giveaway does not exist. Try creating one or double-check the ID.
 			`,
-				embeds: []
+				embeds: [],
 			})
 			.catch(() => null);
 
@@ -36,16 +36,16 @@ export default async function toEndGiveaway(
 	if (!prizesN) {
 		await interaction
 			.followUp({
-				ephemeral: true,
 				content: stripIndents`
 				${Emojis.Error} This giveaway has no prizes. Add some prizes, and try again.
 				
 				If the prize(s) are a secret, you can for example name the prize "Secret"
-			`
+			`,
+				ephemeral: true,
 			})
 			.catch(() => null);
 
-		toDashboard(interaction, id);
+		void toDashboard(interaction, id);
 
 		return;
 	}
@@ -53,12 +53,12 @@ export default async function toEndGiveaway(
 	if (!giveaway.channelId) {
 		await interaction
 			.followUp({
+				content: `${Emojis.Warn} The giveaway has never been announced.`,
 				ephemeral: true,
-				content: `${Emojis.Warn} The giveaway has never been announced.`
 			})
 			.catch(() => null);
 
-		toDashboard(interaction, id);
+		void toDashboard(interaction, id);
 
 		return;
 	}
@@ -72,10 +72,7 @@ export default async function toEndGiveaway(
 	if (giveaway.endDate) {
 		const isWas = Number(giveaway.endDate) < Date.now() ? "is" : "was";
 
-		content += `\nThe giveaway ${isWas} set to end ${time(
-			giveaway.endDate,
-			"R"
-		)}.`;
+		content += `\nThe giveaway ${isWas} set to end ${time(giveaway.endDate, "R")}.`;
 	}
 
 	if (prizesN < winnersN) {
@@ -88,27 +85,27 @@ export default async function toEndGiveaway(
 	}
 
 	const confirmation = await yesNo({
-		filter: (i) => i.user.id === interaction.user.id,
-		yesStyle: ButtonStyle.Secondary,
-		noStyle: ButtonStyle.Secondary,
-		medium: interaction,
-		timeActive: 60_000,
 		data: {
 			components: [],
 			content,
-			embeds: []
-		}
+			embeds: [],
+		},
+		filter: (index) => index.user.id === interaction.user.id,
+		medium: interaction,
+		noStyle: ButtonStyle.Secondary,
+		timeActive: 60_000,
+		yesStyle: ButtonStyle.Secondary,
 	});
 
 	if (!confirmation) {
 		await interaction
 			.followUp({
+				content: "Alright! Ending the giveaway was canceled.",
 				ephemeral: true,
-				content: "Alright! Ending the giveaway was canceled."
 			})
 			.catch(() => null);
 
-		toDashboard(interaction, id);
+		void toDashboard(interaction, id);
 
 		return;
 	}
@@ -117,25 +114,23 @@ export default async function toEndGiveaway(
 		ended: true,
 		entriesLocked: true,
 		nowOutdated: {
-			announcementMessage: false
-		}
+			announcementMessage: false,
+		},
 	});
 
-	const endedGiveawayRows = components.createRows(
-		components.buttons.endedGiveaway.component()
-	);
+	const endedGiveawayRows = components.createRows(components.buttons.endedGiveaway.component());
 
 	await giveaway.announcementMessage?.edit({
 		allowedMentions: { parse: ["roles", "everyone"] },
 		components: endedGiveawayRows,
 		content: giveaway.pingRolesMentions?.join(" "),
-		embeds: [giveaway.toEmbed()]
+		embeds: [giveaway.toEmbed()],
 	});
 
 	new Logger({
-		label: "GIVEAWAY",
 		color: "red",
-		interaction
+		interaction,
+		label: "GIVEAWAY",
 	}).log(`Ended giveaway #${id}`);
 
 	await toDashboard(interaction, id);

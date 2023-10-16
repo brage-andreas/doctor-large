@@ -1,100 +1,90 @@
-import components from "#components";
-import { Emojis } from "#constants";
-import ConfigManager from "#database/config.js";
-import ReportManager from "#database/report.js";
-import {
-	ModalCollector,
-	messageFromURL,
-	messageToEmbed,
-	parseMessageURL,
-	squash,
-	yesNo
-} from "#helpers";
-import Logger from "#logger";
-import type ConfigModule from "#modules/Config.js";
-import { type CommandData, type CommandExport } from "#typings";
-import { stripIndents } from "common-tags";
 import {
 	ApplicationCommandOptionType,
 	ApplicationCommandType,
-	inlineCode,
 	type ChatInputCommandInteraction,
 	type ContextMenuCommandInteraction,
 	type GuildMember,
 	type Message,
-	type ModalSubmitInteraction
+	type ModalSubmitInteraction,
+	inlineCode,
 } from "discord.js";
+import { ModalCollector, messageFromURL, messageToEmbed, parseMessageURL, squash, yesNo } from "#helpers";
+import { type CommandData, type CommandExport } from "#typings";
+import type ConfigModule from "#modules/Config.js";
+import ConfigManager from "#database/config.js";
+import ReportManager from "#database/report.js";
+import { stripIndents } from "common-tags";
+import components from "#components";
+import { Emojis } from "#constants";
+import Logger from "#logger";
 const data: CommandData = {
 	chatInput: {
-		name: "report",
-		dm_permission: false,
 		description: "Report a member or a user to the moderators.",
+		dm_permission: false,
+		name: "report",
 		options: [
 			{
-				name: "message",
 				description: "Report a message to the moderators.",
-				type: ApplicationCommandOptionType.Subcommand,
+				name: "message",
 				options: [
 					{
-						name: "message-url",
 						description: "The URL to the message.",
+						name: "message-url",
+						required: true,
 						type: ApplicationCommandOptionType.String,
-						required: true
 					},
 					{
-						name: "comment",
 						description: "A comment to help the moderators.",
+						name: "comment",
+						required: true,
 						type: ApplicationCommandOptionType.String,
-						required: true
 					},
 					{
-						name: "anonymous",
 						description: "Hide your identity to the moderators.",
-						type: ApplicationCommandOptionType.Boolean
-					}
-				]
+						name: "anonymous",
+						type: ApplicationCommandOptionType.Boolean,
+					},
+				],
+				type: ApplicationCommandOptionType.Subcommand,
 			},
 			{
-				name: "user",
 				description: "Report a user to the moderators",
-				type: ApplicationCommandOptionType.Subcommand,
+				name: "user",
 				options: [
 					{
-						name: "user",
 						description: "The user to target.",
+						name: "user",
+						required: true,
 						type: ApplicationCommandOptionType.User,
-						required: true
 					},
 					{
-						name: "comment",
 						description: "A comment to help the moderators.",
+						name: "comment",
+						required: true,
 						type: ApplicationCommandOptionType.String,
-						required: true
 					},
 					{
+						description: "Hide your identity to the moderators. (False)",
 						name: "anonymous",
-						description:
-							"Hide your identity to the moderators. (False)",
-						type: ApplicationCommandOptionType.Boolean
-					}
-				]
-			}
-		]
+						type: ApplicationCommandOptionType.Boolean,
+					},
+				],
+				type: ApplicationCommandOptionType.Subcommand,
+			},
+		],
 	},
 	messageContextMenu: {
 		name: "Report message",
-		type: ApplicationCommandType.Message
+		type: ApplicationCommandType.Message,
 	},
 	userContextMenu: {
 		name: "Report user",
-		type: ApplicationCommandType.User
-	}
+		type: ApplicationCommandType.User,
+	},
 };
 
 const handleMessage = async (
-	interaction:
-		| ChatInputCommandInteraction<"cached">
-		| ModalSubmitInteraction<"cached">,
+	interaction: ChatInputCommandInteraction<"cached"> | ModalSubmitInteraction<"cached">,
 	config: ConfigModule,
 	message: Message<true>,
 	comment: string,
@@ -106,11 +96,10 @@ const handleMessage = async (
 
 	const hasRecentReport = await reportManager.hasRecentReport({
 		targetMessageId: message.id,
-		targetUserId: message.author.id
+		targetUserId: message.author.id,
 	});
 
-	const res = await yesNo({
-		medium: interaction,
+	const response = await yesNo({
 		data: {
 			content: squash(stripIndents`
 				## ${Emojis.FaceInClouds} Are you sure you want to report this message?
@@ -125,23 +114,26 @@ const handleMessage = async (
 				
 				The message:
 			`),
-			embeds: [messageEmbed]
-		}
+			embeds: [messageEmbed],
+		},
+		medium: interaction,
 	});
 
 	const goToMessageRow = components.createRows(
 		components.buttons.url({
 			label: "Go to message",
-			url: message.url
+			url: message.url,
 		})
 	);
 
-	if (!res) {
-		interaction.editReply({
-			components: goToMessageRow,
-			content: `Alright! Canceled report on message by ${message.author}.`,
-			embeds: []
-		});
+	if (!response) {
+		interaction
+			.editReply({
+				components: goToMessageRow,
+				content: `Alright! Canceled report on message by ${message.author.toString()}.`,
+				embeds: [],
+			})
+			.catch(() => null);
 
 		return;
 	}
@@ -158,7 +150,7 @@ const handleMessage = async (
 		targetMessageChannelId: message.channelId,
 		targetMessageId: message.id,
 		targetUserId: message.author.id,
-		targetUsername: message.author.tag
+		targetUsername: message.author.tag,
 	});
 
 	await config.postReport(report);
@@ -167,37 +159,34 @@ const handleMessage = async (
 		`Reported message ${message.id} by ${message.author.tag} (${message.author.id})`
 	);
 
-	interaction.editReply({
-		components: goToMessageRow,
-		content: stripIndents`
+	interaction
+		.editReply({
+			components: goToMessageRow,
+			content: stripIndents`
 			${Emojis.Check} Done! Thank you for keeping the server safe ${Emojis.Sparks}
 			
 			You reported a message from ${message.author}.
-		`
-	});
+		`,
+		})
+		.catch(() => null);
 };
 
 const handleMember = async (
-	interaction:
-		| ChatInputCommandInteraction<"cached">
-		| ModalSubmitInteraction<"cached">,
+	interaction: ChatInputCommandInteraction<"cached"> | ModalSubmitInteraction<"cached">,
 	config: ConfigModule,
 	member: GuildMember,
 	comment: string,
 	anonymous?: boolean
 ) => {
-	const memberString = `${member} - ${inlineCode(member.user.tag)} (${
-		member.id
-	})`;
+	const memberString = `${member.toString()} - ${inlineCode(member.user.tag)} (${member.id})`;
 
 	const reportManager = new ReportManager(interaction.guild);
 
 	const hasRecentReport = await reportManager.hasRecentReport({
-		targetUserId: member.id
+		targetUserId: member.id,
 	});
 
-	const res = await yesNo({
-		medium: interaction,
+	const response = await yesNo({
 		data: {
 			content: squash(stripIndents`
 				${Emojis.FaceInClouds} Are you sure you want to report ${memberString}?
@@ -209,15 +198,18 @@ const handleMember = async (
 
 				${anonymous ? "* You opted to stay anonymous" : ""}
 				* Comment: ${inlineCode(comment.replaceAll("`", "\\`"))}
-			`)
-		}
+			`),
+		},
+		medium: interaction,
 	});
 
-	if (!res) {
-		interaction.editReply({
-			components: [],
-			content: `Alright! Canceled report on ${memberString}.`
-		});
+	if (!response) {
+		interaction
+			.editReply({
+				components: [],
+				content: `Alright! Canceled report on ${memberString}.`,
+			})
+			.catch(() => null);
 
 		return;
 	}
@@ -232,28 +224,26 @@ const handleMember = async (
 		guildId: member.guild.id,
 		guildRelativeId,
 		targetUserId: member.id,
-		targetUsername: member.user.tag
+		targetUsername: member.user.tag,
 	});
 
 	await config.postReport(report);
 
-	new Logger({ interaction, label: "REPORT" }).log(
-		`Reported member ${member.user.tag} (${member.user.id})`
-	);
+	new Logger({ interaction, label: "REPORT" }).log(`Reported member ${member.user.tag} (${member.user.id})`);
 
-	interaction.editReply({
-		components: [],
-		content: stripIndents`
+	interaction
+		.editReply({
+			components: [],
+			content: stripIndents`
 			${Emojis.Check} Done! Thank you for keeping the server safe ${Emojis.Sparks}
 			
 			You reported ${memberString}.
-		`
-	});
+		`,
+		})
+		.catch(() => null);
 };
 
-const chatInput = async (
-	interaction: ChatInputCommandInteraction<"cached">
-) => {
+const chatInput = async (interaction: ChatInputCommandInteraction<"cached">) => {
 	await interaction.deferReply({ ephemeral: true });
 
 	const configManager = new ConfigManager(interaction.guild);
@@ -264,9 +254,11 @@ const chatInput = async (
 		.catch(() => false);
 
 	if (!validation) {
-		interaction.editReply({
-			content: `${Emojis.NoEntry} Reporting is disabled in this server, as it has not been set up.`
-		});
+		interaction
+			.editReply({
+				content: `${Emojis.NoEntry} Reporting is disabled in this server, as it has not been set up.`,
+			})
+			.catch(() => null);
 
 		return;
 	}
@@ -274,9 +266,11 @@ const chatInput = async (
 	const config = await configManager.get();
 
 	if (!config.reportEnabled) {
-		interaction.editReply({
-			content: `${Emojis.NoEntry} Reporting is disabled in this server.`
-		});
+		interaction
+			.editReply({
+				content: `${Emojis.NoEntry} Reporting is disabled in this server.`,
+			})
+			.catch(() => null);
 
 		return;
 	}
@@ -295,7 +289,7 @@ const chatInput = async (
 				content: stripIndents`
 					${Emojis.Error} Could not parse the message URL. Double-check it and try again.
 					${inlineCode(messageURL)}
-				`
+				`,
 			});
 
 			return;
@@ -303,23 +297,17 @@ const chatInput = async (
 
 		if (parsedURL.guildId !== interaction.guildId) {
 			await interaction.editReply({
-				content: `${Emojis.Error} The message is not from this server.`
+				content: `${Emojis.Error} The message is not from this server.`,
 			});
 
 			return;
 		}
 
-		const channel = interaction.guild.channels.cache.get(
-			parsedURL.channelId
-		);
+		const channel = interaction.guild.channels.cache.get(parsedURL.channelId);
 
 		if (!channel?.isTextBased()) {
 			await interaction.editReply({
-				content: `${
-					Emojis.Error
-				} The channel from the URL is invalid: ${inlineCode(
-					messageURL
-				)}`
+				content: `${Emojis.Error} The channel from the URL is invalid: ${inlineCode(messageURL)}`,
 			});
 
 			return;
@@ -329,24 +317,18 @@ const chatInput = async (
 
 		if (!message) {
 			await interaction.reply({
+				content: `${Emojis.Error} I could not find a message with the URL: ${inlineCode(messageURL)}`,
 				ephemeral: true,
-				content: `${
-					Emojis.Error
-				} I could not find a message with the URL: ${inlineCode(
-					messageURL
-				)}`
 			});
 
 			return;
 		}
 
-		handleMessage(interaction, config, message, comment, anonymous);
+		void handleMessage(interaction, config, message, comment, anonymous);
 	}
 };
 
-const contextMenu = async (
-	interaction: ContextMenuCommandInteraction<"cached">
-) => {
+const contextMenu = async (interaction: ContextMenuCommandInteraction<"cached">) => {
 	const configManager = new ConfigManager(interaction.guild);
 
 	const validation = await configManager
@@ -355,10 +337,12 @@ const contextMenu = async (
 		.catch(() => false);
 
 	if (!validation) {
-		interaction.reply({
-			ephemeral: true,
-			content: `${Emojis.NoEntry} Reporting is disabled in this server, as it has not been set up.`
-		});
+		interaction
+			.reply({
+				content: `${Emojis.NoEntry} Reporting is disabled in this server, as it has not been set up.`,
+				ephemeral: true,
+			})
+			.catch(() => null);
 
 		return;
 	}
@@ -366,10 +350,12 @@ const contextMenu = async (
 	const config = await configManager.get();
 
 	if (!config.reportEnabled) {
-		interaction.reply({
-			ephemeral: true,
-			content: `${Emojis.NoEntry} Reporting is disabled in this server.`
-		});
+		interaction
+			.reply({
+				content: `${Emojis.NoEntry} Reporting is disabled in this server.`,
+				ephemeral: true,
+			})
+			.catch(() => null);
 
 		return;
 	}
@@ -379,7 +365,7 @@ const contextMenu = async (
 	await interaction.showModal(modal);
 
 	const modalCollector = ModalCollector(interaction, modal, {
-		time: 180_000
+		time: 180_000,
 	});
 
 	modalCollector.on("collect", async (modalInteraction) => {
@@ -388,21 +374,11 @@ const contextMenu = async (
 		const comment = modalInteraction.fields.getTextInputValue("comment");
 
 		if (interaction.isMessageContextMenuCommand()) {
-			handleMessage(
-				modalInteraction,
-				config,
-				interaction.targetMessage,
-				comment
-			);
+			void handleMessage(modalInteraction, config, interaction.targetMessage, comment);
 		}
 
 		if (interaction.isUserContextMenuCommand()) {
-			handleMember(
-				modalInteraction,
-				config,
-				interaction.targetMember,
-				comment
-			);
+			void handleMember(modalInteraction, config, interaction.targetMember, comment);
 		}
 	});
 };
@@ -411,6 +387,6 @@ export const getCommand: CommandExport = () => ({
 	data,
 	handle: {
 		chatInput,
-		contextMenu
-	}
+		contextMenu,
+	},
 });

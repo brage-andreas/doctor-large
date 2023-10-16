@@ -1,43 +1,43 @@
+import { type Case, CaseType, type Note, type Report } from "@prisma/client";
+import type BanCaseModule from "./CaseModules/BanCaseModule.js";
+import { type Client, type Guild } from "discord.js";
 import type CaseManager from "#database/case.js";
 import { type CaseWithIncludes } from "#typings";
-import { CaseType, type Case, type Note, type Report } from "@prisma/client";
-import { type Client, type Guild } from "discord.js";
-import type BanCaseModule from "./CaseModules/BanCaseModule.js";
 
 export class CaseModule implements CaseWithIncludes {
 	public client: Client<true>;
+	public createdAt: Date;
 	public data: CaseWithIncludes;
-	public guild: Guild;
-	public manager: CaseManager;
+	public daysPruned: null | number;
 
-	public id: number;
+	public dmMessageId: null | string;
+	public expiration: Date | null;
+	public guild: Guild;
 	public guildId: string;
 	public guildRelativeId: number;
-	public createdAt: Date;
-	public type: CaseType;
-	public daysPruned: number | null;
-	public dmMessageId: string | null;
-	public expiration: Date | null;
-	public logMessageChannelId: string | null;
-	public logMessageId: string | null;
+	public id: number;
+	public logMessageChannelId: null | string;
+	public logMessageId: null | string;
+	public manager: CaseManager;
 	public moderatorUserId: string;
 	public moderatorUsername: string;
+	public newSlowmode: null | number;
 	public note: Note | null;
-	public noteId: number | null;
-	public originalSlowmode: number | null;
+	public noteId: null | number;
+	public originalSlowmode: null | number;
 	public persistant: boolean | null;
 	public processed: boolean;
-	public reason: string | null;
+	public reason: null | string;
 	public reference: Case | null;
+	public referenceId: null | number;
 	public referencedBy: Array<Case>;
-	public referenceId: number | null;
 	public report: Report | null;
-	public reportId: number | null;
+	public reportId: null | number;
 	public roles: Array<string>;
 	public targetIds: Array<string>;
-	public targetUsername: string | null;
+	public targetUsername: null | string;
 	public temporary: boolean | null;
-	public newSlowmode: number | null;
+	public type: CaseType;
 
 	public constructor(manager: CaseManager, data: CaseWithIncludes) {
 		this.manager = manager;

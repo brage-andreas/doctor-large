@@ -1,29 +1,29 @@
-import { ColorsHex } from "#constants";
-import type NoteManager from "#database/note.js";
-import { s } from "#helpers";
 import { type CaseWithIncludes, type NoteWithIncludes } from "#typings";
 import { type Client, type EmbedData, type Guild } from "discord.js";
+import type NoteManager from "#database/note.js";
 import getTag from "../helpers/getTag.js";
+import { ColorsHex } from "#constants";
+import { s } from "#helpers";
 
 export class NoteModule implements NoteWithIncludes {
-	public client: Client<true>;
-	public data: NoteWithIncludes;
-	public guild: Guild;
-	public manager: NoteManager;
-
-	public id: number;
-	public guildId: string;
-	public createdAt: Date;
-	public guildRelativeId: number;
+	public author: string;
 	public authorUserId: string;
 	public authorUsername: string;
+	public client: Client<true>;
+
 	public content: string;
+	public createdAt: Date;
+	public data: NoteWithIncludes;
+	public guild: Guild;
+	public guildId: string;
+	public guildRelativeId: number;
+	public id: number;
+	public manager: NoteManager;
 	public referencedBy: Array<CaseWithIncludes>;
+	public target: string;
+
 	public targetUserId: string;
 	public targetUsername: string;
-
-	public author: string;
-	public target: string;
 
 	public constructor(manager: NoteManager, data: NoteWithIncludes) {
 		this.manager = manager;
@@ -43,36 +43,34 @@ export class NoteModule implements NoteWithIncludes {
 		this.targetUsername = data.targetUsername;
 
 		this.author = getTag({
+			id: this.authorUserId,
 			tag: this.authorUsername,
-			id: this.authorUserId
 		});
 
 		this.target = getTag({
+			id: this.targetUserId,
 			tag: this.targetUsername,
-			id: this.targetUserId
 		});
 	}
 
-	public toShortList() {
-		return `* (#${this.guildRelativeId}) ${this.content}`;
-	}
-
 	public toEmbed(): EmbedData {
-		const referencedString = this.referencedBy.length
-			? `• Referenced by ${this.referencedBy.length} ${s(
-					"case",
-					this.referencedBy.length
-			  )}`
-			: "";
+		const referencedString =
+			this.referencedBy.length > 0
+				? `• Referenced by ${this.referencedBy.length} ${s("case", this.referencedBy.length)}`
+				: "";
 
 		return {
 			author: { name: `${this.target} (${this.targetUserId})` },
 			color: ColorsHex.Yellow,
 			description: this.content,
-			timestamp: this.createdAt,
 			footer: {
-				text: `Note #${this.guildRelativeId} • By ${this.author} (${this.authorUserId}) ${referencedString}`
-			}
+				text: `Note #${this.guildRelativeId} • By ${this.author} (${this.authorUserId}) ${referencedString}`,
+			},
+			timestamp: this.createdAt,
 		};
+	}
+
+	public toShortList() {
+		return `* (#${this.guildRelativeId}) ${this.content}`;
 	}
 }

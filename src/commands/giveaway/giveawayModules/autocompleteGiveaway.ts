@@ -1,7 +1,7 @@
-import { Emojis } from "#constants";
+import { type AutocompleteInteraction } from "discord.js";
 import GiveawayManager from "#database/giveaway.js";
 import { type Giveaway } from "@prisma/client";
-import { type AutocompleteInteraction } from "discord.js";
+import { Emojis } from "#constants";
 
 export default async function (interaction: AutocompleteInteraction<"cached">) {
 	const guild = interaction.guild;
@@ -9,9 +9,7 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 	const giveawayManager = new GiveawayManager(guild);
 	const highestIdThatExists = await giveawayManager.getCountInGuild();
 
-	const focused =
-		parseInt(interaction.options.getFocused()) ||
-		(await giveawayManager.getCountInGuild());
+	const focused = Number.parseInt(interaction.options.getFocused()) || (await giveawayManager.getCountInGuild());
 
 	const highestIdToTry = focused + 2;
 	const lowestIdToTry = focused - 3;
@@ -66,15 +64,15 @@ export default async function (interaction: AutocompleteInteraction<"cached">) {
 		})
 		.map((data) => ({
 			name: getName(data),
-			value: data.id
+			value: data.id,
 		}));
 
 	const emptyResponse = {
 		name: `${Emojis.Sleep} Whoa so empty — there are no giveaways`,
-		value: -1
+		value: -1,
 	};
 
-	const response = fullResponse.length ? fullResponse : [emptyResponse];
+	const response = fullResponse.length > 0 ? fullResponse : [emptyResponse];
 
-	interaction.respond(response);
+	interaction.respond(response).catch(() => null);
 }

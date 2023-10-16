@@ -1,12 +1,10 @@
-import components from "#components";
+import { type ButtonInteraction } from "discord.js";
 import { Emojis, Regex } from "#constants";
 import { messageToEmbed } from "#helpers";
+import components from "#components";
 import Logger from "#logger";
-import { type ButtonInteraction } from "discord.js";
 
-export default async function previewMessage(
-	interaction: ButtonInteraction<"cached">
-) {
+export default async function previewMessage(interaction: ButtonInteraction<"cached">) {
 	await interaction.deferReply({ ephemeral: true });
 
 	const match = interaction.customId.match(Regex.PreviewMessage);
@@ -15,7 +13,7 @@ export default async function previewMessage(
 
 	if (!channelId || !messageId) {
 		await interaction.editReply({
-			content: `${Emojis.Error} This button is faulty.`
+			content: `${Emojis.Error} This button is faulty.`,
 		});
 
 		return;
@@ -25,7 +23,7 @@ export default async function previewMessage(
 
 	if (!channel?.isTextBased()) {
 		await interaction.editReply({
-			content: `${Emojis.Error} This button is faulty, as the channel no longer exist or is unavailable to me.\n(Channel \`${channelId}\`)`
+			content: `${Emojis.Error} This button is faulty, as the channel no longer exist or is unavailable to me.\n(Channel \`${channelId}\`)`,
 		});
 
 		return;
@@ -33,31 +31,29 @@ export default async function previewMessage(
 
 	const message = await channel.messages
 		.fetch({
+			force: true,
 			message: messageId,
-			force: true
 		})
 		.catch(() => null);
 
 	if (!message) {
 		await interaction.editReply({
-			content: `${Emojis.Error} This button is faulty, as the message no longer exist or is unavailable to me.\n(Message \`${messageId}\` in channel \`${channelId}\`)`
+			content: `${Emojis.Error} This button is faulty, as the message no longer exist or is unavailable to me.\n(Message \`${messageId}\` in channel \`${channelId}\`)`,
 		});
 
 		return;
 	}
 
 	const embed = messageToEmbed(message);
-	const row = components.createRows(
-		components.buttons.url({ label: "Go to message", url: message.url })
-	);
+	const row = components.createRows(components.buttons.url({ label: "Go to message", url: message.url }));
 
-	new Logger({ color: "grey", label: "BUTTON", interaction }).log(
+	new Logger({ color: "grey", interaction, label: "BUTTON" }).log(
 		`Sent preview of message ${messageId} of channel ${channelId}`
 	);
 
 	await interaction.editReply({
 		components: row,
 		content: null,
-		embeds: [embed]
+		embeds: [embed],
 	});
 }

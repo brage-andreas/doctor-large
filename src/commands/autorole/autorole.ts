@@ -1,30 +1,22 @@
-import components from "#components";
-import { HIDE_OPTION } from "#constants";
-import AutoroleManager from "#database/autorole.js";
-import Logger from "#logger";
+import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
 import { type CommandData, type CommandExport } from "#typings";
+import AutoroleManager from "#database/autorole.js";
+import { HIDE_OPTION } from "#constants";
 import { oneLine } from "common-tags";
-import {
-	PermissionFlagsBits,
-	type ChatInputCommandInteraction
-} from "discord.js";
+import components from "#components";
+import Logger from "#logger";
 
 const data: CommandData = {
 	chatInput: {
-		name: "autorole",
+		default_member_permissions: (PermissionFlagsBits.ManageRoles | PermissionFlagsBits.ManageGuild).toString(),
+		description: "Configuration for giving joining members specific roles automatically.",
 		dm_permission: false,
-		description:
-			"Configuration for giving joining members specific roles automatically.",
-		default_member_permissions: (
-			PermissionFlagsBits.ManageRoles | PermissionFlagsBits.ManageGuild
-		).toString(),
-		options: [HIDE_OPTION]
-	}
+		name: "autorole",
+		options: [HIDE_OPTION],
+	},
 };
 
-const chatInput = async (
-	interaction: ChatInputCommandInteraction<"cached">
-) => {
+const chatInput = async (interaction: ChatInputCommandInteraction<"cached">) => {
 	if (!interaction.isChatInputCommand()) {
 		return;
 	}
@@ -36,7 +28,7 @@ const chatInput = async (
 	const autoroleManager = new AutoroleManager(interaction.guild);
 	await autoroleManager.initialize();
 
-	const logger = new Logger({ label: "AUTOROLE", interaction });
+	const logger = new Logger({ interaction, label: "AUTOROLE" });
 
 	const dashboard = async () => {
 		const autorole = await autoroleManager.get();
@@ -44,66 +36,78 @@ const chatInput = async (
 		const rows = components.createRows(
 			components.selectMenus.role,
 			components.buttons.clear.component("roles"),
-			autorole.activated
-				? components.buttons.disable
-				: components.buttons.enable
+			autorole.activated ? components.buttons.disable : components.buttons.enable
 		);
 
-		const msg = await interaction.editReply({
+		const message = await interaction.editReply({
 			components: rows,
-			embeds: [autorole.toEmbed()]
+			embeds: [autorole.toEmbed()],
 		});
 
-		const collector = msg.createMessageComponentCollector({
-			filter: (i) => i.user.id === interaction.user.id,
+		const collector = message.createMessageComponentCollector({
+			filter: (index) => index.user.id === interaction.user.id,
+			max: 2,
 			time: 60_000,
-			// if it is max: 1 like it should be the "end" event gets
-			// fired before "collect" and it's just a pain
-			max: 2
 		});
 
-		collector.on("collect", async (i) => {
-			await i.deferUpdate();
+		collector.on("collect", async (index) => {
+			await index.deferUpdate();
 
 			let active = autorole.activated;
 			let rolesIdsArray = [...autorole.roleIds];
 
-			if (i.customId === components.selectMenus.role.customId) {
-				if (!i.isRoleSelectMenu()) {
-					return;
+			switch (index.customId) {
+				case components.selectMenus.role.customId: {
+					if (!index.isRoleSelectMenu()) {
+						return;
+					}
+
+					rolesIdsArray = index.values;
+
+					logger.log(
+						oneLine`
+							Roles changed from
+							[${[...autorole.roleIds].join(", ")}]
+							to [${rolesIdsArray.join(", ")}]
+						`
+					);
+
+					break;
 				}
 
-				rolesIdsArray = i.values;
+				case components.buttons.clear.customId: {
+					rolesIdsArray = [];
 
-				logger.log(
-					oneLine`
-						Roles changed from
-						[${[...autorole.roleIds].join(", ")}]
-						to [${rolesIdsArray.join(", ")}]
-					`
-				);
-			} else if (i.customId === components.buttons.clear.customId) {
-				rolesIdsArray = [];
+					logger.log(
+						oneLine`
+							Roles changed from
+							[${[...autorole.roleIds].join(", ")}]
+							to [${rolesIdsArray.join(", ")}]
+						`
+					);
 
-				logger.log(
-					oneLine`
-						Roles changed from
-						[${[...autorole.roleIds].join(", ")}]
-						to [${rolesIdsArray.join(", ")}]
-					`
-				);
-			} else if (i.customId === components.buttons.enable.customId) {
-				active = true;
+					break;
+				}
 
-				logger.log("Activated autorole");
-			} else if (i.customId === components.buttons.disable.customId) {
-				active = false;
-				logger.log("Deactivated autorole");
+				case components.buttons.enable.customId: {
+					active = true;
+
+					logger.log("Activated autorole");
+
+					break;
+				}
+
+				case components.buttons.disable.customId: {
+					active = false;
+					logger.log("Deactivated autorole");
+
+					break;
+				}
 			}
 
 			await autoroleManager.update({
 				activated: active,
-				roleIds: rolesIdsArray
+				roleIds: rolesIdsArray,
 			});
 
 			collector.stop("stop");
@@ -113,7 +117,7 @@ const chatInput = async (
 			if (reason === "time") {
 				await interaction
 					.editReply({
-						components: []
+						components: [],
 					})
 					.catch(() => null);
 
@@ -130,6 +134,6 @@ const chatInput = async (
 export const getCommand: CommandExport = () => ({
 	data,
 	handle: {
-		chatInput
-	}
+		chatInput,
+	},
 });

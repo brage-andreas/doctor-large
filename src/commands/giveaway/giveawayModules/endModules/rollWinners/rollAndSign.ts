@@ -1,6 +1,6 @@
+import { type Snowflake, type WinnerId } from "#typings";
 import type Giveaway from "#modules/Giveaway.js";
 import type PrizeModule from "#modules/Prize.js";
-import { type Snowflake, type WinnerId } from "#typings";
 import roll from "./roll.js";
 
 export async function rollAndSign(options: {
@@ -12,14 +12,7 @@ export async function rollAndSign(options: {
 	prizesQuantity: number;
 	winnerQuantity: number;
 }) {
-	const {
-		giveaway,
-		ignoreRequirements,
-		overrideClaimed,
-		prizes,
-		prizesQuantity,
-		winnerQuantity
-	} = options;
+	const { giveaway, ignoreRequirements, overrideClaimed, prizes, prizesQuantity, winnerQuantity } = options;
 
 	let { entries } = options;
 
@@ -29,11 +22,7 @@ export async function rollAndSign(options: {
 		entries = entries.filter((userId) => {
 			const member = members.get(userId);
 
-			if (
-				!member ||
-				!giveaway.isOldEnough(member) ||
-				!giveaway.memberHasRequiredRoles(member)
-			) {
+			if (!member || !giveaway.isOldEnough(member) || !giveaway.memberHasRequiredRoles(member)) {
 				return false;
 			}
 
@@ -42,7 +31,7 @@ export async function rollAndSign(options: {
 	}
 
 	await giveaway.manager.deleteWinners(giveaway.data, {
-		onlyDeleteUnclaimed: !overrideClaimed
+		onlyDeleteUnclaimed: !overrideClaimed,
 	});
 
 	const data = roll({
@@ -50,18 +39,16 @@ export async function rollAndSign(options: {
 		overrideClaimed,
 		prizes,
 		prizesQuantity,
-		winnerQuantity
+		winnerQuantity,
 	});
 
 	if (!data?.length) {
 		return null;
 	}
 
-	const values = data.map((e) => `(${e.prizeId}, '${e.userId}')`).join(",\n");
+	const values = data.map((rollObject) => `(${rollObject.prizeId}, '${rollObject.userId}')`).join(",\n");
 
-	return await giveaway.manager.prisma.$queryRawUnsafe<
-		Array<{ id: WinnerId; userId: Snowflake }>
-	>(
+	return await giveaway.manager.prisma.$queryRawUnsafe<Array<{ id: WinnerId; userId: Snowflake }>>(
 		`INSERT INTO guilds."Winner"("prizeId", "userId")
 		 VALUES ${values}
 		 RETURNING id, "userId";`

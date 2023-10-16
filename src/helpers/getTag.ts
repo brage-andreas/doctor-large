@@ -1,25 +1,19 @@
 import { type GuildMember, type User } from "discord.js";
 
 const _getTag = (
-	userOrMember:
-		| GuildMember
-		| User
-		| { discriminator: number | string; username: string; id: string }
+	userOrMember: { discriminator: number | string; id: string; username: string } | GuildMember | User
 ) => {
-	const { discriminator, username } =
-		"guild" in userOrMember ? userOrMember.user : userOrMember;
+	const { discriminator, username } = "guild" in userOrMember ? userOrMember.user : userOrMember;
 
-	return discriminator === "0"
-		? `@${username}`
-		: `${username}#${discriminator}`;
+	return discriminator === "0" ? `@${username}` : `${username}#${discriminator}`;
 };
 
 const normalizeData = (
 	data:
+		| { discriminator: number | string; id: string; username: string }
+		| { id: string; tag: string }
 		| GuildMember
 		| User
-		| { discriminator: number | string; username: string; id: string }
-		| { tag: string; id: string }
 ) => {
 	if (!("username" in data) && !("guild" in data)) {
 		const split = data.tag.split("#");
@@ -33,7 +27,7 @@ const normalizeData = (
 		return {
 			discriminator,
 			id: data.id,
-			username: split.join("#")
+			username: split.join("#"),
 		};
 	}
 
@@ -42,10 +36,10 @@ const normalizeData = (
 
 export default function getTag(
 	userOrMember:
+		| { discriminator: number | string; id: string; username: string }
+		| { id: string; tag: string }
 		| GuildMember
-		| User
-		| { discriminator: number | string; username: string; id: string }
-		| { tag: string; id: string },
+		| User,
 	options?: { id: boolean }
 ) {
 	if (options?.id) {

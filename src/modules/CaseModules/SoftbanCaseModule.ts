@@ -1,24 +1,21 @@
-import type CaseManager from "#database/case.js";
-import { CaseModule } from "#modules/Case.js";
-import { type CaseWithIncludes } from "#typings";
-import { CaseType } from "@prisma/client";
 import { type SoftbanCaseWithIncludes } from "../../typings/cases/index.js";
+import type CaseManager from "#database/case.js";
+import { type CaseWithIncludes } from "#typings";
+import { CaseModule } from "#modules/Case.js";
+import { CaseType } from "@prisma/client";
 
-export default class SoftbanCaseModule
-	extends CaseModule
-	implements SoftbanCaseWithIncludes
-{
+export default class SoftbanCaseModule extends CaseModule implements SoftbanCaseWithIncludes {
 	public daysPruned: number;
+	public expiration = null;
+	public newSlowmode = null;
+	public originalSlowmode = null;
+	public persistant = null;
+
+	public roles = [];
 	public targetIds: [string];
 	public targetUsername: string;
 	public temporary: boolean;
 	public type: typeof CaseType.Softban;
-
-	public expiration = null;
-	public originalSlowmode = null;
-	public persistant = null;
-	public roles = [];
-	public newSlowmode = null;
 
 	public constructor(manager: CaseManager, data: CaseWithIncludes) {
 		super(manager, data);
@@ -28,27 +25,19 @@ export default class SoftbanCaseModule
 		}
 
 		if (data.daysPruned === null) {
-			throw new TypeError(
-				"`daysPruned` is null when it should be present"
-			);
+			throw new TypeError("`daysPruned` is null when it should be present");
 		}
 
 		if (data.targetIds.length > 1) {
-			throw new TypeError(
-				"`targetIds` has more than one id when it should have one"
-			);
+			throw new TypeError("`targetIds` has more than one id when it should have one");
 		}
 
 		if (data.targetUsername === null) {
-			throw new TypeError(
-				"`targetUsername` is null when it should be present"
-			);
+			throw new TypeError("`targetUsername` is null when it should be present");
 		}
 
 		if (data.temporary === null) {
-			throw new TypeError(
-				"`temporary` is null when it should be present"
-			);
+			throw new TypeError("`temporary` is null when it should be present");
 		}
 
 		this.daysPruned = data.daysPruned;

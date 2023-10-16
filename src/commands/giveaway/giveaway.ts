@@ -1,16 +1,16 @@
-import { Emojis, HIDE_OPTION } from "#constants";
-import Logger from "#logger";
-import { type CommandData, type CommandExport } from "#typings";
-import { oneLine } from "common-tags";
 import {
 	ApplicationCommandOptionType,
-	PermissionFlagsBits,
 	type AutocompleteInteraction,
-	type ChatInputCommandInteraction
+	type ChatInputCommandInteraction,
+	PermissionFlagsBits,
 } from "discord.js";
 import sendToAutocompleteGiveaway from "./giveawayModules/autocompleteGiveaway.js";
-import sendToCreate from "./giveawayModules/create.js";
+import { type CommandData, type CommandExport } from "#typings";
 import sendToDashboard from "./giveawayModules/dashboard.js";
+import sendToCreate from "./giveawayModules/create.js";
+import { Emojis, HIDE_OPTION } from "#constants";
+import { oneLine } from "common-tags";
+import Logger from "#logger";
 
 const data: CommandData = {
 	chatInput: {
@@ -20,37 +20,34 @@ const data: CommandData = {
 		name: "giveaway",
 		options: [
 			{
-				name: "dashboard",
-				type: ApplicationCommandOptionType.Subcommand,
 				description: oneLine`
 					Shows a dashboard where you can view current giveaways,
 					or a specific giveaway to manage it.
 				`,
+				name: "dashboard",
 				options: [
 					{
 						autocomplete: true,
-						description:
-							"Which giveaway should be managed in the dashboard.",
+						description: "Which giveaway should be managed in the dashboard.",
 						name: "giveaway",
 						required: true,
-						type: ApplicationCommandOptionType.Integer
+						type: ApplicationCommandOptionType.Integer,
 					},
-					HIDE_OPTION
-				]
+					HIDE_OPTION,
+				],
+				type: ApplicationCommandOptionType.Subcommand,
 			},
 			{
 				description: "Create and customise a new giveaway.",
 				name: "create",
+				options: [HIDE_OPTION],
 				type: ApplicationCommandOptionType.Subcommand,
-				options: [HIDE_OPTION]
-			}
-		]
-	}
+			},
+		],
+	},
 };
 
-const chatInput = async (
-	interaction: ChatInputCommandInteraction<"cached">
-) => {
+const chatInput = async (interaction: ChatInputCommandInteraction<"cached">) => {
 	const hide = interaction.options.getBoolean("hide") ?? true;
 
 	switch (interaction.options.getSubcommand()) {
@@ -59,18 +56,18 @@ const chatInput = async (
 			const id = interaction.options.getInteger("giveaway", true);
 
 			if (id === -1) {
-				interaction.editReply({
-					content: `${Emojis.Sleep} Whoa so empty — there are no giveaways`
-				});
+				interaction
+					.editReply({
+						content: `${Emojis.Sleep} Whoa so empty — there are no giveaways`,
+					})
+					.catch(() => null);
 
 				break;
 			}
 
-			new Logger({ label: "GIVEAWAY", interaction }).log(
-				`Opened dashboard of giveaway with ID #${id}`
-			);
+			new Logger({ interaction, label: "GIVEAWAY" }).log(`Opened dashboard of giveaway with ID #${id}`);
 
-			sendToDashboard(interaction, id);
+			void sendToDashboard(interaction, id);
 			break;
 		}
 
@@ -88,7 +85,7 @@ const autocomplete = async (interaction: AutocompleteInteraction<"cached">) => {
 export const getCommand: CommandExport = () => ({
 	data,
 	handle: {
+		autocomplete,
 		chatInput,
-		autocomplete
-	}
+	},
 });

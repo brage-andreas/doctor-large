@@ -1,25 +1,27 @@
-import { Regex } from "#constants";
+import markReportUnprocessed from "./buttons/markReportUnprocessed.js";
+import markReportProcessed from "./buttons/markReportProcessed.js";
+import previewMessage from "./buttons/previewMessage.js";
+import enterGiveaway from "./buttons/enterGiveaway.js";
+import { Events, type Interaction } from "discord.js";
+import acceptPrize from "./buttons/acceptPrize.js";
+import memberInfo from "./buttons/memberInfo.js";
 import commands from "#scripts/loadCommands.js";
 import { type EventExport } from "#typings";
 import { stripIndents } from "common-tags";
-import { Events, type Interaction } from "discord.js";
-import acceptPrize from "./buttons/acceptPrize.js";
-import enterGiveaway from "./buttons/enterGiveaway.js";
-import markReportProcessed from "./buttons/markReportProcessed.js";
-import markReportUnprocessed from "./buttons/markReportUnprocessed.js";
-import memberInfo from "./buttons/memberInfo.js";
-import previewMessage from "./buttons/previewMessage.js";
+import { Regex } from "#constants";
 
 const execute = async (interaction: Interaction) => {
 	if (!interaction.inGuild()) {
 		if (interaction.isRepliable()) {
-			interaction.reply({
-				content: stripIndents`
+			interaction
+				.reply({
+					content: stripIndents`
 					I see you found my hiding spot...
 					Anyways, try finding me inside a server.
 				`,
-				ephemeral: true
-			});
+					ephemeral: true,
+				})
+				.catch(() => null);
 		}
 
 		return;
@@ -27,10 +29,12 @@ const execute = async (interaction: Interaction) => {
 
 	if (!interaction.inCachedGuild()) {
 		if (interaction.isRepliable()) {
-			interaction.reply({
-				content: "Something went wrong...",
-				ephemeral: true
-			});
+			interaction
+				.reply({
+					content: "Something went wrong...",
+					ephemeral: true,
+				})
+				.catch(() => null);
 		}
 
 		return;
@@ -76,11 +80,7 @@ const execute = async (interaction: Interaction) => {
 		return;
 	}
 
-	if (
-		!interaction.isChatInputCommand() &&
-		!interaction.isContextMenuCommand() &&
-		!interaction.isAutocomplete()
-	) {
+	if (!interaction.isChatInputCommand() && !interaction.isContextMenuCommand() && !interaction.isAutocomplete()) {
 		return;
 	}
 
@@ -88,9 +88,7 @@ const execute = async (interaction: Interaction) => {
 
 	if (!command) {
 		// this should never happen
-		throw new Error(
-			`Command '${interaction.commandName}' not found in command map`
-		);
+		throw new Error(`Command '${interaction.commandName}' not found in command map`);
 	}
 
 	if (interaction.isChatInputCommand()) {
@@ -122,5 +120,5 @@ const execute = async (interaction: Interaction) => {
 
 export const getEvent: EventExport = () => ({
 	event: Events.InteractionCreate,
-	execute
+	execute,
 });

@@ -1,10 +1,10 @@
-import components from "#components";
 import type GiveawayManager from "#database/giveaway.js";
+import { type ButtonInteraction } from "discord.js";
+import { stripIndents } from "common-tags";
+import toDashboard from "../dashboard.js";
+import components from "#components";
 import { listify } from "#helpers";
 import Logger from "#logger";
-import { stripIndents } from "common-tags";
-import { type ButtonInteraction } from "discord.js";
-import toDashboard from "../dashboard.js";
 
 export default async function toSetRequiredRoles(
 	interaction: ButtonInteraction<"cached">,
@@ -17,7 +17,7 @@ export default async function toSetRequiredRoles(
 		return;
 	}
 
-	const chooseRequiredRoleStr = stripIndents`
+	const chooseRequiredRoleString = stripIndents`
 			Select the roles you require entrants to have.
 			
 			Currently set to: ${
@@ -27,19 +27,15 @@ export default async function toSetRequiredRoles(
 			}
 		`;
 
-	const rows = components.createRows(
-		components.selectMenus.role,
-		components.buttons.back,
-		components.buttons.clear
-	);
+	const rows = components.createRows(components.selectMenus.role, components.buttons.back, components.buttons.clear);
 
-	const updateMsg = await interaction.editReply({
-		content: chooseRequiredRoleStr,
-		components: rows
+	const updateMessage = await interaction.editReply({
+		components: rows,
+		content: chooseRequiredRoleString,
 	});
 
-	const component = await updateMsg.awaitMessageComponent({
-		filter: (i) => i.user.id === interaction.user.id
+	const component = await updateMessage.awaitMessageComponent({
+		filter: (index) => index.user.id === interaction.user.id,
 	});
 
 	await component.deferUpdate();
@@ -50,15 +46,13 @@ export default async function toSetRequiredRoles(
 		}
 
 		case components.buttons.clear.customId: {
-			new Logger({ label: "GIVEAWAY", interaction }).log(
-				`Cleared required roles of giveaway #${giveaway.id}`
-			);
+			new Logger({ interaction, label: "GIVEAWAY" }).log(`Cleared required roles of giveaway #${giveaway.id}`);
 
 			await giveaway.edit({
-				requiredRolesIds: [],
 				nowOutdated: {
-					announcementMessage: true
-				}
+					announcementMessage: true,
+				},
+				requiredRolesIds: [],
 			});
 
 			break;
@@ -69,15 +63,13 @@ export default async function toSetRequiredRoles(
 				return;
 			}
 
-			new Logger({ label: "GIVEAWAY", interaction }).log(
-				`Edited required roles of giveaway #${giveaway.id}`
-			);
+			new Logger({ interaction, label: "GIVEAWAY" }).log(`Edited required roles of giveaway #${giveaway.id}`);
 
 			await giveaway.edit({
-				requiredRolesIds: component.values,
 				nowOutdated: {
-					announcementMessage: true
-				}
+					announcementMessage: true,
+				},
+				requiredRolesIds: component.values,
 			});
 
 			break;

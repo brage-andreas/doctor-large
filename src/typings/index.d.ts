@@ -1,12 +1,3 @@
-import type GiveawayModule from "#modules/Giveaway.js";
-import {
-	type Case,
-	type Giveaway,
-	type Note,
-	type Prize,
-	type Report,
-	type Winner
-} from "@prisma/client";
 import {
 	type APIActionRowComponent,
 	type APIButtonComponent,
@@ -22,12 +13,14 @@ import {
 	type ClientEvents,
 	type ContextMenuCommandInteraction,
 	type RESTPostAPIChatInputApplicationCommandsJSONBody,
-	type RESTPostAPIContextMenuApplicationCommandsJSONBody
+	type RESTPostAPIContextMenuApplicationCommandsJSONBody,
 } from "discord.js";
+import { type Case, type Giveaway, type Note, type Prize, type Report, type Winner } from "@prisma/client";
+import type GiveawayModule from "#modules/Giveaway.js";
 
 declare global {
 	namespace NodeJS {
-		interface ProcessEnv {
+		interface ProcessEnvironment {
 			DATABASE_URL: `postgres://${string}:${string}@${string}:${number}/${string}?schema=${string}`;
 			DISCORD_APPLICATION_ID: string;
 			DISCORD_APPLICATION_TOKEN: string;
@@ -36,21 +29,13 @@ declare global {
 	}
 }
 
-type Prop<T extends object, P extends keyof T> = T[P];
-type UnknownOrPromise = Promise<unknown> | unknown;
+type Property<T extends object, P extends keyof T> = T[P];
 
-export type Color =
-	| "black"
-	| "blue"
-	| "green"
-	| "grey"
-	| "red"
-	| "white"
-	| "yellow";
+export type Color = "black" | "blue" | "green" | "grey" | "red" | "white" | "yellow";
 
 export interface EventExportData {
 	event: keyof ClientEvents;
-	execute(...args: Array<unknown>): Promise<unknown> | unknown;
+	execute(...arguments_: Array<unknown>): unknown;
 }
 export interface EventImport {
 	getEvent(): EventExportData;
@@ -69,27 +54,21 @@ export interface CommandExportData {
 		};
 	};
 	handle: {
-		autocomplete?(
-			interaction: AutocompleteInteraction<"cached">
-		): UnknownOrPromise;
-		chatInput?(
-			interaction: ChatInputCommandInteraction<"cached">
-		): UnknownOrPromise;
-		contextMenu?(
-			interaction: ContextMenuCommandInteraction<"cached">
-		): UnknownOrPromise;
+		autocomplete?(interaction: AutocompleteInteraction<"cached">): unknown;
+		chatInput?(interaction: ChatInputCommandInteraction<"cached">): unknown;
+		contextMenu?(interaction: ContextMenuCommandInteraction<"cached">): unknown;
 	};
 }
 export interface CommandImport {
 	getCommand(): CommandExportData;
 }
-export type CommandData = Prop<CommandExportData, "data">;
+export type CommandData = Property<CommandExportData, "data">;
 export type CommandExport = () => CommandExportData;
-export type CommandHandle = Prop<CommandExportData, "handle">;
+export type CommandHandle = Property<CommandExportData, "handle">;
 
-export type GiveawayId = Prop<Giveaway, "id">;
-export type PrizeId = Prop<Prize, "id">;
-export type WinnerId = Prop<Winner, "id">;
+export type GiveawayId = Property<Giveaway, "id">;
+export type PrizeId = Property<Prize, "id">;
+export type WinnerId = Property<Winner, "id">;
 export type Snowflake = string;
 
 export type GiveawayWithIncludes = Giveaway & {
@@ -97,14 +76,14 @@ export type GiveawayWithIncludes = Giveaway & {
 };
 
 export type PrizeWithIncludes = Prize & {
-	winners: Array<Winner>;
 	giveaway: GiveawayModule;
+	winners: Array<Winner>;
 };
 
 export type CaseWithIncludes = Case & {
-	referencedBy: Array<Case>;
 	note: Note | null;
 	reference: Case | null;
+	referencedBy: Array<Case>;
 	report: Report | null;
 };
 
@@ -132,17 +111,13 @@ export type CreateRowsCompatibleRow =
 	| APIActionRowComponent<APISelectMenuComponent>
 	| APIActionRowComponent<APIUserSelectComponent>;
 
-export interface ComponentObject<
-	T extends
-		CreateRowsCompatibleAPIComponent = CreateRowsCompatibleAPIComponent
-> {
+export interface ComponentObject<T extends CreateRowsCompatibleAPIComponent = CreateRowsCompatibleAPIComponent> {
+	component(...parameters: Array<unknown>): T;
 	readonly customId?: string;
-	component(...params: Array<unknown>): T;
 }
 
-export interface ComponentObjectWithNoParams<
-	T extends
-		CreateRowsCompatibleAPIComponent = CreateRowsCompatibleAPIComponent
+export interface ComponentObjectWithNoParameters<
+	T extends CreateRowsCompatibleAPIComponent = CreateRowsCompatibleAPIComponent,
 > extends ComponentObject<T> {
 	component(): T;
 }
@@ -155,25 +130,18 @@ export type CustomIdCompatibleButtonStyle =
 
 export interface CreateRows {
 	(...components: CreateRowsInput): Array<CreateRowsCompatibleRow>;
-	uniform(length?: number): {
-		(...components: CreateRowsInput): Array<CreateRowsCompatibleRow>;
-	};
 	specific(
 		lengthRow1?: number,
 		lengthRow2?: number,
 		lengthRow3?: number,
 		lengthRow4?: number,
 		lengthRow5?: number
-	): {
-		(...components: CreateRowsInput): Array<CreateRowsCompatibleRow>;
-	};
+	): (...components: CreateRowsInput) => Array<CreateRowsCompatibleRow>;
+	uniform(length?: number): (...components: CreateRowsInput) => Array<CreateRowsCompatibleRow>;
 }
 
 export type CreateRowsInput = Array<
-	| ComponentObjectWithNoParams
-	| CreateRowsCompatibleAPIComponent
-	| null
-	| undefined
+	ComponentObjectWithNoParameters | CreateRowsCompatibleAPIComponent | null | undefined
 >;
 
 export interface CountPrizeWinner {

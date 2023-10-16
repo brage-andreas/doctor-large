@@ -1,17 +1,11 @@
-import { stripIndents } from "common-tags";
 import { type EmbedField, type GuildMember, type User } from "discord.js";
-import getTag from "./getTag.js";
-import listify from "./listify.js";
+import { stripIndents } from "common-tags";
 import longstamp from "./timestamps.js";
+import listify from "./listify.js";
+import getTag from "./getTag.js";
 
-export default function getMemberInfo(
-	member: GuildMember,
-	prefix?: string
-): [EmbedField, EmbedField];
-export default function getMemberInfo(
-	member: User,
-	prefix?: string
-): [EmbedField];
+export default function getMemberInfo(member: GuildMember, prefix?: string): [EmbedField, EmbedField];
+export default function getMemberInfo(member: User, prefix?: string): [EmbedField];
 export default function getMemberInfo(
 	member: GuildMember | User | null,
 	prefix?: string
@@ -28,8 +22,8 @@ export default function getMemberInfo(
 				value: stripIndents`
 					* Name: Unknown user
 					* Created: Unknown user
-				`
-			}
+				`,
+			},
 		];
 	}
 
@@ -41,39 +35,24 @@ export default function getMemberInfo(
 		value: stripIndents`
 			* Name: ${getTag(user, { id: true })}
 			* Created: ${longstamp(user.createdAt)}
-		`
+		`,
 	};
 
 	if (!("guild" in member)) {
 		return [userField];
 	}
 
-	const numAtStart = (string: string) => Number(string.split(" ")[0]) || 0;
-
-	const roleArray = [...member.roles.cache.values()];
-
-	const highestLevelRole = roleArray.reduce((highestNum, role) => {
-		const n = numAtStart(role.name);
-
-		return highestNum < n ? n : highestNum;
-	}, 0);
-
-	const filteredRoleMentions = [...member.roles.cache.values()].reduce(
+	const roleMentionsWithoutEveryone = [...member.roles.cache.values()].reduce<Array<string>>(
 		(roleMentionsArray, role) => {
 			if (role.id === role.guild.id) {
 				return roleMentionsArray;
 			}
 
-			if (
-				!numAtStart(role.name) ||
-				highestLevelRole <= numAtStart(role.name)
-			) {
-				roleMentionsArray.push(role.toString());
-			}
+			roleMentionsArray.push(role.toString());
 
 			return roleMentionsArray;
 		},
-		[] as Array<string>
+		[]
 	);
 
 	return [
@@ -84,12 +63,8 @@ export default function getMemberInfo(
 			value: stripIndents`
 				* Nickname: ${member.nickname ? `${member.nickname}` : "None"}
 				* Joined: ${member.joinedAt ? longstamp(member.joinedAt) : "Unknown"}
-				* Roles: ${
-					filteredRoleMentions.length
-						? listify(filteredRoleMentions, { length: 7 })
-						: "None"
-				}
-			`
-		}
+				* Roles: ${roleMentionsWithoutEveryone.length > 0 ? listify(roleMentionsWithoutEveryone, { length: 7 }) : "None"}
+			`,
+		},
 	];
 }

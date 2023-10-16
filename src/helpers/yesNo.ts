@@ -1,16 +1,16 @@
-import components from "#components";
-import { Emojis } from "#constants";
-import { type CustomIdCompatibleButtonStyle } from "#typings";
 import {
-	ButtonStyle,
-	ComponentType,
-	Message,
 	type AutocompleteInteraction,
 	type ButtonInteraction,
+	ButtonStyle,
+	ComponentType,
 	type ContextMenuCommandInteraction,
 	type Interaction,
-	type MessageEditOptions
+	Message,
+	type MessageEditOptions,
 } from "discord.js";
+import { type CustomIdCompatibleButtonStyle } from "#typings";
+import components from "#components";
+import { Emojis } from "#constants";
 
 /**
  * `noStyle` = ButtonStyle.Primary
@@ -24,47 +24,44 @@ import {
  * `filter` = (i) => i.user.id === medium.user.id
  */
 export default async function yesNo(options: {
-	respondToIgnore?: boolean;
-	timeActive?: number;
-	yesStyle?: CustomIdCompatibleButtonStyle;
-	noStyle?: CustomIdCompatibleButtonStyle;
+	data: Exclude<MessageEditOptions, "Components">;
+	filter?(interaction: ButtonInteraction): boolean;
 	medium:
 		| ContextMenuCommandInteraction<"cached">
 		| Exclude<Interaction<"cached">, AutocompleteInteraction>
 		| Message<true>;
-	data: Exclude<MessageEditOptions, "Components">;
-	filter?(interaction: ButtonInteraction): boolean;
+	noStyle?: CustomIdCompatibleButtonStyle;
+	respondToIgnore?: boolean;
+	timeActive?: number;
+	yesStyle?: CustomIdCompatibleButtonStyle;
 }): Promise<boolean> {
-	const { medium, data } = options;
+	const { data, medium, timeActive } = options;
 
-	const defaultFilter = (i: ButtonInteraction<"cached">) =>
-		i.user.id === ("user" in medium ? medium.user.id : medium.author.id);
+	const defaultFilter = (index: ButtonInteraction<"cached">) =>
+		index.user.id === ("user" in medium ? medium.user.id : medium.author.id);
 
 	const respondToIgnore = options.respondToIgnore ?? true;
 	const yesStyle = options.yesStyle ?? ButtonStyle.Primary;
 	const noStyle = options.noStyle ?? ButtonStyle.Primary;
-	const filter = options.filter ?? defaultFilter;
-	const time = options.timeActive ?? 60_000;
+	const time = timeActive ?? 60_000;
+
+	const { filter } = options.filter ? options : { filter: defaultFilter }; // preserves class scope
 
 	const rows = components.createRows(
 		components.buttons.yes.component(yesStyle),
 		components.buttons.no.component(noStyle)
 	);
 
-	let message: Message<true>;
-
-	if (medium instanceof Message) {
-		message = await medium.edit({ ...data, components: rows });
-	} else {
-		message = await medium.editReply({ ...data, components: rows });
-	}
+	const message = await (medium instanceof Message
+		? medium.edit({ ...data, components: rows })
+		: medium.editReply({ ...data, components: rows }));
 
 	return new Promise((resolve, reject) => {
 		const collector = message.createMessageComponentCollector({
 			componentType: ComponentType.Button,
 			filter,
+			max: 1,
 			time,
-			max: 1
 		});
 
 		if (respondToIgnore) {
@@ -72,7 +69,7 @@ export default async function yesNo(options: {
 				interaction
 					.reply({
 						content: `${Emojis.NoEntry} This button is not for you.`,
-						ephemeral: true
+						ephemeral: true,
 					})
 					.catch(() => null);
 			});
@@ -82,14 +79,14 @@ export default async function yesNo(options: {
 			await interaction.deferUpdate().catch(() => null);
 
 			if (interaction.customId === components.buttons.yes.customId) {
-				resolve(undefined);
+				resolve();
 			} else {
 				reject();
 			}
 		});
 
 		collector.on("end", (collected) => {
-			if (!collected.size) {
+			if (collected.size === 0) {
 				reject();
 			}
 		});

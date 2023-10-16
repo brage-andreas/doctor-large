@@ -1,10 +1,7 @@
 import { time } from "discord.js";
 
 const seconds = (dateOrTimestamp: Date | number | string) => {
-	const ms =
-		typeof dateOrTimestamp === "object"
-			? dateOrTimestamp.getTime()
-			: Number(dateOrTimestamp) || 0;
+	const ms = typeof dateOrTimestamp === "object" ? dateOrTimestamp.getTime() : Number(dateOrTimestamp) || 0;
 
 	return Math.floor(ms / 1000);
 };
@@ -36,17 +33,15 @@ export default function longstamp(
 export default function longstamp(
 	dateOrTimestamp: Date | number | string,
 	options?: { extraLong?: true; reverse?: true }
-):
-	| `<t:${number}:${"d" | "F"}> (<t:${number}:R>)`
-	| `<t:${number}:R> (<t:${number}:${"d" | "F"}>)` {
+): `<t:${number}:${"F" | "d"}> (<t:${number}:R>)` | `<t:${number}:R> (<t:${number}:${"F" | "d"}>)` {
 	const style = options?.extraLong ? "F" : "d";
 
 	const main = time(seconds(dateOrTimestamp), style);
-	const rel = time(seconds(dateOrTimestamp), "R");
+	const relative = time(seconds(dateOrTimestamp), "R");
 
 	if (options?.reverse) {
-		return `${rel} (${main})` as const;
+		return `${relative} (${main})` as const;
 	}
 
-	return `${main} (${rel})` as const;
+	return `${main} (${relative})` as const;
 }

@@ -1,21 +1,20 @@
 import { type Color } from "#typings";
 
 const ansiColors = {
-	black: "\x1b[30m",
-	blue: "\x1b[94m",
-	green: "\x1b[92m",
-	grey: "\x1b[90m",
-	none: "\x1b[0m",
-	red: "\x1b[91m",
-	white: "\x1b[97m",
-	yellow: "\x1b[93m"
+	black: "\u001B[30m",
+	blue: "\u001B[94m",
+	green: "\u001B[92m",
+	grey: "\u001B[90m",
+	none: "\u001B[0m",
+	red: "\u001B[91m",
+	white: "\u001B[97m",
+	yellow: "\u001B[93m",
 } as const;
 
 export const color = <T extends string, C extends Color>(
 	text: T,
 	color: C
-): `${(typeof ansiColors)[C]}${T}${(typeof ansiColors)["none"]}` =>
-	`${ansiColors[color]}${text}${ansiColors.none}`;
+): `${(typeof ansiColors)[C]}${T}${(typeof ansiColors)["none"]}` => `${ansiColors[color]}${text}${ansiColors.none}`;
 
 export const black = <T extends string>(text: T) => color(text, "black");
 export const blue = <T extends string>(text: T) => color(text, "blue");
@@ -25,7 +24,7 @@ export const red = <T extends string>(text: T) => color(text, "red");
 export const white = <T extends string>(text: T) => color(text, "white");
 export const yellow = <T extends string>(text: T) => color(text, "yellow");
 
-export const getColorFn = (color: Color) => {
+export const getColorFunction = (color: Color) => {
 	switch (color) {
 		case "black": {
 			return black;

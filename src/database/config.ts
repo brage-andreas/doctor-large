@@ -1,6 +1,6 @@
+import { type Guild, type GuildBasedChannel } from "discord.js";
 import ConfigModule from "#modules/Config.js";
 import { type Prisma } from "@prisma/client";
-import { type Guild, type GuildBasedChannel } from "discord.js";
 import prisma from "./prisma.js";
 
 export default class ConfigManager {
@@ -17,50 +17,34 @@ export default class ConfigManager {
 		data: {
 			channel?: GuildBasedChannel;
 			channelId?: string;
-			parentId?: string | null;
-			parentParentId?: string | null;
+			parentId?: null | string;
+			parentParentId?: null | string;
 		}
 	): Promise<boolean> {
-		const rawIds: Array<string | null | undefined> = [];
+		const rawIds: Array<null | string | undefined> = [];
 
 		if (data.channel) {
-			rawIds.push(
-				data.channel.id,
-				data.channel.parentId,
-				data.channel.parent?.parentId
-			);
+			rawIds.push(data.channel.id, data.channel.parentId, data.channel.parent?.parentId);
 		} else {
 			rawIds.push(data.channelId, data.parentId, data.parentParentId);
 		}
 
-		const ids = rawIds.filter((e) => Boolean(e)) as Array<string>;
+		const ids = rawIds.filter(Boolean) as Array<string>;
 
-		if (!ids.length) {
+		if (ids.length === 0) {
 			return false;
 		}
 
-		const res = await prisma.config.count({
+		const response = await prisma.config.count({
 			where: {
 				guildId,
 				protectedChannelsIds: {
-					hasSome: ids
-				}
-			}
+					hasSome: ids,
+				},
+			},
 		});
 
-		return Boolean(res);
-	}
-
-	public async validate(): Promise<void> {
-		const exists = await this.prisma.count({
-			where: { guildId: this.guild.id }
-		});
-
-		this.validated = true;
-
-		return new Promise((resolve, reject) =>
-			exists ? resolve() : reject()
-		);
+		return Boolean(response);
 	}
 
 	public async create(): Promise<ConfigModule> {
@@ -69,7 +53,7 @@ export default class ConfigManager {
 		}
 
 		const data = await this.prisma.create({
-			data: { guildId: this.guild.id }
+			data: { guildId: this.guild.id },
 		});
 
 		return new ConfigModule(data, this);
@@ -81,24 +65,34 @@ export default class ConfigManager {
 		}
 
 		const data = await this.prisma.findUniqueOrThrow({
-			where: { guildId: this.guild.id }
+			where: { guildId: this.guild.id },
 		});
 
 		return new ConfigModule(data, this);
 	}
 
-	public async update(
-		data: Omit<Prisma.ConfigUpdateInput, "createdAt" | "guildId">
-	): Promise<ConfigModule> {
+	public async update(data: Omit<Prisma.ConfigUpdateInput, "createdAt" | "guildId">): Promise<ConfigModule> {
 		if (!this.validated) {
 			throw new Error("ConfigManager must be validated before used");
 		}
 
-		const res = await this.prisma.update({
+		const response = await this.prisma.update({
+			data,
 			where: { guildId: this.guild.id },
-			data
 		});
 
-		return new ConfigModule(res, this);
+		return new ConfigModule(response, this);
+	}
+
+	public async validate(): Promise<void> {
+		const exists = await this.prisma.count({
+			where: { guildId: this.guild.id },
+		});
+
+		this.validated = true;
+
+		return new Promise((resolve, reject) => {
+			exists ? resolve() : reject();
+		});
 	}
 }

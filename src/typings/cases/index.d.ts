@@ -4,13 +4,7 @@ import { type CaseType } from "@prisma/client";
 export interface WarnCaseWithIncludes
 	extends Omit<
 		CaseWithIncludes,
-		| "daysPruned"
-		| "expiration"
-		| "originalSlowmode"
-		| "persistant"
-		| "roles"
-		| "temporary"
-		| "newSlowmode"
+		"daysPruned" | "expiration" | "newSlowmode" | "originalSlowmode" | "persistant" | "roles" | "temporary"
 	> {
 	targetIds: [string];
 	targetUsername: string;
@@ -20,12 +14,7 @@ export interface WarnCaseWithIncludes
 export interface RestrictCaseWithIncludes
 	extends Omit<
 		CaseWithIncludes,
-		| "daysPruned"
-		| "expiration"
-		| "originalSlowmode"
-		| "persistant"
-		| "temporary"
-		| "newSlowmode"
+		"daysPruned" | "expiration" | "newSlowmode" | "originalSlowmode" | "persistant" | "temporary"
 	> {
 	targetIds: [string];
 	targetUsername: string;
@@ -35,12 +24,7 @@ export interface RestrictCaseWithIncludes
 export interface UnrestrictCaseWithIncludes
 	extends Omit<
 		CaseWithIncludes,
-		| "daysPruned"
-		| "expiration"
-		| "originalSlowmode"
-		| "persistant"
-		| "temporary"
-		| "newSlowmode"
+		"daysPruned" | "expiration" | "newSlowmode" | "originalSlowmode" | "persistant" | "temporary"
 	> {
 	targetIds: [string];
 	targetUsername: string;
@@ -48,10 +32,7 @@ export interface UnrestrictCaseWithIncludes
 }
 
 export interface MuteCaseWithIncludes
-	extends Omit<
-		CaseWithIncludes,
-		"daysPruned" | "originalSlowmode" | "persistant" | "newSlowmode"
-	> {
+	extends Omit<CaseWithIncludes, "daysPruned" | "newSlowmode" | "originalSlowmode" | "persistant"> {
 	expiration: Date;
 	targetIds: [string];
 	targetUsername: string;
@@ -60,10 +41,7 @@ export interface MuteCaseWithIncludes
 }
 
 export interface UnmuteCaseWithIncludes
-	extends Omit<
-		CaseWithIncludes,
-		"daysPruned" | "originalSlowmode" | "persistant" | "newSlowmode"
-	> {
+	extends Omit<CaseWithIncludes, "daysPruned" | "newSlowmode" | "originalSlowmode" | "persistant"> {
 	expiration: Date;
 	targetIds: [string];
 	targetUsername: string;
@@ -72,14 +50,7 @@ export interface UnmuteCaseWithIncludes
 }
 
 export interface KickCaseWithIncludes
-	extends Omit<
-		CaseWithIncludes,
-		| "daysPruned"
-		| "originalSlowmode"
-		| "persistant"
-		| "temporary"
-		| "newSlowmode"
-	> {
+	extends Omit<CaseWithIncludes, "daysPruned" | "newSlowmode" | "originalSlowmode" | "persistant" | "temporary"> {
 	targetIds: [string];
 	targetUsername: string;
 	temporary: boolean;
@@ -87,10 +58,7 @@ export interface KickCaseWithIncludes
 }
 
 export interface SoftbanCaseWithIncludes
-	extends Omit<
-		CaseWithIncludes,
-		"originalSlowmode" | "persistant" | "temporary" | "newSlowmode"
-	> {
+	extends Omit<CaseWithIncludes, "newSlowmode" | "originalSlowmode" | "persistant" | "temporary"> {
 	daysPruned: number;
 	targetIds: [string];
 	targetUsername: string;
@@ -99,10 +67,7 @@ export interface SoftbanCaseWithIncludes
 }
 
 export interface BanCaseWithIncludes
-	extends Omit<
-		CaseWithIncludes,
-		"originalSlowmode" | "persistant" | "temporary" | "newSlowmode"
-	> {
+	extends Omit<CaseWithIncludes, "newSlowmode" | "originalSlowmode" | "persistant" | "temporary"> {
 	daysPruned: number;
 	targetIds: [string];
 	targetUsername: string;
@@ -111,20 +76,14 @@ export interface BanCaseWithIncludes
 }
 
 export interface MultiBanCaseWithIncludes
-	extends Omit<
-		CaseWithIncludes,
-		"originalSlowmode" | "persistant" | "temporary" | "newSlowmode"
-	> {
+	extends Omit<CaseWithIncludes, "newSlowmode" | "originalSlowmode" | "persistant" | "temporary"> {
 	daysPruned: number;
 	temporary: boolean;
 	type: typeof CaseType.MultiBan;
 }
 
 export interface UnbanCaseWithIncludes
-	extends Omit<
-		CaseWithIncludes,
-		"originalSlowmode" | "persistant" | "temporary" | "newSlowmode"
-	> {
+	extends Omit<CaseWithIncludes, "newSlowmode" | "originalSlowmode" | "persistant" | "temporary"> {
 	daysPruned: number;
 	targetIds: [string];
 	targetUsername: string;
@@ -133,28 +92,19 @@ export interface UnbanCaseWithIncludes
 }
 
 export interface SlowmodeCaseWithIncludes
-	extends Omit<
-		CaseWithIncludes,
-		"daysPruned" | "roles" | "targetUsername" | "temporary"
-	> {
+	extends Omit<CaseWithIncludes, "daysPruned" | "roles" | "targetUsername" | "temporary"> {
 	expiration: Date;
-	originalSlowmode: number;
 	newSlowmode: number;
-	targetIds: [string];
+	originalSlowmode: number;
 	persistant: boolean;
+	targetIds: [string];
 	type: typeof CaseType.Slowmode;
 }
 
 export interface LockdownCaseWithIncludes
 	extends Omit<
 		CaseWithIncludes,
-		| "daysPruned"
-		| "originalSlowmode"
-		| "persistant"
-		| "roles"
-		| "targetUsername"
-		| "temporary"
-		| "newSlowmode"
+		"daysPruned" | "newSlowmode" | "originalSlowmode" | "persistant" | "roles" | "targetUsername" | "temporary"
 	> {
 	expiration: Date;
 	targetIds: [string];
