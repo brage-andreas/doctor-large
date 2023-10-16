@@ -25,5 +25,5 @@
 			"#typings": ["./src/typings/index.d.ts"]
 		}
 	},
-	"include": ["./src/**/*"]
+	"include": ["src/"]
 }
