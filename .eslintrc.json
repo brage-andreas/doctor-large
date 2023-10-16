@@ -71,6 +71,7 @@
 				"next": "*",
 				"prev": [
 					"directive",
+					"import",
 					"multiline-block-like",
 					"multiline-const",
 					"multiline-expression",
