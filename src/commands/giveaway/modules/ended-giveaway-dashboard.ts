@@ -8,11 +8,11 @@ import {
 import { rollAndSign } from "./end-modules/roll-winners/roll-and-sign.js";
 import toDeleteGiveaway from "./dashboard/modules/delete-giveaway.js";
 import { toAnnounceWinners } from "./end-modules/announce-winners.js";
-import components from "../../../discord-components/index.js";
 import type GiveawayManager from "#database/giveaway.js";
 import type GiveawayModule from "#modules/giveaway.js";
 import toDashboard from "./dashboard/dashboard.js";
 import { source, stripIndents } from "common-tags";
+import components from "#discord-components";
 import { Emojis } from "#constants";
 import { s } from "#helpers";
 

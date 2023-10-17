@@ -13,7 +13,7 @@ import { getMissingPermissions, listify, messageToEmbed, yesNo } from "#helpers"
 import { oneLine, stripIndent, stripIndents } from "common-tags";
 import { type CommandData, type CommandExport } from "#typings";
 import ConfigManager from "#database/config.js";
-import components from "../../discord-components";
+import components from "#discord-components";
 import { Emojis } from "#constants";
 import Logger from "#logger";
 

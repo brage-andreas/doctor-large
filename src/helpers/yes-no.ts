@@ -9,7 +9,7 @@ import {
 	type MessageEditOptions,
 } from "discord.js";
 import { type CustomIdCompatibleButtonStyle } from "#typings";
-import components from "#components";
+import components from "#discord-components";
 import { Emojis } from "#constants";
 
 /**

@@ -2,8 +2,8 @@ import { type ButtonInteraction, type ComponentType, type NewsChannel, type Text
 import type GiveawayManager from "#database/giveaway.js";
 import { oneLine, stripIndents } from "common-tags";
 import { getMissingPermissions } from "#helpers";
+import components from "#discord-components";
 import toDashboard from "../dashboard.js";
-import components from "../../../../../discord-components/index.js";
 import { Emojis } from "#constants";
 import Logger from "#logger";
 

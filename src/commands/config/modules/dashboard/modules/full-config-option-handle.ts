@@ -9,9 +9,9 @@ import {
 import { clearTimeout, setTimeout } from "node:timers";
 import type ConfigModule from "#modules/config.js";
 import { getMissingPermissions } from "#helpers";
+import components from "#discord-components";
 import { Colors, Emojis } from "#constants";
 import { stripIndents } from "common-tags";
-import components from "../../../../../discord-components";
 
 const createEmbed = (
 	channel: ForumChannel | GuildTextBasedChannel | undefined,

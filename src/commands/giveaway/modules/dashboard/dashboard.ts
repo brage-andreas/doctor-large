@@ -1,7 +1,6 @@
 import toAnnouncementOptions from "./modules/announcement-options.js";
 import { ComponentType, type RepliableInteraction } from "discord.js";
 import toSetRequiredRoles from "./modules/set-required-roles.js";
-import components from "../../../../discord-components/index.js";
 import toAnnounceGiveaway from "./modules/announce-giveaway.js";
 import toEndedDashboard from "../ended-giveaway-dashboard.js";
 import toDeleteGiveaway from "./modules/delete-giveaway.js";
@@ -11,6 +10,7 @@ import toManagePrizes from "./modules/manage-prizes.js";
 import toEndOptions from "./modules/end-options.js";
 import GiveawayManager from "#database/giveaway.js";
 import toResetData from "./modules/reset-data.js";
+import components from "#discord-components";
 import { stripIndents } from "common-tags";
 import { Emojis } from "#constants";
 

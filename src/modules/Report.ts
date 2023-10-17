@@ -12,7 +12,7 @@ import { type CaseWithIncludes, type ReportWithIncludes } from "#typings";
 import { source, stripIndent, stripIndents } from "common-tags";
 import type ReportManager from "#database/report.js";
 import { ColorsHex, Emojis } from "#constants";
-import components from "#components";
+import components from "#discord-components";
 
 export const isMessageReport = (
 	data: Report

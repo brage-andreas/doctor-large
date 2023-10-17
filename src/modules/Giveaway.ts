@@ -24,8 +24,8 @@ import { type Giveaway, type HostNotified, type Prisma, type Winner } from "@pri
 import { commandMention, getTag, listify, longstamp, messageURL, s } from "#helpers";
 import { default as GiveawayManager } from "#database/giveaway.js";
 import { oneLine, stripIndent, stripIndents } from "common-tags";
+import components from "#discord-components";
 import { Colors, Emojis } from "#constants";
-import components from "#components";
 import PrizeModule from "./prize.js";
 import ms from "ms";
 

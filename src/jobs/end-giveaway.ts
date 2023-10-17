@@ -1,12 +1,12 @@
-import { rollAndSign } from "../commands/giveaway/giveaway-modules/end-modules/roll-winners/roll-and-sign.js";
+import { rollAndSign } from "../commands/giveaway/modules/end-modules/roll-winners/roll-and-sign.js";
 import { type GiveawayWithIncludes, type WinnerId } from "#typings";
 import GiveawayModule from "#modules/giveaway.js";
 import { longstamp, messageURL } from "#helpers";
 import { type Client, bold } from "discord.js";
 import { Emojis, Giveaway } from "#constants";
 import { oneLine, source } from "common-tags";
+import components from "#discord-components";
 import prisma from "#database/prisma.js";
-import components from "#components";
 
 const DM_BUFFER = Giveaway.HostDMTimeBeforeEnd;
 

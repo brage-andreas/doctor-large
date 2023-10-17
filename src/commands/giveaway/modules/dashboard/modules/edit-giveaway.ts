@@ -1,9 +1,9 @@
 import { type ButtonInteraction, type RepliableInteraction, time } from "discord.js";
 import type GiveawayManager from "#database/giveaway.js";
+import components from "#discord-components";
 import { stripIndents } from "common-tags";
 import toDashboard from "../dashboard.js";
 import { ModalCollector } from "#helpers";
-import components from "../../../../../discord-components/index.js";
 import { Emojis } from "#constants";
 import Logger from "#logger";
 

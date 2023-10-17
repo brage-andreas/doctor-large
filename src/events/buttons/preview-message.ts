@@ -1,7 +1,7 @@
 import { type ButtonInteraction } from "discord.js";
+import components from "#discord-components";
 import { Emojis, Regex } from "#constants";
 import { messageToEmbed } from "#helpers";
-import components from "#components";
 import Logger from "#logger";
 
 export default async function previewMessage(interaction: ButtonInteraction<"cached">) {

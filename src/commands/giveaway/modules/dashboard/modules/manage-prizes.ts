@@ -11,9 +11,9 @@ import toPrizeDashboard from "./prize/prize-dashboard.js";
 import type GiveawayManager from "#database/giveaway.js";
 import toCreatePrize from "./prize/create-prize.js";
 import { Colors, Emojis, Regex } from "#constants";
+import components from "#discord-components";
 import { stripIndents } from "common-tags";
 import toDashboard from "../dashboard.js";
-import components from "../../../../../discord-components/index.js";
 import { s, yesNo } from "#helpers";
 import Logger from "#logger";
 

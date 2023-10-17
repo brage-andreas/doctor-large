@@ -11,8 +11,8 @@ import { Colors, Emojis, Giveaway } from "#constants";
 import { oneLine, stripIndents } from "common-tags";
 import { EndAutomation } from "@prisma/client";
 import toEndGiveaway from "./end-giveaway.js";
+import components from "#discord-components";
 import toDashboard from "../dashboard.js";
-import components from "../../../../../discord-components/index.js";
 import { longstamp } from "#helpers";
 import ms from "ms";
 

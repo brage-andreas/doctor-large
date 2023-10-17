@@ -1,7 +1,7 @@
 import { type ButtonInteraction, type ChatInputCommandInteraction, ComponentType } from "discord.js";
 import toConfigDashboard from "./dashboard/dashboard.js";
 import type ConfigManager from "#database/config.js";
-import components from "../../../discord-components/index.js";
+import components from "#discord-components";
 import { Emojis } from "#constants";
 
 export default async function toCreateConfig(

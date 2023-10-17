@@ -2,10 +2,10 @@ import { type ButtonInteraction, bold } from "discord.js";
 import type GiveawayManager from "#database/giveaway.js";
 import toPrizeDashboard from "./prize-dashboard.js";
 import type PrizeModule from "#modules/prize.js";
+import components from "#discord-components";
 import { Emojis, Prize } from "#constants";
 import { ModalCollector } from "#helpers";
 import { oneLine } from "common-tags";
-import components from "../../../../../../discord-components/index.js";
 import Logger from "#logger";
 
 export default async function toEditPrize(

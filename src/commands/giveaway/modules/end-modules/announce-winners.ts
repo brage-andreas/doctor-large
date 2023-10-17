@@ -4,7 +4,7 @@ import type GiveawayModule from "#modules/giveaway.js";
 import GiveawayManager from "#database/giveaway.js";
 import { oneLine, stripIndents } from "common-tags";
 import { getMissingPermissions } from "#helpers";
-import components from "../../../../discord-components/index.js";
+import components from "#discord-components";
 import { Emojis } from "#constants";
 import Logger from "#logger";
 

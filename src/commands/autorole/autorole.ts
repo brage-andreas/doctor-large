@@ -1,9 +1,9 @@
 import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
 import { type CommandData, type CommandExport } from "#typings";
 import AutoroleManager from "#database/autorole.js";
+import components from "#discord-components";
 import { HIDE_OPTION } from "#constants";
 import { oneLine } from "common-tags";
-import components from "../../discord-components";
 import Logger from "#logger";
 
 const data: CommandData = {

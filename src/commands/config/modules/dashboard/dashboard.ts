@@ -3,8 +3,8 @@ import handlePartialConfigOption from "./modules/partial-config-option-handle.js
 import handleFullConfigOption from "./modules/full-config-option-handle.js";
 import toCreateConfig from "../create-config.js";
 import ConfigManager from "#database/config.js";
+import components from "#discord-components";
 import prisma from "#database/prisma.js";
-import components from "../../../../discord-components/index.js";
 import { Emojis } from "#constants";
 import { yesNo } from "#helpers";
 import Logger from "#logger";

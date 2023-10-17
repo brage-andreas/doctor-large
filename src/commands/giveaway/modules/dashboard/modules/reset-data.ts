@@ -1,8 +1,8 @@
 import { type ButtonInteraction, ButtonStyle, ComponentType, bold, underscore } from "discord.js";
 import type GiveawayManager from "#database/giveaway.js";
 import { stripIndent, stripIndents } from "common-tags";
+import components from "#discord-components";
 import toDashboard from "../dashboard.js";
-import components from "../../../../../discord-components/index.js";
 import { Emojis } from "#constants";
 import { yesNo } from "#helpers";
 import Logger from "#logger";

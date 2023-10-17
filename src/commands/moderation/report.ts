@@ -13,8 +13,8 @@ import { type CommandData, type CommandExport } from "#typings";
 import type ConfigModule from "#modules/config.js";
 import ConfigManager from "#database/config.js";
 import ReportManager from "#database/report.js";
+import components from "#discord-components";
 import { stripIndents } from "common-tags";
-import components from "../../discord-components";
 import { Emojis } from "#constants";
 import Logger from "#logger";
 

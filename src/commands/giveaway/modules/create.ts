@@ -1,8 +1,8 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import GiveawayManager from "#database/giveaway.js";
 import toDashboard from "./dashboard/dashboard.js";
+import components from "#discord-components";
 import { ModalCollector } from "#helpers";
-import components from "../../../discord-components/index.js";
 import Logger from "#logger";
 
 export default async function (interaction: ChatInputCommandInteraction<"cached">) {
