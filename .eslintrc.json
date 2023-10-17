@@ -23,29 +23,6 @@
 		"prettier"
 	],
 
-	"settings": {
-		"import/parsers": {
-			"@typescript-eslint/parser": [".ts", ".tsx"]
-		},
-		"import/resolver": {
-			"typescript": true,
-			"node": true,
-			"alias": {
-				"map": [
-					["#discord-components", "./src/discord-components/index.ts"],
-					["#constants", "./src/constants.ts"],
-					["#database/*", "./src/database/*"],
-					["#helpers", "./src/helpers/index.ts"],
-					["#logger", "./src/logger/logger.ts"],
-					["#modules/*", "./src/modules/*"],
-					["#scripts/*", "./src/scripts/*"],
-					["#typings", "./src/typings/index.d.ts"]
-				],
-				"extensions": [".ts", ".json"]
-			}
-		}
-	},
-
 	"rules": {
 		"perfectionist/sort-imports": [
 			"error",
@@ -62,8 +39,9 @@
 		"unicorn/no-useless-undefined": "off",
 		"unicorn/prefer-ternary": "off",
 
-		"import/no-duplicates": ["error", { "prefer-inline": true }],
 		"import/consistent-type-specifier-style": ["error", "prefer-inline"],
+		"import/no-duplicates": ["error", { "prefer-inline": true }],
+		"import/no-useless-path-segments": "error",
 
 		"@typescript-eslint/array-type": ["error", { "default": "generic" }],
 		"@typescript-eslint/await-thenable": "error",
