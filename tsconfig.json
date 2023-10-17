@@ -15,7 +15,7 @@
 		"target": "ESNext",
 
 		"paths": {
-			"#components": ["./src/components/index.ts"],
+			"#components": ["./src/discord-components/index.ts"],
 			"#constants": ["./src/constants.ts"],
 			"#database/*": ["./src/database/*"],
 			"#helpers": ["./src/helpers/index.ts"],
