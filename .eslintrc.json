@@ -23,6 +23,29 @@
 		"prettier"
 	],
 
+	"settings": {
+		"import/parsers": {
+			"@typescript-eslint/parser": [".ts", ".tsx"]
+		},
+		"import/resolver": {
+			"typescript": true,
+			"node": true,
+			"alias": {
+				"map": [
+					["#discord-components", "./src/discord-components/index.ts"],
+					["#constants", "./src/constants.ts"],
+					["#database/*", "./src/database/*"],
+					["#helpers", "./src/helpers/index.ts"],
+					["#logger", "./src/logger/logger.ts"],
+					["#modules/*", "./src/modules/*"],
+					["#scripts/*", "./src/scripts/*"],
+					["#typings", "./src/typings/index.d.ts"]
+				],
+				"extensions": [".ts", ".json"]
+			}
+		}
+	},
+
 	"rules": {
 		"perfectionist/sort-imports": [
 			"error",
