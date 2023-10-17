@@ -23,14 +23,16 @@ const splitToFives = (number: number) => {
 	}
 
 	const array: Array<number> = [];
-	let n = number;
+	const height = Math.ceil(number / 5);
+	let mutableNumber = number;
 
-	for (let index = 0; index < Math.ceil(number / 5); index++) {
-		if (n >= 5) {
+	for (let index = 0; index < height; index++) {
+		if (mutableNumber >= 5) {
 			array.push(5);
-			n -= 5;
+
+			mutableNumber -= 5;
 		} else {
-			array.push(n);
+			array.push(mutableNumber);
 
 			break;
 		}
