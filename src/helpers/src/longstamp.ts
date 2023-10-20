@@ -7,30 +7,30 @@ const seconds = (dateOrTimestamp: Date | number | string) => {
 };
 
 // Default
-export default function longstamp(
+export function longstamp(
 	dateOrTimestamp: Date | number | string,
 	options?: { extraLong?: undefined; reverse?: undefined }
 ): `<t:${number}:${"d"}> (<t:${number}:R>)`;
 
 // Extra long
-export default function longstamp(
+export function longstamp(
 	dateOrTimestamp: Date | number | string,
 	options: { extraLong: true }
 ): `<t:${number}:${"F"}> (<t:${number}:R>)`;
 
 // Reverse
-export default function longstamp(
+export function longstamp(
 	dateOrTimestamp: Date | number | string,
 	options: { reverse: true }
 ): `<t:${number}:R> (<t:${number}:${"d"}>)`;
 
 // Extra long + reverse
-export default function longstamp(
+export function longstamp(
 	dateOrTimestamp: Date | number | string,
 	options: { extraLong: true; reverse: true }
 ): `<t:${number}:R> (<t:${number}:${"F"}>)`;
 
-export default function longstamp(
+export function longstamp(
 	dateOrTimestamp: Date | number | string,
 	options?: { extraLong?: true; reverse?: true }
 ): `<t:${number}:${"F" | "d"}> (<t:${number}:R>)` | `<t:${number}:R> (<t:${number}:${"F" | "d"}>)` {

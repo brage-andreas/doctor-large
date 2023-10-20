@@ -19,12 +19,12 @@ export const ModalCollector = (
 	>
 ) =>
 	new InteractionCollector<ModalSubmitInteraction<"cached">>(interaction.client, {
+		time: 60_000,
+		...collectorOptions,
 		channel: interaction.channelId ?? undefined,
 		filter: (modalInteraction) =>
 			modalInteraction.user.id === interaction.user.id && modalInteraction.customId === modal.custom_id,
 		guild: interaction.guildId,
 		interactionType: InteractionType.ModalSubmit,
 		max: 1,
-		time: 60_000,
-		...collectorOptions,
 	});

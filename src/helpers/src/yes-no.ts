@@ -13,17 +13,13 @@ import components from "#discord-components";
 import { Emojis } from "#constants";
 
 /**
- * `noStyle` = ButtonStyle.Primary
- *
- * `respondToIgnore` = true
- *
- * `timeActive` = 60_000
- *
- * `yesStyle` = ButtonStyle.Primary
- *
- * `filter` = (i) => i.user.id === medium.user.id
+ * @param [filter=(i) => i.user.id === medium.user.id]
+ * @param [noStyle=ButtonStyle.Primary]
+ * @param [respondToIgnore=true]
+ * @param [timeActive=60_000]
+ * @param [yesStyle=ButtonStyle.Primary]
  */
-export default async function yesNo(options: {
+interface YesNoOptions {
 	data: Exclude<MessageEditOptions, "Components">;
 	filter?(interaction: ButtonInteraction): boolean;
 	medium:
@@ -34,7 +30,9 @@ export default async function yesNo(options: {
 	respondToIgnore?: boolean;
 	timeActive?: number;
 	yesStyle?: CustomIdCompatibleButtonStyle;
-}): Promise<boolean> {
+}
+
+export const yesNo = async (options: YesNoOptions): Promise<boolean> => {
 	const { data, medium, timeActive } = options;
 
 	const defaultFilter = (index: ButtonInteraction<"cached">) =>
@@ -93,4 +91,4 @@ export default async function yesNo(options: {
 	})
 		.then(() => true)
 		.catch(() => false);
-}
+};

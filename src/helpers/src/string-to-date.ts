@@ -8,15 +8,18 @@ import ms from "ms";
  * * `2 weeks`
  * * `1h`
  */
-export default function stringToDate(string: string) {
+export const stringToDate = (string: string) => {
 	const dateParseResult = Date.parse(string);
-	const msResult = ms(string);
 
 	if (!Number.isNaN(dateParseResult)) {
 		return dateParseResult;
-	} else if (!Number.isNaN(msResult)) {
+	}
+
+	const msResult = ms(string);
+
+	if (!Number.isNaN(msResult)) {
 		return Date.now() + msResult;
 	}
 
 	return null;
-}
+};

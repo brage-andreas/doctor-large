@@ -1,16 +1,14 @@
 import { type EmbedField, type GuildMember, type User } from "discord.js";
+import { getUsername, listify, longstamp } from "#helpers";
 import { stripIndents } from "common-tags";
-import longstamp from "./timestamps.js";
-import listify from "./listify.js";
-import getTag from "./get-tag.js";
 
-export default function getMemberInfo(member: GuildMember, prefix?: string): [EmbedField, EmbedField];
-export default function getMemberInfo(member: User, prefix?: string): [EmbedField];
-export default function getMemberInfo(
+export function getMemberInfo(member: GuildMember, prefix?: string): [EmbedField, EmbedField];
+export function getMemberInfo(member: User, prefix?: string): [EmbedField];
+export function getMemberInfo(
 	member: GuildMember | User | null,
 	prefix?: string
 ): [EmbedField, EmbedField] | [EmbedField];
-export default function getMemberInfo(
+export function getMemberInfo(
 	member: GuildMember | User | null,
 	prefix?: string
 ): [EmbedField, EmbedField] | [EmbedField] {
@@ -33,7 +31,7 @@ export default function getMemberInfo(
 		inline: false,
 		name: prefix ? `${prefix} user info` : "User info",
 		value: stripIndents`
-			* Name: ${getTag(user, { id: true })}
+			* Name: ${getUsername(user, { id: true })}
 			* Created: ${longstamp(user.createdAt)}
 		`,
 	};
