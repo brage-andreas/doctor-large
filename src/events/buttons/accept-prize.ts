@@ -1,8 +1,8 @@
 import GiveawayManager from "#database/giveaway.js";
 import { oneLine, stripIndents } from "common-tags";
 import { type ButtonInteraction } from "discord.js";
-import { commandMention, s } from "#helpers";
 import { Emojis, Regex } from "#constants";
+import { s } from "#helpers";
 import Logger from "#logger";
 
 export default async function acceptPrize(interaction: ButtonInteraction<"cached">) {
@@ -42,15 +42,13 @@ export default async function acceptPrize(interaction: ButtonInteraction<"cached
 
 	const prizes = giveaway.prizesOf(userId);
 
-	const myGiveaways = await commandMention("my-giveaways", interaction);
-
 	if (!prizes?.unclaimed.size) {
 		interaction
 			.followUp({
 				content: stripIndents`
 				${Emojis.Check} You have already claimed all your prizes. You're all set! ${Emojis.Grin}
 
-				You can use ${myGiveaways} to view your prizes.
+				You can use \`/my-giveaways\` to view your prizes.
 			`,
 				ephemeral: true,
 			})
@@ -67,7 +65,7 @@ export default async function acceptPrize(interaction: ButtonInteraction<"cached
 				[...prizes.unclaimed.values()].reduce((accumulator, prize) => accumulator + prize.count, 0)
 			)}! Woo!
 			
-			You can use ${myGiveaways} to view your prizes.
+			You can use \`/my-giveaways\` to view your prizes.
 		`,
 			ephemeral: true,
 		})

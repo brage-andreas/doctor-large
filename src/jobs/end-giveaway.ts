@@ -1,7 +1,7 @@
 import { rollAndSign } from "../commands/giveaway/modules/end-modules/roll-winners/roll-and-sign.js";
 import { type GiveawayWithIncludes, type WinnerId } from "#typings";
+import { createMessageURL, longstamp } from "#helpers";
 import GiveawayModule from "#modules/giveaway.js";
-import { longstamp, messageURL } from "#helpers";
 import { type Client, bold } from "discord.js";
 import { Emojis, Giveaway } from "#constants";
 import { oneLine, source } from "common-tags";
@@ -90,7 +90,8 @@ export default async function checkEndingGiveawaysFunction(client: Client<true>)
 
 		const guildName = client.guilds.cache.get(guildId)?.name ?? "unknown server";
 
-		const url = channelId && announcementMessageId ? messageURL(guildId, channelId, announcementMessageId) : null;
+		const url =
+			channelId && announcementMessageId ? createMessageURL(guildId, channelId, announcementMessageId) : null;
 
 		const timeLeft = longstamp(endDate);
 
@@ -145,7 +146,8 @@ export default async function checkEndingGiveawaysFunction(client: Client<true>)
 
 		const channel = channel_?.isTextBased() ? channel_ : null;
 
-		const url = channelId && announcementMessageId ? messageURL(guildId, channelId, announcementMessageId) : null;
+		const url =
+			channelId && announcementMessageId ? createMessageURL(guildId, channelId, announcementMessageId) : null;
 
 		const string = source`
 			${bold("A giveaway you are hosting just ended!")} ${Emojis.Sparks}.

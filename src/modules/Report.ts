@@ -6,7 +6,7 @@ import {
 	type MessageCreateOptions,
 	Routes,
 } from "discord.js";
-import { getMemberInfo, getTag, longstamp, messageToEmbed, messageURL, squash } from "#helpers";
+import { createMessageURL, getMemberInfo, getUsername, longstamp, messageToEmbed, squash } from "#helpers";
 import { type Prisma, type Report, type ReportType } from "@prisma/client";
 import { type CaseWithIncludes, type ReportWithIncludes } from "#typings";
 import { source, stripIndent, stripIndents } from "common-tags";
@@ -171,7 +171,7 @@ export class UserReportModule implements Omit<ReportWithIncludes, "targetMessage
 
 	// Message module requires async
 	public get author() {
-		return getTag({
+		return getUsername({
 			id: this.authorUserId,
 			tag: this.authorUsername,
 		});
@@ -182,14 +182,14 @@ export class UserReportModule implements Omit<ReportWithIncludes, "targetMessage
 			return null;
 		}
 
-		return getTag({
+		return getUsername({
 			id: this.processedByUserId,
 			tag: this.processedByUsername,
 		});
 	}
 
 	public get target() {
-		return getTag({
+		return getUsername({
 			id: this.targetUserId,
 			tag: this.targetUsername,
 		});
@@ -212,7 +212,7 @@ export class MessageReportModule extends UserReportModule {
 
 		this.targetMessageChannelId = data.targetMessageChannelId;
 		this.targetMessageId = data.targetMessageId;
-		this.targetMessageURL = messageURL(data.guildId, data.targetMessageChannelId, data.targetMessageId);
+		this.targetMessageURL = createMessageURL(data.guildId, data.targetMessageChannelId, data.targetMessageId);
 	}
 
 	public async fetchTargetMessage() {

@@ -1,7 +1,7 @@
 import { type ButtonInteraction, type ComponentType, type NewsChannel, type TextChannel } from "discord.js";
 import type GiveawayManager from "#database/giveaway.js";
 import { oneLine, stripIndents } from "common-tags";
-import { getMissingPermissions } from "#helpers";
+import { listMissingPermissions } from "#helpers";
 import components from "#discord-components";
 import toDashboard from "../dashboard.js";
 import { Emojis } from "#constants";
@@ -99,7 +99,7 @@ export default async function toAnnouncementOptions(
 				return;
 			}
 
-			const missingPermissions = getMissingPermissions(channel, "SendMessages", "EmbedLinks");
+			const missingPermissions = listMissingPermissions(channel, "SendMessages", "EmbedLinks");
 
 			if (missingPermissions.length > 0) {
 				void retry(

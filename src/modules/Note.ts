@@ -1,9 +1,8 @@
 import { type CaseWithIncludes, type NoteWithIncludes } from "#typings";
 import { type Client, type EmbedData, type Guild } from "discord.js";
 import type NoteManager from "#database/note.js";
-import getTag from "../helpers/get-tag.js";
+import { getUsername, s } from "#helpers";
 import { ColorsHex } from "#constants";
-import { s } from "#helpers";
 
 export class NoteModule implements NoteWithIncludes {
 	public author: string;
@@ -42,12 +41,12 @@ export class NoteModule implements NoteWithIncludes {
 		this.targetUserId = data.targetUserId;
 		this.targetUsername = data.targetUsername;
 
-		this.author = getTag({
+		this.author = getUsername({
 			id: this.authorUserId,
 			tag: this.authorUsername,
 		});
 
-		this.target = getTag({
+		this.target = getUsername({
 			id: this.targetUserId,
 			tag: this.targetUsername,
 		});

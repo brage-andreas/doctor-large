@@ -8,7 +8,7 @@ import {
 	type ModalSubmitInteraction,
 	inlineCode,
 } from "discord.js";
-import { ModalCollector, messageFromURL, messageToEmbed, parseMessageURL, squash, yesNo } from "#helpers";
+import { ModalCollector, destructureMessageURL, getMessageFromURL, messageToEmbed, squash, yesNo } from "#helpers";
 import { type CommandData, type CommandExport } from "#typings";
 import type ConfigModule from "#modules/config.js";
 import ConfigManager from "#database/config.js";
@@ -283,7 +283,7 @@ const chatInput = async (interaction: ChatInputCommandInteraction<"cached">) => 
 	if (subcommand === "message") {
 		const messageURL = interaction.options.getString("message-url", true);
 
-		const parsedURL = parseMessageURL(messageURL);
+		const parsedURL = destructureMessageURL(messageURL);
 
 		if (!parsedURL) {
 			await interaction.editReply({
@@ -314,7 +314,7 @@ const chatInput = async (interaction: ChatInputCommandInteraction<"cached">) => 
 			return;
 		}
 
-		const message = await messageFromURL(interaction.client, parsedURL);
+		const message = await getMessageFromURL(interaction.client, parsedURL);
 
 		if (!message) {
 			await interaction.reply({

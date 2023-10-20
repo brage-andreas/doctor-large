@@ -8,7 +8,7 @@ import {
 } from "discord.js";
 import { clearTimeout, setTimeout } from "node:timers";
 import type ConfigModule from "#modules/config.js";
-import { getMissingPermissions } from "#helpers";
+import { listMissingPermissions } from "#helpers";
 import components from "#discord-components";
 import { Colors, Emojis } from "#constants";
 import { stripIndents } from "common-tags";
@@ -32,7 +32,7 @@ const createEmbed = (
 		return embed;
 	}
 
-	let missingPermissions = getMissingPermissions(channel, "ViewChannel", "SendMessages", "EmbedLinks").map(
+	let missingPermissions = listMissingPermissions(channel, "ViewChannel", "SendMessages", "EmbedLinks").map(
 		(permission) => `* ${permission}`
 	);
 

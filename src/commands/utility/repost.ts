@@ -7,7 +7,7 @@ import {
 	PermissionFlagsBits,
 	inlineCode,
 } from "discord.js";
-import { messageFromURL, messageToEmbed, parseMessageURL } from "#helpers";
+import { destructureMessageURL, getMessageFromURL, messageToEmbed } from "#helpers";
 import { type CommandData, type CommandExport } from "#typings";
 import ConfigManager from "#database/config.js";
 import components from "#discord-components";
@@ -73,7 +73,7 @@ const chatInput = async (interaction: ChatInputCommandInteraction<"cached">) => 
 
 	const urlInput = interaction.options.getString("message_link", true);
 
-	const parsedURL = parseMessageURL(urlInput);
+	const parsedURL = destructureMessageURL(urlInput);
 
 	if (!parsedURL) {
 		await interaction.reply({
@@ -122,7 +122,7 @@ const chatInput = async (interaction: ChatInputCommandInteraction<"cached">) => 
 		return;
 	}
 
-	const message = await messageFromURL(interaction.client, parsedURL);
+	const message = await getMessageFromURL(interaction.client, parsedURL);
 
 	if (!message) {
 		await interaction.reply({

@@ -9,7 +9,7 @@ import {
 	inlineCode,
 	underscore,
 } from "discord.js";
-import { getMissingPermissions, listify, messageToEmbed, yesNo } from "#helpers";
+import { listMissingPermissions, listify, messageToEmbed, yesNo } from "#helpers";
 import { oneLine, stripIndent, stripIndents } from "common-tags";
 import { type CommandData, type CommandExport } from "#typings";
 import ConfigManager from "#database/config.js";
@@ -185,10 +185,10 @@ const chatInput = async (interaction: ChatInputCommandInteraction<"cached">) => 
 	// type inferring is being weird
 	const channel = uncertainChannel;
 
-	const missingPermissions = getMissingPermissions(channel, "SendMessages", "EmbedLinks");
+	const missingPermissions = listMissingPermissions(channel, "SendMessages", "EmbedLinks");
 
 	if (channel.isThread()) {
-		const missingThreadPermissions = getMissingPermissions(channel, "SendMessagesInThreads").at(0);
+		const missingThreadPermissions = listMissingPermissions(channel, "SendMessagesInThreads").at(0);
 
 		if (missingThreadPermissions) {
 			missingPermissions.push(...missingThreadPermissions);

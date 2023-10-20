@@ -1,7 +1,7 @@
 import { type ButtonInteraction, type GuildTextBasedChannel, type NewsChannel, type TextChannel } from "discord.js";
 import type GiveawayManager from "#database/giveaway.js";
 import { oneLine, stripIndents } from "common-tags";
-import { getMissingPermissions } from "#helpers";
+import { listMissingPermissions } from "#helpers";
 import components from "#discord-components";
 import toDashboard from "../dashboard.js";
 import { Emojis } from "#constants";
@@ -112,7 +112,7 @@ export default async function toAnnounceGiveaway(
 				channel = channel_;
 			}
 
-			const missingPerms = getMissingPermissions(channel, "SendMessages", "EmbedLinks");
+			const missingPerms = listMissingPermissions(channel, "SendMessages", "EmbedLinks");
 
 			if (missingPerms.length > 0) {
 				void retry(

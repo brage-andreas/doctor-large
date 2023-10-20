@@ -21,7 +21,7 @@ import {
 	type WinnerId,
 } from "#typings";
 import { type Giveaway, type HostNotified, type Prisma, type Winner } from "@prisma/client";
-import { commandMention, getTag, listify, longstamp, messageURL, s } from "#helpers";
+import { createMessageURL, getUsername, listify, longstamp, s } from "#helpers";
 import { default as GiveawayManager } from "#database/giveaway.js";
 import { oneLine, stripIndent, stripIndents } from "common-tags";
 import components from "#discord-components";
@@ -123,7 +123,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 
 		// -- Props --
 		this.asRelId = `#${this.guildRelativeId}`;
-		this.host = getTag({ id: this.hostUserId, tag: this.hostUsername });
+		this.host = getUsername({ id: this.hostUserId, tag: this.hostUsername });
 		// -----------
 	}
 
@@ -205,8 +205,6 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			return;
 		}
 
-		const myGiveaways = await commandMention("my-giveaways", this.client);
-
 		const alreadyNotified = new Set<string>();
 		const ids: Array<WinnerId> = [];
 
@@ -236,7 +234,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 				Make sure to ${bold("claim your prize(s)")}!
 
 				## How to claim your prizes
-				* Use ${myGiveaways} in the server and claim your prizes.
+				* Use \`/my-giveaways\` in the server and claim your prizes.
 				* Click the "${Emojis.StarEyes} Accept Prize" button in the announcement.
 
 				GG!
@@ -833,7 +831,7 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			return null;
 		}
 
-		return messageURL(this.guildId, this.channelId, this.announcementMessageId);
+		return createMessageURL(this.guildId, this.channelId, this.announcementMessageId);
 	}
 
 	public get channel(): GuildTextBasedChannel | null {
@@ -883,6 +881,6 @@ export default class GiveawayModule implements ModifiedGiveaway {
 			return null;
 		}
 
-		return messageURL(this.guildId, this.channelId, this.winnerMessageId);
+		return createMessageURL(this.guildId, this.channelId, this.winnerMessageId);
 	}
 }

@@ -3,7 +3,7 @@ import toEndedDashboard from "../ended-giveaway-dashboard.js";
 import type GiveawayModule from "#modules/giveaway.js";
 import GiveawayManager from "#database/giveaway.js";
 import { oneLine, stripIndents } from "common-tags";
-import { getMissingPermissions } from "#helpers";
+import { listMissingPermissions } from "#helpers";
 import components from "#discord-components";
 import { Emojis } from "#constants";
 import Logger from "#logger";
@@ -56,7 +56,7 @@ export async function toAnnounceWinners(interaction: RepliableInteraction<"cache
 		return;
 	}
 
-	const missingPerms = getMissingPermissions(channel, "SendMessages", "EmbedLinks");
+	const missingPerms = listMissingPermissions(channel, "SendMessages", "EmbedLinks");
 
 	if (missingPerms.length > 0) {
 		await interaction.editReply({

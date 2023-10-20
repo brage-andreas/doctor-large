@@ -5,7 +5,7 @@ import {
 	EmbedBuilder,
 	PermissionFlagsBits,
 } from "discord.js";
-import { getMissingPermissions, listify } from "#helpers";
+import { listMissingPermissions, listify } from "#helpers";
 import { clearTimeout, setTimeout } from "node:timers";
 import ConfigModule from "#modules/config.js";
 import components from "#discord-components";
@@ -159,7 +159,7 @@ async function channels(
 					return `1. ${channel.toString()} \`${channel.id}\` (${type})`;
 				}
 
-				const missingPermissions = getMissingPermissions(channel, "ViewChannel", "SendMessages", "EmbedLinks");
+				const missingPermissions = listMissingPermissions(channel, "ViewChannel", "SendMessages", "EmbedLinks");
 
 				let string = `1. ${channel.toString()} \`${channel.id}\` (${type})`;
 

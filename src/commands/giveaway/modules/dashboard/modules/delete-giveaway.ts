@@ -1,9 +1,9 @@
 import { type ButtonInteraction, ButtonStyle, bold } from "discord.js";
 import type GiveawayManager from "#database/giveaway.js";
-import { commandMention, yesNo } from "#helpers";
 import { stripIndents } from "common-tags";
 import toDashboard from "../dashboard.js";
 import { Emojis } from "#constants";
+import { yesNo } from "#helpers";
 import Logger from "#logger";
 
 export default async function toDeleteGiveaway(
@@ -27,10 +27,8 @@ export default async function toDeleteGiveaway(
 		return;
 	}
 
-	const myGiveaways = await commandMention("my-giveaways", interaction);
-
 	const isConcludedString = giveaway.ended
-		? `\n\n${Emojis.Warn} It is recommended to keep ended giveaways. They can still be seen in the ${myGiveaways} command.`
+		? `\n\n${Emojis.Warn} It is recommended to keep ended giveaways. They can still be seen in the \`/my-giveaways\` command.`
 		: "";
 
 	const accept = await yesNo({

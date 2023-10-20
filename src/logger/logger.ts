@@ -1,9 +1,9 @@
 import { type ContextMenuCommandInteraction, type Guild, type Interaction } from "discord.js";
 import { DEFAULT_LOGGER_COLOR, DEFAULT_LOGGER_PREFIX } from "#constants";
 import { getColorFunction, grey } from "./color.js";
+import { getUsername } from "#helpers";
 import { type Color } from "#typings";
 import console from "node:console";
-import { getTag } from "#helpers";
 
 const formatType = (type: string) => type.toUpperCase().padStart(3, " ");
 
@@ -65,7 +65,7 @@ export default class Logger {
 		const { channel, guild: interactionGuild, user } = this.interaction;
 		const guild = this.guild ?? interactionGuild;
 
-		const prefixArray = [`${grey("User:")} ${getTag(user)} ${grey(`(${user.id})`)}`];
+		const prefixArray = [`${grey("User:")} ${getUsername(user)} ${grey(`(${user.id})`)}`];
 
 		if (channel) {
 			prefixArray.push(`${grey("Channel:")} #${channel.name} ${grey(`(${channel.id})`)}`);
