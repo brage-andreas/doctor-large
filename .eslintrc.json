@@ -48,7 +48,7 @@
 		"@typescript-eslint/consistent-type-definitions": "error",
 		"@typescript-eslint/consistent-type-imports": ["error", { "fixStyle": "inline-type-imports" }],
 		"@typescript-eslint/explicit-member-accessibility": "error",
-		"@typescript-eslint/method-signature-style": ["error", "method"],
+		"@typescript-eslint/method-signature-style": ["error", "property"],
 		"@typescript-eslint/no-base-to-string": "off",
 		"@typescript-eslint/no-import-type-side-effects": "off",
 		"@typescript-eslint/no-inferrable-types": "error",
@@ -119,12 +119,12 @@
 			{
 				"ExportDeclaration": {
 					"consistent": true,
-					"minProperties": 4,
+					"minProperties": 3,
 					"multiline": true
 				},
 				"ObjectExpression": {
 					"consistent": true,
-					"minProperties": 4,
+					"minProperties": 3,
 					"multiline": true
 				}
 			}
