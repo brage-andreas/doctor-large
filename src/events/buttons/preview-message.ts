@@ -47,9 +47,11 @@ export default async function previewMessage(interaction: ButtonInteraction<"cac
 	const embed = messageToEmbed(message);
 	const row = components.createRows(components.buttons.url({ label: "Go to message", url: message.url }));
 
-	new Logger({ color: "grey", interaction, label: "BUTTON" }).log(
-		`Sent preview of message ${messageId} of channel ${channelId}`
-	);
+	new Logger({
+		color: "grey",
+		interaction,
+		label: "BUTTON",
+	}).log(`Sent preview of message ${messageId} of channel ${channelId}`);
 
 	await interaction.editReply({
 		components: row,

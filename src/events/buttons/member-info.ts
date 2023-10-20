@@ -40,7 +40,11 @@ export default async function memberInfo(interaction: ButtonInteraction<"cached"
 		timestamp: new Date().toISOString(),
 	};
 
-	new Logger({ color: "grey", interaction, label: "BUTTON" }).log(`Opened member info of ${memberId}`);
+	new Logger({
+		color: "grey",
+		interaction,
+		label: "BUTTON",
+	}).log(`Opened member info of ${memberId}`);
 
 	await interaction.editReply({
 		content: null,

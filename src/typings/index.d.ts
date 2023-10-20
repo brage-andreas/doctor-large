@@ -35,10 +35,10 @@ export type Color = "black" | "blue" | "green" | "grey" | "red" | "white" | "yel
 
 export interface EventExportData {
 	event: keyof ClientEvents;
-	execute(...arguments_: Array<unknown>): unknown;
+	execute: (...arguments_: Array<unknown>) => unknown;
 }
 export interface EventImport {
-	getEvent(): EventExportData;
+	getEvent: () => EventExportData;
 }
 export type EventExport = () => EventExportData;
 
@@ -54,13 +54,13 @@ export interface CommandExportData {
 		};
 	};
 	handle: {
-		autocomplete?(interaction: AutocompleteInteraction<"cached">): unknown;
-		chatInput?(interaction: ChatInputCommandInteraction<"cached">): unknown;
-		contextMenu?(interaction: ContextMenuCommandInteraction<"cached">): unknown;
+		autocomplete?: (interaction: AutocompleteInteraction<"cached">) => unknown;
+		chatInput?: (interaction: ChatInputCommandInteraction<"cached">) => unknown;
+		contextMenu?: (interaction: ContextMenuCommandInteraction<"cached">) => unknown;
 	};
 }
 export interface CommandImport {
-	getCommand(): CommandExportData;
+	getCommand: () => CommandExportData;
 }
 export type CommandData = Property<CommandExportData, "data">;
 export type CommandExport = () => CommandExportData;
@@ -112,14 +112,14 @@ export type CreateRowsCompatibleRow =
 	| APIActionRowComponent<APIUserSelectComponent>;
 
 export interface ComponentObject<T extends CreateRowsCompatibleAPIComponent = CreateRowsCompatibleAPIComponent> {
-	component(...parameters: Array<unknown>): T;
+	component: (...parameters: Array<unknown>) => T;
 	readonly customId?: string;
 }
 
 export interface ComponentObjectWithNoParameters<
 	T extends CreateRowsCompatibleAPIComponent = CreateRowsCompatibleAPIComponent,
 > extends ComponentObject<T> {
-	component(): T;
+	component: () => T;
 }
 
 export type CustomIdCompatibleButtonStyle =
@@ -130,14 +130,14 @@ export type CustomIdCompatibleButtonStyle =
 
 export interface CreateRows {
 	(...components: CreateRowsInput): Array<CreateRowsCompatibleRow>;
-	specific(
+	specific: (
 		lengthRow1?: number,
 		lengthRow2?: number,
 		lengthRow3?: number,
 		lengthRow4?: number,
 		lengthRow5?: number
-	): (...components: CreateRowsInput) => Array<CreateRowsCompatibleRow>;
-	uniform(length?: number): (...components: CreateRowsInput) => Array<CreateRowsCompatibleRow>;
+	) => (...components: CreateRowsInput) => Array<CreateRowsCompatibleRow>;
+	uniform: (length?: number) => (...components: CreateRowsInput) => Array<CreateRowsCompatibleRow>;
 }
 
 export type CreateRowsInput = Array<

@@ -23,7 +23,11 @@ const formatEmoji = (emoji: string): APIMessageComponentEmoji => {
 
 	const { animated, id, name } = match.groups;
 
-	return { animated: Boolean(animated), id, name };
+	return {
+		animated: Boolean(animated),
+		id,
+		name,
+	};
 };
 
 export const announceGiveaway = {

@@ -49,7 +49,14 @@ export default class GiveawayManager {
 
 		const giveaway = new GiveawayModule(data_.giveaway, this.guild);
 
-		return new PrizeModule({ ...data_, giveaway, winners: [] }, this.guild);
+		return new PrizeModule(
+			{
+				...data_,
+				giveaway,
+				winners: [],
+			},
+			this.guild
+		);
 	}
 
 	public async createWinners(...arguments_: Array<Prisma.WinnerCreateManyInput>) {

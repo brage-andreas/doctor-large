@@ -53,7 +53,11 @@ export default async function markReportUnprocessed(interaction: ButtonInteracti
 
 	const logEditedSuccess = await report.editLog();
 
-	new Logger({ color: "grey", interaction, label: "REPORT" }).log(`Marked report #${report.id} unprocessed`);
+	new Logger({
+		color: "grey",
+		interaction,
+		label: "REPORT",
+	}).log(`Marked report #${report.id} unprocessed`);
 
 	if (!logEditedSuccess) {
 		await interaction.editReply({

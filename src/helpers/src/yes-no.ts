@@ -21,7 +21,7 @@ import { Emojis } from "#constants";
  */
 interface YesNoOptions {
 	data: Exclude<MessageEditOptions, "Components">;
-	filter?(interaction: ButtonInteraction): boolean;
+	filter?: (interaction: ButtonInteraction) => boolean;
 	medium:
 		| ContextMenuCommandInteraction<"cached">
 		| Exclude<Interaction<"cached">, AutocompleteInteraction>

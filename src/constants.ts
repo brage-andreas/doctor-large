@@ -92,10 +92,26 @@ export const ACTIVITIES: Array<ActivitiesOptions> = [
 	{ name: "Team Fortress 2", type: ActivityType.Playing },
 	{ name: "BEST FREE INTROS 2012", type: ActivityType.Watching },
 	{ name: "Boss Baby 2", type: ActivityType.Watching },
-	{ name: "large", state: "bowling", type: ActivityType.Custom },
-	{ name: "large", state: "melee sniper", type: ActivityType.Custom },
-	{ name: "large", state: "grapes will ferment", type: ActivityType.Custom },
-	{ name: "large", state: "hey waltuh - YouTube", type: ActivityType.Custom },
+	{
+		name: "large",
+		state: "bowling",
+		type: ActivityType.Custom,
+	},
+	{
+		name: "large",
+		state: "melee sniper",
+		type: ActivityType.Custom,
+	},
+	{
+		name: "large",
+		state: "grapes will ferment",
+		type: ActivityType.Custom,
+	},
+	{
+		name: "large",
+		state: "hey waltuh - YouTube",
+		type: ActivityType.Custom,
+	},
 	{
 		name: "large",
 		state: "waiting for heavy update",
@@ -106,7 +122,11 @@ export const ACTIVITIES: Array<ActivitiesOptions> = [
 		state: "How to escape a basement - YouTube",
 		type: ActivityType.Custom,
 	},
-	{ name: "large", state: "QUANTUM GAMING", type: ActivityType.Custom },
+	{
+		name: "large",
+		state: "QUANTUM GAMING",
+		type: ActivityType.Custom,
+	},
 	{
 		name: "large",
 		state: "[TF2] Top 10 Medic Tips - YouTube",

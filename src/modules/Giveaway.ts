@@ -376,9 +376,17 @@ export default class GiveawayModule implements ModifiedGiveaway {
 					unclaimed: Map<number, CountPrizeWinner>;
 				} = { claimed: new Map(), unclaimed: new Map() };
 
-				const oldClaimed: CountPrizeWinner = prizes.claimed.get(prizeId) ?? { count: 0, prize, winner };
+				const oldClaimed: CountPrizeWinner = prizes.claimed.get(prizeId) ?? {
+					count: 0,
+					prize,
+					winner,
+				};
 
-				const oldUnclaimed: CountPrizeWinner = prizes.unclaimed.get(prizeId) ?? { count: 0, prize, winner };
+				const oldUnclaimed: CountPrizeWinner = prizes.unclaimed.get(prizeId) ?? {
+					count: 0,
+					prize,
+					winner,
+				};
 
 				if (claimed) {
 					const newClaimed = prizes.claimed.set(prizeId, {

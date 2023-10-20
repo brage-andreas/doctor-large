@@ -52,7 +52,11 @@ export default async function markReportProcessed(interaction: ButtonInteraction
 
 	const logEditedSuccess = await report.editLog();
 
-	new Logger({ color: "grey", interaction, label: "REPORT" }).log(`Marked report #${report.id} processed`);
+	new Logger({
+		color: "grey",
+		interaction,
+		label: "REPORT",
+	}).log(`Marked report #${report.id} processed`);
 
 	if (!logEditedSuccess) {
 		await interaction.editReply({
